@@ -1,0 +1,48 @@
+{
+  "name": "@buildnbuzz/buzzform",
+  "version": "0.1.0",
+  "description": "Simple React form library for shadcn/ui. Declare fields, customize rendering, get live validation with minimal boilerplate.",
+  "author": "Parth Lad <parth@buildnbuzz.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildnbuzz/buzzform.git"
+  },
+  "homepage": "https://form.buildnbuzz.com",
+  "keywords": [
+    "react",
+    "forms",
+    "shadcn",
+    "nextjs",
+    "react-hook-form",
+    "zod"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": "^18 || ^19",
+    "react-hook-form": "^7.69.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.39.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
