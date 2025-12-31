@@ -69,3 +69,11 @@ export type {
     FormConfig,
     UseFormOptions,
 } from './form';
+
+// Schema types
+export type {
+    FieldToZod,
+    FieldsToShape,
+    SchemaBuilder,
+    SchemaBuilderMap,
+} from './schema';

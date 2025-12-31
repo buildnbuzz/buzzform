@@ -83,3 +83,7 @@ export { FormConfigContext } from './context/form-context';
 
 // Hooks
 export { useForm } from './hooks/use-form';
+
+// Schema utilities
+export { createSchema, fieldsToZodSchema } from './schema';
+export type { FieldToZod, FieldsToShape } from './types';
