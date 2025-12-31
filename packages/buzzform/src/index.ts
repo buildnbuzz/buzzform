@@ -18,3 +18,6 @@ export type {
 
 // Utilities (no external dependencies)
 export { createArrayHelpers } from './utils';
+
+// Resolvers
+export { zodResolver } from './resolvers';

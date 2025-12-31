@@ -67,6 +67,7 @@
   },
   "peerDependencies": {
     "react": "^18 || ^19",
+    "zod": "^3.0.0",
     "react-hook-form": "^7.0.0",
     "@tanstack/react-form": "^0.40.0"
   },
@@ -86,6 +87,7 @@
     "eslint": "^9.39.1",
     "react-hook-form": "^7.69.0",
     "@tanstack/react-form": "^0.40.0",
+    "zod": "^3.25.0",
     "tsup": "^8.3.5",
     "typescript": "^5.9.2"
   },
