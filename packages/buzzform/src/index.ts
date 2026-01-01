@@ -2,7 +2,9 @@
 // @buildnbuzz/buzzform
 // =============================================================================
 
-// Types - Adapter interface
+// =============================================================================
+// TYPES - Adapter Interface
+// =============================================================================
 export type {
     FormState,
     SetValueOptions,
@@ -15,7 +17,9 @@ export type {
     AdapterFactory,
 } from './types';
 
-// Types - Field definitions
+// =============================================================================
+// TYPES - Field Definitions
+// =============================================================================
 export type {
     // Validation
     ValidationContext,
@@ -66,7 +70,9 @@ export type {
     LayoutField,
 } from './types';
 
-// Types - Form configuration
+// =============================================================================
+// TYPES - Form Configuration
+// =============================================================================
 export type {
     BuzzFormSchema,
     FormSettings,
@@ -74,16 +80,48 @@ export type {
     UseFormOptions,
 } from './types';
 
-// Utilities (no external dependencies)
+// =============================================================================
+// TYPES - Schema Utilities
+// =============================================================================
+export type {
+    FieldToZod,
+    FieldsToShape,
+    SchemaBuilder,
+    SchemaBuilderMap,
+} from './types';
+
+// =============================================================================
+// SCHEMA
+// =============================================================================
+export { createSchema, fieldsToZodSchema } from './schema';
+
+// Re-export schema helpers for advanced usage (custom field builders)
+export {
+    extractValidationConfig,
+    applyCustomValidation,
+    makeOptional,
+    coerceToNumber,
+    coerceToDate,
+    getPatternErrorMessage,
+    isFileLike,
+    isFileTypeAccepted,
+} from './schema';
+
+// =============================================================================
+// UTILITIES
+// =============================================================================
 export { createArrayHelpers } from './utils';
 
-// Provider
+// Add common utilities that registry components will need
+export { generateFieldId, getNestedValue, setNestedValue, formatBytes } from './lib';
+
+// =============================================================================
+// CONTEXT & PROVIDERS
+// =============================================================================
 export { FormProvider } from './providers/form-provider';
 export { FormConfigContext } from './context/form-context';
 
-// Hooks
+// =============================================================================
+// HOOKS
+// =============================================================================
 export { useForm } from './hooks/use-form';
-
-// Schema utilities
-export { createSchema, fieldsToZodSchema } from './schema';
-export type { FieldToZod, FieldsToShape } from './types';
