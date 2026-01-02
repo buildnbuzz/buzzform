@@ -16,5 +16,9 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "chokidar": "^5.0.0",
+    "concurrently": "^9.2.1"
   }
 }
