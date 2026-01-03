@@ -40,6 +40,10 @@ import {
   NumberField,
   NumberFieldSkeleton,
 } from "@/components/buzzform/fields/number";
+import {
+  TagsField,
+  TagsFieldSkeleton,
+} from "@/components/buzzform/fields/tags";
 
 export interface FieldRendererComponentProps {
   field: Field;
@@ -106,6 +110,11 @@ export const defaultFieldRegistry: FieldRegistry = createFieldRegistry({
     kind: "data",
     renderer: NumberField as ComponentType<FieldRendererComponentProps>,
     skeleton: NumberFieldSkeleton as ComponentType<{ field: Field }>,
+  },
+  tags: {
+    kind: "data",
+    renderer: TagsField as ComponentType<FieldRendererComponentProps>,
+    skeleton: TagsFieldSkeleton as ComponentType<{ field: Field }>,
   },
 });
 

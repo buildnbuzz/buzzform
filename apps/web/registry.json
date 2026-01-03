@@ -168,6 +168,26 @@
           "target": "components/buzzform/fields/number.tsx"
         }
       ]
+    },
+    {
+      "name": "tags",
+      "type": "registry:ui",
+      "title": "TagsField",
+      "description": "A chip-based multi-value tag input field for BuzzForm. Supports customizable delimiters (enter, comma, space, tab), variants (chips, pills, inline), min/max tags, duplicate handling, and copy-to-clipboard.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": [
+        "@buzzform/init",
+        "badge",
+        "field",
+        "@buzzform/copy"
+      ],
+      "files": [
+        {
+          "path": "registry/base/fields/tags.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/tags.tsx"
+        }
+      ]
     }
   ]
 }
