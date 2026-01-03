@@ -1,0 +1,56 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "buzzform",
+  "homepage": "https://form.buildnbuzz.com",
+  "items": [
+    {
+      "name": "buzzform",
+      "type": "registry:ui",
+      "title": "BuzzForm",
+      "description": "Core BuzzForm components including Form, FormFields, FormSubmit, FormReset, and field rendering system. Requires setting up a provider - see documentation.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["button", "field"],
+      "files": [
+        {
+          "path": "registry/base/form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/form.tsx"
+        },
+        {
+          "path": "registry/base/fields/render.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/render.tsx"
+        }
+      ]
+    },
+    {
+      "name": "copy",
+      "type": "registry:ui",
+      "title": "CopyButton",
+      "description": "A copy-to-clipboard button component used by BuzzForm fields with the copyable option.",
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "registry/base/copy.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/copy.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text",
+      "type": "registry:ui",
+      "title": "TextField",
+      "description": "A text input field component for BuzzForm. Supports validation, copy-to-clipboard, and all TextField options.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["buzzform", "input", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/base/fields/text.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/text.tsx"
+        }
+      ]
+    }
+  ]
+}

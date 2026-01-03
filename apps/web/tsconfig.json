@@ -21,6 +21,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
+      "@/components/buzzform/*": ["./registry/base/*"],
       "fumadocs-mdx:collections/*": [".source/*"]
     }
   },
