@@ -4,7 +4,7 @@
   "homepage": "https://form.buildnbuzz.com",
   "items": [
     {
-      "name": "buzzform",
+      "name": "init",
       "type": "registry:ui",
       "title": "BuzzForm",
       "description": "Core BuzzForm components including Form, FormFields, FormSubmit, FormReset, and field rendering system. Requires setting up a provider - see documentation.",
@@ -43,7 +43,12 @@
       "title": "TextField",
       "description": "A text input field component for BuzzForm. Supports validation, copy-to-clipboard, and all TextField options.",
       "dependencies": ["@buildnbuzz/buzzform"],
-      "registryDependencies": ["buzzform", "input", "field", "copy"],
+      "registryDependencies": [
+        "@buzzform/init",
+        "input",
+        "field",
+        "@buzzform/copy"
+      ],
       "files": [
         {
           "path": "registry/base/fields/text.tsx",

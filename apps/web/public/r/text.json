@@ -7,10 +7,10 @@
     "@buildnbuzz/buzzform"
   ],
   "registryDependencies": [
-    "buzzform",
+    "@buzzform/init",
     "input",
     "field",
-    "copy"
+    "@buzzform/copy"
   ],
   "files": [
     {
