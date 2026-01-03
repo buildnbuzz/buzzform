@@ -210,6 +210,26 @@
           "target": "components/buzzform/fields/date.tsx"
         }
       ]
+    },
+    {
+      "name": "select",
+      "type": "registry:ui",
+      "title": "SelectField",
+      "description": "A select dropdown field component for BuzzForm. Supports single and multi-select (hasMany), static or async options, dependent dropdowns (dependencies), searchable, clearable, and custom option rendering with icons and descriptions.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": [
+        "@buzzform/init",
+        "combobox",
+        "input-group",
+        "field"
+      ],
+      "files": [
+        {
+          "path": "registry/base/fields/select.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/select.tsx"
+        }
+      ]
     }
   ]
 }

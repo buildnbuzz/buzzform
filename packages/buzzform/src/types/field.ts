@@ -383,6 +383,8 @@ export interface SelectOption {
     description?: string | ReactNode;
     /** Optional icon */
     icon?: ReactNode;
+    /** Optional badge */
+    badge?: string;
     /** Whether disabled */
     disabled?: boolean;
 }
