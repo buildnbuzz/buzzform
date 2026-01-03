@@ -36,6 +36,10 @@ import {
   RadioField,
   RadioFieldSkeleton,
 } from "@/components/buzzform/fields/radio";
+import {
+  NumberField,
+  NumberFieldSkeleton,
+} from "@/components/buzzform/fields/number";
 
 export interface FieldRendererComponentProps {
   field: Field;
@@ -97,6 +101,11 @@ export const defaultFieldRegistry: FieldRegistry = createFieldRegistry({
     kind: "data",
     renderer: RadioField as ComponentType<FieldRendererComponentProps>,
     skeleton: RadioFieldSkeleton as ComponentType<{ field: Field }>,
+  },
+  number: {
+    kind: "data",
+    renderer: NumberField as ComponentType<FieldRendererComponentProps>,
+    skeleton: NumberFieldSkeleton as ComponentType<{ field: Field }>,
   },
 });
 

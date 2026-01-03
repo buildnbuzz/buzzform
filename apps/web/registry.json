@@ -147,6 +147,27 @@
           "target": "components/buzzform/fields/radio.tsx"
         }
       ]
+    },
+    {
+      "name": "number",
+      "type": "registry:ui",
+      "title": "NumberField",
+      "description": "A number input field component for BuzzForm. Supports stepper variants (default, stacked, pill, plain), prefix/suffix, thousand separators, precision, and min/max constraints.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": [
+        "@buzzform/init",
+        "input",
+        "input-group",
+        "field",
+        "@buzzform/copy"
+      ],
+      "files": [
+        {
+          "path": "registry/base/fields/number.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/number.tsx"
+        }
+      ]
     }
   ]
 }
