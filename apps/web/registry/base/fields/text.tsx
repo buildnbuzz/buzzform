@@ -99,9 +99,9 @@ export function TextField({
       }
     >
       {label && (
-        <FieldLabel htmlFor={fieldId}>
+        <FieldLabel htmlFor={fieldId} className="gap-1 items-baseline">
           {label}
-          {field.required && <span className="text-destructive ml-1">*</span>}
+          {field.required && <span className="text-destructive">*</span>}
         </FieldLabel>
       )}
 

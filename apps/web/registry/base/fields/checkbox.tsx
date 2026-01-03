@@ -97,10 +97,10 @@ export function CheckboxField({
         {label && (
           <FieldLabel
             htmlFor={fieldId}
-            className="cursor-pointer m-0 font-normal"
+            className="cursor-pointer m-0 font-normal flex-none gap-1 items-baseline"
           >
+            {field.required && <span className="text-destructive">*</span>}
             {label}
-            {field.required && <span className="text-destructive ml-1">*</span>}
           </FieldLabel>
         )}
 
