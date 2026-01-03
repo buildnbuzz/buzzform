@@ -20,6 +20,10 @@ import {
   TextareaField,
   TextareaFieldSkeleton,
 } from "@/components/buzzform/fields/textarea";
+import {
+  CheckboxField,
+  CheckboxFieldSkeleton,
+} from "@/components/buzzform/fields/checkbox";
 
 export interface FieldRendererComponentProps {
   field: Field;
@@ -61,6 +65,11 @@ export const defaultFieldRegistry: FieldRegistry = createFieldRegistry({
     kind: "data",
     renderer: TextareaField as ComponentType<FieldRendererComponentProps>,
     skeleton: TextareaFieldSkeleton as ComponentType<{ field: Field }>,
+  },
+  checkbox: {
+    kind: "data",
+    renderer: CheckboxField as ComponentType<FieldRendererComponentProps>,
+    skeleton: CheckboxFieldSkeleton as ComponentType<{ field: Field }>,
   },
 });
 

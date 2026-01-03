@@ -76,6 +76,21 @@
           "target": "components/buzzform/fields/textarea.tsx"
         }
       ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:ui",
+      "title": "CheckboxField",
+      "description": "A checkbox field component for BuzzForm. Supports boolean values with horizontal label layout.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["@buzzform/init", "checkbox", "field"],
+      "files": [
+        {
+          "path": "registry/base/fields/checkbox.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/checkbox.tsx"
+        }
+      ]
     }
   ]
 }
