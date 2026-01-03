@@ -3,11 +3,8 @@
 import * as React from "react";
 import { ThemeProvider } from "./theme";
 import { RootProvider } from "fumadocs-ui/provider/next";
+import { BuzzFormProvider } from "./buzz-form";
 
-/**
- * Providers component that wraps all app-level context providers
- * Add new providers here as your app grows
- */
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider
@@ -21,7 +18,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           enabled: false,
         }}
       >
-        {children}
+        <BuzzFormProvider>{children}</BuzzFormProvider>
       </RootProvider>
     </ThemeProvider>
   );
