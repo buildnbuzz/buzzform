@@ -194,7 +194,7 @@
       "type": "registry:ui",
       "title": "DateField",
       "description": "A date and datetime field components for BuzzForm. Supports date and datetime selection, customizable formats (date-fns display), manual input parsing with inputFormat, and time picker options.",
-      "dependencies": ["@buildnbuzz/buzzform", "date-fns", "lucide-react"],
+      "dependencies": ["@buildnbuzz/buzzform", "date-fns"],
       "registryDependencies": [
         "@buzzform/init",
         "popover",

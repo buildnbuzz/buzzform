@@ -31,7 +31,7 @@ function scanIconUsage() {
         return acc
     }, {} as IconUsage)
 
-    const dirsToScan = [path.join(process.cwd(), "components/buzzform")]
+    const dirsToScan = [path.join(process.cwd(), "registry/base")]
 
     const files: string[] = []
     for (const dir of dirsToScan) {
@@ -107,7 +107,7 @@ function main() {
 const isWatchMode = process.argv.includes("--watch")
 
 if (isWatchMode) {
-    const DIRS_TO_WATCH = [path.join(process.cwd(), "components/buzzform")]
+    const DIRS_TO_WATCH = [path.join(process.cwd(), "registry/base")]
 
     async function startWatcher() {
         const { default: chokidar } = await import("chokidar")

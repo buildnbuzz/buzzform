@@ -22,8 +22,7 @@ import {
 } from "@/components/ui/field";
 import { CopyButton } from "@/components/buzzform/copy";
 import { cn } from "@/lib/utils";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Add01Icon, MinusSignIcon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 
 export interface NumberFieldProps {
   field: NumberFieldType;
@@ -292,9 +291,11 @@ export function NumberField({
                 className="flex-1 w-7 flex items-center justify-center border-b border-input text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:pointer-events-none disabled:opacity-50"
                 aria-label="Increment"
               >
-                <HugeiconsIcon
-                  icon={Add01Icon}
-                  strokeWidth={2}
+                <IconPlaceholder
+                  lucide="Plus"
+                  hugeicons="Add01Icon"
+                  tabler="IconPlus"
+                  phosphor="Plus"
                   className="size-3"
                 />
               </button>
@@ -305,9 +306,11 @@ export function NumberField({
                 className="flex-1 w-7 flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:pointer-events-none disabled:opacity-50"
                 aria-label="Decrement"
               >
-                <HugeiconsIcon
-                  icon={MinusSignIcon}
-                  strokeWidth={2}
+                <IconPlaceholder
+                  lucide="Minus"
+                  hugeicons="MinusSignIcon"
+                  tabler="IconMinus"
+                  phosphor="Minus"
                   className="size-3"
                 />
               </button>
@@ -330,9 +333,11 @@ export function NumberField({
               disabled={isDisabled || isReadOnly}
               aria-label="Decrement"
             >
-              <HugeiconsIcon
-                icon={MinusSignIcon}
-                strokeWidth={2}
+              <IconPlaceholder
+                lucide="Minus"
+                hugeicons="MinusSignIcon"
+                tabler="IconMinus"
+                phosphor="Minus"
                 className="size-4"
               />
             </InputGroupButton>
@@ -353,9 +358,11 @@ export function NumberField({
               disabled={isDisabled || isReadOnly}
               aria-label="Increment"
             >
-              <HugeiconsIcon
-                icon={Add01Icon}
-                strokeWidth={2}
+              <IconPlaceholder
+                lucide="Plus"
+                hugeicons="Add01Icon"
+                tabler="IconPlus"
+                phosphor="Plus"
                 className="size-4"
               />
             </InputGroupButton>
@@ -375,9 +382,11 @@ export function NumberField({
             disabled={isDisabled || isReadOnly}
             aria-label="Decrement"
           >
-            <HugeiconsIcon
-              icon={MinusSignIcon}
-              strokeWidth={2}
+            <IconPlaceholder
+              lucide="Minus"
+              hugeicons="MinusSignIcon"
+              tabler="IconMinus"
+              phosphor="Minus"
               className="size-3.5"
             />
           </InputGroupButton>
@@ -397,9 +406,11 @@ export function NumberField({
             disabled={isDisabled || isReadOnly}
             aria-label="Increment"
           >
-            <HugeiconsIcon
-              icon={Add01Icon}
-              strokeWidth={2}
+            <IconPlaceholder
+              lucide="Plus"
+              hugeicons="Add01Icon"
+              tabler="IconPlus"
+              phosphor="Plus"
               className="size-3.5"
             />
           </InputGroupButton>

@@ -17,14 +17,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ViewIcon,
-  ViewOffSlashIcon,
-  MagicWand01Icon,
-  Tick01Icon,
-  Cancel01Icon,
-} from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
   calculatePasswordStrength,
   generateStrongPassword,
@@ -233,7 +226,13 @@ export function PasswordField({
                   aria-label="Generate password"
                   title="Generate strong password"
                 >
-                  <HugeiconsIcon icon={MagicWand01Icon} className="size-3.5" />
+                  <IconPlaceholder
+                    lucide="Sparkles"
+                    hugeicons="MagicWand01Icon"
+                    tabler="IconWand"
+                    phosphor="MagicWand"
+                    className="size-3.5"
+                  />
                 </Button>
               )}
               {/* Show/hide button */}
@@ -245,10 +244,23 @@ export function PasswordField({
                 disabled={isDisabled}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                <HugeiconsIcon
-                  icon={showPassword ? ViewOffSlashIcon : ViewIcon}
-                  className="size-3.5"
-                />
+                {showPassword ? (
+                  <IconPlaceholder
+                    lucide="EyeOff"
+                    hugeicons="ViewOffSlashIcon"
+                    tabler="IconEyeOff"
+                    phosphor="EyeSlash"
+                    className="size-3.5"
+                  />
+                ) : (
+                  <IconPlaceholder
+                    lucide="Eye"
+                    hugeicons="ViewIcon"
+                    tabler="IconEye"
+                    phosphor="Eye"
+                    className="size-3.5"
+                  />
+                )}
               </Button>
             </div>
           </div>
@@ -305,13 +317,19 @@ export function PasswordField({
                 >
                   {value ? (
                     req.met ? (
-                      <HugeiconsIcon
-                        icon={Tick01Icon}
+                      <IconPlaceholder
+                        lucide="Check"
+                        hugeicons="Tick01Icon"
+                        tabler="IconCheck"
+                        phosphor="Check"
                         className="size-3 text-green-500"
                       />
                     ) : (
-                      <HugeiconsIcon
-                        icon={Cancel01Icon}
+                      <IconPlaceholder
+                        lucide="X"
+                        hugeicons="Cancel01Icon"
+                        tabler="IconX"
+                        phosphor="X"
                         className="size-3 text-muted-foreground"
                       />
                     )

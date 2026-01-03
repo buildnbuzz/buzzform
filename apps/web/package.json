@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "icons:dev": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts --watch",
+    "icons:build": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts",
     "registry:build": "npx shadcn build"
   },
   "dependencies": {
