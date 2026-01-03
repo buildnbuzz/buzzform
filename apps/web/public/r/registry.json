@@ -230,6 +230,21 @@
           "target": "components/buzzform/fields/select.tsx"
         }
       ]
+    },
+    {
+      "name": "upload",
+      "type": "registry:ui",
+      "title": "UploadField",
+      "description": "A file upload field component for BuzzForm. Supports single and multiple file uploads (hasMany), drag-and-drop, variants (dropzone, avatar, inline, gallery), progress indicators, and file previews with size validation.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["@buzzform/init", "button", "progress", "field"],
+      "files": [
+        {
+          "path": "registry/base/fields/upload.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/upload.tsx"
+        }
+      ]
     }
   ]
 }

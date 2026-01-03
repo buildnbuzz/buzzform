@@ -52,6 +52,10 @@ import {
   SelectField,
   SelectFieldSkeleton,
 } from "@/components/buzzform/fields/select";
+import {
+  UploadField,
+  UploadFieldSkeleton,
+} from "@/components/buzzform/fields/upload";
 
 export interface FieldRendererComponentProps {
   field: Field;
@@ -138,6 +142,11 @@ export const defaultFieldRegistry: FieldRegistry = createFieldRegistry({
     kind: "data",
     renderer: SelectField as ComponentType<FieldRendererComponentProps>,
     skeleton: SelectFieldSkeleton as ComponentType<{ field: Field }>,
+  },
+  upload: {
+    kind: "data",
+    renderer: UploadField as ComponentType<FieldRendererComponentProps>,
+    skeleton: UploadFieldSkeleton as ComponentType<{ field: Field }>,
   },
 });
 
