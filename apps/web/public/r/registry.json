@@ -245,6 +245,21 @@
           "target": "components/buzzform/fields/upload.tsx"
         }
       ]
+    },
+    {
+      "name": "row",
+      "type": "registry:ui",
+      "title": "RowField",
+      "description": "A horizontal layout field for BuzzForm. Organizes fields side-by-side with customizable gap, alignment (start, center, end, stretch), justify (start, center, end, between), wrapping, and responsive behavior (stacks on mobile by default).",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["@buzzform/init", "skeleton"],
+      "files": [
+        {
+          "path": "registry/base/fields/row.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/row.tsx"
+        }
+      ]
     }
   ]
 }
