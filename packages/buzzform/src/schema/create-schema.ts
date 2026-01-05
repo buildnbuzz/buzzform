@@ -9,17 +9,14 @@ import { fieldsToZodSchema } from './fields-to-schema';
 /**
  * Creates a Zod schema from an array of field definitions.
  *
- * Uses `<const T>` to preserve literal field names for type inference.
+ * Provides full intellisense when writing field definitions inline.
  * The returned schema has `.fields` attached for use in rendering.
  *
  * @example
  * const loginSchema = createSchema([
- *   { type: 'email', name: 'email', required: true },
+ *   { type: 'email', name: 'email', required: true },  // ← Full intellisense!
  *   { type: 'password', name: 'password', minLength: 8 },
  * ]);
- *
- * // TypeScript infers:
- * // loginSchema: ZodObject<{ email: ZodString; password: ZodString }> & { fields: [...] }
  *
  * type LoginData = z.infer<typeof loginSchema>;
  * // { email: string; password: string }
@@ -31,9 +28,9 @@ import { fieldsToZodSchema } from './fields-to-schema';
  * <FormRenderer fields={loginSchema.fields} />
  */
 export function createSchema<const T extends readonly Field[]>(
-    fields: T
+    fields: [...{ [K in keyof T]: T[K] extends Field ? T[K] : Field }]
 ): z.ZodObject<FieldsToShape<T>> & { fields: T } {
-    const schema = fieldsToZodSchema(fields);
+    const schema = fieldsToZodSchema(fields as T);
 
     // Attach fields to schema for rendering access
     return Object.assign(schema, { fields }) as z.ZodObject<FieldsToShape<T>> & { fields: T };

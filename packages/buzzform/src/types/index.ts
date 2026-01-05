@@ -38,10 +38,12 @@ export type {
 
     // Data fields
     TextField,
+    EmailField,
     PasswordField,
     TextareaField,
     NumberField,
     DateField,
+    DatetimeField,
     SelectOption,
     SelectField,
     CheckboxField,

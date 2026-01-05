@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { DateField } from '../../types';
+import type { DateField, DatetimeField } from '../../types';
 import { coerceToDate, makeOptional, applyCustomValidation } from '../helpers';
 
 /**
@@ -15,7 +15,7 @@ function toDate(value?: string | Date): Date | undefined {
 /**
  * Creates Zod schema for date and datetime fields.
  */
-export function createDateFieldSchema(field: DateField): z.ZodTypeAny {
+export function createDateFieldSchema(field: DateField | DatetimeField): z.ZodTypeAny {
     const isDatetime = field.type === 'datetime';
 
     // Parse min/max dates from field config

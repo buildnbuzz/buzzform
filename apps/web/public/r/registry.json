@@ -24,6 +24,20 @@
       ]
     },
     {
+      "name": "rhf-provider",
+      "type": "registry:ui",
+      "title": "BuzzFormProvider",
+      "description": "Pre-configured FormProvider component for BuzzForm with React Hook Form adapter and Zod resolver. Wrap your app with this provider to enable BuzzForm functionality.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "files": [
+        {
+          "path": "registry/base/rhf-provider.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/provider.tsx"
+        }
+      ]
+    },
+    {
       "name": "copy",
       "type": "registry:ui",
       "title": "CopyButton",
@@ -344,6 +358,33 @@
           "type": "registry:component",
           "target": "components/buzzform/fields/array.tsx"
         }
+      ]
+    },
+    {
+      "name": "starter",
+      "type": "registry:ui",
+      "title": "BuzzForm Starter",
+      "description": "One-command setup for BuzzForm. Installs all field components, core utilities, provider, and dependencies. Perfect for new projects or getting started.",
+      "registryDependencies": [
+        "@buzzform/init",
+        "@buzzform/rhf-provider",
+        "@buzzform/copy",
+        "@buzzform/text",
+        "@buzzform/textarea",
+        "@buzzform/checkbox",
+        "@buzzform/password",
+        "@buzzform/switch",
+        "@buzzform/radio",
+        "@buzzform/number",
+        "@buzzform/tags",
+        "@buzzform/date",
+        "@buzzform/select",
+        "@buzzform/upload",
+        "@buzzform/row",
+        "@buzzform/group",
+        "@buzzform/collapsible",
+        "@buzzform/tabs",
+        "@buzzform/array"
       ]
     }
   ]

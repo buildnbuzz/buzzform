@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { TextField, TextareaField, PasswordField } from '../../types';
+import type { TextField, EmailField, TextareaField, PasswordField } from '../../types';
 import { makeOptional, getPatternErrorMessage, applyCustomValidation } from '../helpers';
 
 /**
@@ -58,7 +58,7 @@ export function createTextFieldSchema(field: TextField | TextareaField): z.ZodTy
 /**
  * Creates Zod schema for email fields.
  */
-export function createEmailFieldSchema(field: TextField): z.ZodTypeAny {
+export function createEmailFieldSchema(field: EmailField): z.ZodTypeAny {
     let schema = z.string().email({ message: 'Invalid email address' });
 
     // Length constraints (rare for email but supported)

@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from "react";
 import type {
   DateField as DateFieldType,
+  DatetimeField as DatetimeFieldType,
   FormAdapter,
 } from "@buildnbuzz/buzzform";
 import { parseToDate, getFieldWidthStyle } from "@buildnbuzz/buzzform";
@@ -62,7 +63,7 @@ const DEFAULT_PRESETS = [
 ];
 
 export interface DateFieldProps {
-  field: DateFieldType;
+  field: DateFieldType | DatetimeFieldType;
   path: string;
   form: FormAdapter;
   autoFocus?: boolean;
@@ -90,8 +91,11 @@ export function DateField({
   const dateValue = parseToDate(value);
   const hasError = !!error;
 
-  const timePickerConfig = field.ui?.timePicker;
-  const hasTimePicker = Boolean(timePickerConfig) || field.type === "datetime";
+  const timePickerConfig =
+    field.type === "datetime"
+      ? (field as DatetimeFieldType).ui?.timePicker
+      : undefined;
+  const hasTimePicker = field.type === "datetime";
   const includeSeconds =
     typeof timePickerConfig === "object"
       ? timePickerConfig.includeSeconds === true
@@ -505,10 +509,18 @@ const InputSkeleton = ({ className = "" }: { className?: string }) => (
   </div>
 );
 
-export function DateFieldSkeleton({ field }: { field: DateFieldType }) {
+export function DateFieldSkeleton({
+  field,
+}: {
+  field: DateFieldType | DatetimeFieldType;
+}) {
   const label = field.label !== false ? (field.label ?? field.name) : null;
-  const timePickerConfig = field.ui?.timePicker;
-  const hasTimePicker = Boolean(timePickerConfig) || field.type === "datetime";
+  const timePickerConfig =
+    field.type === "datetime"
+      ? (field as DatetimeFieldType).ui?.timePicker
+      : undefined;
+  const hasTimePicker = field.type === "datetime";
+  void timePickerConfig;
 
   if (hasTimePicker) {
     return (

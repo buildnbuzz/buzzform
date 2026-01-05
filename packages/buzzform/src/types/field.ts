@@ -244,10 +244,30 @@ export interface BaseField<TValue = unknown, TData = Record<string, unknown>> {
 // =============================================================================
 
 /**
- * Text field (text, email)
+ * Text field
  */
 export interface TextField extends BaseField<string> {
-    type: 'text' | 'email';
+    type: 'text';
+    /** Minimum length */
+    minLength?: number;
+    /** Maximum length */
+    maxLength?: number;
+    /** Pattern to match (string or RegExp) */
+    pattern?: string | RegExp;
+    /** Trim whitespace */
+    trim?: boolean;
+    /** UI options */
+    ui?: {
+        /** Show copy button to copy value to clipboard */
+        copyable?: boolean;
+    };
+}
+
+/**
+ * Email field
+ */
+export interface EmailField extends BaseField<string> {
+    type: 'email';
     /** Minimum length */
     minLength?: number;
     /** Maximum length */
@@ -343,10 +363,10 @@ export interface NumberField extends BaseField<number> {
 }
 
 /**
- * Date/Datetime field
+ * Date field
  */
 export interface DateField extends BaseField<Date> {
-    type: 'date' | 'datetime';
+    type: 'date';
     /** Minimum date */
     minDate?: Date | string;
     /** Maximum date */
@@ -357,7 +377,30 @@ export interface DateField extends BaseField<Date> {
         format?: string;
         /** Manual input format */
         inputFormat?: string;
-        /** Time picker config (for datetime) */
+        /** Quick date presets */
+        presets?: boolean | Array<{
+            label: string;
+            value: Date | (() => Date);
+        }>;
+    };
+}
+
+/**
+ * Datetime field
+ */
+export interface DatetimeField extends BaseField<Date> {
+    type: 'datetime';
+    /** Minimum date */
+    minDate?: Date | string;
+    /** Maximum date */
+    maxDate?: Date | string;
+    /** UI options */
+    ui?: {
+        /** Display format (date-fns format) */
+        format?: string;
+        /** Manual input format */
+        inputFormat?: string;
+        /** Time picker config */
         timePicker?: boolean | {
             interval?: number;
             use24hr?: boolean;
@@ -681,10 +724,12 @@ export interface CollapsibleField {
  */
 export type Field =
     | TextField
+    | EmailField
     | PasswordField
     | TextareaField
     | NumberField
     | DateField
+    | DatetimeField
     | SelectField
     | CheckboxField
     | SwitchField
@@ -707,10 +752,12 @@ export type FieldType = Field['type'];
  */
 export type DataField =
     | TextField
+    | EmailField
     | PasswordField
     | TextareaField
     | NumberField
     | DateField
+    | DatetimeField
     | SelectField
     | CheckboxField
     | SwitchField

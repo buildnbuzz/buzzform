@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "starter",
+  "title": "BuzzForm Starter",
+  "description": "One-command setup for BuzzForm. Installs all field components, core utilities, provider, and dependencies. Perfect for new projects or getting started.",
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/copy",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "@buzzform/checkbox",
+    "@buzzform/password",
+    "@buzzform/switch",
+    "@buzzform/radio",
+    "@buzzform/number",
+    "@buzzform/tags",
+    "@buzzform/date",
+    "@buzzform/select",
+    "@buzzform/upload",
+    "@buzzform/row",
+    "@buzzform/group",
+    "@buzzform/collapsible",
+    "@buzzform/tabs",
+    "@buzzform/array"
+  ],
+  "type": "registry:ui"
+}

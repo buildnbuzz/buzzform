@@ -3,10 +3,12 @@ import type {
     Field,
     TabsField,
     TextField,
+    EmailField,
     PasswordField,
     TextareaField,
     NumberField,
     DateField,
+    DatetimeField,
     SelectField,
     RadioField,
     CheckboxField,
@@ -51,7 +53,7 @@ function fieldToZod(field: Field): z.ZodTypeAny {
         case 'text':
             return createTextFieldSchema(field as TextField);
         case 'email':
-            return createEmailFieldSchema(field as TextField);
+            return createEmailFieldSchema(field as EmailField);
         case 'password':
             return createPasswordFieldSchema(field as PasswordField);
         case 'textarea':
@@ -64,7 +66,7 @@ function fieldToZod(field: Field): z.ZodTypeAny {
         // Date
         case 'date':
         case 'datetime':
-            return createDateFieldSchema(field as DateField);
+            return createDateFieldSchema(field as DateField | DatetimeField);
 
         // Selection
         case 'select':

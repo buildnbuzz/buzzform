@@ -3,6 +3,7 @@
 import React from "react";
 import type {
   TextField as TextFieldType,
+  EmailField as EmailFieldType,
   FormAdapter,
 } from "@buildnbuzz/buzzform";
 import { getFieldWidthStyle } from "@buildnbuzz/buzzform";
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/field";
 
 export interface TextFieldProps {
-  field: TextFieldType;
+  field: TextFieldType | EmailFieldType;
   path: string;
   form: FormAdapter;
   autoFocus?: boolean;
@@ -129,7 +130,11 @@ export function TextField({
   );
 }
 
-export function TextFieldSkeleton({ field }: { field: TextFieldType }) {
+export function TextFieldSkeleton({
+  field,
+}: {
+  field: TextFieldType | EmailFieldType;
+}) {
   const label = field.label !== false ? (field.label ?? field.name) : null;
 
   return (
