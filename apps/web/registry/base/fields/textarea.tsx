@@ -74,7 +74,7 @@ export function TextareaField({
   };
 
   const handleBlur = () => {
-    form.onBlur(path);
+    form.onBlur?.(path);
   };
 
   // Character count for maxLength

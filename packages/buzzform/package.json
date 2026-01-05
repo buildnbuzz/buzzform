@@ -15,7 +15,6 @@
     "shadcn",
     "nextjs",
     "react-hook-form",
-    "tanstack-form",
     "zod"
   ],
   "main": "dist/index.js",
@@ -52,16 +51,6 @@
         "default": "./dist/rhf.js"
       }
     },
-    "./tanstack": {
-      "import": {
-        "types": "./dist/tanstack.d.mts",
-        "default": "./dist/tanstack.mjs"
-      },
-      "require": {
-        "types": "./dist/tanstack.d.ts",
-        "default": "./dist/tanstack.js"
-      }
-    },
     "./zod": {
       "import": {
         "types": "./dist/zod.d.mts",
@@ -89,7 +78,6 @@
     "nanoid": "^5.0.9"
   },
   "peerDependencies": {
-    "@tanstack/react-form": "^0.40.0",
     "react": "^18 || ^19",
     "react-hook-form": "^7.0.0",
     "zod": "^3.0.0"
@@ -100,14 +88,10 @@
     },
     "react-hook-form": {
       "optional": true
-    },
-    "@tanstack/react-form": {
-      "optional": true
     }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
-    "@tanstack/react-form": "^0.40.0",
     "@types/node": "^22.15.3",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",

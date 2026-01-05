@@ -19,7 +19,7 @@ import type {
     SetValueOptions,
 } from '../types';
 import { createArrayHelpers } from '../utils';
-import { getNestedValue } from '../lib';
+import { getNestedValue, flattenNestedObject } from '../lib';
 
 // =============================================================================
 // RHF ADAPTER OPTIONS
@@ -40,7 +40,9 @@ export interface RhfAdapterOptions<TData extends FieldValues = FieldValues>
 
     /**
      * Validation strategy before submit.
-     * @default false (validate on first submit, then on every change)
+     * - 'firstError': Return first error only (faster)
+     * - 'all': Return all errors (better UX for complex forms)
+     * @default 'firstError'
      */
     criteriaMode?: 'firstError' | 'all';
 
@@ -49,6 +51,12 @@ export interface RhfAdapterOptions<TData extends FieldValues = FieldValues>
      * Useful for expensive async validation.
      */
     delayError?: number;
+
+    /**
+     * Focus on the first field with an error after submit.
+     * @default true
+     */
+    shouldFocusError?: boolean;
 }
 
 // =============================================================================
@@ -58,7 +66,19 @@ export interface RhfAdapterOptions<TData extends FieldValues = FieldValues>
 /**
  * React Hook Form adapter implementing the FormAdapter interface.
  * 
+ * This is the default adapter for BuzzForm. It provides full implementation
+ * of all required and optional FormAdapter methods using React Hook Form.
+ * 
  * @example
+ * // In FormProvider
+ * import { useRhf } from '@buildnbuzz/buzzform/rhf';
+ * 
+ * <FormProvider adapter={useRhf}>
+ *   <App />
+ * </FormProvider>
+ * 
+ * @example
+ * // Direct usage
  * const form = useRhf({
  *   defaultValues: { email: '', password: '' },
  *   resolver: zodResolver(schema),
@@ -66,13 +86,6 @@ export interface RhfAdapterOptions<TData extends FieldValues = FieldValues>
  *     await loginUser(data);
  *   },
  * });
- * 
- * return (
- *   <form onSubmit={form.handleSubmit}>
- *     <input {...register('email')} />
- *     <button disabled={form.formState.isSubmitting}>Submit</button>
- *   </form>
- * );
  */
 export function useRhf<TData extends FieldValues = FieldValues>(
     options: RhfAdapterOptions<TData>
@@ -85,6 +98,7 @@ export function useRhf<TData extends FieldValues = FieldValues>(
         reValidateMode = 'onChange',
         criteriaMode,
         delayError,
+        shouldFocusError = true,
         onSubmit,
     } = options;
 
@@ -95,14 +109,12 @@ export function useRhf<TData extends FieldValues = FieldValues>(
     const form = useForm<TData>({
         defaultValues: defaultValues as DefaultValues<TData>,
         values: values,
-        // We cast resolver because strict RHF types expect nested errors, but
-        // our resolvers might return flat errors (which worked in practice).
-        // This cast bridges the type gap.
         resolver: resolver as unknown as RhfResolver<TData>,
         mode,
         reValidateMode,
         criteriaMode,
         delayError,
+        shouldFocusError,
     });
 
     // -------------------------------------------------------------------------
@@ -113,16 +125,9 @@ export function useRhf<TData extends FieldValues = FieldValues>(
 
     useEffect(() => {
         if (values && JSON.stringify(values) !== JSON.stringify(prevValuesRef.current)) {
-            // RHF handles this via the `values` prop, but we track for reference
             prevValuesRef.current = values;
         }
     }, [values]);
-
-    // -------------------------------------------------------------------------
-    // Create stable API reference for submit handler
-    // -------------------------------------------------------------------------
-
-    const apiRef = useRef<FormAdapter<TData> | null>(null);
 
     // -------------------------------------------------------------------------
     // Build submit handler
@@ -139,10 +144,12 @@ export function useRhf<TData extends FieldValues = FieldValues>(
     // -------------------------------------------------------------------------
 
     const api: FormAdapter<TData> = {
-        // The underlying RHF control for field components
+        // ---------------------------------------------------------------------
+        // CORE PROPERTIES
+        // ---------------------------------------------------------------------
+
         control: form.control,
 
-        // Reactive form state via getter
         get formState(): FormState {
             const state = form.formState;
             return {
@@ -152,39 +159,23 @@ export function useRhf<TData extends FieldValues = FieldValues>(
                 isValid: state.isValid,
                 isLoading: state.isLoading,
                 errors: normalizeErrors(state.errors),
-                dirtyFields: flattenObject(state.dirtyFields) as Record<string, boolean>,
-                touchedFields: flattenObject(state.touchedFields) as Record<string, boolean>,
+                dirtyFields: flattenNestedObject(state.dirtyFields),
+                touchedFields: flattenNestedObject(state.touchedFields),
                 submitCount: state.submitCount,
             };
         },
 
         handleSubmit,
 
-        // --- Value Management ---
+        // ---------------------------------------------------------------------
+        // VALUE MANAGEMENT
+        // ---------------------------------------------------------------------
 
         getValues: () => form.getValues(),
 
         setValue: (name: string, value: unknown, opts?: SetValueOptions) => {
-            let shouldValidate = opts?.shouldValidate;
-
-            if (shouldValidate === undefined) {
-                const hasError = !!getNestedValue(form.formState.errors, name);
-
-                if (mode === 'onChange') {
-                    shouldValidate = true;
-                } else if (mode === 'onBlur') {
-                    if (hasError && reValidateMode === 'onChange') {
-                        shouldValidate = true;
-                    }
-                } else if (mode === 'onSubmit') {
-                    if (hasError && reValidateMode === 'onChange') {
-                        shouldValidate = true;
-                    }
-                }
-            }
-
             form.setValue(name as Path<TData>, value as PathValue<TData, Path<TData>>, {
-                shouldValidate,
+                shouldValidate: opts?.shouldValidate,
                 shouldDirty: opts?.shouldDirty ?? true,
                 shouldTouch: opts?.shouldTouch,
             });
@@ -193,28 +184,12 @@ export function useRhf<TData extends FieldValues = FieldValues>(
         reset: (vals) => form.reset(vals as DefaultValues<TData>),
 
         watch: <T = unknown>(name?: string): T => {
-            // Note: This creates a subscription. For non-reactive reads, use getValues
             return form.watch(name as Path<TData>) as T;
         },
 
-        onBlur: (name: string) => {
-            let shouldValidate = false;
-            const hasError = !!getNestedValue(form.formState.errors, name);
-
-            if (mode === 'onBlur') {
-                shouldValidate = true;
-            } else if (mode === 'onSubmit') {
-                if (hasError && reValidateMode === 'onBlur') {
-                    shouldValidate = true;
-                }
-            }
-
-            if (shouldValidate) {
-                form.trigger(name as Path<TData>);
-            }
-        },
-
-        // --- Validation ---
+        // ---------------------------------------------------------------------
+        // VALIDATION
+        // ---------------------------------------------------------------------
 
         validate: async (name) => {
             if (name) {
@@ -240,16 +215,55 @@ export function useRhf<TData extends FieldValues = FieldValues>(
             }
         },
 
-        // --- Arrays ---
+        // ---------------------------------------------------------------------
+        // ARRAYS
+        // ---------------------------------------------------------------------
 
         array: createArrayHelpers(
             (path) => form.getValues(path as Path<TData>) as unknown[],
-            (path, value) => form.setValue(path as Path<TData>, value as PathValue<TData, Path<TData>>, { shouldDirty: true })
+            (path, value) => form.setValue(
+                path as Path<TData>,
+                value as PathValue<TData, Path<TData>>,
+                { shouldDirty: true }
+            )
         ),
-    };
 
-    // Store reference for potential use in submit handler
-    apiRef.current = api;
+        // ---------------------------------------------------------------------
+        // OPTIONAL ENHANCED FEATURES
+        // ---------------------------------------------------------------------
+
+        onBlur: (name: string) => {
+            // Mark field as touched
+            const hasError = !!getNestedValue(form.formState.errors, name);
+
+            // Trigger validation based on mode
+            if (mode === 'onBlur' || mode === 'all') {
+                form.trigger(name as Path<TData>);
+            } else if (hasError && reValidateMode === 'onBlur') {
+                // Re-validate if field has error and reValidateMode is onBlur
+                form.trigger(name as Path<TData>);
+            }
+        },
+
+        getFieldState: (name: string) => {
+            const state = form.getFieldState(name as Path<TData>, form.formState);
+            return {
+                isDirty: state.isDirty,
+                isTouched: state.isTouched,
+                invalid: state.invalid,
+                error: state.error?.message,
+            };
+        },
+
+        setFocus: (name: string, options?: { shouldSelect?: boolean }) => {
+            form.setFocus(name as Path<TData>, options);
+        },
+
+        unregister: (name: string | string[]) => {
+            const names = Array.isArray(name) ? name : [name];
+            names.forEach(n => form.unregister(n as Path<TData>));
+        },
+    };
 
     return api;
 }
@@ -262,7 +276,7 @@ export function useRhf<TData extends FieldValues = FieldValues>(
  * Hook to watch specific field values reactively.
  * Use this when you need to react to field changes outside of components.
  * 
- * @param control - The control object from useRhf
+ * @param control - The control object from useRhf (form.control)
  * @param name - Field path(s) to watch
  */
 export function useRhfWatch<TData extends FieldValues, TValue = unknown>(
@@ -315,25 +329,7 @@ function normalizeErrors<TData extends FieldValues>(
     return result;
 }
 
-/**
- * Flatten nested objects to dot-notation paths.
- */
-function flattenObject(obj: Record<string, unknown>, prefix = ''): Record<string, boolean> {
-    const result: Record<string, boolean> = {};
 
-    for (const key in obj) {
-        const path = prefix ? `${prefix}.${key}` : key;
-        const value = obj[key];
-
-        if (typeof value === 'boolean') {
-            result[path] = value;
-        } else if (isRecord(value)) {
-            Object.assign(result, flattenObject(value, path));
-        }
-    }
-
-    return result;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;

@@ -60,7 +60,7 @@ export function TextField({
         });
       }
     }
-    form.onBlur(path);
+    form.onBlur?.(path);
   };
 
   // Convert pattern to string if it's a RegExp

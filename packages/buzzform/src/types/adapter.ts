@@ -8,6 +8,9 @@ import type { FormSettings } from './form';
 /**
  * Represents the current reactive state of a form.
  * Adapters must ensure this triggers re-renders when values change.
+ * 
+ * This is the MINIMUM state required for BuzzForm to work.
+ * Custom adapters must provide all these properties.
  */
 export interface FormState {
     /** True while the form is being submitted */
@@ -29,6 +32,8 @@ export interface FormState {
      * Field-level errors.
      * Key is the field path (e.g., "email", "address.city", "items.0.name")
      * Value is the error message(s)
+     * 
+     * NOTE: Path format uses dot notation. Array indices use numbers (items.0.name).
      */
     errors: Record<string, string | string[] | undefined>;
 
@@ -50,7 +55,7 @@ export interface FormState {
  * Options when programmatically setting a field value.
  */
 export interface SetValueOptions {
-    /** Run validation after setting the value (default: false) */
+    /** Run validation after setting the value (default: adapter-specific) */
     shouldValidate?: boolean;
 
     /** Mark the field as dirty (default: true) */
@@ -109,12 +114,15 @@ export type Resolver<TData> = (
 /**
  * Helper methods for manipulating array fields.
  * All methods operate on a field path (e.g., "items", "users.0.tags").
+ * 
+ * This is REQUIRED for ArrayField to work. If your custom adapter doesn't
+ * support arrays, you can implement these as no-ops or throw errors.
  */
 export interface ArrayHelpers {
     /**
      * Get array items with stable IDs for React keys.
      * @param path - Field path to the array
-     * @returns Array of items, each with an `id` property
+     * @returns Array of items, each with an `id` property for React keys
      */
     fields: <T = unknown>(path: string) => Array<T & { id: string }>;
 
@@ -140,6 +148,7 @@ export interface ArrayHelpers {
 
     /**
      * Move an item from one index to another.
+     * Used for drag-and-drop reordering.
      */
     move: (path: string, from: number, to: number) => void;
 
@@ -164,8 +173,8 @@ export interface ArrayHelpers {
 // =============================================================================
 
 /**
- * Options passed to an adapter when creating a form instance.
- * These are the inputs an adapter needs to set up form state management.
+ * Base options passed to any adapter when creating a form instance.
+ * Adapters can extend this with library-specific options.
  * 
  * @typeParam TData - The shape of form data
  */
@@ -193,15 +202,18 @@ export interface AdapterOptions<TData = Record<string, unknown>> {
 
     /**
      * When to run validation.
-     * - 'onChange': Validate on every value change (default)
+     * - 'onChange': Validate on every value change
      * - 'onBlur': Validate when fields lose focus
      * - 'onSubmit': Validate only on submit
      * - 'all': Validate on all events
+     * 
+     * NOTE: Not all adapters support all modes. Check adapter documentation.
      */
     mode?: 'onChange' | 'onBlur' | 'onSubmit' | 'all';
 
     /**
      * When to re-validate after initial error.
+     * NOTE: This is optional. Some form libraries don't have this concept.
      */
     reValidateMode?: 'onChange' | 'onBlur' | 'onSubmit';
 
@@ -218,37 +230,67 @@ export interface AdapterOptions<TData = Record<string, unknown>> {
 /**
  * The contract any form adapter must fulfill.
  * 
- * Implement this interface to integrate any form library (RHF, TanStack, Formik, custom).
- * The adapter handles form state management; UI rendering is handled separately.
+ * ## Required vs Optional
  * 
- * @typeParam TData - The shape of form data
+ * **Required methods** are the building blocks that BuzzForm needs to function.
+ * If any are missing, forms will break.
+ * 
+ * **Optional methods** (marked with `?`) provide enhanced functionality but
+ * are not required. BuzzForm will gracefully degrade without them.
+ * 
+ * ## Creating a Custom Adapter
+ * 
+ * To create a custom adapter (e.g., for useActionState, Formik, or vanilla React):
+ * 
+ * 1. Implement all required properties and methods
+ * 2. Optionally implement enhanced features
+ * 3. Return the adapter from a hook (factory function)
  * 
  * @example
- * // Creating a custom adapter
+ * // Minimal custom adapter skeleton
  * function useMyAdapter<T>(options: AdapterOptions<T>): FormAdapter<T> {
- *   // Set up your form library...
+ *   const [values, setValues] = useState(options.defaultValues ?? {});
+ *   const [errors, setErrors] = useState({});
+ *   const [isSubmitting, setIsSubmitting] = useState(false);
+ *   
  *   return {
- *     control: myFormInstance,
- *     get formState() { return mapToFormState(myFormInstance) },
- *     handleSubmit: (e) => { ... },
- *     // ... implement all methods
+ *     control: null, // Your state/context
+ *     get formState() { return { ... } },
+ *     handleSubmit: async (e) => { ... },
+ *     getValues: () => values,
+ *     setValue: (name, value) => { ... },
+ *     reset: (vals) => setValues(vals ?? {}),
+ *     watch: (name) => name ? values[name] : values,
+ *     validate: async () => true,
+ *     setError: (name, error) => { ... },
+ *     clearErrors: () => setErrors({}),
+ *     array: createArrayHelpers(...),
  *   };
  * }
+ * 
+ * @typeParam TData - The shape of form data
  */
 export interface FormAdapter<TData = Record<string, unknown>> {
+    // =========================================================================
+    // CORE PROPERTIES (Required)
+    // =========================================================================
+
     /**
      * Form-level behavior settings.
-     * Accessible by renderers to determine behavior like autoFocus.
+     * Set by useForm after applying FormSettings.
      */
     settings?: FormSettings;
 
     /**
      * The underlying form library's control/instance.
-     * Used by field components to connect to form state.
      * 
-     * - React Hook Form: `Control<TData>`
-     * - TanStack Form: `FormApi<TData>`
-     * - Custom: Whatever your fields need
+     * This is passed to field components that need direct access to the form
+     * library (e.g., for React Hook Form's Controller).
+     * 
+     * For custom adapters, this can be:
+     * - Your state object
+     * - A context value
+     * - null (if not needed)
      */
     control: unknown;
 
@@ -259,8 +301,15 @@ export interface FormAdapter<TData = Record<string, unknown>> {
      * @example
      * get formState() {
      *   return {
-     *     isSubmitting: form.formState.isSubmitting,
-     *     // ...
+     *     isSubmitting: this._isSubmitting,
+     *     isValidating: false,
+     *     isDirty: Object.keys(this._touched).length > 0,
+     *     isValid: Object.keys(this._errors).length === 0,
+     *     isLoading: false,
+     *     errors: this._errors,
+     *     dirtyFields: this._dirty,
+     *     touchedFields: this._touched,
+     *     submitCount: this._submitCount,
      *   };
      * }
      */
@@ -275,9 +324,9 @@ export interface FormAdapter<TData = Record<string, unknown>> {
      */
     handleSubmit: (e?: FormEvent) => Promise<void> | void;
 
-    // -------------------------------------------------------------------------
-    // Value Management
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // VALUE MANAGEMENT (Required)
+    // =========================================================================
 
     /**
      * Get all current form values.
@@ -287,7 +336,7 @@ export interface FormAdapter<TData = Record<string, unknown>> {
     /**
      * Set a single field's value.
      * 
-     * @param name - Field path (e.g., "email", "address.city")
+     * @param name - Field path (e.g., "email", "address.city", "items.0.name")
      * @param value - New value
      * @param options - Additional options
      */
@@ -313,17 +362,9 @@ export interface FormAdapter<TData = Record<string, unknown>> {
      */
     watch: <T = unknown>(name?: string) => T;
 
-    /**
-     * Handle field blur event.
-     * Triggers validation if mode is 'onBlur'.
-     * 
-     * @param name - Field path
-     */
-    onBlur: (name: string) => void;
-
-    // -------------------------------------------------------------------------
-    // Validation
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // VALIDATION (Required)
+    // =========================================================================
 
     /**
      * Manually trigger validation.
@@ -349,14 +390,62 @@ export interface FormAdapter<TData = Record<string, unknown>> {
      */
     clearErrors: (name?: string | string[]) => void;
 
-    // -------------------------------------------------------------------------
-    // Arrays
-    // -------------------------------------------------------------------------
+    // =========================================================================
+    // ARRAYS (Required for ArrayField)
+    // =========================================================================
 
     /**
      * Helpers for manipulating array fields.
+     * Required if you use ArrayField component.
      */
     array: ArrayHelpers;
+
+    // =========================================================================
+    // OPTIONAL ENHANCED FEATURES
+    // These provide better UX but are not required for basic functionality.
+    // =========================================================================
+
+    /**
+     * Handle field blur event.
+     * Triggers validation if mode is 'onBlur'.
+     * 
+     * If not provided, BuzzForm will not trigger blur-based validation.
+     * 
+     * @param name - Field path
+     */
+    onBlur?: (name: string) => void;
+
+    /**
+     * Get the state of a specific field.
+     * More efficient than accessing the entire formState for single fields.
+     * 
+     * @param name - Field path
+     */
+    getFieldState?: (name: string) => {
+        isDirty: boolean;
+        isTouched: boolean;
+        invalid: boolean;
+        error?: string;
+    };
+
+    /**
+     * Programmatically focus a field.
+     * Useful for accessibility and after adding array items.
+     * 
+     * @param name - Field path
+     * @param options - Focus options
+     */
+    setFocus?: (name: string, options?: { shouldSelect?: boolean }) => void;
+
+    /**
+     * Unregister a field from the form.
+     * Called when conditional fields are hidden.
+     * 
+     * If not provided, hidden fields will retain their values.
+     * 
+     * @param name - Field path(s) to unregister
+     */
+    unregister?: (name: string | string[]) => void;
 }
 
 // =============================================================================
@@ -367,11 +456,66 @@ export interface FormAdapter<TData = Record<string, unknown>> {
  * Type for an adapter factory function (hook).
  * 
  * @example
- * const useRhfAdapter: AdapterFactory = (options) => {
- *   const form = useForm(options);
- *   return { ... };
- * };
+ * // Using the adapter
+ * function MyApp() {
+ *   return (
+ *     <FormProvider adapter={useRhfAdapter}>
+ *       <MyForm />
+ *     </FormProvider>
+ *   );
+ * }
  */
 export type AdapterFactory<TData = Record<string, unknown>> = (
     options: AdapterOptions<TData>
 ) => FormAdapter<TData>;
+
+// =============================================================================
+// VALIDATION HELPERS FOR CUSTOM ADAPTERS
+// =============================================================================
+
+/**
+ * Validates that a FormAdapter has all required methods.
+ * Call this in development to catch missing implementations early.
+ * 
+ * @param adapter - The adapter to validate
+ * @param adapterName - Name for error messages
+ * @throws Error if required methods are missing
+ */
+export function validateAdapter(adapter: FormAdapter, adapterName = 'adapter'): void {
+    const required = [
+        'control',
+        'formState',
+        'handleSubmit',
+        'getValues',
+        'setValue',
+        'reset',
+        'watch',
+        'validate',
+        'setError',
+        'clearErrors',
+        'array',
+    ] as const;
+
+    for (const key of required) {
+        if (adapter[key] === undefined) {
+            throw new Error(
+                `Invalid FormAdapter: "${adapterName}" is missing required property "${key}". ` +
+                `See FormAdapter interface for implementation requirements.`
+            );
+        }
+    }
+
+    // Validate array helpers
+    const arrayMethods = [
+        'fields', 'append', 'prepend', 'insert',
+        'remove', 'move', 'swap', 'replace', 'update'
+    ] as const;
+
+    for (const method of arrayMethods) {
+        if (typeof adapter.array[method] !== 'function') {
+            throw new Error(
+                `Invalid FormAdapter: "${adapterName}.array.${method}" must be a function.`
+            );
+        }
+    }
+}

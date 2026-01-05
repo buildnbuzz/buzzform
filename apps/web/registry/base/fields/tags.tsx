@@ -181,7 +181,7 @@ export function TagsField({
         setInputValue("");
       }
     }
-    form.onBlur(path);
+    form.onBlur?.(path);
   }, [inputValue, addTag, form, path]);
 
   const handleContainerClick = useCallback(() => {

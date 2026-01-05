@@ -73,7 +73,7 @@ export function PasswordField({
   };
 
   const handleBlur = () => {
-    form.onBlur(path);
+    form.onBlur?.(path);
   };
 
   const togglePasswordVisibility = () => {

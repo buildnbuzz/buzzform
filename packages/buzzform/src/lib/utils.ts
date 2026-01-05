@@ -85,3 +85,36 @@ export function formatBytes(bytes: number, decimals = 2): string {
 
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
+
+/**
+ * Flatten a nested object to dot-notation paths.
+ * Useful for converting form library state (like dirtyFields, touchedFields)
+ * to the flat format expected by FormState.
+ * 
+ * @example
+ * flattenNestedObject({ user: { name: true, email: true } })
+ * // => { 'user.name': true, 'user.email': true }
+ * 
+ * flattenNestedObject({ items: { 0: { title: true } } })
+ * // => { 'items.0.title': true }
+ */
+export function flattenNestedObject(
+    obj: Record<string, unknown>,
+    prefix = ''
+): Record<string, boolean> {
+    const result: Record<string, boolean> = {};
+
+    for (const key in obj) {
+        const path = prefix ? `${prefix}.${key}` : key;
+        const value = obj[key];
+
+        if (typeof value === 'boolean') {
+            result[path] = value;
+        } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            Object.assign(result, flattenNestedObject(value as Record<string, unknown>, path));
+        }
+    }
+
+    return result;
+}
+

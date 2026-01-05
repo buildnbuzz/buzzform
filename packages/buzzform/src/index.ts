@@ -17,6 +17,9 @@ export type {
     AdapterFactory,
 } from './types';
 
+// Adapter validation helper (for custom adapter authors)
+export { validateAdapter } from './types';
+
 // =============================================================================
 // TYPES - Field Definitions
 // =============================================================================

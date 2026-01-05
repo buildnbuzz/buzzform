@@ -2,6 +2,7 @@ export {
     generateFieldId,
     getNestedValue,
     setNestedValue,
+    flattenNestedObject,
     formatBytes,
 } from './utils';
 
