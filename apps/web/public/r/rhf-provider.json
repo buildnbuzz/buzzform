@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "rhf-provider",
+  "title": "BuzzFormProvider",
+  "description": "Pre-configured FormProvider component for BuzzForm with React Hook Form adapter and Zod resolver. Wrap your app with this provider to enable BuzzForm functionality.",
+  "dependencies": [
+    "@buildnbuzz/buzzform"
+  ],
+  "files": [
+    {
+      "path": "registry/base/rhf-provider.tsx",
+      "content": "\"use client\";\r\n\r\nimport { FormProvider } from \"@buildnbuzz/buzzform\";\r\nimport { useRhf } from \"@buildnbuzz/buzzform/rhf\";\r\nimport { zodResolver } from \"@buildnbuzz/buzzform/zod\";\r\n\r\nexport const BuzzFormProvider = ({\r\n  children,\r\n}: {\r\n  children: React.ReactNode;\r\n}) => {\r\n  return (\r\n    <FormProvider adapter={useRhf} resolver={zodResolver} mode=\"onBlur\">\r\n      {children}\r\n    </FormProvider>\r\n  );\r\n};\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/provider.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

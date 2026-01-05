@@ -24,6 +24,20 @@
       ]
     },
     {
+      "name": "rhf-provider",
+      "type": "registry:ui",
+      "title": "BuzzFormProvider",
+      "description": "Pre-configured FormProvider component for BuzzForm with React Hook Form adapter and Zod resolver. Wrap your app with this provider to enable BuzzForm functionality.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "files": [
+        {
+          "path": "registry/base/rhf-provider.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/provider.tsx"
+        }
+      ]
+    },
+    {
       "name": "copy",
       "type": "registry:ui",
       "title": "CopyButton",
