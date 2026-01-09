@@ -41,7 +41,7 @@ export function ExampleViewer({ example, code }: ExampleViewerProps) {
         <CodeDialog code={code} exampleName={example.name} />
       </div>
       <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm bg-background/50 backdrop-blur-[2px] p-4 md:p-8 lg:p-12 min-h-100 md:min-h-125">
-        <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center [&>div]:w-full">
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center [&>div]:w-full">
           <Component />
         </div>
       </div>
@@ -74,7 +74,7 @@ function CodeDialog({ code, exampleName }: CodeDialogProps) {
           <DialogTitle>Component Code</DialogTitle>
           <DialogDescription>Source code for {exampleName}</DialogDescription>
         </DialogHeader>
-        <div className="bg-zinc-950">
+        <div className="bg-muted">
           {code ? (
             <div className="text-sm p-4">
               <DynamicCodeBlock lang="tsx" code={code} />

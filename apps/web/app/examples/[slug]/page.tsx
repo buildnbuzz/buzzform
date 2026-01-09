@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getExampleBySlug,
-  getExampleCode,
-  generateExampleStaticParams,
-} from "@/lib/examples";
+import { getExampleBySlug, generateExampleStaticParams } from "@/lib/examples";
+import { getExampleCode } from "@/lib/examples.server";
 import { ExampleViewer } from "@/components/example-viewer";
 
 interface ExamplePageProps {
