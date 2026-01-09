@@ -100,7 +100,6 @@ interface ArrayRowProps {
 
 /**
  * Hook to count errors in nested fields for a row.
- * Memoizes the expensive path calculation.
  */
 const useNestedErrors = (
   form: FormAdapter,
@@ -108,10 +107,7 @@ const useNestedErrors = (
   basePath: string
 ): number => {
   const errors = form.formState.errors;
-  const nestedPaths = React.useMemo(
-    () => getNestedFieldPaths(fields, basePath),
-    [fields, basePath]
-  );
+  const nestedPaths = getNestedFieldPaths(fields, basePath);
   return nestedPaths.filter((p) => errors[p]).length;
 };
 
@@ -184,29 +180,23 @@ const ArrayRow = React.memo(
 
     const errorCount = useNestedErrors(form, field.fields, rowPath);
 
-    const handleRemoveClick = React.useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (canRemove && !isDisabled && !isReadOnly) {
-          onRemove(index);
-        }
-      },
-      [canRemove, isDisabled, isReadOnly, onRemove, index]
-    );
+    const handleRemoveClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (canRemove && !isDisabled && !isReadOnly) {
+        onRemove(index);
+      }
+    };
 
-    const handleDuplicateClick = React.useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (!isDisabled && !isReadOnly) {
-          onDuplicate(index);
-        }
-      },
-      [isDisabled, isReadOnly, onDuplicate, index]
-    );
+    const handleDuplicateClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (!isDisabled && !isReadOnly) {
+        onDuplicate(index);
+      }
+    };
 
-    const handleToggleClick = React.useCallback(() => {
+    const handleToggleClick = () => {
       onToggle(index);
-    }, [onToggle, index]);
+    };
 
     // Focus first focusable element when row is new and open
     React.useEffect(() => {
@@ -504,129 +494,108 @@ export const ArrayField = React.forwardRef<
       })
     );
 
-    const handleDragEnd = React.useCallback(
-      (event: DragEndEvent) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-          const oldIndex = rows.findIndex((r) => r.id === active.id);
-          const newIndex = rows.findIndex((r) => r.id === over.id);
-          if (oldIndex !== -1 && newIndex !== -1) {
-            form.array.move(path, oldIndex, newIndex);
-          }
+    const handleDragEnd = (event: DragEndEvent) => {
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = rows.findIndex((r) => r.id === active.id);
+        const newIndex = rows.findIndex((r) => r.id === over.id);
+        if (oldIndex !== -1 && newIndex !== -1) {
+          form.array.move(path, oldIndex, newIndex);
         }
-      },
-      [rows, form, path]
-    );
+      }
+    };
 
-    const handleAdd = React.useCallback(
-      (e?: React.MouseEvent) => {
-        e?.stopPropagation();
-        if (!isDisabled && !isReadOnly) {
-          form.array.append(path, {});
-          setAnnouncement(`Item ${rows.length + 1} added`);
-        }
-      },
-      [form, path, isDisabled, isReadOnly, rows.length]
-    );
+    const handleAdd = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      if (!isDisabled && !isReadOnly) {
+        form.array.append(path, {});
+        setAnnouncement(`Item ${rows.length + 1} added`);
+      }
+    };
 
-    const handleRemove = React.useCallback(
-      (index: number) => {
-        const rowToRemove = rows[index];
-        if (!rowToRemove) return;
+    const handleRemove = (index: number) => {
+      const rowToRemove = rows[index];
+      if (!rowToRemove) return;
 
-        const removedLabel = getArrayRowLabel(
-          rowToRemove,
-          field.fields,
-          field.ui,
-          `Item ${index + 1}`
+      const removedLabel = getArrayRowLabel(
+        rowToRemove,
+        field.fields,
+        field.ui,
+        `Item ${index + 1}`
+      );
+
+      // 1. Mark as exiting to trigger animation
+      setExitingRowIds((prev) => new Set([...prev, rowToRemove.id]));
+
+      // 2. Wait for animation to complete before actual removal
+      setTimeout(() => {
+        // Find fresh index of this ID in case list changed
+        const currentRows = form.array.fields<ArrayRowItem>(path);
+        const currentIndex = currentRows.findIndex(
+          (r) => r.id === rowToRemove.id
         );
 
-        // 1. Mark as exiting to trigger animation
-        setExitingRowIds((prev) => new Set([...prev, rowToRemove.id]));
-
-        // 2. Wait for animation to complete before actual removal
-        setTimeout(() => {
-          // Find fresh index of this ID in case list changed
-          const currentRows = form.array.fields<ArrayRowItem>(path);
-          const currentIndex = currentRows.findIndex(
-            (r) => r.id === rowToRemove.id
-          );
-
-          if (currentIndex !== -1) {
-            form.array.remove(path, currentIndex);
-            setAnnouncement(`${removedLabel} removed`);
-          }
-
-          // Cleanup exiting state
-          setExitingRowIds((prev) => {
-            const next = new Set(prev);
-            next.delete(rowToRemove.id);
-            return next;
-          });
-        }, 300); // Match CSS animation duration
-      },
-      [form, path, rows, field.fields, field.ui]
-    );
-
-    const handleDuplicate = React.useCallback(
-      (index: number) => {
-        const currentValue = rows[index];
-        if (currentValue) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { id, ...rest } = currentValue;
-          form.array.insert(path, index + 1, rest);
-          setAnnouncement(`Item ${index + 1} duplicated`);
+        if (currentIndex !== -1) {
+          form.array.remove(path, currentIndex);
+          setAnnouncement(`${removedLabel} removed`);
         }
-      },
-      [form, path, rows]
-    );
 
-    const handleRemoveAllClick = React.useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // Check if confirmation is required (default: true for safety)
-        if (ui?.confirmDelete !== false) {
-          setShowDeleteAllDialog(true);
-        } else {
-          form.array.replace(path, []);
-        }
-      },
-      [ui?.confirmDelete, form, path]
-    );
+        // Cleanup exiting state
+        setExitingRowIds((prev) => {
+          const next = new Set(prev);
+          next.delete(rowToRemove.id);
+          return next;
+        });
+      }, 300); // Match CSS animation duration
+    };
 
-    const handleConfirmRemoveAll = React.useCallback(() => {
+    const handleDuplicate = (index: number) => {
+      const currentValue = rows[index];
+      if (currentValue) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { id, ...rest } = currentValue;
+        form.array.insert(path, index + 1, rest);
+        setAnnouncement(`Item ${index + 1} duplicated`);
+      }
+    };
+
+    const handleRemoveAllClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      // Check if confirmation is required (default: true for safety)
+      if (ui?.confirmDelete !== false) {
+        setShowDeleteAllDialog(true);
+      } else {
+        form.array.replace(path, []);
+      }
+    };
+
+    const handleConfirmRemoveAll = () => {
       form.array.replace(path, []);
       setShowDeleteAllDialog(false);
-    }, [form, path]);
+    };
 
-    const handleToggleRow = React.useCallback(
-      (index: number) => {
-        const rowId = rows[index]?.id;
-        if (rowId) {
-          setCollapsedRowsMap((prev) => ({
-            ...prev,
-            [rowId]: !prev[rowId],
-          }));
-        }
-      },
-      [rows]
-    );
+    const handleToggleRow = (index: number) => {
+      const rowId = rows[index]?.id;
+      if (rowId) {
+        setCollapsedRowsMap((prev) => ({
+          ...prev,
+          [rowId]: !prev[rowId],
+        }));
+      }
+    };
 
-    const handleToggleAllRows = React.useCallback(
-      (e: React.MouseEvent) => {
-        e.stopPropagation();
-        // If any row is open, we want to collapse all.
-        // Only if ALL are collapsed, we expand all.
-        const anyOpen = rows.some((row) => !collapsedRowsMap[row.id]);
+    const handleToggleAllRows = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      // If any row is open, we want to collapse all.
+      // Only if ALL are collapsed, we expand all.
+      const anyOpen = rows.some((row) => !collapsedRowsMap[row.id]);
 
-        const newMap: Record<string, boolean> = {};
-        for (const row of rows) {
-          newMap[row.id] = anyOpen;
-        }
-        setCollapsedRowsMap(newMap);
-      },
-      [rows, collapsedRowsMap]
-    );
+      const newMap: Record<string, boolean> = {};
+      for (const row of rows) {
+        newMap[row.id] = anyOpen;
+      }
+      setCollapsedRowsMap(newMap);
+    };
 
     const allRowsCollapsed =
       rows.length > 0 && rows.every((row) => collapsedRowsMap[row.id]);

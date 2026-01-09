@@ -1,28 +1,79 @@
 ---
-title: Quick Start
-description: Getting started with BuzzForm
+title: Introduction
+description: BuzzForm is a schema-driven form library for React and shadcn/ui that eliminates boilerplate while maintaining full control over your forms.
 ---
 
 # Introduction
 
-BuzzForm is a simple React form library for shadcn/ui. Declare fields, customize rendering, and get live validation with minimal boilerplate.
+**BuzzForm** is a modern, schema-driven form library designed specifically for React applications using [shadcn/ui](https://ui.shadcn.com). Define your forms as data, and let BuzzForm handle the rendering, validation, and state management - all with minimal boilerplate.
 
-## Installation
+## Why BuzzForm?
 
-A minimum version of Node.js 20 is required.
+Building forms in React can be repetitive and error-prone. You often find yourself:
 
-```bash tab="pnpm" selected
-pnpm add @buildnbuzz/buzzform
-```
+- Writing the same input patterns over and over
+- Manually wiring up validation logic
+- Managing complex conditional field visibility
+- Handling array fields and nested data structures
 
-```bash tab="npm"
-npm install @buildnbuzz/buzzform
-```
+BuzzForm solves these problems by letting you **declare your form structure once** and automatically generating:
 
-```bash tab="yarn"
-yarn add @buildnbuzz/buzzform
-```
+- **Fully typed form components** with TypeScript inference
+- **Zod validation schemas** from your field definitions
+- **Accessible, styled UI** using shadcn/ui components
+- **Smart defaults** that work out of the box
 
-```bash tab="bun"
-bun add @buildnbuzz/buzzform
-```
+## Key Features
+
+<Cards>
+  <Card title="🎯 Schema-Driven">
+    Define fields as data. Your form structure becomes a single source of truth
+    for rendering, validation, and types.
+  </Card>
+  <Card title="🧩 17+ Field Types">
+    Text, password, select, date, upload, arrays, tabs, and more—all built-in
+    and ready to use.
+  </Card>
+  <Card title="⚡ Auto Validation">
+    Generates Zod schemas automatically from your field definitions. No manual
+    schema writing required.
+  </Card>
+  <Card title="🎨 shadcn/ui Native">
+    Beautiful, accessible components that match your existing shadcn/ui design
+    system perfectly.
+  </Card>
+  <Card title="🔌 Adapter Pattern">
+    Built on React Hook Form with a clean adapter pattern. Extensible to other
+    form libraries.
+  </Card>
+  <Card title="📦 Registry Ready">
+    Install individual components via the shadcn CLI. Only include what you
+    need.
+  </Card>
+</Cards>
+
+## A Quick Look
+
+Here's what building a form with BuzzForm looks like:
+
+<IntroDemo />
+
+That's it. No manual `register` calls, no separate validation schema, no repetitive JSX. Just declare your fields and go.
+
+## How It Works
+
+1. **Define your fields** as an array of field objects, each with a `type`, `name`, and optional configuration
+2. **BuzzForm infers the schema** and generates a Zod validator automatically
+3. **Render with `<FormFields />`** which maps your field definitions to shadcn/ui components
+4. **Handle submission** with full TypeScript inference on your data
+
+## Who Is This For?
+
+BuzzForm is ideal for:
+
+- **Developers using shadcn/ui** who want a consistent form experience
+- **Teams building admin panels** or internal tools with many forms
+- **Projects requiring complex forms** with conditional logic, arrays, and nested data
+- **Anyone tired of form boilerplate** who wants to move faster
+
+## What's Next?

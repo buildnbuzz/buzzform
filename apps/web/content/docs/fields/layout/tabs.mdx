@@ -1,0 +1,239 @@
+---
+title: Tabs Field
+description: Organize fields into tabbed sections with optional nested data.
+---
+
+# Tabs Field
+
+The `tabs` field organizes fields into a tabbed interface. Each tab can optionally create nested data with a `name` property.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/tabs
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/tabs
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "tabs",
+    tabs: [
+      {
+        name: "personal",
+        label: "Personal",
+        fields: [
+          { type: "text", name: "name", label: "Name" },
+          { type: "email", name: "email", label: "Email" },
+        ],
+      },
+      {
+        name: "work",
+        label: "Work",
+        fields: [
+          { type: "text", name: "company", label: "Company" },
+          { type: "text", name: "title", label: "Job Title" },
+        ],
+      },
+    ],
+  },
+]);
+
+// Result: { personal: { name, email }, work: { company, title } }
+
+export function TabsFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `tabs` | `Tab[]` | Tab definitions |
+
+### Tab Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | Optional - creates nested object |
+| `label` | `string \| ReactNode` | Tab label |
+| `fields` | `Field[]` | Fields in this tab |
+| `description` | `string` | Tab description |
+| `icon` | `ReactNode` | Tab icon |
+| `disabled` | `boolean` | Disable tab |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.defaultTab` | `number \| string` | `0` | Initially active tab |
+| `ui.showErrorBadge` | `boolean` | `true` | Show error count per tab |
+| `ui.variant` | `'default' \| 'line'` | `'default'` | Tab style |
+| `ui.spacing` | `'sm' \| 'md' \| 'lg'` | `'md'` | Space between fields |
+
+## Data Structure
+
+### Named Tabs (Nested Data)
+
+When tabs have a `name`, they create nested objects:
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    { name: "billing", label: "Billing", fields: [...] },
+    { name: "shipping", label: "Shipping", fields: [...] },
+  ],
+}
+
+// Result: { billing: {...}, shipping: {...} }
+```
+
+### Unnamed Tabs (Flat Data)
+
+Without `name`, fields remain at the current level:
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    { label: "Basic", fields: [
+      { type: "text", name: "title", label: "Title" },
+    ]},
+    { label: "Advanced", fields: [
+      { type: "text", name: "slug", label: "Slug" },
+    ]},
+  ],
+}
+
+// Result: { title, slug } — flat structure
+```
+
+## Features
+
+### Error Badges
+
+Shows validation error count on each tab:
+
+```tsx
+{
+  type: "tabs",
+  tabs: [...],
+  ui: { showErrorBadge: true },
+}
+```
+
+### Default Tab
+
+Set the initially active tab:
+
+```tsx
+// By index
+ui: { defaultTab: 1 }
+
+// By name
+ui: { defaultTab: "settings" }
+```
+
+### Tab Icons
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    { label: "Profile", icon: <UserIcon />, fields: [...] },
+    { label: "Settings", icon: <SettingsIcon />, fields: [...] },
+  ],
+}
+```
+
+## Examples
+
+### User Profile
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    {
+      name: "profile",
+      label: "Profile",
+      fields: [
+        { type: "text", name: "name", label: "Display Name", required: true },
+        { type: "textarea", name: "bio", label: "Bio" },
+        { type: "upload", name: "avatar", label: "Avatar", ui: { variant: "avatar" } },
+      ],
+    },
+    {
+      name: "account",
+      label: "Account",
+      fields: [
+        { type: "email", name: "email", label: "Email", required: true },
+        { type: "password", name: "password", label: "New Password" },
+      ],
+    },
+    {
+      name: "preferences",
+      label: "Preferences",
+      fields: [
+        { type: "switch", name: "notifications", label: "Email Notifications" },
+        { type: "select", name: "language", label: "Language", options: languages },
+      ],
+    },
+  ],
+  ui: { showErrorBadge: true },
+}
+```
+
+### Product Editor
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    {
+      label: "Basic Info",
+      fields: [
+        { type: "text", name: "title", label: "Title", required: true },
+        { type: "textarea", name: "description", label: "Description" },
+        { type: "number", name: "price", label: "Price", required: true },
+      ],
+    },
+    {
+      label: "Media",
+      fields: [
+        { type: "upload", name: "images", label: "Images", hasMany: true },
+      ],
+    },
+    {
+      label: "SEO",
+      fields: [
+        { type: "text", name: "metaTitle", label: "Meta Title" },
+        { type: "textarea", name: "metaDescription", label: "Meta Description" },
+      ],
+    },
+  ],
+}
+```
+
+### Settings with Disabled Tab
+
+```tsx
+{
+  type: "tabs",
+  tabs: [
+    { label: "General", fields: [...] },
+    { label: "Security", fields: [...] },
+    { label: "Billing", fields: [...], disabled: !isPremium },
+  ],
+}
+```

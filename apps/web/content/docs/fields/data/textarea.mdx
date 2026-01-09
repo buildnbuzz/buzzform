@@ -1,0 +1,128 @@
+---
+title: Textarea Field
+description: Multi-line text input with optional auto-resize.
+---
+
+# Textarea Field
+
+The `textarea` field renders a multi-line text input with optional auto-resize functionality.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/textarea
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/textarea
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "textarea",
+    name: "bio",
+    label: "Bio",
+    placeholder: "Tell us about yourself...",
+    rows: 4,
+  },
+]);
+
+export function TextareaFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `rows` | `number` | `3` | Number of visible rows |
+| `autoResize` | `boolean` | `false` | Auto-grow with content |
+| `minLength` | `number` | - | Minimum character length |
+| `maxLength` | `number` | - | Maximum character length |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.copyable` | `boolean` | `false` | Show copy button |
+
+## Features
+
+### Auto-Resize
+
+The textarea automatically grows as the user types:
+
+```tsx
+{
+  type: "textarea",
+  name: "content",
+  label: "Content",
+  autoResize: true,
+  rows: 3, // Minimum rows
+}
+```
+
+### Character Limit
+
+Show remaining characters with `maxLength`:
+
+```tsx
+{
+  type: "textarea",
+  name: "description",
+  label: "Description",
+  maxLength: 500,
+  placeholder: "Max 500 characters",
+}
+```
+
+## Examples
+
+### Blog Post Content
+
+```tsx
+{
+  type: "textarea",
+  name: "content",
+  label: "Content",
+  required: true,
+  rows: 10,
+  autoResize: true,
+  minLength: 100,
+  placeholder: "Write your post content here...",
+}
+```
+
+### Short Bio with Limit
+
+```tsx
+{
+  type: "textarea",
+  name: "bio",
+  label: "Short Bio",
+  maxLength: 160,
+  rows: 3,
+  description: "Brief description for your profile",
+}
+```
+
+### Copyable Code Block
+
+```tsx
+{
+  type: "textarea",
+  name: "embedCode",
+  label: "Embed Code",
+  readOnly: true,
+  rows: 5,
+  ui: { copyable: true },
+  defaultValue: '<iframe src="..."></iframe>',
+}
+```

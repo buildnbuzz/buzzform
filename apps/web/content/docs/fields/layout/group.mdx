@@ -1,0 +1,215 @@
+---
+title: Group Field
+description: Create nested objects in form data with visual grouping.
+---
+
+# Group Field
+
+The `group` field wraps child fields in a named object, creating nested data structures. It also provides visual grouping options.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/group
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/group
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "group",
+    name: "address",
+    label: "Address",
+    fields: [
+      { type: "text", name: "street", label: "Street" },
+      { type: "text", name: "city", label: "City" },
+      { type: "text", name: "zip", label: "ZIP Code" },
+    ],
+  },
+]);
+
+// Result: { address: { street, city, zip } }
+
+export function GroupFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `name` | `string` | Object key in form data |
+| `fields` | `Field[]` | Nested fields |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.variant` | `'card' \| 'flat' \| 'ghost' \| 'bordered'` | `'flat'` | Visual style |
+| `ui.spacing` | `'sm' \| 'md' \| 'lg'` | `'md'` | Space between fields |
+| `ui.collapsed` | `boolean` | `false` | Start collapsed |
+| `ui.showErrorBadge` | `boolean` | `true` | Show error count badge |
+
+## Variants
+
+### Flat (Default)
+
+No visual container, just groups data:
+
+```tsx
+{
+  type: "group",
+  name: "details",
+  label: "Details",
+  fields: [...],
+  ui: { variant: "flat" },
+}
+```
+
+### Card
+
+Elevated card container:
+
+```tsx
+{
+  type: "group",
+  name: "billing",
+  label: "Billing Information",
+  fields: [...],
+  ui: { variant: "card" },
+}
+```
+
+### Bordered
+
+Simple border outline:
+
+```tsx
+{
+  type: "group",
+  name: "shipping",
+  label: "Shipping Address",
+  fields: [...],
+  ui: { variant: "bordered" },
+}
+```
+
+### Ghost
+
+Subtle background:
+
+```tsx
+{
+  type: "group",
+  name: "preferences",
+  label: "Preferences",
+  fields: [...],
+  ui: { variant: "ghost" },
+}
+```
+
+## Features
+
+### Collapsible Group
+
+Start collapsed to save space:
+
+```tsx
+{
+  type: "group",
+  name: "advanced",
+  label: "Advanced Settings",
+  fields: [...],
+  ui: { collapsed: true },
+}
+```
+
+### Error Badge
+
+Shows count of validation errors in nested fields:
+
+```tsx
+{
+  type: "group",
+  name: "contact",
+  label: "Contact Info",
+  fields: [...],
+  ui: { showErrorBadge: true },
+}
+```
+
+## Examples
+
+### Billing Address
+
+```tsx
+{
+  type: "group",
+  name: "billing",
+  label: "Billing Address",
+  fields: [
+    { type: "text", name: "street", label: "Street Address", required: true },
+    {
+      type: "row",
+      fields: [
+        { type: "text", name: "city", label: "City", required: true },
+        { type: "text", name: "state", label: "State" },
+        { type: "text", name: "zip", label: "ZIP", required: true },
+      ],
+    },
+    { type: "select", name: "country", label: "Country", options: countries },
+  ],
+  ui: { variant: "card" },
+}
+```
+
+### Contact Information
+
+```tsx
+{
+  type: "group",
+  name: "contact",
+  label: "Contact Information",
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "text", name: "phone", label: "Phone" },
+  ],
+  ui: { variant: "bordered" },
+}
+```
+
+### Nested Groups
+
+```tsx
+{
+  type: "group",
+  name: "company",
+  label: "Company Details",
+  fields: [
+    { type: "text", name: "name", label: "Company Name" },
+    {
+      type: "group",
+      name: "address",
+      label: "Company Address",
+      fields: [
+        { type: "text", name: "street", label: "Street" },
+        { type: "text", name: "city", label: "City" },
+      ],
+      ui: { variant: "ghost" },
+    },
+  ],
+  ui: { variant: "card" },
+}
+
+// Result: { company: { name, address: { street, city } } }
+```

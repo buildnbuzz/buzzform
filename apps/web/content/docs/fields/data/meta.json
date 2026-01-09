@@ -1,0 +1,16 @@
+{
+  "title": "Data Fields",
+  "pages": [
+    "text",
+    "password",
+    "textarea",
+    "number",
+    "date",
+    "select",
+    "radio",
+    "checkbox",
+    "switch",
+    "tags",
+    "upload"
+  ]
+}

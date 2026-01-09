@@ -1,0 +1,206 @@
+---
+title: Form Component
+description: API reference for Form, FormSubmit, FormReset, and other form components.
+---
+
+# Form Component
+
+The `Form` component and its companions provide a complete form UI with automatic field rendering and state management.
+
+## Form
+
+The main form component that wraps your entire form.
+
+```tsx
+import { Form } from "@/components/buzzform/form";
+
+<Form
+  schema={schema}
+  onSubmit={(data) => console.log(data)}
+  submitLabel="Save"
+/>;
+```
+
+### Properties
+
+| Property           | Type                                   | Default          | Description                                  |
+| ------------------ | -------------------------------------- | ---------------- | -------------------------------------------- |
+| `schema`           | `BuzzFormSchema`                       | -                | Schema from `createSchema()`                 |
+| `fields`           | `Field[]`                              | -                | Override fields (if not using schema.fields) |
+| `defaultValues`    | `object \| function`                   | -                | Initial form values                          |
+| `onSubmit`         | `(data) => void`                       | -                | Submit handler                               |
+| `mode`             | `'onChange' \| 'onBlur' \| 'onSubmit'` | Provider default | Validation mode                              |
+| `adapter`          | `AdapterFactory`                       | Provider default | Form library adapter                         |
+| `settings`         | `FormSettings`                         | -                | Form behavior settings                       |
+| `disabled`         | `boolean`                              | `false`          | Disable entire form                          |
+| `requireDirty`     | `boolean`                              | `false`          | Only allow submit when dirty                 |
+| `disableIfInvalid` | `boolean`                              | `false`          | Disable submit until valid                   |
+| `showSubmit`       | `boolean`                              | `true`           | Show auto submit button                      |
+| `submitLabel`      | `string`                               | `"Submit"`       | Submit button text                           |
+| `submitClassName`  | `string`                               | -                | Submit button styling                        |
+| `registry`         | `FieldRegistry`                        | -                | Custom field registry                        |
+| `className`        | `string`                               | -                | Form container class                         |
+
+### Ref Access
+
+Access the form adapter via ref:
+
+```tsx
+const formRef = useRef<FormAdapter>(null);
+
+<Form ref={formRef} schema={schema} onSubmit={handleSubmit} />;
+
+// Later...
+formRef.current?.reset();
+formRef.current?.setValue("email", "new@example.com");
+```
+
+## Compound Components
+
+For custom layouts, use the compound component pattern:
+
+```tsx
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent className="space-y-6">
+    <FormMessage />
+    <FormFields />
+    <FormActions>
+      <FormReset>Clear</FormReset>
+      <FormSubmit>Save Changes</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>
+```
+
+### FormContent
+
+Renders the actual `<form>` element. Required when using children.
+
+```tsx
+<FormContent className="space-y-4">{/* Form contents */}</FormContent>
+```
+
+### FormFields
+
+Renders all fields from the schema.
+
+```tsx
+<FormFields className="gap-4" />
+```
+
+### FormField
+
+Render a single field by name.
+
+```tsx
+<FormField name="email" />
+<FormField name="password" />
+```
+
+### FormSubmit
+
+Submit button with automatic loading state.
+
+```tsx
+<FormSubmit submittingText="Saving..." variant="default" size="lg">
+  Save Changes
+</FormSubmit>
+```
+
+| Property         | Type                     | Default           | Description                  |
+| ---------------- | ------------------------ | ----------------- | ---------------------------- |
+| `submittingText` | `string`                 | `"Submitting..."` | Text during submission       |
+| `disabled`       | `boolean`                | -                 | Additional disable condition |
+| `variant`        | `ButtonProps['variant']` | `"default"`       | Button variant               |
+| `size`           | `ButtonProps['size']`    | -                 | Button size                  |
+
+### FormReset
+
+Reset button that clears the form.
+
+```tsx
+<FormReset variant="outline">Clear Form</FormReset>
+```
+
+Automatically disabled when form is not dirty or is submitting.
+
+### FormAction
+
+Generic action button with form-aware disable state.
+
+```tsx
+<FormAction onClick={handlePreview}>Preview</FormAction>
+```
+
+### FormActions
+
+Container for action buttons with alignment.
+
+```tsx
+<FormActions align="between">
+  <FormReset />
+  <FormSubmit />
+</FormActions>
+```
+
+| Property | Type                                        | Default | Description      |
+| -------- | ------------------------------------------- | ------- | ---------------- |
+| `align`  | `'start' \| 'center' \| 'end' \| 'between'` | `'end'` | Button alignment |
+
+### FormMessage
+
+Displays form-level error messages.
+
+```tsx
+<FormMessage />;
+
+{
+  /* Or with custom message */
+}
+<FormMessage>Something went wrong</FormMessage>;
+```
+
+## useFormContext
+
+Access form state from any child component.
+
+```tsx
+import { useFormContext } from "@/components/buzzform/form";
+
+function CustomComponent() {
+  const { form, fields, disabled } = useFormContext();
+
+  return (
+    <div>
+      <p>Is submitting: {form.formState.isSubmitting ? "Yes" : "No"}</p>
+      <p>Is dirty: {form.formState.isDirty ? "Yes" : "No"}</p>
+    </div>
+  );
+}
+```
+
+### Context Properties
+
+| Property           | Type            | Description               |
+| ------------------ | --------------- | ------------------------- |
+| `form`             | `FormAdapter`   | Form adapter instance     |
+| `fields`           | `Field[]`       | Field definitions         |
+| `registry`         | `FieldRegistry` | Field component registry  |
+| `disabled`         | `boolean`       | Whether form is disabled  |
+| `requireDirty`     | `boolean`       | Whether dirty is required |
+| `disableIfInvalid` | `boolean`       | Whether valid is required |
+
+## FormAdapter Methods
+
+When using `useFormContext` or a ref, you have access to:
+
+| Method                       | Description                                   |
+| ---------------------------- | --------------------------------------------- |
+| `form.getValues()`           | Get all current values                        |
+| `form.setValue(name, value)` | Set a field value                             |
+| `form.reset(values?)`        | Reset to default or provided values           |
+| `form.watch(name?)`          | Watch a field value reactively                |
+| `form.validate(name?)`       | Trigger validation                            |
+| `form.setError(name, error)` | Set a field error                             |
+| `form.clearErrors(name?)`    | Clear field errors                            |
+| `form.formState`             | Access isSubmitting, isDirty, isValid, errors |

@@ -1,0 +1,177 @@
+---
+title: Conditional Logic
+description: Control field visibility, disabled state, and read-only mode dynamically based on form data.
+---
+
+# Conditional Logic
+
+BuzzForm supports dynamic field states based on form data. This lets you build complex forms that adapt to user input.
+
+## Disabled Fields
+
+Disable a field based on a condition:
+
+```tsx
+// Static
+{ type: "text", name: "city", disabled: true }
+
+// Dynamic - function receives form data
+{
+  type: "select",
+  name: "city",
+  label: "City",
+  options: [...],
+  disabled: (data) => !data.country, // Disable until country is selected
+}
+```
+
+## Hidden Fields
+
+Hide fields completely from the UI:
+
+```tsx
+// Static
+{ type: "text", name: "internal", hidden: true }
+
+// Dynamic
+{
+  type: "text",
+  name: "otherReason",
+  label: "Please specify",
+  hidden: (data) => data.reason !== "other",
+}
+```
+
+<Callout type="info">
+Hidden fields retain their values by default. Use `condition` instead if you want to completely unregister the field when hidden.
+</Callout>
+
+## Read-Only Fields
+
+Make fields read-only (visible but not editable):
+
+```tsx
+// Static
+{ type: "text", name: "createdAt", readOnly: true }
+
+// Dynamic
+{
+  type: "text",
+  name: "title",
+  label: "Title",
+  readOnly: (data) => data.status === "published",
+}
+```
+
+## Condition Prop
+
+The `condition` prop provides more control than `hidden`. When the condition returns `false`, the field is:
+- Hidden from the UI
+- Unregistered from the form (no validation, value removed)
+
+```tsx
+{
+  type: "text",
+  name: "companyName",
+  label: "Company Name",
+  condition: (data, siblingData, context) => {
+    // Only show for business accounts
+    return data.accountType === "business";
+  },
+}
+```
+
+### Condition Context
+
+```tsx
+condition: (data, siblingData, context) => {
+  // data - Complete form data
+  // siblingData - Data at the same nesting level
+  // context.operation - "create" | "update" | "read"
+  // context.path - Path segments to this field
+
+  return true; // Show field
+}
+```
+
+## Function Signature
+
+All dynamic props (`disabled`, `hidden`, `readOnly`) receive:
+
+```tsx
+(data: FormData, siblingData: Record<string, unknown>) => boolean
+```
+
+| Parameter | Description |
+|-----------|-------------|
+| `data` | Complete form data object |
+| `siblingData` | Data at the same nesting level (useful in arrays/groups) |
+
+## Examples
+
+### Dependent Dropdowns
+
+```tsx
+const schema = createSchema([
+  {
+    type: "select",
+    name: "country",
+    label: "Country",
+    options: countries,
+  },
+  {
+    type: "select",
+    name: "state",
+    label: "State",
+    options: async ({ data }) => fetchStates(data.country),
+    dependencies: ["country"],
+    disabled: (data) => !data.country,
+  },
+]);
+```
+
+### Show/Hide Based on Selection
+
+```tsx
+const schema = createSchema([
+  {
+    type: "radio",
+    name: "contactMethod",
+    label: "Preferred Contact",
+    options: ["email", "phone", "mail"],
+  },
+  {
+    type: "email",
+    name: "email",
+    label: "Email",
+    hidden: (data) => data.contactMethod !== "email",
+  },
+  {
+    type: "text",
+    name: "phone",
+    label: "Phone",
+    hidden: (data) => data.contactMethod !== "phone",
+  },
+  {
+    type: "group",
+    name: "address",
+    label: "Mailing Address",
+    hidden: (data) => data.contactMethod !== "mail",
+    fields: [
+      { type: "text", name: "street", label: "Street" },
+      { type: "text", name: "city", label: "City" },
+    ],
+  },
+]);
+```
+
+### Lock After Save
+
+```tsx
+{
+  type: "text",
+  name: "slug",
+  label: "URL Slug",
+  readOnly: (data) => data.id !== undefined, // Lock after initial save
+}
+```

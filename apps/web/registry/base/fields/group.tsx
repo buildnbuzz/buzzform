@@ -43,19 +43,17 @@ const useNestedErrors = (
 ): number => {
   const errors = form.formState.errors;
 
-  return React.useMemo(() => {
-    const nestedPaths = getNestedFieldPaths(fields, basePath);
-    let errorCount = 0;
+  const nestedPaths = getNestedFieldPaths(fields, basePath);
+  let errorCount = 0;
 
-    for (const fieldPath of nestedPaths) {
-      const error = errors[fieldPath];
-      if (error) {
-        errorCount++;
-      }
+  for (const fieldPath of nestedPaths) {
+    const error = errors[fieldPath];
+    if (error) {
+      errorCount++;
     }
+  }
 
-    return errorCount;
-  }, [errors, fields, basePath]);
+  return errorCount;
 };
 
 /**

@@ -1,0 +1,113 @@
+---
+title: Checkbox Field
+description: Boolean checkbox input for single true/false values.
+---
+
+# Checkbox Field
+
+The `checkbox` field renders a single checkbox for boolean values.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/checkbox
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/checkbox
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "checkbox",
+    name: "terms",
+    label: "I agree to the terms and conditions",
+    required: true,
+  },
+]);
+
+export function CheckboxFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+The checkbox field uses the common base field props. No additional props are needed.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `required` | `boolean` | `false` | Must be checked to submit |
+| `defaultValue` | `boolean` | `false` | Initial checked state |
+
+## Examples
+
+### Terms Agreement
+
+```tsx
+{
+  type: "checkbox",
+  name: "terms",
+  label: (
+    <>
+      I agree to the{" "}
+      <a href="/terms" className="underline">
+        terms of service
+      </a>{" "}
+      and{" "}
+      <a href="/privacy" className="underline">
+        privacy policy
+      </a>
+    </>
+  ),
+  required: true,
+}
+```
+
+### Newsletter Signup
+
+```tsx
+{
+  type: "checkbox",
+  name: "newsletter",
+  label: "Subscribe to our newsletter",
+  description: "We'll send you updates about new features and promotions.",
+  defaultValue: true,
+}
+```
+
+### Optional Checkbox
+
+```tsx
+{
+  type: "checkbox",
+  name: "rememberMe",
+  label: "Remember me",
+}
+```
+
+### Conditional Field
+
+Show additional fields when checked:
+
+```tsx
+const schema = createSchema([
+  {
+    type: "checkbox",
+    name: "hasDiscount",
+    label: "Apply discount code",
+  },
+  {
+    type: "text",
+    name: "discountCode",
+    label: "Discount Code",
+    hidden: (data) => !data.hasDiscount,
+  },
+]);
+```

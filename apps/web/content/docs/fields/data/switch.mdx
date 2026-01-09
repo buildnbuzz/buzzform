@@ -1,0 +1,151 @@
+---
+title: Switch Field
+description: Toggle switch for boolean values with customizable alignment.
+---
+
+# Switch Field
+
+The `switch` field renders a toggle switch, an alternative to checkbox for boolean values.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/switch
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/switch
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "switch",
+    name: "notifications",
+    label: "Enable notifications",
+  },
+]);
+
+export function SwitchFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+The switch field uses the common base field props.
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `defaultValue` | `boolean` | `false` | Initial state |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.alignment` | `'start' \| 'end' \| 'between'` | `'between'` | Switch position |
+
+## Alignment Options
+
+### Between (Default)
+
+Label on left, switch on right with full-width spacing:
+
+```tsx
+{
+  type: "switch",
+  name: "enabled",
+  label: "Enable feature",
+  ui: { alignment: "between" },
+}
+```
+
+### Start
+
+Switch on left, label on right:
+
+```tsx
+{
+  type: "switch",
+  name: "enabled",
+  label: "Enable feature",
+  ui: { alignment: "start" },
+}
+```
+
+### End
+
+Label on left, switch immediately after:
+
+```tsx
+{
+  type: "switch",
+  name: "enabled",
+  label: "Enable feature",
+  ui: { alignment: "end" },
+}
+```
+
+## Examples
+
+### Settings Panel
+
+```tsx
+const schema = createSchema([
+  {
+    type: "switch",
+    name: "emailNotifications",
+    label: "Email notifications",
+    description: "Receive updates via email",
+    defaultValue: true,
+  },
+  {
+    type: "switch",
+    name: "pushNotifications",
+    label: "Push notifications",
+    description: "Receive push notifications on your device",
+  },
+  {
+    type: "switch",
+    name: "marketingEmails",
+    label: "Marketing emails",
+    description: "Receive promotional content and offers",
+  },
+]);
+```
+
+### Feature Toggle
+
+```tsx
+{
+  type: "switch",
+  name: "darkMode",
+  label: "Dark mode",
+  description: "Switch to dark theme",
+}
+```
+
+### Conditional Content
+
+```tsx
+const schema = createSchema([
+  {
+    type: "switch",
+    name: "isPublic",
+    label: "Make project public",
+    description: "Anyone can view this project",
+  },
+  {
+    type: "text",
+    name: "accessCode",
+    label: "Access Code",
+    description: "Required for private projects",
+    hidden: (data) => data.isPublic,
+  },
+]);
+```

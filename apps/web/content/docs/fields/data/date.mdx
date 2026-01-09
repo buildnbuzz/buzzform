@@ -1,0 +1,226 @@
+---
+title: Date Field
+description: Date picker with calendar popup, presets, and manual input.
+---
+
+# Date Field
+
+The `date` and `datetime` fields provide calendar-based date selection with optional time picker and quick presets.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/date
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/date
+```
+
+<Callout>
+Requires `date-fns` for formatting. Install with: `npm install date-fns`
+</Callout>
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "date",
+    name: "birthdate",
+    label: "Birth Date",
+    required: true,
+  },
+]);
+
+export function DateFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `minDate` | `Date \| string` | - | Earliest allowed date |
+| `maxDate` | `Date \| string` | - | Latest allowed date |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.format` | `string` | `"PPP"` | Display format (date-fns) |
+| `ui.inputFormat` | `string` | - | Manual input format |
+| `ui.presets` | `boolean \| Array` | - | Quick date presets |
+
+## Features
+
+### Date Constraints
+
+Limit selectable dates:
+
+```tsx
+{
+  type: "date",
+  name: "startDate",
+  label: "Start Date",
+  minDate: new Date(), // Today onwards
+  maxDate: "2025-12-31", // String format works too
+}
+```
+
+### Custom Format
+
+Use date-fns format strings:
+
+```tsx
+{
+  type: "date",
+  name: "date",
+  label: "Date",
+  ui: { format: "MM/dd/yyyy" },
+}
+```
+
+Common formats:
+- `"PPP"` → January 1, 2025
+- `"PP"` → Jan 1, 2025
+- `"P"` → 01/01/2025
+- `"yyyy-MM-dd"` → 2025-01-01
+
+### Date Presets
+
+Quick selection buttons:
+
+```tsx
+// Default presets
+{
+  type: "date",
+  name: "date",
+  ui: { presets: true },
+}
+
+// Custom presets
+{
+  type: "date",
+  name: "date",
+  ui: {
+    presets: [
+      { label: "Today", value: () => new Date() },
+      { label: "Tomorrow", value: () => addDays(new Date(), 1) },
+      { label: "Next Week", value: () => addWeeks(new Date(), 1) },
+    ],
+  },
+}
+```
+
+## Examples
+
+### Birth Date
+
+```tsx
+{
+  type: "date",
+  name: "birthdate",
+  label: "Date of Birth",
+  required: true,
+  maxDate: new Date(), // Can't be in the future
+  ui: { format: "MMMM d, yyyy" },
+}
+```
+
+### Event Date with Presets
+
+```tsx
+{
+  type: "date",
+  name: "eventDate",
+  label: "Event Date",
+  minDate: new Date(),
+  ui: {
+    presets: true,
+    format: "EEEE, MMMM d, yyyy", // Monday, January 1, 2025
+  },
+}
+```
+
+---
+
+## Datetime
+
+The `datetime` field adds time selection to the date picker.
+
+### Usage
+
+```tsx
+{
+  type: "datetime",
+  name: "appointment",
+  label: "Appointment",
+  required: true,
+}
+```
+
+### UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.timePicker.interval` | `number` | `15` | Time step in minutes |
+| `ui.timePicker.use24hr` | `boolean` | `false` | Use 24-hour format |
+| `ui.timePicker.includeSeconds` | `boolean` | `false` | Show seconds |
+
+### Examples
+
+#### Appointment Scheduler
+
+```tsx
+{
+  type: "datetime",
+  name: "appointment",
+  label: "Appointment Time",
+  minDate: new Date(),
+  ui: {
+    format: "PPP 'at' p", // January 1, 2025 at 2:30 PM
+    timePicker: {
+      interval: 30, // 30-minute slots
+    },
+  },
+}
+```
+
+#### 24-Hour Format
+
+```tsx
+{
+  type: "datetime",
+  name: "timestamp",
+  label: "Timestamp",
+  ui: {
+    format: "yyyy-MM-dd HH:mm",
+    timePicker: {
+      use24hr: true,
+      interval: 15,
+    },
+  },
+}
+```
+
+#### With Seconds
+
+```tsx
+{
+  type: "datetime",
+  name: "logTime",
+  label: "Log Time",
+  ui: {
+    format: "PPP HH:mm:ss",
+    timePicker: {
+      use24hr: true,
+      includeSeconds: true,
+    },
+  },
+}
+```

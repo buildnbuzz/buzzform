@@ -1,0 +1,232 @@
+---
+title: Upload Field
+description: File upload with drag-drop, previews, and multiple variants.
+---
+
+# Upload Field
+
+The `upload` field handles file uploads with drag-and-drop support, file previews, and multiple visual variants including avatar, dropzone, and gallery.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/upload
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/upload
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "upload",
+    name: "document",
+    label: "Upload Document",
+  },
+]);
+
+export function UploadFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `hasMany` | `boolean` | `false` | Allow multiple files |
+| `minFiles` | `number` | - | Minimum files (with hasMany) |
+| `maxFiles` | `number` | - | Maximum files (with hasMany) |
+| `maxSize` | `number` | - | Max file size in bytes |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.accept` | `string` | `"*"` | MIME type filter |
+| `ui.variant` | `'dropzone' \| 'avatar' \| 'inline' \| 'gallery'` | `'dropzone'` | Visual style |
+| `ui.shape` | `'circle' \| 'square' \| 'rounded'` | `'rounded'` | Avatar shape |
+| `ui.size` | `'xs' \| 'sm' \| 'md' \| 'lg' \| 'xl'` | `'md'` | Size preset |
+| `ui.crop` | `boolean \| object` | - | Enable cropping |
+| `ui.showProgress` | `boolean` | `true` | Show upload progress |
+| `ui.dropzoneText` | `string` | - | Custom dropzone message |
+
+## Variants
+
+### Dropzone (Default)
+
+Full dropzone with drag-and-drop:
+
+```tsx
+{
+  type: "upload",
+  name: "files",
+  label: "Documents",
+  hasMany: true,
+  ui: { variant: "dropzone" },
+}
+```
+
+### Avatar
+
+Circular or square image upload:
+
+```tsx
+{
+  type: "upload",
+  name: "avatar",
+  label: "Profile Picture",
+  ui: {
+    variant: "avatar",
+    shape: "circle",
+    size: "lg",
+    accept: "image/*",
+  },
+}
+```
+
+### Inline
+
+Compact button-style upload:
+
+```tsx
+{
+  type: "upload",
+  name: "file",
+  label: "Attachment",
+  ui: { variant: "inline" },
+}
+```
+
+### Gallery
+
+Grid of image previews:
+
+```tsx
+{
+  type: "upload",
+  name: "photos",
+  label: "Photos",
+  hasMany: true,
+  ui: {
+    variant: "gallery",
+    accept: "image/*",
+  },
+}
+```
+
+## File Type Filtering
+
+Use `ui.accept` to filter file types:
+
+```tsx
+// Images only
+ui: { accept: "image/*" }
+
+// Specific types
+ui: { accept: "image/png,image/jpeg" }
+
+// By extension
+ui: { accept: ".pdf,.doc,.docx" }
+
+// Multiple categories
+ui: { accept: "image/*,.pdf" }
+```
+
+## Examples
+
+### Profile Avatar
+
+```tsx
+{
+  type: "upload",
+  name: "avatar",
+  label: "Profile Picture",
+  maxSize: 5 * 1024 * 1024, // 5MB
+  ui: {
+    variant: "avatar",
+    shape: "circle",
+    size: "xl",
+    accept: "image/*",
+    crop: {
+      aspectRatio: 1,
+      circular: true,
+    },
+  },
+}
+```
+
+### Document Upload
+
+```tsx
+{
+  type: "upload",
+  name: "documents",
+  label: "Documents",
+  hasMany: true,
+  maxFiles: 5,
+  maxSize: 10 * 1024 * 1024, // 10MB each
+  ui: {
+    variant: "dropzone",
+    accept: ".pdf,.doc,.docx,.xls,.xlsx",
+    dropzoneText: "Drop documents here or click to browse",
+    showProgress: true,
+  },
+}
+```
+
+### Image Gallery
+
+```tsx
+{
+  type: "upload",
+  name: "photos",
+  label: "Product Photos",
+  hasMany: true,
+  minFiles: 1,
+  maxFiles: 10,
+  ui: {
+    variant: "gallery",
+    accept: "image/*",
+  },
+}
+```
+
+### Single File Inline
+
+```tsx
+{
+  type: "upload",
+  name: "resume",
+  label: "Resume",
+  required: true,
+  maxSize: 2 * 1024 * 1024, // 2MB
+  ui: {
+    variant: "inline",
+    accept: ".pdf,.doc,.docx",
+  },
+}
+```
+
+### Company Logo
+
+```tsx
+{
+  type: "upload",
+  name: "logo",
+  label: "Company Logo",
+  ui: {
+    variant: "avatar",
+    shape: "square",
+    size: "lg",
+    accept: "image/png,image/svg+xml",
+    crop: { aspectRatio: 1 },
+  },
+}
+```

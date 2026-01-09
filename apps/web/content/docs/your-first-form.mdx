@@ -1,0 +1,158 @@
+---
+title: Your First Form
+description: Build your first form with BuzzForm in under 5 minutes.
+---
+
+# Your First Form
+
+Now that you've installed BuzzForm, let's build a real form. By the end of this guide, you'll understand the core pattern that powers every BuzzForm.
+
+## The Pattern
+
+Every BuzzForm follows the same simple pattern:
+
+1. **Define fields** as an array of objects
+2. **Create a schema** with `createSchema()`
+3. **Render with `<Form>`** component
+
+That's it. Let's see it in action.
+
+## Step 1: A Simple Contact Form
+
+Here's the simplest possible form - just two fields:
+
+<BasicFormDemo />
+
+**What's happening:**
+
+- Each field object describes a form input with `type`, `name`, `label`, and validation rules
+- `createSchema()` generates both the field definitions and a Zod validation schema
+- `<Form>` renders everything automatically - inputs, labels, validation, and submit button
+
+## Step 2: Adding Validation
+
+BuzzForm generates validation automatically from your field definitions. Common validations like `required`, `minLength`, and `email` are built-in:
+
+<ValidationFormDemo />
+
+Try submitting the form with invalid data - you'll see validation errors appear automatically. BuzzForm:
+
+- Validates on blur (when you leave a field)
+- Shows inline error messages
+- Prevents submission until all fields are valid
+
+**Available validations by field type:**
+
+| Field Type | Built-in Validations                            |
+| ---------- | ----------------------------------------------- |
+| `text`     | `required`, `minLength`, `maxLength`, `pattern` |
+| `email`    | `required` + automatic email format validation  |
+| `password` | `required`, `minLength`, `maxLength`            |
+| `number`   | `required`, `min`, `max`                        |
+| `select`   | `required`                                      |
+
+## Step 3: More Field Types
+
+BuzzForm supports 17+ field types. Here's a form with a mix:
+
+<FullFormDemo />
+
+## Handling Form Submission
+
+The `onSubmit` handler receives your form data. Use `InferSchema` to get full TypeScript types:
+
+```tsx
+import { createSchema, InferSchema } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email", required: true },
+  { type: "checkbox", name: "newsletter", label: "Subscribe" },
+]);
+
+// Infer the type from your schema
+type FormData = InferSchema<typeof schema>;
+// Result: { name: string, email: string, newsletter: boolean }
+
+const handleSubmit = async (data: FormData) => {
+  // data is now fully typed!
+  console.log(data.name); // ✓ TypeScript knows this is a string
+  console.log(data.email); // ✓ TypeScript knows this is a string
+
+  await fetch("/api/signup", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+```
+
+### Using with Server Actions
+
+`InferSchema` is especially useful for server actions where you need to type the incoming data:
+
+```tsx title="actions.ts"
+"use server";
+
+import { InferSchema } from "@buildnbuzz/buzzform";
+import { signupSchema } from "./schema";
+
+type SignupData = InferSchema<typeof signupSchema>;
+
+export async function signup(data: SignupData) {
+  // Fully typed server action
+  await db.users.create({
+    name: data.name,
+    email: data.email,
+  });
+}
+```
+
+For async operations, BuzzForm automatically:
+
+- Disables the submit button while submitting
+- Shows "Submitting..." text
+- Re-enables after completion
+
+## Default Values
+
+Pre-fill fields with `defaultValue`:
+
+```tsx
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", defaultValue: "John" },
+  { type: "select", name: "role", label: "Role", options: [...], defaultValue: "dev" },
+  { type: "checkbox", name: "newsletter", label: "Subscribe", defaultValue: true },
+]);
+```
+
+## Custom Layouts
+
+By default, `<Form>` renders fields vertically with auto-generated submit button. For custom layouts, use the compound components:
+
+```tsx
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+  FormReset,
+} from "@/components/buzzform/form";
+
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent className="space-y-6">
+    <FormFields />
+    <div className="flex gap-2">
+      <FormSubmit>Create Account</FormSubmit>
+      <FormReset>Clear</FormReset>
+    </div>
+  </FormContent>
+</Form>;
+```
+
+## What's Next?
+
+You now know the core BuzzForm pattern. From here, explore:
+
+- **Field Types** - Learn about all 17+ available field types
+- **Validation** - Custom validators, async validation, cross-field validation
+- **Layouts** - Row, Group, Collapsible, Tabs, and Array fields

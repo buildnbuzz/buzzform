@@ -1,0 +1,176 @@
+---
+title: Collapsible Field
+description: Expandable section for organizing optional or advanced fields.
+---
+
+# Collapsible Field
+
+The `collapsible` field provides an expandable/collapsible section for organizing fields. Unlike `group`, it doesn't create nested data—fields remain at the current level.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/collapsible
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/collapsible
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  { type: "text", name: "title", label: "Title", required: true },
+  {
+    type: "collapsible",
+    label: "Advanced Options",
+    collapsed: true,
+    fields: [
+      { type: "text", name: "slug", label: "URL Slug" },
+      { type: "switch", name: "featured", label: "Featured" },
+    ],
+  },
+]);
+
+// Result: { title, slug, featured } — flat, not nested
+
+export function CollapsibleFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `label` | `string` | - | Section title |
+| `fields` | `Field[]` | - | Fields inside section |
+| `collapsed` | `boolean` | `false` | Start collapsed |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.variant` | `'card' \| 'flat' \| 'ghost' \| 'bordered'` | `'bordered'` | Visual style |
+| `ui.spacing` | `'sm' \| 'md' \| 'lg'` | `'md'` | Space between fields |
+| `ui.showErrorBadge` | `boolean` | `true` | Show error count badge |
+| `ui.description` | `string` | - | Section description |
+| `ui.icon` | `ReactNode` | - | Section icon |
+
+## Group vs Collapsible
+
+| Feature | Group | Collapsible |
+|---------|-------|-------------|
+| Creates nested data | ✅ Yes | ❌ No |
+| Has `name` prop | ✅ Required | ❌ None |
+| Collapsible | ✅ Optional | ✅ Always |
+| Use case | Data structure | Visual organization |
+
+## Variants
+
+### Bordered (Default)
+
+```tsx
+{
+  type: "collapsible",
+  label: "More Options",
+  fields: [...],
+  ui: { variant: "bordered" },
+}
+```
+
+### Card
+
+```tsx
+{
+  type: "collapsible",
+  label: "Settings",
+  fields: [...],
+  ui: { variant: "card" },
+}
+```
+
+### Ghost
+
+```tsx
+{
+  type: "collapsible",
+  label: "Advanced",
+  fields: [...],
+  ui: { variant: "ghost" },
+}
+```
+
+## Examples
+
+### Advanced Settings
+
+```tsx
+{
+  type: "collapsible",
+  label: "Advanced Settings",
+  collapsed: true,
+  fields: [
+    { type: "text", name: "apiKey", label: "API Key" },
+    { type: "switch", name: "debug", label: "Debug Mode" },
+    { type: "number", name: "timeout", label: "Timeout (ms)", defaultValue: 5000 },
+  ],
+  ui: {
+    variant: "bordered",
+    description: "Configure advanced options",
+  },
+}
+```
+
+### SEO Options
+
+```tsx
+{
+  type: "collapsible",
+  label: "SEO",
+  collapsed: true,
+  fields: [
+    { type: "text", name: "metaTitle", label: "Meta Title", maxLength: 60 },
+    { type: "textarea", name: "metaDescription", label: "Meta Description", maxLength: 160 },
+    { type: "tags", name: "keywords", label: "Keywords", maxTags: 10 },
+  ],
+  ui: { variant: "card" },
+}
+```
+
+### Optional Details
+
+```tsx
+const schema = createSchema([
+  { type: "text", name: "name", label: "Product Name", required: true },
+  { type: "number", name: "price", label: "Price", required: true },
+  {
+    type: "collapsible",
+    label: "Optional Details",
+    collapsed: true,
+    fields: [
+      { type: "textarea", name: "description", label: "Description" },
+      { type: "text", name: "sku", label: "SKU" },
+      { type: "number", name: "weight", label: "Weight (kg)" },
+    ],
+  },
+]);
+```
+
+### With Icon
+
+```tsx
+{
+  type: "collapsible",
+  label: "Shipping Options",
+  fields: [...],
+  ui: {
+    icon: <TruckIcon className="h-4 w-4" />,
+    description: "Configure shipping preferences",
+  },
+}
+```

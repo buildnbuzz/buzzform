@@ -1,0 +1,256 @@
+---
+title: Installation
+description: Set up BuzzForm in your project with the shadcn registry or manual installation.
+---
+
+# Installation
+
+BuzzForm works with any React project that uses [shadcn/ui](https://ui.shadcn.com). This guide covers everything that gets installed and where files end up.
+
+## Prerequisites
+
+Before installing BuzzForm, ensure you have:
+
+- **Node.js 20+**
+- **React 18 or 19**
+- **A project with shadcn/ui initialized** ([setup guide](https://ui.shadcn.com/docs/installation))
+
+## Quick Install (Recommended)
+
+The fastest way to get started is using the shadcn registry. This single command installs everything you need:
+
+```bash tab="pnpm" selected
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/starter
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/starter
+```
+
+```bash tab="yarn"
+yarn dlx shadcn@latest add https://form.buildnbuzz.com/r/starter
+```
+
+```bash tab="bun"
+bunx shadcn@latest add https://form.buildnbuzz.com/r/starter
+```
+
+### Using a Named Registry (Optional)
+
+If you prefer shorter commands, you can configure BuzzForm as a named registry in your `components.json`:
+
+```json title="components.json"
+{
+  "registries": {
+    "@buzzform": "https://form.buildnbuzz.com/r/{name}.json"
+  }
+}
+```
+
+Then use the namespace instead of the full URL:
+
+```bash
+npx shadcn@latest add @buzzform/starter
+```
+
+This also works for installing individual components:
+
+```bash
+npx shadcn@latest add @buzzform/text @buzzform/select @buzzform/date
+```
+
+## What Gets Installed
+
+When you run the starter command, here's exactly what happens:
+
+### 1. NPM Package
+
+The core library is added to your `package.json`:
+
+```json
+{
+  "dependencies": {
+    "@buildnbuzz/buzzform": "^0.1.0"
+  }
+}
+```
+
+This package contains:
+
+- Field type definitions and TypeScript types
+- Schema creation utilities (`createSchema`)
+- React Hook Form adapter (`useRhf`)
+- Zod schema generator (`zodResolver`)
+
+### 2. Peer Dependencies
+
+BuzzForm requires these peer dependencies (installed automatically if missing):
+
+| Package           | Version | Purpose               |
+| ----------------- | ------- | --------------------- |
+| `react-hook-form` | ^7.0.0  | Form state management |
+| `zod`             | ^3.0.0  | Runtime validation    |
+
+Some field types require additional dependencies:
+
+| Field              | Extra Dependencies                                         |
+| ------------------ | ---------------------------------------------------------- |
+| `date`, `datetime` | `date-fns`                                                 |
+| `array`            | `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` |
+
+### 3. Component Files
+
+Components are copied to your project as `.tsx` files. This gives you full control—you can modify anything.
+
+<Files>
+  <Folder name="components" defaultOpen>
+    <Folder name="buzzform" defaultOpen>
+      <File name="form.tsx" />
+      <File name="provider.tsx" />
+      <File name="copy.tsx" />
+      <Folder name="lib">
+        <File name="password.ts" />
+      </Folder>
+      <Folder name="fields" defaultOpen>
+        <File name="render.tsx" />
+        <File name="text.tsx" />
+        <File name="select.tsx" />
+        <File name="..." />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+| File                | Purpose                                            |
+| ------------------- | -------------------------------------------------- |
+| `form.tsx`          | Form, FormFields, FormSubmit, FormReset components |
+| `provider.tsx`      | BuzzFormProvider (wraps your app)                  |
+| `copy.tsx`          | Copy-to-clipboard utility                          |
+| `lib/password.ts`   | Password generation utilities                      |
+| `fields/render.tsx` | Field renderer (maps types to components)          |
+| `fields/*.tsx`      | Individual field type components                   |
+
+## Setting Up the Provider (Optional)
+
+The `BuzzFormProvider` is **optional** but recommended. It lets you configure React Hook Form and Zod validation globally, so you don't have to repeat settings on every form.
+
+### Option 1: Global Provider (Recommended)
+
+Wrap your application with `BuzzFormProvider` in your root layout:
+
+```tsx title="app/layout.tsx"
+import { BuzzFormProvider } from "@/components/buzzform/provider";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BuzzFormProvider>{children}</BuzzFormProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+The provider sets up:
+
+- **React Hook Form** as the form state adapter
+- **Zod** as the validation resolver
+- **`onBlur` validation mode** (validates when fields lose focus)
+
+<Callout type="info">
+  You can customize the provider by editing `components/buzzform/provider.tsx`.
+  Change the validation mode, add default values, or swap adapters.
+</Callout>
+
+### Option 2: Per-Form Configuration
+
+If you prefer not to use a global provider, you can pass the adapter and resolver directly to each `Form` component:
+
+```tsx
+import { useRhf } from "@buildnbuzz/buzzform/rhf";
+import { zodResolver } from "@buildnbuzz/buzzform/zod";
+import { Form } from "@/components/buzzform/form";
+
+export function MyForm() {
+  return (
+    <Form
+      schema={schema}
+      adapter={useRhf}
+      resolver={zodResolver}
+      mode="onBlur"
+      onSubmit={handleSubmit}
+    />
+  );
+}
+```
+
+This gives you more control when you need different settings per form, but requires more boilerplate.
+
+## Manual Installation
+
+If you prefer installing components individually:
+
+### Step 1: Install Core Package
+
+```bash
+npm install @buildnbuzz/buzzform react-hook-form zod
+```
+
+### Step 2: Install Core Components
+
+```bash
+npx shadcn@latest add @buzzform/init @buzzform/rhf-provider
+```
+
+### Step 3: Install Field Components
+
+Install only the field types you need:
+
+```bash
+npx shadcn@latest add @buzzform/text @buzzform/password @buzzform/select
+```
+
+Available fields: `text`, `textarea`, `password`, `checkbox`, `switch`, `radio`, `number`, `date`, `select`, `tags`, `upload`, `row`, `group`, `collapsible`, `tabs`, `array`.
+
+## Verifying Installation
+
+Create a simple form to verify everything works:
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email", required: true },
+]);
+
+export function TestForm() {
+  return (
+    <Form
+      schema={schema}
+      onSubmit={(data) => console.log(data)}
+      submitLabel="Submit"
+    />
+  );
+}
+```
+
+If you see a form with Name and Email fields, you're all set!
+
+## Troubleshooting
+
+### "Field type 'xxx' is not registered"
+
+You're using a field type that isn't installed. Install it individually:
+
+```bash
+npx shadcn@latest add https://form.buildnbuzz.com/r/xxx
+```
+
+Then import and register it in `components/buzzform/fields/render.tsx`.
+
+### Provider not found errors
+
+Make sure `BuzzFormProvider` wraps your entire application, not just individual pages.

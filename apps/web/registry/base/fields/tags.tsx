@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useMemo,
-  KeyboardEvent,
-} from "react";
+import React, { useState, useRef, KeyboardEvent } from "react";
 import type {
   TagsField as TagsFieldType,
   FormAdapter,
@@ -72,15 +66,11 @@ export function TagsField({
 
   // Watch field value directly
   const rawValue = form.watch<string[]>(path);
-  const emptyTags = useMemo(() => [], []);
-  const tags = Array.isArray(rawValue) ? rawValue : emptyTags;
+  const tags = Array.isArray(rawValue) ? rawValue : [];
   const hasError = !!error;
 
-  // Get delimiters from field config - memoized
-  const delimiters = useMemo(
-    () => field.ui?.delimiters ?? ["enter"],
-    [field.ui?.delimiters]
-  );
+  // Get delimiters from field config
+  const delimiters = field.ui?.delimiters ?? ["enter"];
   const variant = field.ui?.variant ?? "chips";
   const allowDuplicates = field.allowDuplicates ?? false;
   const maxTags = field.maxTags;
@@ -88,92 +78,77 @@ export function TagsField({
 
   const canAddMore = maxTags === undefined || tags.length < maxTags;
 
-  const updateTags = useCallback(
-    (newTags: string[]) => {
-      form.setValue(path, newTags, { shouldDirty: true });
-    },
-    [form, path]
-  );
+  const updateTags = (newTags: string[]) => {
+    form.setValue(path, newTags, { shouldDirty: true });
+  };
 
-  const addTag = useCallback(
-    (tagValue: string) => {
-      const trimmed = tagValue.trim();
-      if (!trimmed) return false;
+  const addTag = (tagValue: string) => {
+    const trimmed = tagValue.trim();
+    if (!trimmed) return false;
 
-      // Check max tag length
-      if (maxTagLength && trimmed.length > maxTagLength) return false;
+    // Check max tag length
+    if (maxTagLength && trimmed.length > maxTagLength) return false;
 
-      // Check for duplicates
-      if (!allowDuplicates && tags.includes(trimmed)) return false;
+    // Check for duplicates
+    if (!allowDuplicates && tags.includes(trimmed)) return false;
 
-      // Check max tags limit
-      if (maxTags !== undefined && tags.length >= maxTags) return false;
+    // Check max tags limit
+    if (maxTags !== undefined && tags.length >= maxTags) return false;
 
-      updateTags([...tags, trimmed]);
-      return true;
-    },
-    [tags, updateTags, allowDuplicates, maxTags, maxTagLength]
-  );
+    updateTags([...tags, trimmed]);
+    return true;
+  };
 
-  const removeTag = useCallback(
-    (index: number) => {
-      if (isDisabled || isReadOnly) return;
-      const newTags = tags.filter((_, i) => i !== index);
-      updateTags(newTags);
-    },
-    [tags, updateTags, isDisabled, isReadOnly]
-  );
+  const removeTag = (index: number) => {
+    if (isDisabled || isReadOnly) return;
+    const newTags = tags.filter((_, i) => i !== index);
+    updateTags(newTags);
+  };
 
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      const currentValue = inputValue.trim();
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    const currentValue = inputValue.trim();
 
-      // Handle backspace to remove last tag
-      if (e.key === "Backspace" && !inputValue && tags.length > 0) {
-        removeTag(tags.length - 1);
-        return;
+    // Handle backspace to remove last tag
+    if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+      removeTag(tags.length - 1);
+      return;
+    }
+
+    // Check delimiter keys
+    const shouldAdd =
+      (delimiters.includes("enter") && e.key === "Enter") ||
+      (delimiters.includes("comma") && e.key === ",") ||
+      (delimiters.includes("space") && e.key === " ") ||
+      (delimiters.includes("tab") && e.key === "Tab");
+
+    if (shouldAdd && currentValue) {
+      e.preventDefault();
+      if (addTag(currentValue)) {
+        setInputValue("");
       }
+    }
+  };
 
-      // Check delimiter keys
-      const shouldAdd =
-        (delimiters.includes("enter") && e.key === "Enter") ||
-        (delimiters.includes("comma") && e.key === ",") ||
-        (delimiters.includes("space") && e.key === " ") ||
-        (delimiters.includes("tab") && e.key === "Tab");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
 
-      if (shouldAdd && currentValue) {
-        e.preventDefault();
-        if (addTag(currentValue)) {
-          setInputValue("");
-        }
-      }
-    },
-    [inputValue, tags, delimiters, addTag, removeTag]
-  );
+    // Handle comma/space delimiter if they're active
+    if (
+      delimiters.includes("comma") &&
+      newValue.includes(",") &&
+      !newValue.endsWith(",")
+    ) {
+      const parts = newValue.split(",");
+      const lastPart = parts.pop() ?? "";
+      parts.forEach((part) => addTag(part));
+      setInputValue(lastPart);
+      return;
+    }
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newValue = e.target.value;
+    setInputValue(newValue);
+  };
 
-      // Handle comma/space delimiter if they're active
-      if (
-        delimiters.includes("comma") &&
-        newValue.includes(",") &&
-        !newValue.endsWith(",")
-      ) {
-        const parts = newValue.split(",");
-        const lastPart = parts.pop() ?? "";
-        parts.forEach((part) => addTag(part));
-        setInputValue(lastPart);
-        return;
-      }
-
-      setInputValue(newValue);
-    },
-    [delimiters, addTag]
-  );
-
-  const handleBlur = useCallback(() => {
+  const handleBlur = () => {
     // Optionally add pending tag on blur
     const trimmed = inputValue.trim();
     if (trimmed) {
@@ -182,13 +157,13 @@ export function TagsField({
       }
     }
     form.onBlur?.(path);
-  }, [inputValue, addTag, form, path]);
+  };
 
-  const handleContainerClick = useCallback(() => {
+  const handleContainerClick = () => {
     if (!isDisabled && !isReadOnly) {
       inputRef.current?.focus();
     }
-  }, [isDisabled, isReadOnly]);
+  };
 
   // Get variant-specific styles
   const getTagStyles = () => {

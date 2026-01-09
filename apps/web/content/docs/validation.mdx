@@ -1,0 +1,158 @@
+---
+title: Validation
+description: Learn about auto-generated validation, custom validators, and async validation in BuzzForm.
+---
+
+# Validation
+
+BuzzForm automatically generates Zod validation schemas from your field definitions. You can also add custom validation logic.
+
+## Auto-Generated Validation
+
+Validation is generated from field properties:
+
+```tsx
+const schema = createSchema([
+  {
+    type: "text",
+    name: "username",
+    required: true,      // → z.string().min(1)
+    minLength: 3,        // → .min(3)
+    maxLength: 20,       // → .max(20)
+    pattern: /^[a-z]+$/, // → .regex()
+  },
+  {
+    type: "number",
+    name: "age",
+    required: true,
+    min: 18,             // → z.number().min(18)
+    max: 120,            // → .max(120)
+  },
+  {
+    type: "email",
+    name: "email",
+    required: true,      // Automatic email format validation
+  },
+]);
+```
+
+### Validation by Field Type
+
+| Field Type | Auto Validations |
+|------------|------------------|
+| `text`, `textarea` | `required`, `minLength`, `maxLength`, `pattern` |
+| `email` | `required` + email format |
+| `password` | `required`, `minLength`, `maxLength`, `criteria` |
+| `number` | `required`, `min`, `max`, `precision` |
+| `date`, `datetime` | `required`, `minDate`, `maxDate` |
+| `select`, `radio` | `required`, validates against options |
+| `tags` | `minTags`, `maxTags`, `maxTagLength` |
+| `upload` | `required`, `minFiles`, `maxFiles`, `maxSize` |
+| `array` | `minRows`, `maxRows` |
+
+## Custom Validation
+
+Add the `validate` prop for custom logic:
+
+```tsx
+{
+  type: "text",
+  name: "username",
+  label: "Username",
+  validate: (value, context) => {
+    if (value.includes(" ")) {
+      return "Username cannot contain spaces";
+    }
+    return true; // Valid
+  },
+}
+```
+
+### Validation Context
+
+The validation function receives a context object:
+
+```tsx
+validate: (value, context) => {
+  // context.data - Complete form data
+  // context.siblingData - Data at the same nesting level
+  // context.path - Path segments to this field
+
+  if (context.data.country === "US" && !value.match(/^\d{5}$/)) {
+    return "US ZIP codes must be 5 digits";
+  }
+  return true;
+}
+```
+
+## Cross-Field Validation
+
+Access other fields via `context.data`:
+
+```tsx
+const schema = createSchema([
+  { type: "password", name: "password", label: "Password" },
+  {
+    type: "password",
+    name: "confirmPassword",
+    label: "Confirm Password",
+    validate: (value, { data }) => {
+      if (value !== data.password) {
+        return "Passwords do not match";
+      }
+      return true;
+    },
+  },
+]);
+```
+
+## Async Validation
+
+Return a Promise for async validation (e.g., checking username availability):
+
+```tsx
+{
+  type: "text",
+  name: "username",
+  label: "Username",
+  validate: async (value) => {
+    const available = await checkUsernameAvailable(value);
+    if (!available) {
+      return "Username is already taken";
+    }
+    return true;
+  },
+}
+```
+
+## Validation Modes
+
+Configure when validation runs via the provider or form:
+
+```tsx
+<BuzzFormProvider mode="onBlur">
+  {/* Validates when fields lose focus */}
+</BuzzFormProvider>
+```
+
+| Mode | Description |
+|------|-------------|
+| `onSubmit` | Validate only on form submission |
+| `onBlur` | Validate when field loses focus (default) |
+| `onChange` | Validate on every keystroke |
+| `all` | Validate on all events |
+
+## Server-Side Errors
+
+Set errors programmatically after server validation:
+
+```tsx
+const handleSubmit = async (data) => {
+  const result = await submitToServer(data);
+  
+  if (result.errors) {
+    // Set field-level errors from server
+    form.setError("email", { message: "Email already registered" });
+  }
+};
+```

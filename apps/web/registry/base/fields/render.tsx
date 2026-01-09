@@ -384,14 +384,14 @@ export function FieldRenderer({
   const formValues = form.getValues();
   const siblingData = getSiblingData(formValues, path);
 
-  const isHidden = React.useMemo(() => {
+  const isHidden = (() => {
     if (!isDataField(field)) return false;
     if (typeof field.hidden === "function")
       return field.hidden(formValues, siblingData);
     return field.hidden ?? false;
-  }, [field, formValues, siblingData]);
+  })();
 
-  const isConditionMet = React.useMemo(() => {
+  const isConditionMet = (() => {
     if (!isDataField(field)) return true;
     if (field.condition) {
       return field.condition(formValues, siblingData, {
@@ -400,46 +400,48 @@ export function FieldRenderer({
       });
     }
     return true;
-  }, [field, formValues, siblingData, path]);
+  })();
 
   // Derived properties calculation
-  const fieldId = React.useMemo(
-    () => (isDataField(field) && field.id ? field.id : generateFieldId(path)),
-    [field, path]
-  );
+  const fieldId =
+    isDataField(field) && field.id ? field.id : generateFieldId(path);
 
-  const label = React.useMemo(
-    () =>
-      isDataField(field) && field.label !== false
-        ? (field.label ?? field.name ?? null)
-        : null,
-    [field]
-  );
+  const label = (() => {
+    // Layout fields (like collapsible, tabs) have label but no name
+    if ("label" in field && field.label !== false) {
+      return field.label ?? null;
+    }
+    // Data fields use label or fallback to name
+    if (isDataField(field) && field.label !== false) {
+      return field.label ?? field.name ?? null;
+    }
+    return null;
+  })();
 
-  const isDisabled = React.useMemo(() => {
+  const isDisabled = (() => {
     if (!isDataField(field)) return false;
     const disabled =
       typeof field.disabled === "function"
         ? field.disabled(formValues, siblingData)
         : (field.disabled ?? false);
     return disabled || form.formState.isSubmitting;
-  }, [field, formValues, siblingData, form.formState.isSubmitting]);
+  })();
 
-  const isReadOnly = React.useMemo(() => {
+  const isReadOnly = (() => {
     if (!isDataField(field)) return false;
     return typeof field.readOnly === "function"
       ? field.readOnly(formValues, siblingData)
       : (field.readOnly ?? false);
-  }, [field, formValues, siblingData]);
+  })();
 
   const error = getErrorMessage(form.formState.errors, path);
 
-  const shouldAutoFocus = React.useMemo(() => {
+  const shouldAutoFocus = (() => {
     if (!isDataField(field)) return false;
     return (
       isFirstField && form.settings?.autoFocus && !isDisabled && !isReadOnly
     );
-  }, [field, form.settings?.autoFocus, isDisabled, isReadOnly, isFirstField]);
+  })();
 
   if (isHidden || !isConditionMet) return null;
 
@@ -522,12 +524,13 @@ export function RenderFields({
   basePath = "",
   registry,
 }: RenderFieldsProps) {
-  const firstFieldName = React.useMemo(() => {
-    for (const field of fields) {
-      if ("name" in field && field.name) return field.name;
+  let firstFieldName: string | null = null;
+  for (const field of fields) {
+    if ("name" in field && field.name) {
+      firstFieldName = field.name;
+      break;
     }
-    return null;
-  }, [fields]);
+  }
 
   return (
     <>

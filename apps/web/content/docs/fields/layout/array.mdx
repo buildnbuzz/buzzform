@@ -1,0 +1,268 @@
+---
+title: Array Field
+description: Repeatable field groups with drag-drop reordering.
+---
+
+# Array Field
+
+The `array` field creates repeatable field groups with add/remove functionality and optional drag-and-drop reordering.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/array
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/array
+```
+
+<Callout>
+Drag-and-drop requires `@dnd-kit`. Install with: `npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
+</Callout>
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "array",
+    name: "contacts",
+    label: "Contacts",
+    fields: [
+      { type: "text", name: "name", label: "Name", required: true },
+      { type: "email", name: "email", label: "Email", required: true },
+    ],
+  },
+]);
+
+// Result: { contacts: [{ name, email }, { name, email }, ...] }
+
+export function ArrayFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `name` | `string` | - | Array key in form data |
+| `fields` | `Field[]` | - | Fields for each array item |
+| `minRows` | `number` | - | Minimum items |
+| `maxRows` | `number` | - | Maximum items |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.isSortable` | `boolean` | `true` | Enable drag-drop reordering |
+| `ui.addLabel` | `string` | `"Add Item"` | Add button text |
+| `ui.rowLabelField` | `string` | - | Field name for row titles |
+| `ui.collapsed` | `boolean` | `false` | Start container collapsed |
+| `ui.rowsCollapsed` | `boolean` | `false` | Start rows collapsed |
+| `ui.confirmDelete` | `boolean` | `false` | Confirm before delete all |
+| `ui.emptyMessage` | `string` | - | Empty state message |
+| `ui.showErrorBadge` | `boolean` | `true` | Show error count badge |
+
+## Features
+
+### Row Constraints
+
+Limit the number of items:
+
+```tsx
+{
+  type: "array",
+  name: "items",
+  minRows: 1,  // At least 1 item required
+  maxRows: 10, // Maximum 10 items
+  fields: [...],
+}
+```
+
+### Dynamic Row Labels
+
+Show a field value as the row title:
+
+```tsx
+{
+  type: "array",
+  name: "team",
+  label: "Team Members",
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    { type: "email", name: "email", label: "Email" },
+  ],
+  ui: { rowLabelField: "name" }, // Shows person's name in row header
+}
+```
+
+### Drag-and-Drop Reordering
+
+Enabled by default. Disable with:
+
+```tsx
+{
+  type: "array",
+  name: "items",
+  fields: [...],
+  ui: { isSortable: false },
+}
+```
+
+### Collapsed Rows
+
+Start with all rows collapsed:
+
+```tsx
+{
+  type: "array",
+  name: "items",
+  fields: [...],
+  ui: { rowsCollapsed: true },
+}
+```
+
+### Delete Confirmation
+
+Require confirmation before deleting all items:
+
+```tsx
+{
+  type: "array",
+  name: "items",
+  fields: [...],
+  ui: { confirmDelete: true },
+}
+```
+
+## Examples
+
+### Contact List
+
+```tsx
+{
+  type: "array",
+  name: "contacts",
+  label: "Contacts",
+  minRows: 1,
+  maxRows: 5,
+  fields: [
+    {
+      type: "row",
+      fields: [
+        { type: "text", name: "name", label: "Name", required: true },
+        { type: "email", name: "email", label: "Email", required: true },
+      ],
+    },
+    { type: "text", name: "phone", label: "Phone" },
+  ],
+  ui: {
+    addLabel: "Add Contact",
+    rowLabelField: "name",
+    confirmDelete: true,
+  },
+}
+```
+
+### Order Line Items
+
+```tsx
+{
+  type: "array",
+  name: "items",
+  label: "Order Items",
+  minRows: 1,
+  fields: [
+    {
+      type: "row",
+      fields: [
+        { type: "text", name: "product", label: "Product", style: { width: "50%" } },
+        { type: "number", name: "quantity", label: "Qty", min: 1, style: { width: "25%" } },
+        { type: "number", name: "price", label: "Price", ui: { prefix: "$" }, style: { width: "25%" } },
+      ],
+    },
+  ],
+  ui: {
+    addLabel: "Add Item",
+    rowLabelField: "product",
+  },
+}
+```
+
+### Experience Timeline
+
+```tsx
+{
+  type: "array",
+  name: "experience",
+  label: "Work Experience",
+  fields: [
+    {
+      type: "row",
+      fields: [
+        { type: "text", name: "company", label: "Company", required: true },
+        { type: "text", name: "title", label: "Job Title", required: true },
+      ],
+    },
+    {
+      type: "row",
+      fields: [
+        { type: "date", name: "startDate", label: "Start Date", required: true },
+        { type: "date", name: "endDate", label: "End Date" },
+      ],
+    },
+    { type: "textarea", name: "description", label: "Description" },
+  ],
+  ui: {
+    addLabel: "Add Experience",
+    rowLabelField: "company",
+    isSortable: true,
+  },
+}
+```
+
+### Nested Arrays
+
+```tsx
+{
+  type: "array",
+  name: "sections",
+  label: "Sections",
+  fields: [
+    { type: "text", name: "title", label: "Section Title" },
+    {
+      type: "array",
+      name: "items",
+      label: "Items",
+      fields: [
+        { type: "text", name: "content", label: "Content" },
+      ],
+      ui: { addLabel: "Add Item" },
+    },
+  ],
+  ui: { addLabel: "Add Section" },
+}
+
+// Result: { sections: [{ title, items: [{ content }, ...] }, ...] }
+```
+
+### Read-Only Array
+
+```tsx
+{
+  type: "array",
+  name: "history",
+  label: "Order History",
+  fields: [
+    { type: "text", name: "orderId", label: "Order ID", readOnly: true },
+    { type: "date", name: "date", label: "Date", readOnly: true },
+  ],
+  ui: { isSortable: false },
+  readOnly: true, // No add/remove buttons
+}
+```

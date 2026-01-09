@@ -40,25 +40,23 @@ const useTabErrors = (
 ): number => {
   const errors = form.formState.errors;
 
-  return React.useMemo(() => {
-    const tabPath = tab.name
-      ? basePath
-        ? `${basePath}.${tab.name}`
-        : tab.name
-      : basePath;
+  const tabPath = tab.name
+    ? basePath
+      ? `${basePath}.${tab.name}`
+      : tab.name
+    : basePath;
 
-    const nestedPaths = getNestedFieldPaths(tab.fields, tabPath);
-    let errorCount = 0;
+  const nestedPaths = getNestedFieldPaths(tab.fields, tabPath);
+  let errorCount = 0;
 
-    for (const fieldPath of nestedPaths) {
-      const error = errors[fieldPath];
-      if (error) {
-        errorCount++;
-      }
+  for (const fieldPath of nestedPaths) {
+    const error = errors[fieldPath];
+    if (error) {
+      errorCount++;
     }
+  }
 
-    return errorCount;
-  }, [errors, tab, basePath]);
+  return errorCount;
 };
 
 interface TabTriggerWithBadgeProps {

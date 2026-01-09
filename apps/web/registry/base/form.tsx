@@ -76,14 +76,14 @@ function FormRoot<TData extends Record<string, unknown>>(
   }: FormProps<TData>,
   ref: React.ForwardedRef<FormAdapter<TData>>
 ) {
-  const settings = React.useMemo<FormSettings | undefined>(() => {
+  const settings: FormSettings | undefined = (() => {
     if (!explicitSettings && !requireDirty) return undefined;
     return {
       ...explicitSettings,
       submitOnlyWhenDirty:
         requireDirty || explicitSettings?.submitOnlyWhenDirty,
     };
-  }, [explicitSettings, requireDirty]);
+  })();
 
   const form = useForm<TData>({
     schema,
@@ -96,23 +96,20 @@ function FormRoot<TData extends Record<string, unknown>>(
 
   React.useImperativeHandle(ref, () => form);
 
-  const fields = React.useMemo(() => {
+  const fields: readonly Field[] = (() => {
     if (explicitFields) return explicitFields;
     if (schema && "fields" in schema) return schema.fields as readonly Field[];
     return [];
-  }, [explicitFields, schema]);
+  })();
 
-  const contextValue = React.useMemo<FormContextValue<TData>>(
-    () => ({
-      form,
-      fields,
-      registry,
-      disabled,
-      requireDirty,
-      disableIfInvalid,
-    }),
-    [form, fields, registry, disabled, requireDirty, disableIfInvalid]
-  );
+  const contextValue: FormContextValue<TData> = {
+    form,
+    fields,
+    registry,
+    disabled,
+    requireDirty,
+    disableIfInvalid,
+  };
 
   const content = children ?? (
     <FormContent className={className}>
@@ -170,10 +167,7 @@ function FormField({
   ...props
 }: React.ComponentProps<"div"> & { name: string }) {
   const { fields, form, registry } = useFormContext();
-  const field = React.useMemo(
-    () => fields.find((f) => "name" in f && f.name === name),
-    [fields, name]
-  );
+  const field = fields.find((f) => "name" in f && f.name === name);
 
   if (!field) {
     if (process.env.NODE_ENV === "development") {

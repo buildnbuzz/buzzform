@@ -1,0 +1,185 @@
+---
+title: Radio Field
+description: Radio button group with default and card variants.
+---
+
+# Radio Field
+
+The `radio` field renders a single-selection radio button group with optional card layout for visual selection.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/radio
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/radio
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "radio",
+    name: "plan",
+    label: "Select Plan",
+    required: true,
+    options: [
+      { label: "Free", value: "free" },
+      { label: "Pro", value: "pro" },
+      { label: "Enterprise", value: "enterprise" },
+    ],
+  },
+]);
+
+export function RadioFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `options` | `Array \| Function` | - | Radio options |
+| `dependencies` | `string[]` | - | Fields that trigger refetch |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.variant` | `'default' \| 'card'` | `'default'` | Visual style |
+| `ui.direction` | `'vertical' \| 'horizontal'` | `'vertical'` | Layout direction |
+| `ui.columns` | `1 \| 2 \| 3 \| 4` | - | Grid columns |
+| `ui.card.size` | `'sm' \| 'md' \| 'lg'` | `'md'` | Card size |
+| `ui.card.bordered` | `boolean` | `true` | Show card border |
+
+## Variants
+
+### Default Radio Buttons
+
+Standard radio button list:
+
+```tsx
+{
+  type: "radio",
+  name: "size",
+  label: "Size",
+  options: ["Small", "Medium", "Large"],
+  ui: { direction: "horizontal" },
+}
+```
+
+### Card Variant
+
+Visual card-based selection:
+
+```tsx
+{
+  type: "radio",
+  name: "plan",
+  label: "Plan",
+  options: [
+    { label: "Free", value: "free", description: "$0/month" },
+    { label: "Pro", value: "pro", description: "$10/month" },
+    { label: "Enterprise", value: "enterprise", description: "Custom pricing" },
+  ],
+  ui: { variant: "card", columns: 3 },
+}
+```
+
+## Option Format
+
+Options support descriptions and icons:
+
+```tsx
+options: [
+  {
+    label: "Standard Delivery",
+    value: "standard",
+    description: "5-7 business days",
+  },
+  {
+    label: "Express Delivery",
+    value: "express",
+    description: "2-3 business days",
+    icon: <TruckIcon />,
+  },
+  {
+    label: "Next Day",
+    value: "nextday",
+    description: "Delivered tomorrow",
+    disabled: true, // Not available
+  },
+]
+```
+
+## Examples
+
+### Shipping Options
+
+```tsx
+{
+  type: "radio",
+  name: "shipping",
+  label: "Shipping Method",
+  required: true,
+  options: [
+    { label: "Standard", value: "standard", description: "Free - 5-7 days" },
+    { label: "Express", value: "express", description: "$9.99 - 2-3 days" },
+    { label: "Overnight", value: "overnight", description: "$19.99 - Next day" },
+  ],
+  ui: { variant: "card" },
+}
+```
+
+### Size Selector
+
+```tsx
+{
+  type: "radio",
+  name: "size",
+  label: "Size",
+  required: true,
+  options: ["XS", "S", "M", "L", "XL"],
+  ui: {
+    variant: "card",
+    columns: 5,
+    card: { size: "sm" },
+  },
+}
+```
+
+### Payment Method
+
+```tsx
+{
+  type: "radio",
+  name: "paymentMethod",
+  label: "Payment Method",
+  required: true,
+  options: [
+    { label: "Credit Card", value: "card", icon: <CreditCardIcon /> },
+    { label: "PayPal", value: "paypal", icon: <PaypalIcon /> },
+    { label: "Bank Transfer", value: "bank", icon: <BankIcon /> },
+  ],
+  ui: { variant: "card", columns: 3 },
+}
+```
+
+### Horizontal Radio
+
+```tsx
+{
+  type: "radio",
+  name: "gender",
+  label: "Gender",
+  options: ["Male", "Female", "Other", "Prefer not to say"],
+  ui: { direction: "horizontal" },
+}
+```

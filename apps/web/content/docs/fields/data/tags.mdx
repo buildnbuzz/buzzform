@@ -1,0 +1,179 @@
+---
+title: Tags Field
+description: Chip-based multi-value input for entering multiple text values.
+---
+
+# Tags Field
+
+The `tags` field allows users to enter multiple text values as chips/tags. Values are created by pressing Enter or using configured delimiters.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/tags
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/tags
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "tags",
+    name: "skills",
+    label: "Skills",
+    placeholder: "Add a skill...",
+  },
+]);
+
+export function TagsFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `minTags` | `number` | - | Minimum number of tags |
+| `maxTags` | `number` | - | Maximum number of tags |
+| `maxTagLength` | `number` | - | Maximum characters per tag |
+| `allowDuplicates` | `boolean` | `false` | Allow duplicate values |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.delimiters` | `Array` | `['enter']` | Keys that create tags |
+| `ui.variant` | `'chips' \| 'pills' \| 'inline'` | `'chips'` | Visual style |
+| `ui.copyable` | `boolean` | `false` | Copy all tags button |
+
+## Delimiters
+
+Configure which keys create new tags:
+
+```tsx
+{
+  type: "tags",
+  name: "emails",
+  label: "Email Addresses",
+  ui: {
+    delimiters: ["enter", "comma", "space"],
+  },
+}
+```
+
+Available delimiters:
+- `"enter"` - Enter key
+- `"comma"` - Comma key
+- `"space"` - Space key
+- `"tab"` - Tab key
+
+## Variants
+
+### Chips (Default)
+
+```tsx
+{
+  type: "tags",
+  name: "tags",
+  ui: { variant: "chips" },
+}
+```
+
+### Pills
+
+Rounded pill style:
+
+```tsx
+{
+  type: "tags",
+  name: "tags",
+  ui: { variant: "pills" },
+}
+```
+
+### Inline
+
+Compact inline display:
+
+```tsx
+{
+  type: "tags",
+  name: "tags",
+  ui: { variant: "inline" },
+}
+```
+
+## Examples
+
+### Skills Input
+
+```tsx
+{
+  type: "tags",
+  name: "skills",
+  label: "Skills",
+  placeholder: "Type a skill and press Enter",
+  maxTags: 10,
+  maxTagLength: 30,
+  ui: {
+    delimiters: ["enter", "comma"],
+    variant: "pills",
+  },
+}
+```
+
+### Email List
+
+```tsx
+{
+  type: "tags",
+  name: "recipients",
+  label: "Recipients",
+  placeholder: "Enter email addresses",
+  minTags: 1,
+  ui: {
+    delimiters: ["enter", "comma", "space"],
+  },
+  validate: (value) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalid = value.find((email) => !emailRegex.test(email));
+    if (invalid) return `Invalid email: ${invalid}`;
+    return true;
+  },
+}
+```
+
+### Keyword Tags
+
+```tsx
+{
+  type: "tags",
+  name: "keywords",
+  label: "Keywords",
+  description: "Add keywords for SEO",
+  maxTags: 5,
+  maxTagLength: 20,
+  placeholder: "Add up to 5 keywords",
+}
+```
+
+### With Copyable
+
+```tsx
+{
+  type: "tags",
+  name: "apiKeys",
+  label: "API Keys",
+  readOnly: true,
+  defaultValue: ["key1", "key2", "key3"],
+  ui: { copyable: true },
+}
+```

@@ -1,5 +1,20 @@
 {
   "title": "Docs",
   "root": true,
-  "pages": ["---Introduction---", "index"]
+  "pages": [
+    "---Getting Started---",
+    "index",
+    "installation",
+    "your-first-form",
+    "---Core Concepts---",
+    "schema",
+    "validation",
+    "conditional-logic",
+    "custom-rendering",
+    "---Fields---",
+    "...fields",
+    "---Reference---",
+    "form-component",
+    "configuration"
+  ]
 }

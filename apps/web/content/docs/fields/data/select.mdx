@@ -1,0 +1,262 @@
+---
+title: Select Field
+description: Dropdown with search, multi-select, and async options.
+---
+
+# Select Field
+
+The `select` field provides a dropdown with optional search, multiple selection, and async data loading with dependency support.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/select
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/select
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "select",
+    name: "country",
+    label: "Country",
+    options: [
+      { label: "United States", value: "us" },
+      { label: "Canada", value: "ca" },
+      { label: "Mexico", value: "mx" },
+    ],
+  },
+]);
+
+export function SelectFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop           | Type                | Default | Description                 |
+| -------------- | ------------------- | ------- | --------------------------- |
+| `options`      | `Array \| Function` | -       | Static or async options     |
+| `dependencies` | `string[]`          | -       | Fields that trigger refetch |
+| `hasMany`      | `boolean`           | `false` | Allow multiple selections   |
+
+## UI Options
+
+| Option               | Type      | Default        | Description                   |
+| -------------------- | --------- | -------------- | ----------------------------- |
+| `ui.isSearchable`    | `boolean` | `false`        | Enable search filtering       |
+| `ui.isClearable`     | `boolean` | `false`        | Show clear button             |
+| `ui.maxVisibleChips` | `number`  | -              | Limit visible chips (hasMany) |
+| `ui.emptyMessage`    | `string`  | `"No options"` | Empty state message           |
+| `ui.loadingMessage`  | `string`  | `"Loading..."` | Loading state message         |
+
+## Option Format
+
+Options can be strings or objects:
+
+```tsx
+// String array
+options: ["Small", "Medium", "Large"];
+
+// Object array
+options: [
+  { label: "Small", value: "sm" },
+  { label: "Medium", value: "md", description: "Most popular" },
+  { label: "Large", value: "lg", disabled: true },
+];
+```
+
+### Option Properties
+
+| Property      | Type                          | Description    |
+| ------------- | ----------------------------- | -------------- |
+| `label`       | `string \| ReactNode`         | Display text   |
+| `value`       | `string \| number \| boolean` | Option value   |
+| `description` | `string`                      | Secondary text |
+| `icon`        | `ReactNode`                   | Leading icon   |
+| `badge`       | `string`                      | Trailing badge |
+| `disabled`    | `boolean`                     | Disable option |
+
+## Features
+
+### Searchable Select
+
+Filter options by typing:
+
+```tsx
+{
+  type: "select",
+  name: "country",
+  label: "Country",
+  options: countries, // Large list
+  ui: { isSearchable: true },
+}
+```
+
+### Multi-Select
+
+Allow multiple selections:
+
+```tsx
+{
+  type: "select",
+  name: "tags",
+  label: "Tags",
+  hasMany: true,
+  options: ["React", "TypeScript", "Next.js", "Tailwind"],
+  ui: { maxVisibleChips: 3 }, // Show "+2 more" for extras
+}
+```
+
+### Async Options
+
+Load options dynamically:
+
+```tsx
+{
+  type: "select",
+  name: "user",
+  label: "User",
+  options: async () => {
+    const users = await fetchUsers();
+    return users.map(u => ({ label: u.name, value: u.id }));
+  },
+}
+```
+
+### Dependent Dropdowns
+
+Refetch options when another field changes:
+
+```tsx
+const schema = createSchema([
+  {
+    type: "select",
+    name: "country",
+    label: "Country",
+    options: countries,
+  },
+  {
+    type: "select",
+    name: "state",
+    label: "State",
+    dependencies: ["country"], // Refetch when country changes
+    options: async ({ data }) => {
+      if (!data.country) return [];
+      return await fetchStates(data.country);
+    },
+    disabled: (data) => !data.country,
+  },
+  {
+    type: "select",
+    name: "city",
+    label: "City",
+    dependencies: ["country", "state"],
+    options: async ({ data }) => {
+      if (!data.state) return [];
+      return await fetchCities(data.country, data.state);
+    },
+    disabled: (data) => !data.state,
+  },
+]);
+```
+
+## Examples
+
+### Role Selector
+
+```tsx
+{
+  type: "select",
+  name: "role",
+  label: "Role",
+  required: true,
+  options: [
+    { label: "Viewer", value: "viewer", description: "Can view content" },
+    { label: "Editor", value: "editor", description: "Can edit content" },
+    { label: "Admin", value: "admin", description: "Full access" },
+  ],
+  ui: { isClearable: true },
+}
+```
+
+### Category Multi-Select
+
+```tsx
+{
+  type: "select",
+  name: "categories",
+  label: "Categories",
+  hasMany: true,
+  required: true,
+  options: [
+    { label: "Technology", value: "tech", icon: <LaptopIcon /> },
+    { label: "Design", value: "design", icon: <PaletteIcon /> },
+    { label: "Business", value: "business", icon: <BriefcaseIcon /> },
+  ],
+  ui: {
+    isSearchable: true,
+    maxVisibleChips: 2,
+  },
+}
+```
+
+### Timezone Selector
+
+```tsx
+{
+  type: "select",
+  name: "timezone",
+  label: "Timezone",
+  options: Intl.supportedValuesOf("timeZone").map(tz => ({
+    label: tz.replace(/_/g, " "),
+    value: tz,
+  })),
+  defaultValue: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  ui: { isSearchable: true },
+}
+```
+
+## Radix UI Migration
+
+<Callout type="info">
+  The Select component uses **Base UI's render prop pattern** by default. If
+  your project uses **Radix UI primitives** with `asChild`, you'll need to
+  update the component after installing.
+</Callout>
+
+### Pattern Difference
+
+**Base UI (default)** - The button receives a `render` prop that specifies what underlying element to use:
+
+```tsx
+<InputGroupButton id={fieldId} render={<ComboboxTrigger />} className="...">
+  {/* button content */}
+</InputGroupButton>
+```
+
+**Radix UI** - The button uses `asChild` and the trigger becomes its child, inheriting the button's styling:
+
+```tsx
+<InputGroupButton id={fieldId} className="..." asChild>
+  <ComboboxTrigger>{/* button content */}</ComboboxTrigger>
+</InputGroupButton>
+```
+
+With `asChild` on the Button, the button's styling and props are passed down to the `ComboboxTrigger`, which handles the dropdown behavior.
+
+### Migration Steps
+
+1. Find `render={<ComboboxTrigger />}` patterns in `select.tsx`
+2. Remove the `render` prop from `InputGroupButton`
+3. Add `asChild` to `InputGroupButton`
+4. Make `<ComboboxTrigger>` a child of `InputGroupButton` and move the content inside it

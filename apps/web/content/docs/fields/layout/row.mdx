@@ -1,0 +1,155 @@
+---
+title: Row Field
+description: Arrange fields horizontally in a flexible row layout.
+---
+
+# Row Field
+
+The `row` field arranges child fields horizontally. It's a layout-only field that doesn't store data.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/row
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/row
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "row",
+    fields: [
+      { type: "text", name: "firstName", label: "First Name" },
+      { type: "text", name: "lastName", label: "Last Name" },
+    ],
+  },
+]);
+
+export function RowFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `fields` | `Field[]` | Fields to arrange horizontally |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.gap` | `number \| string` | `4` | Space between fields |
+| `ui.align` | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'` | Vertical alignment |
+| `ui.justify` | `'start' \| 'center' \| 'end' \| 'between'` | `'start'` | Horizontal distribution |
+| `ui.wrap` | `boolean` | `false` | Allow wrapping |
+| `ui.responsive` | `boolean \| 'stack'` | `false` | Stack on mobile |
+
+## Features
+
+### Field Widths
+
+Control individual field widths with `style.width`:
+
+```tsx
+{
+  type: "row",
+  fields: [
+    { type: "text", name: "city", label: "City", style: { width: "60%" } },
+    { type: "text", name: "state", label: "State", style: { width: "20%" } },
+    { type: "text", name: "zip", label: "ZIP", style: { width: "20%" } },
+  ],
+}
+```
+
+### Responsive Stacking
+
+Stack fields vertically on mobile:
+
+```tsx
+{
+  type: "row",
+  fields: [...],
+  ui: { responsive: "stack" },
+}
+```
+
+### Custom Gap
+
+```tsx
+{
+  type: "row",
+  fields: [...],
+  ui: { gap: 8 }, // 8px gap (uses spacing scale)
+}
+
+{
+  type: "row",
+  fields: [...],
+  ui: { gap: "2rem" }, // Custom CSS value
+}
+```
+
+## Examples
+
+### Name Fields
+
+```tsx
+{
+  type: "row",
+  fields: [
+    { type: "text", name: "firstName", label: "First Name", required: true },
+    { type: "text", name: "lastName", label: "Last Name", required: true },
+  ],
+  ui: { responsive: "stack" },
+}
+```
+
+### Address Line
+
+```tsx
+{
+  type: "row",
+  fields: [
+    { type: "text", name: "city", label: "City", style: { width: "50%" } },
+    { type: "text", name: "state", label: "State", style: { width: "25%" } },
+    { type: "text", name: "zip", label: "ZIP Code", style: { width: "25%" } },
+  ],
+  ui: { gap: 4, responsive: "stack" },
+}
+```
+
+### Mixed Field Types
+
+```tsx
+{
+  type: "row",
+  fields: [
+    { type: "date", name: "startDate", label: "Start Date" },
+    { type: "date", name: "endDate", label: "End Date" },
+    { type: "number", name: "budget", label: "Budget", ui: { prefix: "$" } },
+  ],
+  ui: { align: "end" }, // Align bottoms
+}
+```
+
+### Unequal Widths
+
+```tsx
+{
+  type: "row",
+  fields: [
+    { type: "text", name: "email", label: "Email", style: { width: "70%" } },
+    { type: "select", name: "type", label: "Type", options: ["Work", "Personal"], style: { width: "30%" } },
+  ],
+}
+```

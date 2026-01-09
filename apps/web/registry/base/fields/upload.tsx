@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import React, { useRef, useState, useEffect } from "react";
 import type {
   UploadField as UploadFieldType,
   FormAdapter,
@@ -138,10 +132,7 @@ function DropzoneVariant({
   inputRef: React.RefObject<HTMLInputElement | null>;
 }) {
   const [isDragging, setIsDragging] = useState(false);
-  const previewUrl = useMemo(() => {
-    if (!value) return null;
-    return getPreviewUrl(value);
-  }, [value]);
+  const previewUrl = value ? getPreviewUrl(value) : null;
 
   useEffect(() => {
     const url = previewUrl;
@@ -156,31 +147,25 @@ function DropzoneVariant({
     };
   }, [previewUrl, value]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback(() => setIsDragging(false), []);
+  const handleDragLeave = () => setIsDragging(false);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
-      if (disabled) return;
-      const file = e.dataTransfer.files?.[0];
-      if (file) onChange(file);
-    },
-    [disabled, onChange]
-  );
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (disabled) return;
+    const file = e.dataTransfer.files?.[0];
+    if (file) onChange(file);
+  };
 
-  const handleRemove = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onChange(null);
-    },
-    [onChange]
-  );
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(null);
+  };
 
   const sizeConfig = (field.ui?.size as SizeKey) || "md";
   const dzSize = DZ_SIZE_MAP[sizeConfig] || DZ_SIZE_MAP.md;
@@ -370,10 +355,7 @@ function AvatarVariant({
         ? "rounded-xl"
         : "rounded-md";
 
-  const previewUrl = useMemo(() => {
-    if (!value) return null;
-    return getPreviewUrl(value);
-  }, [value]);
+  const previewUrl = value ? getPreviewUrl(value) : null;
 
   useEffect(() => {
     const url = previewUrl;
@@ -382,13 +364,10 @@ function AvatarVariant({
     };
   }, [previewUrl, value]);
 
-  const handleRemove = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onChange(null);
-    },
-    [onChange]
-  );
+  const handleRemove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(null);
+  };
 
   return (
     <div
@@ -548,7 +527,7 @@ function GalleryThumbnail({
         ? "rounded-lg"
         : "rounded-md";
 
-  const previewUrl = useMemo(() => getPreviewUrl(file), [file]);
+  const previewUrl = getPreviewUrl(file);
 
   useEffect(() => {
     const url = previewUrl;
@@ -655,16 +634,13 @@ function GalleryVariant({
   const maxFiles = field.maxFiles;
   const minFiles = field.minFiles;
 
-  const handleRemove = useCallback(
-    (index: number) => {
-      const newFiles = [...value];
-      newFiles.splice(index, 1);
-      onChange(newFiles);
-    },
-    [value, onChange]
-  );
+  const handleRemove = (index: number) => {
+    const newFiles = [...value];
+    newFiles.splice(index, 1);
+    onChange(newFiles);
+  };
 
-  const fileIds = useMemo(() => {
+  const fileIds = (() => {
     const seen = new Map<string, number>();
     return value.map((file) => {
       const baseId =
@@ -675,7 +651,7 @@ function GalleryVariant({
       seen.set(baseId, count);
       return count === 1 ? baseId : `${baseId}-${count}`;
     });
-  }, [value]);
+  })();
 
   const canAddMore = !maxFiles || value.length < maxFiles;
 
@@ -778,87 +754,75 @@ export function UploadField({
   const hasMany = field.hasMany;
   const showProgress = field.ui?.showProgress;
 
-  const simulateProgress = useCallback(
-    (fileId: string) => {
-      // Check if already 100 or already simulating
-      if (progressMap[fileId] === 100) return;
+  const simulateProgress = (fileId: string) => {
+    // Check if already 100 or already simulating
+    if (progressMap[fileId] === 100) return;
 
-      let current = 0;
-      const interval = setInterval(() => {
-        current += Math.random() * 15 + 2;
-        if (current >= 100) {
-          current = 100;
-          clearInterval(interval);
-        }
-        setProgressMap((prev) => ({ ...prev, [fileId]: current }));
-      }, 300);
-    },
-    [progressMap]
-  );
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.random() * 15 + 2;
+      if (current >= 100) {
+        current = 100;
+        clearInterval(interval);
+      }
+      setProgressMap((prev) => ({ ...prev, [fileId]: current }));
+    }, 300);
+  };
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (!files?.length) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
 
-      if (hasMany) {
-        const currentValue = (value as FileArrayValue) || [];
-        const newFiles = Array.from(files);
-        const combined = [...currentValue, ...newFiles];
+    if (hasMany) {
+      const currentValue = (value as FileArrayValue) || [];
+      const newFiles = Array.from(files);
+      const combined = [...currentValue, ...newFiles];
 
-        if (showProgress) {
-          newFiles.forEach((f, idx) => {
-            // Include index and timestamp for absolute uniqueness within a single select
-            const id = `${f.name}-${f.size}-${f.lastModified}-${Date.now()}-${idx}`;
-            simulateProgress(id);
-          });
-        }
-
-        const maxFiles = field.maxFiles;
-        const finalValue = maxFiles ? combined.slice(0, maxFiles) : combined;
-
-        form.setValue(path, finalValue, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-      } else {
-        const file = files[0];
-
-        if (showProgress && file) {
-          const id = `${file.name}-${file.size}-${file.lastModified}-${Date.now()}`;
+      if (showProgress) {
+        newFiles.forEach((f, idx) => {
+          // Include index and timestamp for absolute uniqueness within a single select
+          const id = `${f.name}-${f.size}-${f.lastModified}-${Date.now()}-${idx}`;
           simulateProgress(id);
-        }
-
-        form.setValue(path, file, {
-          shouldDirty: true,
-          shouldValidate: true,
         });
       }
 
-      if (inputRef.current) inputRef.current.value = "";
-    },
-    [hasMany, value, field.maxFiles, form, path, showProgress, simulateProgress]
-  );
+      const maxFiles = field.maxFiles;
+      const finalValue = maxFiles ? combined.slice(0, maxFiles) : combined;
 
-  const handleSingleChange = useCallback(
-    (newValue: FileValue) => {
-      form.setValue(path, newValue, {
+      form.setValue(path, finalValue, {
         shouldDirty: true,
         shouldValidate: true,
       });
-    },
-    [form, path]
-  );
+    } else {
+      const file = files[0];
 
-  const handleMultiChange = useCallback(
-    (newValue: FileArrayValue) => {
-      form.setValue(path, newValue, {
+      if (showProgress && file) {
+        const id = `${file.name}-${file.size}-${file.lastModified}-${Date.now()}`;
+        simulateProgress(id);
+      }
+
+      form.setValue(path, file, {
         shouldDirty: true,
         shouldValidate: true,
       });
-    },
-    [form, path]
-  );
+    }
+
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleSingleChange = (newValue: FileValue) => {
+    form.setValue(path, newValue, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const handleMultiChange = (newValue: FileArrayValue) => {
+    form.setValue(path, newValue, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
   const renderVariant = () => {
     const commonProps = {

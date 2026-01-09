@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import type {
   DateField as DateFieldType,
   DatetimeField as DatetimeFieldType,
@@ -146,104 +146,92 @@ export function DateField({
   if (minDate) disabledMatchers.push({ before: startOfDay(minDate) });
   if (maxDate) disabledMatchers.push({ after: startOfDay(maxDate) });
 
-  const handleDateSelect = useCallback(
-    (date: Date | undefined) => {
-      if (!date) {
-        form.setValue(path, undefined, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-        return;
-      }
-
-      // Preserve existing time if switching dates
-      let nextDate = date;
-      if (dateValue && hasTimePicker) {
-        nextDate = setHours(nextDate, getHours(dateValue));
-        nextDate = setMinutes(nextDate, getMinutes(dateValue));
-        nextDate = setSeconds(nextDate, getSeconds(dateValue));
-      }
-
-      // Validate against min/max
-      if (minDate && nextDate < startOfDay(minDate)) nextDate = minDate;
-      if (maxDate && nextDate > startOfDay(maxDate)) nextDate = maxDate;
-
-      form.setValue(path, nextDate, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      if (!hasTimePicker) setIsOpen(false);
-    },
-    [form, path, dateValue, hasTimePicker, minDate, maxDate]
-  );
-
-  const handleTimeChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const timeVal = e.target.value;
-      if (!timeVal) return;
-
-      const [hours, minutes, seconds] = timeVal.split(":").map(Number);
-      const current = dateValue || new Date();
-      let next = setHours(current, hours || 0);
-      next = setMinutes(next, minutes || 0);
-      next = setSeconds(next, seconds || 0);
-
-      // Validate against min/max (optional, but good practice)
-      if (minDate && next < minDate) next = minDate;
-      if (maxDate && next > maxDate) next = maxDate;
-
-      form.setValue(path, next, { shouldDirty: true, shouldValidate: true });
-    },
-    [form, path, dateValue, minDate, maxDate]
-  );
-
-  const handleClear = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) {
       form.setValue(path, undefined, {
         shouldDirty: true,
         shouldValidate: true,
       });
-    },
-    [form, path]
-  );
+      return;
+    }
 
-  const handlePresetClick = useCallback(
-    (preset: { label: string; value: Date | (() => Date) }) => {
-      const date =
-        typeof preset.value === "function" ? preset.value() : preset.value;
+    // Preserve existing time if switching dates
+    let nextDate = date;
+    if (dateValue && hasTimePicker) {
+      nextDate = setHours(nextDate, getHours(dateValue));
+      nextDate = setMinutes(nextDate, getMinutes(dateValue));
+      nextDate = setSeconds(nextDate, getSeconds(dateValue));
+    }
 
-      // Preserve existing time
-      let nextDate = date;
-      if (dateValue && hasTimePicker) {
-        nextDate = setHours(nextDate, getHours(dateValue));
-        nextDate = setMinutes(nextDate, getMinutes(dateValue));
-        nextDate = setSeconds(nextDate, getSeconds(dateValue));
-      }
+    // Validate against min/max
+    if (minDate && nextDate < startOfDay(minDate)) nextDate = minDate;
+    if (maxDate && nextDate > startOfDay(maxDate)) nextDate = maxDate;
 
-      // Validate
-      if (minDate && nextDate < startOfDay(minDate)) nextDate = minDate;
-      if (maxDate && nextDate > startOfDay(maxDate)) nextDate = maxDate;
+    form.setValue(path, nextDate, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    if (!hasTimePicker) setIsOpen(false);
+  };
 
-      form.setValue(path, nextDate, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-      if (!hasTimePicker) setIsOpen(false);
-    },
-    [form, path, dateValue, hasTimePicker, minDate, maxDate]
-  );
+  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const timeVal = e.target.value;
+    if (!timeVal) return;
+
+    const [hours, minutes, seconds] = timeVal.split(":").map(Number);
+    const current = dateValue || new Date();
+    let next = setHours(current, hours || 0);
+    next = setMinutes(next, minutes || 0);
+    next = setSeconds(next, seconds || 0);
+
+    // Validate against min/max (optional, but good practice)
+    if (minDate && next < minDate) next = minDate;
+    if (maxDate && next > maxDate) next = maxDate;
+
+    form.setValue(path, next, { shouldDirty: true, shouldValidate: true });
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    form.setValue(path, undefined, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const handlePresetClick = (preset: {
+    label: string;
+    value: Date | (() => Date);
+  }) => {
+    const date =
+      typeof preset.value === "function" ? preset.value() : preset.value;
+
+    // Preserve existing time
+    let nextDate = date;
+    if (dateValue && hasTimePicker) {
+      nextDate = setHours(nextDate, getHours(dateValue));
+      nextDate = setMinutes(nextDate, getMinutes(dateValue));
+      nextDate = setSeconds(nextDate, getSeconds(dateValue));
+    }
+
+    // Validate
+    if (minDate && nextDate < startOfDay(minDate)) nextDate = minDate;
+    if (maxDate && nextDate > startOfDay(maxDate)) nextDate = maxDate;
+
+    form.setValue(path, nextDate, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    if (!hasTimePicker) setIsOpen(false);
+  };
 
   // Handle manual text input change
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputText(e.target.value);
-    },
-    []
-  );
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value);
+  };
 
   // Parse and validate typed date on blur
-  const handleInputBlur = useCallback(() => {
+  const handleInputBlur = () => {
     form.onBlur?.(path);
 
     if (!inputText.trim()) {
@@ -287,17 +275,7 @@ export function DateField({
       // Invalid input - revert to previous value
       setInputText(dateValue ? format(dateValue, dateInputFormat) : "");
     }
-  }, [
-    inputText,
-    dateInputFormat,
-    dateValue,
-    hasTimePicker,
-    field.required,
-    form,
-    path,
-    minDate,
-    maxDate,
-  ]);
+  };
 
   const timeFormat = includeSeconds
     ? use24hr

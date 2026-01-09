@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { IconPlaceholder } from "@/components/icon-placeholder";
 
@@ -26,7 +26,7 @@ export function CopyButton({
 }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = useCallback(async () => {
+  const handleCopy = async () => {
     if (!value || disabled) return;
 
     try {
@@ -40,7 +40,7 @@ export function CopyButton({
     } catch (error) {
       console.error("Failed to copy to clipboard:", error);
     }
-  }, [value, disabled, successDuration, onCopy]);
+  };
 
   return (
     <Button

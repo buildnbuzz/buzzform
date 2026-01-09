@@ -29,28 +29,23 @@ npx shadcn@latest add https://form.buildnbuzz.com/r/starter
 ## Quick Start
 
 ```tsx
-import { Form, FormFields, FormSubmit } from "@/components/buzzform/form";
-import { createSchema, type Field } from "@buildnbuzz/buzzform";
+import { createSchema, type InferSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
 
-const fields: Field[] = [
+const schema = createSchema([
   { type: "text", name: "name", label: "Name", required: true },
   { type: "email", name: "email", label: "Email", required: true },
   { type: "password", name: "password", label: "Password", minLength: 8 },
-];
+]);
 
-const schema = createSchema(fields);
+type FormData = InferSchema<typeof schema>;
 
 export function LoginForm() {
-  const handleSubmit = async (data: typeof schema._type) => {
+  const handleSubmit = async (data: FormData) => {
     console.log(data);
   };
 
-  return (
-    <Form fields={fields} onSubmit={handleSubmit}>
-      <FormFields />
-      <FormSubmit>Sign In</FormSubmit>
-    </Form>
-  );
+  return <Form schema={schema} onSubmit={handleSubmit} submitLabel="Sign In" />;
 }
 ```
 

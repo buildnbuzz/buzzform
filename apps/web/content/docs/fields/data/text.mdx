@@ -1,0 +1,129 @@
+---
+title: Text Field
+description: Single-line text input with optional validation and copy functionality.
+---
+
+# Text Field
+
+The `text` field renders a single-line text input. It's the most common field type and serves as the base for `email` fields.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/text
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/text
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "text",
+    name: "username",
+    label: "Username",
+    required: true,
+    minLength: 3,
+    maxLength: 20,
+    placeholder: "Enter username",
+  },
+]);
+
+export function TextFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `minLength` | `number` | - | Minimum character length |
+| `maxLength` | `number` | - | Maximum character length |
+| `pattern` | `string \| RegExp` | - | Validation pattern |
+| `trim` | `boolean` | `false` | Trim whitespace on blur |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.copyable` | `boolean` | `false` | Show copy button |
+
+## Examples
+
+### With Validation
+
+```tsx
+{
+  type: "text",
+  name: "slug",
+  label: "URL Slug",
+  required: true,
+  minLength: 3,
+  maxLength: 50,
+  pattern: /^[a-z0-9-]+$/,
+  placeholder: "my-page-slug",
+}
+```
+
+### Copyable Input
+
+```tsx
+{
+  type: "text",
+  name: "apiKey",
+  label: "API Key",
+  readOnly: true,
+  defaultValue: "sk_live_abc123",
+  ui: { copyable: true },
+}
+```
+
+### With Description
+
+```tsx
+{
+  type: "text",
+  name: "displayName",
+  label: "Display Name",
+  description: "This will be shown publicly on your profile",
+  placeholder: "John Doe",
+}
+```
+
+---
+
+## Email
+
+The `email` field is a text field with automatic email format validation.
+
+### Usage
+
+```tsx
+{
+  type: "email",
+  name: "email",
+  label: "Email Address",
+  required: true,
+  placeholder: "you@example.com",
+}
+```
+
+Email validation is applied automatically - no need to specify a pattern.
+
+### With Copy Button
+
+```tsx
+{
+  type: "email",
+  name: "email",
+  label: "Email",
+  ui: { copyable: true },
+}
+```

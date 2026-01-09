@@ -1,0 +1,194 @@
+---
+title: Number Field
+description: Numeric input with steppers, formatting, and constraints.
+---
+
+# Number Field
+
+The `number` field provides numeric input with increment/decrement buttons, formatting options, and min/max constraints.
+
+## Installation
+
+```bash tab="pnpm"
+pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/number
+```
+
+```bash tab="npm"
+npx shadcn@latest add https://form.buildnbuzz.com/r/number
+```
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+import { Form } from "@/components/buzzform/form";
+
+const schema = createSchema([
+  {
+    type: "number",
+    name: "quantity",
+    label: "Quantity",
+    min: 1,
+    max: 100,
+    defaultValue: 1,
+  },
+]);
+
+export function NumberFieldDemo() {
+  return <Form schema={schema} onSubmit={console.log} />;
+}
+```
+
+## Properties
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `min` | `number` | - | Minimum value |
+| `max` | `number` | - | Maximum value |
+| `precision` | `number` | - | Decimal places |
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `ui.step` | `number` | `1` | Increment/decrement amount |
+| `ui.variant` | `'default' \| 'stacked' \| 'pill' \| 'plain'` | `'default'` | Stepper button style |
+| `ui.prefix` | `string` | - | Prefix text (e.g., "$") |
+| `ui.suffix` | `string` | - | Suffix text (e.g., "kg") |
+| `ui.thousandSeparator` | `boolean \| string` | `false` | Format with separators |
+| `ui.hideSteppers` | `boolean` | `false` | Hide +/- buttons |
+| `ui.copyable` | `boolean` | `false` | Show copy button |
+
+## Features
+
+### Stepper Variants
+
+```tsx
+// Default - buttons on sides
+{ type: "number", name: "qty", ui: { variant: "default" } }
+
+// Stacked - buttons stacked vertically
+{ type: "number", name: "qty", ui: { variant: "stacked" } }
+
+// Pill - compact pill-style buttons
+{ type: "number", name: "qty", ui: { variant: "pill" } }
+
+// Plain - no stepper buttons
+{ type: "number", name: "qty", ui: { variant: "plain" } }
+```
+
+### Prefix & Suffix
+
+Add context to numeric values:
+
+```tsx
+{
+  type: "number",
+  name: "price",
+  label: "Price",
+  precision: 2,
+  ui: { prefix: "$" },
+}
+
+{
+  type: "number",
+  name: "weight",
+  label: "Weight",
+  ui: { suffix: "kg" },
+}
+```
+
+### Thousand Separator
+
+Format large numbers with separators:
+
+```tsx
+{
+  type: "number",
+  name: "salary",
+  label: "Annual Salary",
+  ui: {
+    prefix: "$",
+    thousandSeparator: true, // Uses locale default
+  },
+}
+
+// Custom separator
+{
+  type: "number",
+  name: "amount",
+  ui: { thousandSeparator: " " }, // Space separator
+}
+```
+
+## Examples
+
+### Price Input
+
+```tsx
+{
+  type: "number",
+  name: "price",
+  label: "Price",
+  required: true,
+  min: 0,
+  max: 10000,
+  precision: 2,
+  ui: {
+    prefix: "$",
+    thousandSeparator: true,
+    variant: "plain",
+  },
+}
+```
+
+### Quantity Selector
+
+```tsx
+{
+  type: "number",
+  name: "quantity",
+  label: "Quantity",
+  min: 1,
+  max: 99,
+  defaultValue: 1,
+  ui: {
+    step: 1,
+    variant: "pill",
+  },
+}
+```
+
+### Percentage Input
+
+```tsx
+{
+  type: "number",
+  name: "discount",
+  label: "Discount",
+  min: 0,
+  max: 100,
+  precision: 1,
+  ui: {
+    suffix: "%",
+    step: 5,
+  },
+}
+```
+
+### Weight with Decimals
+
+```tsx
+{
+  type: "number",
+  name: "weight",
+  label: "Weight",
+  min: 0,
+  precision: 2,
+  ui: {
+    suffix: "kg",
+    step: 0.1,
+    variant: "stacked",
+  },
+}
+```

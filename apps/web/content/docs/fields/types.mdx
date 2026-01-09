@@ -1,0 +1,64 @@
+---
+title: Field Types
+description: Overview of all 18 field types available in BuzzForm.
+---
+
+# Field Types
+
+BuzzForm includes 18 field types organized into two categories:
+
+## Data Fields
+
+Fields that collect user input and store values in form data.
+
+| Type | Description |
+|------|-------------|
+| [`text`](/docs/fields/data/text) | Single-line text input |
+| [`email`](/docs/fields/data/text#email) | Email with format validation |
+| [`password`](/docs/fields/data/password) | Password with strength indicator |
+| [`textarea`](/docs/fields/data/textarea) | Multi-line text input |
+| [`number`](/docs/fields/data/number) | Numeric input with steppers |
+| [`date`](/docs/fields/data/date) | Date picker |
+| [`datetime`](/docs/fields/data/date#datetime) | Date and time picker |
+| [`select`](/docs/fields/data/select) | Dropdown with search, multi-select |
+| [`radio`](/docs/fields/data/radio) | Radio button group |
+| [`checkbox`](/docs/fields/data/checkbox) | Boolean checkbox |
+| [`switch`](/docs/fields/data/switch) | Toggle switch |
+| [`tags`](/docs/fields/data/tags) | Chip-based multi-value input |
+| [`upload`](/docs/fields/data/upload) | File upload with drag-drop |
+
+## Layout Fields
+
+Fields that organize and structure other fields without storing data directly.
+
+| Type | Description |
+|------|-------------|
+| [`row`](/docs/fields/layout/row) | Horizontal field arrangement |
+| [`group`](/docs/fields/layout/group) | Named object container |
+| [`collapsible`](/docs/fields/layout/collapsible) | Expandable section |
+| [`tabs`](/docs/fields/layout/tabs) | Tabbed interface |
+| [`array`](/docs/fields/layout/array) | Repeatable fields with drag-drop |
+
+## Common Properties
+
+All data fields share these base properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `name` | `string` | Field key in form data |
+| `id` | `string` | Explicit HTML id override |
+| `label` | `string \| ReactNode \| false` | Display label |
+| `description` | `string \| ReactNode` | Help text |
+| `placeholder` | `string` | Placeholder text |
+| `required` | `boolean` | Mark as required |
+| `disabled` | `boolean \| function` | Disable input |
+| `readOnly` | `boolean \| function` | Read-only mode |
+| `hidden` | `boolean \| function` | Hide field |
+| `defaultValue` | `any` | Initial value |
+| `schema` | `ZodSchema` | Direct Zod schema override |
+| `validate` | `function` | Custom validation |
+| `condition` | `function` | Conditional visibility |
+| `autoComplete` | `string` | HTML autocomplete attribute |
+| `style.className` | `string` | CSS class |
+| `style.width` | `string \| number` | Field width |
+| `meta` | `object` | Custom metadata for extensions |

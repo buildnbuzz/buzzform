@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import type {
   SelectField as SelectFieldType,
   SelectOption,
@@ -106,11 +106,11 @@ function useAsyncOptions(
   );
   const [isLoading, setIsLoading] = useState(isAsync);
 
-  const dependencyKey = useMemo(() => {
+  const dependencyKey = (() => {
     if (!dependencies || dependencies.length === 0) return "static";
     const values = dependencies.map((dep) => getNestedValue(formValues, dep));
     return JSON.stringify(values);
-  }, [dependencies, formValues]);
+  })();
 
   useEffect(() => {
     if (!isAsync) {
@@ -207,7 +207,7 @@ export function SelectField({
     (field.hasMany ? "Select options..." : "Select an option...");
   const searchPlaceholder = "Search...";
 
-  const filteredOptions = useMemo(() => {
+  const filteredOptions = (() => {
     if (!isSearchable || !searchValue.trim()) {
       return resolvedOptions;
     }
@@ -215,49 +215,42 @@ export function SelectField({
     return resolvedOptions.filter((opt) =>
       getSelectOptionLabelString(opt).toLowerCase().includes(query)
     );
-  }, [resolvedOptions, searchValue, isSearchable]);
+  })();
 
-  const handleSingleChange = useCallback(
-    (stringValue: string | null) => {
-      if (stringValue === null) {
-        form.setValue(path, undefined, {
-          shouldDirty: true,
-          shouldValidate: true,
-        });
-        return;
-      }
-      const actualValue = stringToValue(stringValue, resolvedOptions);
-      form.setValue(path, actualValue, {
+  const handleSingleChange = (stringValue: string | null) => {
+    if (stringValue === null) {
+      form.setValue(path, undefined, {
         shouldDirty: true,
         shouldValidate: true,
       });
-      setSearchValue("");
-    },
-    [form, path, resolvedOptions]
-  );
+      return;
+    }
+    const actualValue = stringToValue(stringValue, resolvedOptions);
+    form.setValue(path, actualValue, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setSearchValue("");
+  };
 
-  const handleMultiChange = useCallback(
-    (stringValues: string[]) => {
-      const actualValues = stringValues
-        .map((sv) => stringToValue(sv, resolvedOptions))
-        .filter((v): v is OptionValue => v !== undefined);
-      form.setValue(path, actualValues, {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    },
-    [form, path, resolvedOptions]
-  );
+  const handleMultiChange = (stringValues: string[]) => {
+    const actualValues = stringValues
+      .map((sv) => stringToValue(sv, resolvedOptions))
+      .filter((v): v is OptionValue => v !== undefined);
+    form.setValue(path, actualValues, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
-  const singleValue = useMemo(() => {
-    if (rawValue === undefined || rawValue === null) return null;
-    return valueToString(rawValue as OptionValue);
-  }, [rawValue]);
+  const singleValue =
+    rawValue === undefined || rawValue === null
+      ? null
+      : valueToString(rawValue as OptionValue);
 
-  const multiValues = useMemo(() => {
-    if (!Array.isArray(rawValue)) return [];
-    return (rawValue as OptionValue[]).map(valueToString);
-  }, [rawValue]);
+  const multiValues = !Array.isArray(rawValue)
+    ? []
+    : (rawValue as OptionValue[]).map(valueToString);
 
   const selectedOption = resolvedOptions.find(
     (o) => singleValue !== null && valueToString(o.value) === singleValue

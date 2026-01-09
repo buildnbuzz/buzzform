@@ -1,0 +1,193 @@
+---
+title: Custom Rendering
+description: Use custom components to render fields while keeping BuzzForm's validation and state management.
+---
+
+# Custom Rendering
+
+BuzzForm lets you use custom components for any field. You can replace just the input or the entire field including wrapper and label.
+
+## Custom Input Only
+
+Use the `input` prop to replace just the input element. BuzzForm handles the label, description, and error display:
+
+```tsx
+{
+  type: "text",
+  name: "color",
+  label: "Favorite Color",
+  input: (props) => (
+    <input
+      type="color"
+      id={props.id}
+      value={props.value || "#000000"}
+      onChange={(e) => props.onChange(e.target.value)}
+      onBlur={props.onBlur}
+      disabled={props.disabled}
+    />
+  ),
+}
+```
+
+### Input Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `field` | `Field` | The field configuration |
+| `path` | `string` | Field path (e.g., "email", "address.city") |
+| `id` | `string` | HTML id for label association |
+| `name` | `string` | HTML name for autofill |
+| `value` | `T` | Current field value |
+| `onChange` | `(value: T) => void` | Update the value |
+| `onBlur` | `() => void` | Mark field as touched |
+| `disabled` | `boolean` | Whether field is disabled |
+| `readOnly` | `boolean` | Whether field is read-only |
+| `error` | `string` | Validation error message |
+| `autoFocus` | `boolean` | Whether to auto-focus |
+
+## Full Custom Component
+
+Use the `component` prop to replace the entire field, including wrapper, label, and error handling:
+
+```tsx
+{
+  type: "text",
+  name: "rating",
+  label: "Rating",
+  component: (props) => (
+    <div className="space-y-2">
+      <label htmlFor={props.id}>{props.field.label}</label>
+      <StarRating
+        value={props.value}
+        onChange={props.onChange}
+        max={5}
+      />
+      {props.error && (
+        <p className="text-sm text-destructive">{props.error}</p>
+      )}
+    </div>
+  ),
+}
+```
+
+### Component Props
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `field` | `Field` | The field configuration |
+| `path` | `string` | Field path |
+| `id` | `string` | HTML id |
+| `form` | `FormAdapter` | Form adapter instance |
+| `value` | `T` | Current field value |
+| `onChange` | `(value: T) => void` | Update the value |
+| `onBlur` | `() => void` | Mark as touched |
+| `disabled` | `boolean` | Disabled state |
+| `readOnly` | `boolean` | Read-only state |
+| `error` | `string` | Validation error |
+| `autoFocus` | `boolean` | Auto-focus flag |
+
+## When to Use Which
+
+| Use Case | Approach |
+|----------|----------|
+| Different input element (color picker, slider) | `input` prop |
+| Third-party component integration | `input` prop |
+| Custom layout/styling for one field | `component` prop |
+| Custom error display | `component` prop |
+| Adding extra elements around input | `component` prop |
+
+## Examples
+
+### Rich Text Editor
+
+```tsx
+import { Editor } from "@tiptap/react";
+
+{
+  type: "textarea",
+  name: "content",
+  label: "Content",
+  input: (props) => (
+    <RichTextEditor
+      content={props.value}
+      onUpdate={(html) => props.onChange(html)}
+      onBlur={props.onBlur}
+      editable={!props.disabled && !props.readOnly}
+    />
+  ),
+}
+```
+
+### Date Picker with Calendar
+
+```tsx
+{
+  type: "date",
+  name: "appointmentDate",
+  label: "Appointment Date",
+  input: (props) => (
+    <CustomCalendar
+      selected={props.value}
+      onSelect={props.onChange}
+      minDate={new Date()}
+      disabled={props.disabled}
+    />
+  ),
+}
+```
+
+### Slider Input
+
+```tsx
+{
+  type: "number",
+  name: "volume",
+  label: "Volume",
+  min: 0,
+  max: 100,
+  input: (props) => (
+    <div className="flex items-center gap-4">
+      <Slider
+        value={[props.value ?? 50]}
+        onValueChange={([v]) => props.onChange(v)}
+        min={props.field.min}
+        max={props.field.max}
+        disabled={props.disabled}
+      />
+      <span className="w-12 text-right">{props.value ?? 50}%</span>
+    </div>
+  ),
+}
+```
+
+### File Input with Preview
+
+```tsx
+{
+  type: "upload",
+  name: "avatar",
+  label: "Profile Picture",
+  component: (props) => (
+    <div className="space-y-4">
+      <label>{props.field.label}</label>
+      <div className="flex items-center gap-4">
+        {props.value && (
+          <img
+            src={URL.createObjectURL(props.value)}
+            className="w-16 h-16 rounded-full object-cover"
+          />
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => props.onChange(e.target.files?.[0])}
+          disabled={props.disabled}
+        />
+      </div>
+      {props.error && (
+        <p className="text-sm text-destructive">{props.error}</p>
+      )}
+    </div>
+  ),
+}
+```

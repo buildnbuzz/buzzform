@@ -1,0 +1,134 @@
+---
+title: Configuration
+description: Configure BuzzForm at the provider and form level.
+---
+
+# Configuration
+
+BuzzForm can be configured globally via `BuzzFormProvider` or per-form via props.
+
+## BuzzFormProvider
+
+Wrap your application to set global defaults:
+
+```tsx title="app/layout.tsx"
+import { BuzzFormProvider } from "@/components/buzzform/provider";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <BuzzFormProvider>{children}</BuzzFormProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Provider Properties
+
+| Property         | Type                                   | Default       | Description                     |
+| ---------------- | -------------------------------------- | ------------- | ------------------------------- |
+| `adapter`        | `AdapterFactory`                       | `useRhf`      | Form state library              |
+| `resolver`       | `ResolverFactory`                      | `zodResolver` | Validation resolver             |
+| `mode`           | `'onChange' \| 'onBlur' \| 'onSubmit'` | `'onBlur'`    | When to validate                |
+| `reValidateMode` | `'onChange' \| 'onBlur' \| 'onSubmit'` | `'onChange'`  | When to re-validate after error |
+
+### Customizing the Provider
+
+Edit `components/buzzform/provider.tsx` to change defaults:
+
+```tsx title="components/buzzform/provider.tsx"
+import { FormProvider } from "@buildnbuzz/buzzform";
+import { useRhf } from "@buildnbuzz/buzzform/rhf";
+import { zodResolver } from "@buildnbuzz/buzzform/zod";
+
+export function BuzzFormProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <FormProvider
+      adapter={useRhf}
+      resolver={zodResolver}
+      mode="onChange" // Validate on every change
+      reValidateMode="onChange"
+    >
+      {children}
+    </FormProvider>
+  );
+}
+```
+
+## Validation Modes
+
+| Mode       | When Validation Runs        |
+| ---------- | --------------------------- |
+| `onSubmit` | Only when form is submitted |
+| `onBlur`   | When a field loses focus    |
+| `onChange` | On every value change       |
+
+### Recommended Modes
+
+- **`onBlur`** (default) - Best UX for most forms. Shows errors after user leaves field.
+- **`onChange`** - Good for real-time feedback, but can be noisy.
+- **`onSubmit`** - Minimal validation, only on submit. Good for simple forms.
+
+## Form Settings
+
+Control form behavior with the `settings` prop:
+
+```tsx
+<Form
+  schema={schema}
+  onSubmit={handleSubmit}
+  settings={{
+    submitOnlyWhenDirty: true,
+    autoFocus: true,
+  }}
+/>
+```
+
+### Available Settings
+
+| Setting               | Type      | Default | Description                        |
+| --------------------- | --------- | ------- | ---------------------------------- |
+| `submitOnlyWhenDirty` | `boolean` | `false` | Prevent submission when no changes |
+| `autoFocus`           | `boolean` | `false` | Focus first field on mount         |
+
+### Shorthand Props
+
+The `Form` component also accepts shorthand props:
+
+```tsx
+// These are equivalent:
+<Form settings={{ submitOnlyWhenDirty: true }} ... />
+<Form requireDirty ... />
+
+// Disable submit until form is valid:
+<Form disableIfInvalid ... />
+```
+
+## Per-Form Overrides
+
+Override provider settings on individual forms:
+
+```tsx
+// Use different validation mode
+<Form schema={schema} mode="onChange" onSubmit={handleSubmit} />;
+
+// Use a different adapter
+import { useCustomAdapter } from "./my-adapter";
+
+<Form schema={schema} adapter={useCustomAdapter} onSubmit={handleSubmit} />;
+```
+
+## Without Provider
+
+If you don't use `BuzzFormProvider`, pass adapter and resolver directly:
+
+```tsx
+import { useRhf } from "@buildnbuzz/buzzform/rhf";
+import { zodResolver } from "@buildnbuzz/buzzform/zod";
+
+<Form schema={schema} adapter={useRhf} mode="onBlur" onSubmit={handleSubmit} />;
+```
+
+This is more verbose but gives full control per-form.

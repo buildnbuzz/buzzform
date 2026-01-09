@@ -1,0 +1,122 @@
+---
+title: Schema
+description: Learn how to define form schemas and infer TypeScript types from your field definitions.
+---
+
+# Schema
+
+A BuzzForm schema is the single source of truth for your form. It defines the fields, validation, and generates TypeScript types automatically.
+
+## Creating a Schema
+
+Use `createSchema()` to define your form:
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email", required: true },
+  { type: "number", name: "age", label: "Age", min: 18 },
+]);
+```
+
+The schema contains:
+- **`fields`** - Your field definitions array
+- **`zodSchema`** - Auto-generated Zod validation schema
+
+## Type Inference
+
+Use `InferSchema` to get full TypeScript types from your schema:
+
+```tsx
+import { createSchema, InferSchema } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email" },
+  { type: "checkbox", name: "newsletter", label: "Subscribe" },
+]);
+
+type FormData = InferSchema<typeof schema>;
+// Result: { name: string, email?: string, newsletter: boolean }
+```
+
+This is especially useful for server actions:
+
+```tsx title="actions.ts"
+"use server";
+
+import { InferSchema } from "@buildnbuzz/buzzform";
+import { contactSchema } from "./schema";
+
+type ContactData = InferSchema<typeof contactSchema>;
+
+export async function submitContact(data: ContactData) {
+  // data is fully typed!
+  await db.contacts.create(data);
+}
+```
+
+## Field Structure
+
+Every field has these common properties:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `type` | `string` | Field type (text, email, select, etc.) |
+| `name` | `string` | Key in form data |
+| `label` | `string \| ReactNode \| false` | Display label |
+| `description` | `string \| ReactNode` | Help text below field |
+| `placeholder` | `string` | Placeholder text |
+| `required` | `boolean` | Whether field is required |
+| `disabled` | `boolean \| function` | Disable input |
+| `hidden` | `boolean \| function` | Hide field |
+| `readOnly` | `boolean \| function` | Read-only mode |
+| `defaultValue` | `any` | Initial value |
+| `validate` | `function` | Custom validation |
+| `condition` | `function` | Conditional visibility |
+| `style` | `object` | Styling options |
+
+## Nested Data Structures
+
+Use `group` fields to create nested objects:
+
+```tsx
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name" },
+  {
+    type: "group",
+    name: "address",
+    label: "Address",
+    fields: [
+      { type: "text", name: "street", label: "Street" },
+      { type: "text", name: "city", label: "City" },
+    ],
+  },
+]);
+
+// Result: { name: string, address: { street: string, city: string } }
+```
+
+## Array Data
+
+Use `array` fields for repeatable items:
+
+```tsx
+const schema = createSchema([
+  {
+    type: "array",
+    name: "contacts",
+    label: "Contacts",
+    minRows: 1,
+    maxRows: 5,
+    fields: [
+      { type: "text", name: "name", label: "Name" },
+      { type: "email", name: "email", label: "Email" },
+    ],
+  },
+]);
+
+// Result: { contacts: Array<{ name: string, email: string }> }
+```

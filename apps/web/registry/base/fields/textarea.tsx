@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect } from "react";
 import type {
   TextareaField as TextareaFieldType,
   FormAdapter,
@@ -47,7 +47,7 @@ export function TextareaField({
   const hasError = !!error;
 
   // Auto-resize logic
-  const adjustHeight = useCallback(() => {
+  const adjustHeight = () => {
     const textarea = textareaRef.current;
     if (textarea && field.autoResize) {
       // Reset height to auto to get the correct scrollHeight
@@ -55,17 +55,13 @@ export function TextareaField({
       // Set height to scrollHeight to fit content
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  }, [field.autoResize]);
+  };
 
-  // Adjust height on value change
+  // Adjust height on value change and autoResize setting
   useEffect(() => {
     adjustHeight();
-  }, [value, adjustHeight]);
-
-  // Adjust height on mount
-  useEffect(() => {
-    adjustHeight();
-  }, [adjustHeight]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, field.autoResize]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     form.setValue(path, e.target.value, {
