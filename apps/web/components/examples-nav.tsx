@@ -1,5 +1,7 @@
 "use client";
 
+import React, { useState } from "react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -30,7 +32,6 @@ import { ChevronRight } from "lucide-react";
  */
 export function ExamplesNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   return (
     <Sidebar>
@@ -61,58 +62,82 @@ export function ExamplesNav() {
         <SidebarGroup>
           <SidebarGroupLabel>Examples</SidebarGroupLabel>
           <SidebarMenu>
-            {exampleCategories.map((category) => {
-              const Icon = category.icon;
-              // Check if any item in this category is active
-              const isActive = category.items.some(
-                (item) => pathname === `/examples/${item.slug}`
-              );
-
-              return (
-                <Collapsible
-                  key={category.category}
-                  defaultOpen={isActive}
-                  className="group/collapsible"
-                >
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger
-                      render={
-                        <SidebarMenuButton tooltip={category.category}>
-                          <Icon className="size-4" />
-                          <span>{category.category}</span>
-                          <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      }
-                    />
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {category.items.map((item) => {
-                          const isItemActive =
-                            pathname === `/examples/${item.slug}`;
-
-                          return (
-                            <SidebarMenuSubItem key={item.slug}>
-                              <SidebarMenuSubButton
-                                isActive={isItemActive}
-                                onClick={() =>
-                                  router.push(`/examples/${item.slug}`)
-                                }
-                              >
-                                <span>{item.name}</span>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              );
-            })}
+            {exampleCategories.map((category) => (
+              <NavCategory
+                key={category.category}
+                category={category}
+                pathname={pathname}
+              />
+            ))}
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
+  );
+}
+
+function NavCategory({
+  category,
+  pathname,
+}: {
+  category: (typeof exampleCategories)[0];
+  pathname: string;
+}) {
+  const Icon = category.icon;
+  const router = useRouter();
+
+  // Check if any item in this category is active
+  const isActive = category.items.some(
+    (item) => pathname === `/examples/${item.slug}`
+  );
+
+  const [isOpen, setIsOpen] = useState(isActive);
+  const [prevIsActive, setPrevIsActive] = useState(isActive);
+
+  // Sync open state when navigation makes this category active
+  if (isActive !== prevIsActive) {
+    setPrevIsActive(isActive);
+    if (isActive) {
+      setIsOpen(true);
+    }
+  }
+
+  return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="group/collapsible"
+    >
+      <SidebarMenuItem>
+        <CollapsibleTrigger
+          render={
+            <SidebarMenuButton tooltip={category.category}>
+              <Icon className="size-4" />
+              <span>{category.category}</span>
+              <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+            </SidebarMenuButton>
+          }
+        />
+        <CollapsibleContent>
+          <SidebarMenuSub>
+            {category.items.map((item) => {
+              const isItemActive = pathname === `/examples/${item.slug}`;
+
+              return (
+                <SidebarMenuSubItem key={item.slug}>
+                  <SidebarMenuSubButton
+                    isActive={isItemActive}
+                    onClick={() => router.push(`/examples/${item.slug}`)}
+                  >
+                    <span>{item.name}</span>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              );
+            })}
+          </SidebarMenuSub>
+        </CollapsibleContent>
+      </SidebarMenuItem>
+    </Collapsible>
   );
 }
