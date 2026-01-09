@@ -3,6 +3,7 @@
 import { createSchema } from "@buildnbuzz/buzzform";
 import { Form } from "@/registry/base/form";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
+import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
@@ -48,7 +49,11 @@ export function IntroDemo() {
             <Form
               schema={schema}
               onSubmit={(data) => {
-                toast.success(<pre>{JSON.stringify(data, null, 2)}</pre>);
+                toast("Form Submitted!", {
+                  description: (
+                    <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                  ),
+                });
               }}
               submitLabel="Create Account"
             />

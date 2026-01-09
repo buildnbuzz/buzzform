@@ -4,6 +4,7 @@ import { createSchema } from "@buildnbuzz/buzzform";
 import { Form } from "@/registry/base/form";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import { toast } from "sonner";
 
 const basicSchema = createSchema([
@@ -149,9 +150,11 @@ function DemoWrapper({
             <Form
               schema={schema}
               onSubmit={(data) => {
-                toast.success(
-                  <pre className="text-xs">{JSON.stringify(data, null, 2)}</pre>
-                );
+                toast("Form Submitted!", {
+                  description: (
+                    <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                  ),
+                });
               }}
               submitLabel={submitLabel}
             />
