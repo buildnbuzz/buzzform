@@ -90,8 +90,8 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster position="bottom-right" richColors />
+          <Analytics />
         </Providers>
-        <Analytics />
       </body>
     </html>
   );

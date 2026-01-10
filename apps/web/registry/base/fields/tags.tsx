@@ -106,10 +106,10 @@ export function TagsField({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    const currentValue = inputValue.trim();
+    const currentValue = e.currentTarget.value.trim();
 
     // Handle backspace to remove last tag
-    if (e.key === "Backspace" && !inputValue && tags.length > 0) {
+    if (e.key === "Backspace" && !e.currentTarget.value && tags.length > 0) {
       removeTag(tags.length - 1);
       return;
     }
@@ -148,9 +148,9 @@ export function TagsField({
     setInputValue(newValue);
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     // Optionally add pending tag on blur
-    const trimmed = inputValue.trim();
+    const trimmed = e.target.value.trim();
     if (trimmed) {
       if (addTag(trimmed)) {
         setInputValue("");
