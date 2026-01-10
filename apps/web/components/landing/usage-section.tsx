@@ -1,5 +1,3 @@
-"use client";
-
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 import { ExampleForm } from "./example-form";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -98,14 +96,14 @@ export default function MyForm() {
           {/* Content Split View */}
           <div className="flex flex-col lg:flex-row h-auto lg:h-150">
             {/* Left Pane: Code */}
-            <div className="h-100 lg:h-auto lg:basis-1/2 border-b lg:border-b-0 lg:border-r border-border/40 bg-zinc-950/20 relative overflow-hidden">
+            <div className="h-100 lg:h-auto lg:basis-1/2 border-b lg:border-b-0 lg:border-r border-border/40 bg-muted/50 dark:bg-muted/20 relative overflow-hidden">
               <div className="absolute inset-0 [&_pre]:bg-transparent! [&_pre]:border-0! [&_pre]:rounded-none! [&_figure]:my-0! [&_figure]:border-0! [&_figure]:rounded-none! [&_figure]:bg-transparent! [&_code]:font-mono [&_code]:text-[13px]! [&_code]:leading-6!">
                 <DynamicCodeBlock lang="tsx" code={code} />
               </div>
             </div>
 
             {/* Right Pane: Preview */}
-            <div className="min-h-125 lg:min-h-0 lg:h-auto lg:basis-1/2 lg:overflow-y-auto bg-background/40 bg-grid-white/5 p-6 md:p-8 flex justify-center">
+            <div className="min-h-125 lg:min-h-0 lg:h-auto lg:basis-1/2 lg:overflow-y-auto bg-background/60 p-6 md:p-8 flex justify-center">
               <div className="w-full max-w-md">
                 <ExampleForm />
               </div>

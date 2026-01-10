@@ -7,16 +7,20 @@ export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: (
-        <>
-          <Image
-            src="/bb-icon.svg"
-            alt="BuzzForm"
-            width={24}
-            height={24}
-            className="dark:invert-0 invert"
-          />
-          <span>BuzzForm</span>
-        </>
+        <div className="flex items-center gap-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-primary-foreground">
+            <Image
+              src="/bb-icon.svg"
+              alt="BuzzForm Logo"
+              width={24}
+              height={24}
+            />
+          </div>
+          <div className="grid flex-1 text-left text-sm leading-tight">
+            <span className="truncate font-semibold">BuzzForm</span>
+            <span className="truncate text-xs text-muted-foreground">Docs</span>
+          </div>
+        </div>
       ),
     },
     links: [
