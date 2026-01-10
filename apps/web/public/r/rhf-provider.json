@@ -4,7 +4,9 @@
   "title": "BuzzFormProvider",
   "description": "Pre-configured FormProvider component for BuzzForm with React Hook Form adapter and Zod resolver. Wrap your app with this provider to enable BuzzForm functionality.",
   "dependencies": [
-    "@buildnbuzz/buzzform"
+    "@buildnbuzz/buzzform",
+    "react-hook-form",
+    "zod"
   ],
   "files": [
     {

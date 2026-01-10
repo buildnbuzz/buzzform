@@ -28,7 +28,7 @@
       "type": "registry:ui",
       "title": "BuzzFormProvider",
       "description": "Pre-configured FormProvider component for BuzzForm with React Hook Form adapter and Zod resolver. Wrap your app with this provider to enable BuzzForm functionality.",
-      "dependencies": ["@buildnbuzz/buzzform"],
+      "dependencies": ["@buildnbuzz/buzzform", "react-hook-form", "zod"],
       "files": [
         {
           "path": "registry/base/rhf-provider.tsx",
@@ -114,21 +114,16 @@
       "dependencies": ["@buildnbuzz/buzzform"],
       "registryDependencies": [
         "@buzzform/init",
+        "@buzzform/copy",
         "input",
         "button",
-        "field",
-        "@buzzform/copy"
+        "field"
       ],
       "files": [
         {
           "path": "registry/base/fields/password.tsx",
           "type": "registry:component",
           "target": "components/buzzform/fields/password.tsx"
-        },
-        {
-          "path": "registry/base/lib/password.ts",
-          "type": "registry:lib",
-          "target": "components/buzzform/lib/password.ts"
         }
       ]
     },
@@ -357,6 +352,20 @@
           "path": "registry/base/fields/array.tsx",
           "type": "registry:component",
           "target": "components/buzzform/fields/array.tsx"
+        }
+      ]
+    },
+    {
+      "name": "signup-form",
+      "type": "registry:ui",
+      "title": "Signup Form",
+      "description": "A basic signup form using BuzzForm with standard fields like text, email, password, confirm password, select, and checkbox.",
+      "registryDependencies": ["@buzzform/starter"],
+      "files": [
+        {
+          "path": "components/examples/signup.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/signup.tsx"
         }
       ]
     },

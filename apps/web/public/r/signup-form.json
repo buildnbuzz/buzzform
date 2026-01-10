@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "signup-form",
+  "title": "Signup Form",
+  "description": "A basic signup form using BuzzForm with standard fields like text, email, password, confirm password, select, and checkbox.",
+  "registryDependencies": [
+    "@buzzform/starter"
+  ],
+  "files": [
+    {
+      "path": "components/examples/signup.tsx",
+      "content": "\"use client\";\r\n\r\nimport { useState } from \"react\";\r\nimport { createSchema } from \"@buildnbuzz/buzzform\";\r\nimport { Form } from \"@/components/buzzform/form\";\r\nimport Link from \"next/link\";\r\n\r\nconst schema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"name\",\r\n    label: \"Name\",\r\n    placeholder: \"John Doe\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email\",\r\n    placeholder: \"john@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"password\",\r\n    name: \"password\",\r\n    label: \"Password\",\r\n    placeholder: \"••••••••\",\r\n    required: true,\r\n    minLength: 8,\r\n    ui: {\r\n      allowGenerate: true,\r\n    },\r\n  },\r\n  {\r\n    type: \"password\",\r\n    name: \"passwordConfirm\",\r\n    label: \"Confirm Password\",\r\n    placeholder: \"••••••••\",\r\n    required: true,\r\n    minLength: 8,\r\n    validate: (value, { data }) => {\r\n      if (value !== data.password) {\r\n        return \"Passwords do not match\";\r\n      }\r\n      return true;\r\n    },\r\n  },\r\n  {\r\n    type: \"select\",\r\n    name: \"role\",\r\n    label: \"Role\",\r\n    options: [\r\n      { label: \"Developer\", value: \"dev\" },\r\n      { label: \"Designer\", value: \"design\" },\r\n      { label: \"Product Manager\", value: \"pm\" },\r\n    ],\r\n    defaultValue: \"dev\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"terms\",\r\n    label: (\r\n      <span>\r\n        I agree to the <Link href=\"/terms\">terms</Link> and{\" \"}\r\n        <Link href=\"/privacy\">privacy policy</Link>\r\n      </span>\r\n    ),\r\n    required: true,\r\n  },\r\n]);\r\n\r\nexport function SignUpForm() {\r\n  const [submittedData, setSubmittedData] = useState<Record<\r\n    string,\r\n    unknown\r\n  > | null>(null);\r\n\r\n  return (\r\n    <div className=\"space-y-4\">\r\n      <Form\r\n        schema={schema}\r\n        onSubmit={(data) => setSubmittedData(data)}\r\n        submitLabel=\"Create Account\"\r\n      />\r\n\r\n      <div className=\"[&_figure]:my-0! [&_figure]:border-border/30! [&_figure]:rounded-lg! [&_pre]:text-xs!\">\r\n        <p className=\"text-xs text-muted-foreground mb-2\">Submitted data:</p>\r\n        <pre>{JSON.stringify(submittedData, null, 2)}</pre>\r\n      </div>\r\n    </div>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/signup.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

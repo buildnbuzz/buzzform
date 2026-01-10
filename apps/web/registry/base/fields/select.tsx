@@ -38,7 +38,6 @@ import {
   ComboboxChipsInput,
   ComboboxTrigger,
   ComboboxValue,
-  ComboboxClear,
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 import {
@@ -47,6 +46,28 @@ import {
   InputGroupButton,
 } from "@/components/ui/input-group";
 
+import { Combobox as ComboboxPrimitive } from "@base-ui/react";
+import { cn } from "@/lib/utils";
+import { IconPlaceholder } from "@/components/icon-placeholder";
+
+function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
+  return (
+    <ComboboxPrimitive.Clear
+      data-slot="combobox-clear"
+      render={<InputGroupButton variant="ghost" size="icon-xs" />}
+      className={cn("cn-combobox-clear", className)}
+      {...props}
+    >
+      <IconPlaceholder
+        lucide="XIcon"
+        tabler="IconX"
+        hugeicons="Cancel01Icon"
+        phosphor="XIcon"
+        className="cn-combobox-clear-icon pointer-events-none"
+      />
+    </ComboboxPrimitive.Clear>
+  );
+}
 export interface SelectFieldProps {
   field: SelectFieldType;
   path: string;
