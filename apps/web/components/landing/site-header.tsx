@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { GithubIcon } from "@hugeicons/core-free-icons";
 import { siteConfig, navLinks } from "@/lib/constants";
+import { MobileNav } from "@/components/landing/mobile-nav";
 
 export function SiteHeader() {
   return (
@@ -16,11 +17,14 @@ export function SiteHeader() {
             alt={siteConfig.name}
             width={24}
             height={24}
+            className="invert dark:invert-0"
           />
-          <span className="text-base font-semibold">{siteConfig.name}</span>
+          <span className="hidden font-bold md:inline-block">
+            {siteConfig.name}
+          </span>
         </Link>
         <div className="ml-auto flex items-center space-x-2">
-          <nav className="flex items-center space-x-6 text-sm font-medium md:flex">
+          <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -46,6 +50,7 @@ export function SiteHeader() {
             }
           />
           <ThemeToggle />
+          <MobileNav />
         </div>
       </div>
     </header>

@@ -27,7 +27,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { HugeiconsIcon } from "@hugeicons/react";
-
+import { siteConfig } from "@/lib/constants";
 /**
  * Client-side Sidebar Navigation for Examples with collapsible categories.
  */
@@ -45,14 +45,17 @@ export function ExamplesNav() {
             >
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-primary-foreground">
                 <Image
-                  src="/bb-icon.svg"
-                  alt="BuzzForm Logo"
+                  src={siteConfig.logo}
+                  alt={siteConfig.name}
                   width={24}
                   height={24}
+                  className="invert dark:invert-0"
                 />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">BuzzForm</span>
+                <span className="truncate font-semibold">
+                  {siteConfig.name}
+                </span>
                 <span className="truncate text-xs">Gallery</span>
               </div>
             </Link>
