@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { heroContent } from "@/lib/constants";
+import { CopyCommand } from "@/components/landing/copy-command";
 
 export function HeroSection() {
   return (
@@ -54,6 +55,7 @@ export function HeroSection() {
             }
           />
         </div>
+        <CopyCommand />
       </div>
       {/* Background decoration */}
       <div className="absolute top-1/2 left-1/2 -z-10 h-125 w-125 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[100px]" />
