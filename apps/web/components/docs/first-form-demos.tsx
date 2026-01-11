@@ -110,7 +110,7 @@ const fullCode = `const schema = createSchema([
 export function SignUpForm() {
   const handleSubmit = async (data) => {
     // data is fully typed: { name, email, role, newsletter }
-    await saveToDatabase(data);
+    // await saveToDatabase(data);
     toast.success("Account created!");
   };
 
