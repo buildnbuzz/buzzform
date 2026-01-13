@@ -49,12 +49,11 @@ jobs:
           CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
 
-          # Check if this is a version bump commit (Version PR merge)
-          COMMIT_MSG=$(git log -1 --pretty=%B)
+          # Check if any of the last 5 commits is a version bump (to handle failed releases)
           IS_VERSION_COMMIT=false
-          if echo "$COMMIT_MSG" | grep -q "^chore: version packages"; then
+          if git log -10 --pretty=%B | grep -q "^chore: version packages"; then
             IS_VERSION_COMMIT=true
-            echo "This is a version bump commit (Version PR merge)"
+            echo "Found a recent version bump commit in history"
           fi
 
           # Run changesets action if: pending changesets OR version bump commit
@@ -63,7 +62,7 @@ jobs:
             echo "Will run release steps"
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "No changesets and not a version commit, skipping release steps"
+            echo "No changesets and no recent version commit, skipping release steps"
           fi
 
       - name: Create Release Pull Request or Publish
