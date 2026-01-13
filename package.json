@@ -9,7 +9,7 @@
     "check-types": "turbo run check-types",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm --filter @buildnbuzz/buzzform publish --access public"
+    "release": "pnpm --filter @buildnbuzz/buzzform publish --access public --no-git-checks"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
