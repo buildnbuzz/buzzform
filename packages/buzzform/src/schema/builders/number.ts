@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import type { NumberField } from '../../types';
-import { coerceToNumber, makeOptional, applyCustomValidation } from '../helpers';
+import { coerceToNumber, makeOptional } from '../helpers';
 
 /**
  * Creates Zod schema for number fields.
+ * Note: Custom validation (field.validate) is handled at root schema level.
  */
 export function createNumberFieldSchema(field: NumberField): z.ZodTypeAny {
     let numSchema = z.number({ error: 'Must be a number' });
@@ -17,10 +18,7 @@ export function createNumberFieldSchema(field: NumberField): z.ZodTypeAny {
     }
 
     // Coercion: empty/null/undefined → undefined, otherwise Number()
-    let schema: z.ZodTypeAny = z.preprocess(coerceToNumber, numSchema);
-
-    // Apply custom validation
-    schema = applyCustomValidation(schema, field, field.name);
+    const schema: z.ZodTypeAny = z.preprocess(coerceToNumber, numSchema);
 
     if (field.required) {
         return schema;

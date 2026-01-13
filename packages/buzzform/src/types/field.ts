@@ -7,12 +7,18 @@ import type { FormAdapter } from './adapter';
 // =============================================================================
 
 /**
- * Context passed to validation functions.
+ * Context passed to custom validation functions.
+ * 
+ * @example
+ * validate: (value, { data }) => {
+ *   if (value !== data.password) return "Passwords do not match";
+ *   return true;
+ * }
  */
 export interface ValidationContext<TData = Record<string, unknown>> {
     /** Complete form data */
     data: TData;
-    /** Sibling field data at the same level */
+    /** Parent object containing this field and its siblings */
     siblingData: Record<string, unknown>;
     /** Path segments to this field */
     path: string[];

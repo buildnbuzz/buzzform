@@ -1,30 +1,21 @@
 import { z } from 'zod';
-import type { Field, FieldType, ValidationContext } from '../types';
+import type { Field, FieldType, ValidationContext, ValidationFn } from '../types';
 
 // =============================================================================
 // VALIDATION CONFIG EXTRACTION
 // =============================================================================
 
-/**
- * A validation function that can be extracted from a field.
- */
 type ExtractableValidationFn = (
     value: unknown,
     context: ValidationContext
 ) => true | string | Promise<true | string>;
 
 export interface ExtractedValidationConfig {
-    /** The validation function (if any) */
     fn?: ExtractableValidationFn;
-    /** Whether this is a live validation */
     isLive: boolean;
-    /** Debounce milliseconds for live validation */
     debounceMs?: number;
 }
 
-/**
- * Extracts validation function and config from the unified validate property.
- */
 export function extractValidationConfig(
     validate?: unknown
 ): ExtractedValidationConfig {
@@ -32,12 +23,10 @@ export function extractValidationConfig(
         return { fn: undefined, isLive: false };
     }
 
-    // Simple function case
     if (typeof validate === 'function') {
         return { fn: validate as ExtractableValidationFn, isLive: false };
     }
 
-    // Object case with potential live config
     if (typeof validate === 'object' && 'fn' in validate) {
         const obj = validate as { fn?: unknown; live?: boolean | { debounceMs?: number } };
         const fn = typeof obj.fn === 'function' ? obj.fn as ExtractableValidationFn : undefined;
@@ -54,91 +43,188 @@ export function extractValidationConfig(
 }
 
 // =============================================================================
-// CUSTOM VALIDATION WRAPPER
+// FIELD VALIDATOR COLLECTION
+// =============================================================================
+
+export interface FieldValidator {
+    path: string;
+    fn: ValidationFn;
+}
+
+/**
+ * Recursively collects all field validators from a field array.
+ */
+export function collectFieldValidators(
+    fields: readonly Field[],
+    basePath: string = ''
+): FieldValidator[] {
+    const validators: FieldValidator[] = [];
+
+    for (const field of fields) {
+        if ('name' in field && field.name) {
+            const fieldPath = basePath ? `${basePath}.${field.name}` : field.name;
+
+            if ('validate' in field && field.validate) {
+                const config = extractValidationConfig(field.validate);
+                if (config.fn) {
+                    validators.push({
+                        path: fieldPath,
+                        fn: config.fn as ValidationFn,
+                    });
+                }
+            }
+
+            if (field.type === 'group' && 'fields' in field) {
+                validators.push(...collectFieldValidators(field.fields, fieldPath));
+            }
+        }
+
+        // Layout fields pass through without adding to path
+        if (field.type === 'row' && 'fields' in field) {
+            validators.push(...collectFieldValidators(field.fields, basePath));
+        }
+        if (field.type === 'collapsible' && 'fields' in field) {
+            validators.push(...collectFieldValidators(field.fields, basePath));
+        }
+        if (field.type === 'tabs' && 'tabs' in field) {
+            for (const tab of field.tabs) {
+                const tabPath = tab.name
+                    ? (basePath ? `${basePath}.${tab.name}` : tab.name)
+                    : basePath;
+                validators.push(...collectFieldValidators(tab.fields, tabPath));
+            }
+        }
+    }
+
+    return validators;
+}
+
+// =============================================================================
+// SIBLING DATA EXTRACTION
 // =============================================================================
 
 /**
- * Applies custom validation from field.validate to a Zod schema.
- * Standardizes the pattern across all field types.
+ * Gets the parent object containing the field at the given path.
  */
-export function applyCustomValidation(
-    schema: z.ZodTypeAny,
-    field: Field,
-    fieldPath: string = ''
-): z.ZodTypeAny {
-    // Only data fields have validate
-    if (!('validate' in field)) {
-        return schema;
+export function getSiblingData(
+    data: Record<string, unknown>,
+    path: string
+): Record<string, unknown> {
+    const parts = path.split('.');
+
+    if (parts.length <= 1) {
+        return data;
     }
 
-    const fieldWithValidate = field as { validate?: unknown };
-    if (!fieldWithValidate.validate) {
-        return schema;
+    const parentParts = parts.slice(0, -1);
+    let current: unknown = data;
+
+    for (const part of parentParts) {
+        if (current && typeof current === 'object' && current !== null) {
+            current = (current as Record<string, unknown>)[part];
+        } else {
+            return {};
+        }
     }
 
-    const config = extractValidationConfig(fieldWithValidate.validate);
-    if (!config.fn) {
-        return schema;
+    if (current && typeof current === 'object' && current !== null) {
+        return current as Record<string, unknown>;
     }
 
-    return schema.superRefine(async (val, ctx) => {
-        const result = await config.fn!(val, {
-            data: {},
-            siblingData: {},
-            path: fieldPath.split('.'),
+    return {};
+}
+
+/**
+ * Gets a value at a dot-notation path.
+ */
+export function getValueByPath(
+    data: Record<string, unknown>,
+    path: string
+): unknown {
+    const parts = path.split('.');
+    let current: unknown = data;
+
+    for (const part of parts) {
+        if (current && typeof current === 'object' && current !== null) {
+            current = (current as Record<string, unknown>)[part];
+        } else {
+            return undefined;
+        }
+    }
+
+    return current;
+}
+
+/**
+ * Creates a superRefine that runs all field validators with full form context.
+ */
+export function createRootValidationRefinement(
+    validators: FieldValidator[]
+): (data: Record<string, unknown>, ctx: z.RefinementCtx) => Promise<void> {
+    return async (data, ctx) => {
+        const validationPromises = validators.map(async ({ path, fn }) => {
+            const value = getValueByPath(data, path);
+            const siblingData = getSiblingData(data, path);
+
+            try {
+                const result = await fn(value, {
+                    data,
+                    siblingData,
+                    path: path.split('.'),
+                });
+
+                if (result !== true) {
+                    ctx.addIssue({
+                        code: 'custom',
+                        path: path.split('.'),
+                        message: typeof result === 'string' ? result : 'Validation failed',
+                    });
+                }
+            } catch (error) {
+                ctx.addIssue({
+                    code: 'custom',
+                    path: path.split('.'),
+                    message: error instanceof Error ? error.message : 'Validation error',
+                });
+            }
         });
 
-        if (result !== true) {
-            ctx.addIssue({
-                code: 'custom',
-                message: typeof result === 'string' ? result : 'Validation failed',
-            });
-        }
-    });
+        await Promise.all(validationPromises);
+    };
 }
 
 // =============================================================================
 // OPTIONAL HANDLING
 // =============================================================================
 
-/**
- * Makes a schema optional based on field type.
- * Different field types have different "empty" representations.
- */
 export function makeOptional(
     schema: z.ZodTypeAny,
     fieldType: FieldType
 ): z.ZodTypeAny {
     switch (fieldType) {
-        // String types: allow empty string
         case 'text':
         case 'textarea':
         case 'email':
         case 'password':
             return schema.optional().or(z.literal(''));
 
-        // Nullable types
         case 'number':
         case 'date':
         case 'select':
         case 'radio':
             return schema.optional().nullable();
 
-        // Boolean types: always have a value
         case 'checkbox':
         case 'switch':
-            return schema; // Booleans are never "optional" in the traditional sense
+            return schema;
 
-        // Array types
         case 'tags':
         case 'array':
             return schema.optional().default([]);
 
-        // Upload
         case 'upload':
             return schema.optional().nullable();
 
-        // Default
         default:
             return schema.optional();
     }
@@ -148,10 +234,6 @@ export function makeOptional(
 // COERCION HELPERS
 // =============================================================================
 
-/**
- * Coerces a value to a number.
- * Empty/null/undefined → undefined, otherwise Number().
- */
 export function coerceToNumber(val: unknown): number | undefined {
     if (val === '' || val === null || val === undefined) {
         return undefined;
@@ -160,10 +242,6 @@ export function coerceToNumber(val: unknown): number | undefined {
     return isNaN(num) ? undefined : num;
 }
 
-/**
- * Coerces a value to a Date.
- * Handles strings, numbers, and Date objects.
- */
 export function coerceToDate(val: unknown): Date | undefined {
     if (val === '' || val === null || val === undefined) {
         return undefined;
@@ -182,9 +260,6 @@ export function coerceToDate(val: unknown): Date | undefined {
 // PATTERN VALIDATION
 // =============================================================================
 
-/**
- * Common regex patterns with their error messages.
- */
 const PATTERN_MESSAGES: Record<string, string> = {
     '^[a-zA-Z0-9_]+$': 'Only letters, numbers, and underscores allowed',
     '^[a-z0-9-]+$': 'Only lowercase letters, numbers, and hyphens allowed',
@@ -192,9 +267,6 @@ const PATTERN_MESSAGES: Record<string, string> = {
     '^https?://': 'Must start with http:// or https://',
 };
 
-/**
- * Gets a human-readable error message for a regex pattern.
- */
 export function getPatternErrorMessage(pattern: string | RegExp): string {
     const patternStr = typeof pattern === 'string' ? pattern : pattern.source;
     return PATTERN_MESSAGES[patternStr] || `Must match pattern: ${patternStr}`;
@@ -204,9 +276,6 @@ export function getPatternErrorMessage(pattern: string | RegExp): string {
 // FILE VALIDATION HELPERS
 // =============================================================================
 
-/**
- * Checks if a value is a File-like object.
- */
 export function isFileLike(value: unknown): value is File {
     return (
         typeof value === 'object' &&
@@ -217,9 +286,6 @@ export function isFileLike(value: unknown): value is File {
     );
 }
 
-/**
- * Validates file type against accept pattern.
- */
 export function isFileTypeAccepted(
     file: File,
     accept: string
@@ -231,16 +297,13 @@ export function isFileTypeAccepted(
     const fileName = file.name.toLowerCase();
 
     return acceptTypes.some(acceptType => {
-        // Wildcard: "image/*"
         if (acceptType.endsWith('/*')) {
             const category = acceptType.replace('/*', '');
             return fileType.startsWith(category + '/');
         }
-        // Extension: ".pdf"
         if (acceptType.startsWith('.')) {
             return fileName.endsWith(acceptType);
         }
-        // Exact MIME type
         return fileType === acceptType;
     });
 }

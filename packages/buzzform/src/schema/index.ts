@@ -112,13 +112,17 @@ export { fieldsToZodSchema } from './fields-to-schema';
 // Re-export schema helpers for advanced usage (custom field builders)
 export {
     extractValidationConfig,
-    applyCustomValidation,
     makeOptional,
     coerceToNumber,
     coerceToDate,
     getPatternErrorMessage,
     isFileLike,
     isFileTypeAccepted,
+    // Helpers for cross-field validation (used by zodResolver)
+    collectFieldValidators,
+    getSiblingData,
+    getValueByPath,
+    type FieldValidator,
 } from './helpers';
 
 // Individual builders for registry integration

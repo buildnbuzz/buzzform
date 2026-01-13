@@ -1,45 +1,36 @@
 import { z } from 'zod';
 import type { SelectField, RadioField } from '../../types';
-import { makeOptional, applyCustomValidation } from '../helpers';
+import { makeOptional } from '../helpers';
 
-/**
- * Base schema for select/radio values.
- * Supports string, number, and boolean as per SelectOption.value type.
- */
-const selectValueSchema = z.union([z.string(), z.number(), z.boolean()]);
+// Base schema for select/radio values with user-friendly error messages
+const selectValueSchema = z.union([
+    z.string({ error: 'Please select an option' }),
+    z.number({ error: 'Please select an option' }),
+    z.boolean({ error: 'Please select an option' }),
+], { error: 'Please select an option' });
 
-/**
- * Creates Zod schema for select fields.
- */
 export function createSelectFieldSchema(field: SelectField): z.ZodTypeAny {
-    // Handle hasMany (multi-select)
     if (field.hasMany) {
-        let arraySchema = z.array(selectValueSchema);
+        let arraySchema = z.array(selectValueSchema, { error: 'Invalid selection' });
 
         if (field.required) {
             arraySchema = arraySchema.min(1, 'Select at least one option');
         }
 
-        const schema: z.ZodTypeAny = applyCustomValidation(arraySchema, field, field.name);
-
         if (!field.required) {
-            return schema.optional().default([]);
+            return arraySchema.optional().default([]);
         }
-        return schema;
+        return arraySchema;
     }
 
-    // Single select
     let schema: z.ZodTypeAny = selectValueSchema;
 
     if (field.required) {
-        // For required fields, we need to ensure a value was selected
         schema = selectValueSchema.refine(
             (val) => val !== '' && val !== null && val !== undefined,
             'Please select an option'
         );
     }
-
-    schema = applyCustomValidation(schema, field, field.name);
 
     if (!field.required) {
         return makeOptional(schema, 'select');
@@ -48,9 +39,6 @@ export function createSelectFieldSchema(field: SelectField): z.ZodTypeAny {
     return schema;
 }
 
-/**
- * Creates Zod schema for radio fields.
- */
 export function createRadioFieldSchema(field: RadioField): z.ZodTypeAny {
     let schema: z.ZodTypeAny = selectValueSchema;
 
@@ -60,8 +48,6 @@ export function createRadioFieldSchema(field: RadioField): z.ZodTypeAny {
             'Please select an option'
         );
     }
-
-    schema = applyCustomValidation(schema, field, field.name);
 
     if (!field.required) {
         return makeOptional(schema, 'radio');
