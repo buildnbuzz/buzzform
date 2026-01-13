@@ -2,7 +2,6 @@
 
 import { createSchema } from "@buildnbuzz/buzzform";
 import { toast } from "sonner";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import {
   Card,
   CardContent,
@@ -98,10 +97,18 @@ export function ProfileUploadForm() {
         <Form
           schema={profileSchema}
           onSubmit={async (data) => {
+            console.log("Form data:", data);
             await new Promise((r) => setTimeout(r, 1000));
             toast("Profile saved!", {
               description: (
-                <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                <div className="space-y-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    Check the console for the full File objects.
+                  </p>
+                  <pre className="max-h-40 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+                    <code>{JSON.stringify(data, null, 2)}</code>
+                  </pre>
+                </div>
               ),
             });
           }}
@@ -127,10 +134,18 @@ export function DocumentUploadForm() {
         <Form
           schema={documentSchema}
           onSubmit={async (data) => {
+            console.log("Form data:", data);
             await new Promise((r) => setTimeout(r, 1000));
             toast("Document uploaded!", {
               description: (
-                <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                <div className="space-y-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    Check the console for the full File objects.
+                  </p>
+                  <pre className="max-h-40 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+                    <code>{JSON.stringify(data, null, 2)}</code>
+                  </pre>
+                </div>
               ),
             });
           }}
@@ -156,10 +171,18 @@ export function GalleryUploadForm() {
         <Form
           schema={gallerySchema}
           onSubmit={async (data) => {
+            console.log("Form data:", data);
             await new Promise((r) => setTimeout(r, 1000));
             toast("Images saved!", {
               description: (
-                <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                <div className="space-y-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    Check the console for the full File objects.
+                  </p>
+                  <pre className="max-h-40 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+                    <code>{JSON.stringify(data, null, 2)}</code>
+                  </pre>
+                </div>
               ),
             });
           }}

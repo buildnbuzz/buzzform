@@ -1,7 +1,6 @@
 "use client";
 
 import { toast } from "sonner";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import { createSchema } from "@buildnbuzz/buzzform";
 import {
   Form,
@@ -61,7 +60,11 @@ export function ProductFormCard() {
   const handleSubmit = async (data: Record<string, unknown>) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     toast("Order calculated!", {
-      description: <ToastCodeBlock code={JSON.stringify(data, null, 2)} />,
+      description: (
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
     });
   };
 

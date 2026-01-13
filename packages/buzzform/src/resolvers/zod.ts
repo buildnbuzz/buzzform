@@ -1,76 +1,118 @@
-import type { ZodSchema, ZodError, ZodIssue } from 'zod';
-import type { Resolver, FieldError, ResolverResult } from '../types';
+import { type z } from 'zod';
+import type { Resolver, FieldError, ResolverResult, Field } from '../types';
+import { collectFieldValidators, getSiblingData, getValueByPath, type FieldValidator } from '../schema/helpers';
 
 // =============================================================================
 // ZOD RESOLVER
 // =============================================================================
 
+type ZodIssue = z.core.$ZodIssue;
+type ZodError = z.ZodError;
+
+// Schema with attached fields from createSchema()
+type SchemaWithFields = z.ZodType & { fields?: readonly Field[] };
+
 /**
  * Creates a validation resolver from a Zod schema.
  * 
- * The resolver validates form values against the schema and returns:
- * - `{ values }` if validation passes (with transformed/parsed data)
- * - `{ errors }` if validation fails (with field-level error messages)
- * 
- * @param schema - A Zod schema to validate against
- * @returns A Resolver function compatible with BuzzForm adapters
- * 
- * @example
- * import { z } from '@buildnbuzz/buzzform/zod';
- * import { zodResolver } from '@buildnbuzz/buzzform';
- * 
- * const schema = z.object({
- *   email: z.string().email('Invalid email'),
- *   age: z.number().min(18, 'Must be at least 18'),
- * });
- * 
- * const form = useRhf({
- *   resolver: zodResolver(schema),
- *   defaultValues: { email: '', age: 0 },
- * });
+ * Custom field validators (field.validate) are run separately from the base schema
+ * to ensure they execute even when other fields have errors.
  */
 export function zodResolver<TData>(
-    schema: ZodSchema<TData>
+    schema: z.ZodType<TData>
 ): Resolver<TData> {
-    return async (values: TData): Promise<ResolverResult<TData>> => {
-        try {
-            // Parse and validate - this also transforms the data
-            const parsed = await schema.parseAsync(values);
+    // Extract field validators from schema.fields (if present)
+    const schemaWithFields = schema as SchemaWithFields;
+    const fieldValidators = schemaWithFields.fields
+        ? collectFieldValidators(schemaWithFields.fields)
+        : [];
 
-            return {
-                values: parsed,
-                errors: {},
-            };
+    return async (values: TData): Promise<ResolverResult<TData>> => {
+        const errors: Record<string, FieldError> = {};
+        let parsedValues: TData | undefined;
+
+        // Phase 1: Run base schema validation
+        try {
+            parsedValues = await schema.parseAsync(values);
         } catch (error) {
-            // Handle Zod validation errors
             if (isZodError(error)) {
-                return {
-                    values: {} as TData,
-                    errors: mapZodErrors(error),
+                Object.assign(errors, mapZodErrors(error));
+            } else {
+                throw error;
+            }
+        }
+
+        // Phase 2: Run custom field validators (always runs, even if base fails)
+        if (fieldValidators.length > 0) {
+            const customErrors = await runFieldValidators(
+                fieldValidators,
+                values as Record<string, unknown>
+            );
+            // Merge, but don't overwrite existing errors
+            for (const [path, error] of Object.entries(customErrors)) {
+                if (!errors[path]) {
+                    errors[path] = error;
+                }
+            }
+        }
+
+        // Return result
+        if (Object.keys(errors).length === 0 && parsedValues !== undefined) {
+            return { values: parsedValues, errors: {} };
+        }
+
+        return { values: {} as TData, errors };
+    };
+}
+
+/**
+ * Run all field validators and collect errors.
+ */
+async function runFieldValidators(
+    validators: FieldValidator[],
+    data: Record<string, unknown>
+): Promise<Record<string, FieldError>> {
+    const errors: Record<string, FieldError> = {};
+
+    await Promise.all(
+        validators.map(async ({ path, fn }) => {
+            const value = getValueByPath(data, path);
+            const siblingData = getSiblingData(data, path);
+
+            try {
+                const result = await fn(value, {
+                    data,
+                    siblingData,
+                    path: path.split('.'),
+                });
+
+                if (result !== true) {
+                    errors[path] = {
+                        type: 'custom',
+                        message: typeof result === 'string' ? result : 'Validation failed',
+                    };
+                }
+            } catch (error) {
+                errors[path] = {
+                    type: 'custom',
+                    message: error instanceof Error ? error.message : 'Validation error',
                 };
             }
+        })
+    );
 
-            // Re-throw unexpected errors
-            throw error;
-        }
-    };
+    return errors;
 }
 
 // =============================================================================
 // ERROR MAPPING
 // =============================================================================
 
-/**
- * Maps Zod validation errors to our FieldError format.
- * Handles nested paths (e.g., "address.city", "items.0.name").
- */
 function mapZodErrors(error: ZodError): Record<string, FieldError> {
     const errors: Record<string, FieldError> = {};
 
     for (const issue of error.issues) {
         const path = issuePath(issue);
-
-        // Only set the first error for each path
         if (!errors[path]) {
             errors[path] = {
                 type: issueType(issue),
@@ -82,39 +124,34 @@ function mapZodErrors(error: ZodError): Record<string, FieldError> {
     return errors;
 }
 
-/**
- * Convert Zod issue path to dot-notation string.
- * ['address', 'city'] → 'address.city'
- * ['items', 0, 'name'] → 'items.0.name'
- */
 function issuePath(issue: ZodIssue): string {
     return issue.path.map(String).join('.');
 }
 
-/**
- * Map Zod issue code to a simpler type string.
- */
 function issueType(issue: ZodIssue): string {
     switch (issue.code) {
         case 'invalid_type':
-            if (issue.received === 'undefined') return 'required';
+            if ('received' in issue && issue.received === 'undefined') return 'required';
             return 'type';
         case 'too_small':
-            return issue.type === 'string' ? 'minLength' : 'min';
+            if ('origin' in issue && issue.origin === 'string') return 'minLength';
+            return 'min';
         case 'too_big':
-            return issue.type === 'string' ? 'maxLength' : 'max';
-        case 'invalid_string':
-            return issue.validation?.toString() || 'pattern';
+            if ('origin' in issue && issue.origin === 'string') return 'maxLength';
+            return 'max';
+        case 'invalid_format': {
+            const formatIssue = issue as { format?: string };
+            if (formatIssue.format === 'regex') return 'pattern';
+            if (typeof formatIssue.format === 'string') return formatIssue.format;
+            return 'pattern';
+        }
         case 'custom':
             return 'custom';
         default:
-            return issue.code;
+            return issue.code ?? 'validation';
     }
 }
 
-/**
- * Type guard to check if an error is a ZodError.
- */
 function isZodError(error: unknown): error is ZodError {
     return (
         typeof error === 'object' &&
@@ -125,8 +162,8 @@ function isZodError(error: unknown): error is ZodError {
 }
 
 // =============================================================================
-// RE-EXPORTS FOR CONVENIENCE
+// RE-EXPORTS
 // =============================================================================
 
-export type { ZodSchema } from 'zod';
+export type { ZodType as ZodSchema } from 'zod';
 export { z } from 'zod';

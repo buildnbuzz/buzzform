@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import { createSchema } from "@buildnbuzz/buzzform";
 import {
   Form,
@@ -109,7 +108,11 @@ export function LoginFormCard() {
   const handleSubmit = async (data: Record<string, unknown>) => {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast("Welcome back!", {
-      description: <ToastCodeBlock code={JSON.stringify(data, null, 2)} />,
+      description: (
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
     });
   };
 
@@ -147,7 +150,11 @@ export function RegisterFormDialog() {
   const handleSubmit = async (data: Record<string, unknown>) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
     toast("Account created!", {
-      description: <ToastCodeBlock code={JSON.stringify(data, null, 2)} />,
+      description: (
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
     });
     setOpen(false);
   };

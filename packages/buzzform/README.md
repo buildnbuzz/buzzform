@@ -16,19 +16,27 @@ A schema-driven form library for React + shadcn/ui. Declare fields once, get val
 ## Installation
 
 ```bash
-# Install the core package
-npm install @buildnbuzz/buzzform
-
-# Install peer dependencies
-npm install react-hook-form zod
-
-# Install components via shadcn registry
+# Recommended: Install everything with one command
 npx shadcn@latest add https://form.buildnbuzz.com/r/starter
 ```
+
+This installs `@buildnbuzz/buzzform`, required peer dependencies (`react-hook-form`, `zod`), and all UI components.
+
+<details>
+<summary>Manual installation</summary>
+
+```bash
+npm install @buildnbuzz/buzzform react-hook-form zod
+npx shadcn@latest add https://form.buildnbuzz.com/r/starter
+```
+
+</details>
 
 ## Quick Start
 
 ```tsx
+"use client";
+
 import { createSchema, type InferSchema } from "@buildnbuzz/buzzform";
 import { Form } from "@/components/buzzform/form";
 

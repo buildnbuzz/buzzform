@@ -1,7 +1,6 @@
 "use client";
 
 import { toast } from "sonner";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import { createSchema } from "@buildnbuzz/buzzform";
 import {
   Form,
@@ -62,7 +61,11 @@ export function ContactFormExample() {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast("Message sent!", {
-      description: <ToastCodeBlock code={JSON.stringify(data, null, 2)} />,
+      description: (
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+          <code>{JSON.stringify(data, null, 2)}</code>
+        </pre>
+      ),
     });
   };
 

@@ -83,7 +83,7 @@ export default async function ExamplePage({ params }: ExamplePageProps) {
   }
 
   // Pre-fetch code on the server - no waterfall!
-  const { content: code } = await getExampleCode(example.file);
+  const { content: code } = await getExampleCode(example.file, example.id);
 
   return <ExampleViewer example={example} code={code} />;
 }

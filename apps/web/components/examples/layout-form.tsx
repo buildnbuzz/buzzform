@@ -2,7 +2,6 @@
 
 import { createSchema } from "@buildnbuzz/buzzform";
 import { toast } from "sonner";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
 import {
   Card,
   CardContent,
@@ -101,7 +100,9 @@ export function ContactLayoutForm() {
             await new Promise((r) => setTimeout(r, 1000));
             toast("Contact saved!", {
               description: (
-                <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+                  <code>{JSON.stringify(data, null, 2)}</code>
+                </pre>
               ),
             });
           }}
@@ -132,7 +133,9 @@ export function CouponLayoutForm() {
             await new Promise((r) => setTimeout(r, 1000));
             toast("Coupon applied!", {
               description: (
-                <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
+                <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+                  <code>{JSON.stringify(data, null, 2)}</code>
+                </pre>
               ),
             });
           }}

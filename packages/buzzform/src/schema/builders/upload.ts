@@ -1,141 +1,87 @@
 import { z } from 'zod';
 import type { UploadField } from '../../types';
-import { isFileLike, isFileTypeAccepted } from '../helpers';
 
-/**
- * Validates a single file against field constraints.
- */
-function validateSingleFile(
-    value: unknown,
-    field: UploadField
-): { valid: boolean; message?: string } {
-    // Allow null/undefined for non-required fields
-    if (value === null || value === undefined || value === '') {
-        return { valid: true };
+function matchesMimePattern(fileType: string, pattern: string): boolean {
+    const normalizedPattern = pattern.toLowerCase().trim();
+    const normalizedType = fileType.toLowerCase();
+
+    if (normalizedPattern.endsWith('/*')) {
+        const category = normalizedPattern.replace('/*', '');
+        return normalizedType.startsWith(category + '/');
     }
 
-    // Allow string URLs (for existing uploads)
-    if (typeof value === 'string') {
-        return { valid: true };
+    if (normalizedPattern.startsWith('.')) {
+        return true;
     }
 
-    // Must be a File-like object
-    if (!isFileLike(value)) {
-        return { valid: false, message: 'Invalid file' };
-    }
-
-    // Validate max size
-    if (field.maxSize && value.size > field.maxSize) {
-        const sizeMB = (field.maxSize / 1024 / 1024).toFixed(1);
-        return {
-            valid: false,
-            message: `File must be smaller than ${sizeMB}MB`,
-        };
-    }
-
-    // Validate file type (accept attribute)
-    const accept = field.ui?.accept;
-    if (accept && accept !== '*') {
-        if (!isFileTypeAccepted(value, accept)) {
-            return {
-                valid: false,
-                message: `File type not allowed. Accepted: ${accept}`,
-            };
-        }
-    }
-
-    return { valid: true };
+    return normalizedType === normalizedPattern;
 }
 
-/**
- * Creates Zod schema for upload fields.
- * Supports both single file and hasMany (array) modes.
- */
+function isFileTypeAccepted(file: File, acceptPatterns: string[]): boolean {
+    if (!file.type) return true;
+    return acceptPatterns.some(pattern => matchesMimePattern(file.type, pattern));
+}
+
 export function createUploadFieldSchema(field: UploadField): z.ZodTypeAny {
-    if (field.hasMany) {
-        // Array mode
-        const schema = z.array(z.any()).superRefine((files, ctx) => {
-            // Validate each file
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                const result = validateSingleFile(file, field);
-                if (!result.valid) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: result.message || 'Invalid file',
-                        path: [i],
-                    });
-                }
-            }
+    let fileSchema: z.ZodTypeAny = z.file({ error: 'Please select a file' });
 
-            // Validate required
-            if (field.required) {
-                const validFiles = files.filter(f => f !== null && f !== undefined);
-                if (validFiles.length === 0) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: 'At least one file is required',
-                    });
-                }
-            }
-
-            // Validate minFiles
-            if (field.minFiles !== undefined && field.minFiles > 0) {
-                const validFiles = files.filter(f => f !== null && f !== undefined);
-                if (validFiles.length < field.minFiles) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: `At least ${field.minFiles} file(s) required`,
-                    });
-                }
-            }
-
-            // Validate maxFiles
-            if (field.maxFiles !== undefined) {
-                const validFiles = files.filter(f => f !== null && f !== undefined);
-                if (validFiles.length > field.maxFiles) {
-                    ctx.addIssue({
-                        code: z.ZodIssueCode.custom,
-                        message: `Maximum ${field.maxFiles} file(s) allowed`,
-                    });
-                }
-            }
+    if (field.maxSize) {
+        const sizeMB = (field.maxSize / 1024 / 1024).toFixed(1);
+        fileSchema = (fileSchema as z.ZodFile).max(field.maxSize, {
+            error: `File must be smaller than ${sizeMB}MB`,
         });
-
-        if (!field.required) {
-            return schema.optional().default([]);
-        }
-        return schema;
     }
 
-    // Single file mode
-    const schema = z.any().superRefine((value, ctx) => {
-        // Handle required
-        if (field.required && (value === null || value === undefined || value === '')) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: 'File is required',
-            });
-            return;
-        }
+    const accept = field.ui?.accept;
+    if (accept && accept !== '*') {
+        const acceptPatterns = accept.split(',').map(t => t.trim());
+        const hasWildcard = acceptPatterns.some(p => p.includes('*') || p.startsWith('.'));
 
-        // Skip further validation for empty non-required values
-        if (value === null || value === undefined || value === '') {
-            return;
-        }
-
-        const result = validateSingleFile(value, field);
-        if (!result.valid) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: result.message || 'Invalid file',
+        if (hasWildcard) {
+            fileSchema = fileSchema.refine(
+                (file) => isFileTypeAccepted(file as File, acceptPatterns),
+                `File type not allowed. Accepted: ${accept}`
+            );
+        } else {
+            fileSchema = (fileSchema as z.ZodFile).mime(acceptPatterns, {
+                error: `File type not allowed. Accepted: ${accept}`,
             });
         }
-    });
-
-    if (!field.required) {
-        return schema.optional().nullable();
     }
 
-    return schema;
+    const fileOrUrl = z.union([
+        fileSchema,
+        z.string({ error: 'Invalid file' }),
+    ], { error: 'Please select a file' });
+
+    if (field.hasMany) {
+        let arraySchema = z.array(fileOrUrl, { error: 'Invalid files' });
+
+        if (field.minFiles !== undefined && field.minFiles > 0) {
+            arraySchema = arraySchema.min(field.minFiles, {
+                error: `At least ${field.minFiles} file(s) required`,
+            });
+        }
+
+        if (field.maxFiles !== undefined) {
+            arraySchema = arraySchema.max(field.maxFiles, {
+                error: `Maximum ${field.maxFiles} file(s) allowed`,
+            });
+        }
+
+        if (field.required) {
+            arraySchema = arraySchema.min(1, {
+                error: 'At least one file is required',
+            });
+            return arraySchema;
+        }
+
+        return arraySchema.optional().default([]);
+    }
+
+    if (field.required) {
+        return fileOrUrl;
+    }
+
+    return fileOrUrl.optional().nullable();
 }

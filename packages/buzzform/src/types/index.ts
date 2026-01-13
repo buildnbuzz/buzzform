@@ -83,3 +83,12 @@ export type {
     SchemaBuilderMap,
     InferSchema,
 } from './schema';
+
+// Strict field typing (used internally by createSchema)
+export type {
+    FieldTypeMap,
+    FieldTypeLiteral,
+    StrictFieldByType,
+    StrictFieldArray,
+} from './strict-fields';
+

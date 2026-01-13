@@ -104,7 +104,6 @@ export { createSchema, fieldsToZodSchema } from './schema';
 // Re-export schema helpers for advanced usage (custom field builders)
 export {
     extractValidationConfig,
-    applyCustomValidation,
     makeOptional,
     coerceToNumber,
     coerceToDate,
