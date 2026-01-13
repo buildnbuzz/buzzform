@@ -15,7 +15,6 @@ export const siteConfig = {
     name: "BuzzForm",
     description:
         "The schema-driven form builder for shadcn/ui. Build complex, type-safe forms with minimal effort.",
-    version: "0.1.0",
     logo: "/bb-icon.svg",
     github: "https://github.com/buildnbuzz/buzzform",
     twitter: "https://x.com/PSL4d",
@@ -45,7 +44,7 @@ export const navLinks: NavLink[] = [
 // =============================================================================
 
 export const heroContent = {
-    badge: `Introducing BuzzForm v${siteConfig.version}`,
+    badge: "Introducing BuzzForm",
     title: "Build complex forms with",
     titleHighlight: "ease and speed",
     description:
