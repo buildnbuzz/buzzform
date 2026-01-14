@@ -78,16 +78,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' || (steps.check_changesets.outputs.should_release == 'true' && github.ref == 'refs/heads/main')
         uses: actions/github-script@v7
         env:
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
-            const publishedPackages = JSON.parse(process.env.PUBLISHED_PACKAGES);
+            let publishedPackages = [];
+            try {
+              publishedPackages = JSON.parse(process.env.PUBLISHED_PACKAGES || '[]');
+            } catch (e) {
+              publishedPackages = [];
+            }
+
+            // If no packages were "officially" published this run, let's check the main package
+            if (publishedPackages.length === 0) {
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('packages/buzzform/package.json', 'utf8'));
+              publishedPackages.push({ name: pkg.name, version: pkg.version });
+            }
+
             for (const pkg of publishedPackages) {
               const tagName = `${pkg.name}@${pkg.version}`;
               try {
+                // Check if release already exists
+                try {
+                  await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag: tagName,
+                  });
+                  console.log(`Release ${tagName} already exists, skipping.`);
+                  continue;
+                } catch (e) {
+                  // Release doesn't exist, proceed to create
+                }
+
                 await github.rest.repos.createRelease({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -99,6 +126,6 @@ jobs:
                 });
                 console.log(`Created release for ${tagName}`);
               } catch (error) {
-                console.error(`Failed to create release for ${tagName}:`, error);
+                console.error(`Failed to handle release for ${tagName}:`, error);
               }
             }
