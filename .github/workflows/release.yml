@@ -29,9 +29,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm for Trusted Publishers
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -46,12 +49,11 @@ jobs:
           CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
           echo "Found $CHANGESET_COUNT changeset file(s)"
 
-          # Check if this is a version bump commit (Version PR merge)
-          COMMIT_MSG=$(git log -1 --pretty=%B)
+          # Check if any of the last 5 commits is a version bump (to handle failed releases)
           IS_VERSION_COMMIT=false
-          if echo "$COMMIT_MSG" | grep -q "^chore: version packages"; then
+          if git log -10 --pretty=%B | grep -q "^chore: version packages"; then
             IS_VERSION_COMMIT=true
-            echo "This is a version bump commit (Version PR merge)"
+            echo "Found a recent version bump commit in history"
           fi
 
           # Run changesets action if: pending changesets OR version bump commit
@@ -60,7 +62,7 @@ jobs:
             echo "Will run release steps"
           else
             echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "No changesets and not a version commit, skipping release steps"
+            echo "No changesets and no recent version commit, skipping release steps"
           fi
 
       - name: Create Release Pull Request or Publish
@@ -76,16 +78,43 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
+        if: steps.changesets.outputs.published == 'true' || (steps.check_changesets.outputs.should_release == 'true' && github.ref == 'refs/heads/main')
         uses: actions/github-script@v7
         env:
           PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           script: |
-            const publishedPackages = JSON.parse(process.env.PUBLISHED_PACKAGES);
+            let publishedPackages = [];
+            try {
+              publishedPackages = JSON.parse(process.env.PUBLISHED_PACKAGES || '[]');
+            } catch (e) {
+              publishedPackages = [];
+            }
+
+            // If no packages were "officially" published this run, let's check the main package
+            if (publishedPackages.length === 0) {
+              const fs = require('fs');
+              const pkg = JSON.parse(fs.readFileSync('packages/buzzform/package.json', 'utf8'));
+              publishedPackages.push({ name: pkg.name, version: pkg.version });
+            }
+
             for (const pkg of publishedPackages) {
               const tagName = `${pkg.name}@${pkg.version}`;
               try {
+                // Check if release already exists
+                try {
+                  await github.rest.repos.getReleaseByTag({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    tag: tagName,
+                  });
+                  console.log(`Release ${tagName} already exists, skipping.`);
+                  continue;
+                } catch (e) {
+                  // Release doesn't exist, proceed to create
+                }
+
                 await github.rest.repos.createRelease({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
@@ -97,6 +126,6 @@ jobs:
                 });
                 console.log(`Created release for ${tagName}`);
               } catch (error) {
-                console.error(`Failed to create release for ${tagName}:`, error);
+                console.error(`Failed to handle release for ${tagName}:`, error);
               }
             }
