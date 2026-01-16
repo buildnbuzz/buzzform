@@ -58,6 +58,7 @@ export function CopyButton({
           hugeicons="Tick02Icon"
           tabler="IconCheck"
           phosphor="Check"
+          remixicon="RiCheckLine"
           className="size-4"
         />
       ) : (
@@ -66,6 +67,7 @@ export function CopyButton({
           hugeicons="Copy01Icon"
           tabler="IconCopy"
           phosphor="Copy"
+          remixicon="RiFileCopyLine"
           className="size-4"
         />
       )}

@@ -267,6 +267,7 @@ export function NumberField({
                   hugeicons="Add01Icon"
                   tabler="IconPlus"
                   phosphor="Plus"
+                  remixicon="RiAddLine"
                   className="size-3"
                 />
               </button>
@@ -282,6 +283,7 @@ export function NumberField({
                   hugeicons="MinusSignIcon"
                   tabler="IconMinus"
                   phosphor="Minus"
+                  remixicon="RiSubtractLine"
                   className="size-3"
                 />
               </button>
@@ -309,6 +311,7 @@ export function NumberField({
                 hugeicons="MinusSignIcon"
                 tabler="IconMinus"
                 phosphor="Minus"
+                remixicon="RiSubtractLine"
                 className="size-4"
               />
             </InputGroupButton>
@@ -334,6 +337,7 @@ export function NumberField({
                 hugeicons="Add01Icon"
                 tabler="IconPlus"
                 phosphor="Plus"
+                remixicon="RiAddLine"
                 className="size-4"
               />
             </InputGroupButton>
@@ -358,6 +362,7 @@ export function NumberField({
               hugeicons="MinusSignIcon"
               tabler="IconMinus"
               phosphor="Minus"
+              remixicon="RiSubtractLine"
               className="size-3.5"
             />
           </InputGroupButton>
@@ -382,6 +387,7 @@ export function NumberField({
               hugeicons="Add01Icon"
               tabler="IconPlus"
               phosphor="Plus"
+              remixicon="RiAddLine"
               className="size-3.5"
             />
           </InputGroupButton>

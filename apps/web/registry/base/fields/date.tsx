@@ -348,6 +348,7 @@ export function DateField({
                 hugeicons="Calendar02Icon"
                 tabler="IconCalendar"
                 phosphor="Calendar"
+                remixicon="RiCalendarLine"
                 className="size-4"
               />
             </PopoverTrigger>
@@ -382,6 +383,7 @@ export function DateField({
                 hugeicons="Cancel01Icon"
                 tabler="IconX"
                 phosphor="X"
+                remixicon="RiCloseLine"
                 className="size-3.5 text-muted-foreground"
               />
             </InputGroupButton>
@@ -429,6 +431,7 @@ export function DateField({
                 hugeicons="Clock01Icon"
                 tabler="IconClock"
                 phosphor="Clock"
+                remixicon="RiTimeLine"
                 className="size-4 shrink-0"
               />
             </InputGroupAddon>

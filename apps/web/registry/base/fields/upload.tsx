@@ -205,6 +205,7 @@ function DropzoneVariant({
             tabler="IconX"
             hugeicons="Cancel01Icon"
             phosphor="X"
+            remixicon="RiCloseLine"
             className="size-3"
           />
         </button>
@@ -249,6 +250,7 @@ function DropzoneVariant({
                       tabler="IconFile"
                       hugeicons="File02Icon"
                       phosphor="File"
+                      remixicon="RiFileLine"
                       className="size-8 text-primary"
                     />
                   </div>
@@ -291,6 +293,7 @@ function DropzoneVariant({
                 tabler="IconUpload"
                 hugeicons="Upload04Icon"
                 phosphor="UploadSimple"
+                remixicon="RiUploadLine"
                 className={cn(dzSize.iconSize, "text-muted-foreground")}
               />
             </div>
@@ -414,6 +417,7 @@ function AvatarVariant({
               tabler="IconPhoto"
               hugeicons="Image01Icon"
               phosphor="Image"
+              remixicon="RiImageLine"
               className="size-6"
             />
             <span className="text-[10px]">Upload</span>
@@ -431,6 +435,7 @@ function AvatarVariant({
             tabler="IconX"
             hugeicons="Cancel01Icon"
             phosphor="X"
+            remixicon="RiCloseLine"
             className="size-3"
           />
         </button>
@@ -475,6 +480,7 @@ function InlineVariant({
           tabler="IconUpload"
           hugeicons="Upload04Icon"
           phosphor="UploadSimple"
+          remixicon="RiUploadLine"
           className={iconSize}
         />
         {sizeConfig === "xs" ? "Upload" : "Choose File"}
@@ -493,6 +499,7 @@ function InlineVariant({
                 tabler="IconX"
                 hugeicons="Cancel01Icon"
                 phosphor="X"
+                remixicon="RiCloseLine"
                 className="size-4"
               />
             </button>
@@ -575,6 +582,7 @@ function GalleryThumbnail({
               tabler="IconFile"
               hugeicons="File02Icon"
               phosphor="File"
+              remixicon="RiFileLine"
               className="size-6 text-muted-foreground"
             />
             <span className="text-[10px] text-muted-foreground mt-1 truncate max-w-full px-1">
@@ -601,6 +609,7 @@ function GalleryThumbnail({
             tabler="IconX"
             hugeicons="Cancel01Icon"
             phosphor="X"
+            remixicon="RiCloseLine"
             className="size-3"
           />
         </button>
@@ -693,6 +702,7 @@ function GalleryVariant({
               tabler="IconPlus"
               hugeicons="Add01Icon"
               phosphor="Plus"
+              remixicon="RiAddLine"
               className={cn(thumbnailSize < 80 ? "size-4" : "size-6")}
             />
             {thumbnailSize >= 100 && (

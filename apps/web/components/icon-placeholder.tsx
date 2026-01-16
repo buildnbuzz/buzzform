@@ -48,6 +48,12 @@ const IconPhosphor = lazy(() =>
   }))
 );
 
+const IconRemixicon = lazy(() =>
+  import("@/registry/icons/remixicon").then((mod) => ({
+    default: mod.IconRemixicon,
+  }))
+);
+
 export type IconPlaceholderProps = {
   [K in IconLibraryName]?: string;
 } & Omit<React.ComponentProps<"svg">, "name"> & { size?: number };
@@ -57,9 +63,10 @@ export function IconPlaceholder({
   tabler,
   hugeicons,
   phosphor,
+  remixicon,
   ...props
 }: IconPlaceholderProps) {
-  const iconName = lucide ?? tabler ?? hugeicons ?? phosphor;
+  const iconName = lucide ?? tabler ?? hugeicons ?? phosphor ?? remixicon;
 
   if (!iconName) {
     return null;
@@ -74,6 +81,9 @@ export function IconPlaceholder({
       )}
       {!lucide && !tabler && !hugeicons && phosphor && (
         <IconPhosphor name={phosphor} {...props} />
+      )}
+      {!lucide && !tabler && !hugeicons && !phosphor && remixicon && (
+        <IconRemixicon name={remixicon} {...props} />
       )}
     </Suspense>
   );

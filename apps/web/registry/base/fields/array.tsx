@@ -252,6 +252,7 @@ const ArrayRow = React.memo(
                   hugeicons="DragDropIcon"
                   tabler="IconGripVertical"
                   phosphor="DotsSixVertical"
+                  remixicon="RiDraggable"
                   className="size-4"
                 />
               </div>
@@ -263,6 +264,7 @@ const ArrayRow = React.memo(
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-4 text-muted-foreground transition-transform duration-200 shrink-0",
                   !isOpen && "-rotate-90"
@@ -296,6 +298,7 @@ const ArrayRow = React.memo(
                     hugeicons="Copy01Icon"
                     tabler="IconCopy"
                     phosphor="Copy"
+                    remixicon="RiFileCopyLine"
                     className="size-3.5"
                   />
                 </Button>
@@ -326,6 +329,7 @@ const ArrayRow = React.memo(
                     hugeicons="Delete02Icon"
                     tabler="IconTrash"
                     phosphor="Trash"
+                    remixicon="RiDeleteBinLine"
                     className="size-3.5"
                   />
                 </Button>
@@ -651,6 +655,7 @@ export const ArrayField = React.forwardRef<
               hugeicons="InsertRowDownIcon"
               tabler="IconRowInsertBottom"
               phosphor="ListPlus"
+              remixicon="RiPlayListAddLine"
               className="size-10 text-muted-foreground/50 mb-3"
             />
             <p className="text-sm font-medium text-muted-foreground mb-1">
@@ -672,6 +677,7 @@ export const ArrayField = React.forwardRef<
                   hugeicons="Add01Icon"
                   tabler="IconPlus"
                   phosphor="Plus"
+                  remixicon="RiAddLine"
                   className="size-4 mr-1.5"
                 />
                 {addLabel}
@@ -694,6 +700,7 @@ export const ArrayField = React.forwardRef<
               hugeicons="Add01Icon"
               tabler="IconPlus"
               phosphor="Plus"
+              remixicon="RiAddLine"
               className="size-4 mr-2"
             />
             {addLabel}
@@ -709,6 +716,7 @@ export const ArrayField = React.forwardRef<
                 hugeicons="SecurityBlockIcon"
                 tabler="IconAlertCircle"
                 phosphor="Warning"
+                remixicon="RiAlertLine"
                 className="size-3.5"
               />
               Minimum {field.minRows} {field.minRows === 1 ? "item" : "items"}{" "}
@@ -743,6 +751,7 @@ export const ArrayField = React.forwardRef<
                   hugeicons="Delete02Icon"
                   tabler="IconTrash"
                   phosphor="Trash"
+                  remixicon="RiDeleteBinLine"
                   className="size-5"
                 />
               </AlertDialogMedia>
@@ -792,6 +801,7 @@ export const ArrayField = React.forwardRef<
                   hugeicons="ArrowDown01Icon"
                   tabler="IconChevronDown"
                   phosphor="CaretDown"
+                  remixicon="RiArrowDownSLine"
                   className={cn(
                     "size-4 text-muted-foreground transition-transform duration-200 shrink-0 mt-0.5",
                     isArrayCollapsed && "-rotate-90"
@@ -858,6 +868,7 @@ export const ArrayField = React.forwardRef<
                             hugeicons="ArrowExpand02Icon"
                             tabler="IconArrowsMaximize"
                             phosphor="ArrowsOutSimple"
+                            remixicon="RiExpandUpDownLine"
                             className="size-4"
                           />
                         ) : (
@@ -866,6 +877,7 @@ export const ArrayField = React.forwardRef<
                             hugeicons="ArrowShrink02Icon"
                             tabler="IconArrowsMinimize"
                             phosphor="ArrowsInSimple"
+                            remixicon="RiContractUpDownLine"
                             className="size-4"
                           />
                         )}
@@ -897,6 +909,7 @@ export const ArrayField = React.forwardRef<
                           hugeicons="DeletePutBackIcon"
                           tabler="IconTrash"
                           phosphor="TrashSimple"
+                          remixicon="RiDeleteBinLine"
                           className="size-4"
                         />
                       </Button>
@@ -925,6 +938,7 @@ export const ArrayField = React.forwardRef<
                       hugeicons="Add01Icon"
                       tabler="IconPlus"
                       phosphor="Plus"
+                      remixicon="RiAddLine"
                       className="size-4"
                     />
                   </Button>
