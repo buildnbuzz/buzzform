@@ -170,6 +170,7 @@ export const CollapsibleField = React.forwardRef<
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-3.5 text-muted-foreground transition-transform duration-200 shrink-0 ml-2",
                   isCollapsed && "-rotate-90"
@@ -215,6 +216,7 @@ export const CollapsibleField = React.forwardRef<
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-3.5 text-muted-foreground transition-transform duration-200 shrink-0 ml-2",
                   isCollapsed && "-rotate-90"
@@ -260,6 +262,7 @@ export const CollapsibleField = React.forwardRef<
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-4 text-muted-foreground transition-transform duration-200 shrink-0 ml-2",
                   isCollapsed && "-rotate-90"

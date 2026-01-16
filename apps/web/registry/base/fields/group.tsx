@@ -126,6 +126,7 @@ export const GroupField = React.forwardRef<
                   hugeicons="AlertCircleIcon"
                   tabler="IconAlertCircle"
                   phosphor="Warning"
+                  remixicon="RiAlertLine"
                   className="size-3.5"
                 />
                 {errorCount} {errorCount === 1 ? "error" : "errors"}
@@ -205,6 +206,7 @@ export const GroupField = React.forwardRef<
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-3.5 text-muted-foreground transition-transform duration-200 shrink-0",
                   isCollapsed && "-rotate-90"
@@ -260,6 +262,7 @@ export const GroupField = React.forwardRef<
                 hugeicons="ArrowDown01Icon"
                 tabler="IconChevronDown"
                 phosphor="CaretDown"
+                remixicon="RiArrowDownSLine"
                 className={cn(
                   "size-4 text-muted-foreground transition-transform duration-200 shrink-0",
                   isCollapsed && "-rotate-90"

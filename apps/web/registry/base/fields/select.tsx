@@ -63,6 +63,7 @@ function ComboboxClear({ className, ...props }: ComboboxPrimitive.Clear.Props) {
         tabler="IconX"
         hugeicons="Cancel01Icon"
         phosphor="XIcon"
+        remixicon="RiCloseLine"
         className="cn-combobox-clear-icon pointer-events-none"
       />
     </ComboboxPrimitive.Clear>

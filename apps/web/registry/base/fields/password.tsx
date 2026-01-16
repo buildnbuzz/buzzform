@@ -380,6 +380,7 @@ export function PasswordField({
                     hugeicons="MagicWand01Icon"
                     tabler="IconWand"
                     phosphor="MagicWand"
+                    remixicon="RiMagicLine"
                     className="size-3.5"
                   />
                 </Button>
@@ -399,6 +400,7 @@ export function PasswordField({
                     hugeicons="ViewOffSlashIcon"
                     tabler="IconEyeOff"
                     phosphor="EyeSlash"
+                    remixicon="RiEyeOffLine"
                     className="size-3.5"
                   />
                 ) : (
@@ -407,6 +409,7 @@ export function PasswordField({
                     hugeicons="ViewIcon"
                     tabler="IconEye"
                     phosphor="Eye"
+                    remixicon="RiEyeLine"
                     className="size-3.5"
                   />
                 )}
@@ -471,6 +474,7 @@ export function PasswordField({
                         hugeicons="Tick01Icon"
                         tabler="IconCheck"
                         phosphor="Check"
+                        remixicon="RiCheckLine"
                         className="size-3 text-green-500"
                       />
                     ) : (
@@ -479,6 +483,7 @@ export function PasswordField({
                         hugeicons="Cancel01Icon"
                         tabler="IconX"
                         phosphor="X"
+                        remixicon="RiCloseLine"
                         className="size-3 text-muted-foreground"
                       />
                     )
