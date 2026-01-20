@@ -37,7 +37,7 @@ npx shadcn@latest add https://form.buildnbuzz.com/r/starter
 ```tsx
 "use client";
 
-import { createSchema, type InferSchema } from "@buildnbuzz/buzzform";
+import { createSchema, type InferType } from "@buildnbuzz/buzzform";
 import { Form } from "@/components/buzzform/form";
 
 const schema = createSchema([
@@ -46,7 +46,7 @@ const schema = createSchema([
   { type: "password", name: "password", label: "Password", minLength: 8 },
 ]);
 
-type FormData = InferSchema<typeof schema>;
+type FormData = InferType<typeof schema>;
 
 export function LoginForm() {
   const handleSubmit = async (data: FormData) => {

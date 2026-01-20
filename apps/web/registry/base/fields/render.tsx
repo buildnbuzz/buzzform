@@ -221,7 +221,7 @@ function isDataField(field: Field): field is DataField {
 
 function getSiblingData(
   formValues: Record<string, unknown>,
-  path: string
+  path: string,
 ): Record<string, unknown> {
   const pathParts = path.split(".");
   const parentParts = pathParts.slice(0, -1);
@@ -232,7 +232,7 @@ function getSiblingData(
 
 function getErrorMessage(
   errors: Record<string, string | string[] | undefined>,
-  path: string
+  path: string,
 ): string | undefined {
   const error = errors[path];
   if (typeof error === "string") return error;
@@ -255,7 +255,6 @@ function CustomComponentRenderer({
   field,
   path,
   form,
-  formValues,
   autoFocus,
   fieldId,
   isDisabled,
@@ -265,8 +264,7 @@ function CustomComponentRenderer({
   const CustomComponent = field.component as React.ComponentType<
     FieldComponentProps<unknown, DataField>
   >;
-  const value = getNestedValue(formValues, path);
-
+  const value = form.watch(path);
   return (
     <CustomComponent
       field={field}
@@ -293,7 +291,6 @@ function CustomInputRenderer({
   field,
   path,
   form,
-  formValues,
   autoFocus,
   fieldId,
   label,
@@ -301,8 +298,7 @@ function CustomInputRenderer({
   isReadOnly,
   error,
 }: FieldRendererComponentProps & { field: DataField }) {
-  const value = getNestedValue(formValues, path);
-
+  const value = form.watch(path);
   const inputProps: FieldInputProps = {
     field,
     path,
@@ -330,7 +326,7 @@ function CustomInputRenderer({
       ? (CustomInput as (props: FieldInputProps) => React.ReactNode)(inputProps)
       : React.createElement(
           CustomInput as React.ComponentType<FieldInputProps>,
-          inputProps
+          inputProps,
         );
 
   return (
@@ -349,7 +345,7 @@ function CustomInputRenderer({
         ref={(el) => {
           if (autoFocus && el) {
             const focusable = el.querySelector<HTMLElement>(
-              'input, textarea, select, button, [tabindex]:not([tabindex="-1"])'
+              'input, textarea, select, button, [tabindex]:not([tabindex="-1"])',
             );
             focusable?.focus();
           }

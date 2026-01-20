@@ -59,10 +59,10 @@ BuzzForm supports 17+ field types. Here's a form with a mix:
 
 ## Handling Form Submission
 
-The `onSubmit` handler receives your form data. Use `InferSchema` to get full TypeScript types:
+The `onSubmit` handler receives your form data. Use `InferType` to get full TypeScript types:
 
 ```tsx
-import { createSchema, InferSchema } from "@buildnbuzz/buzzform";
+import { createSchema, InferType } from "@buildnbuzz/buzzform";
 
 const schema = createSchema([
   { type: "text", name: "name", label: "Name", required: true },
@@ -71,7 +71,7 @@ const schema = createSchema([
 ]);
 
 // Infer the type from your schema
-type FormData = InferSchema<typeof schema>;
+type FormData = InferType<typeof schema>;
 // Result: { name: string, email: string, newsletter: boolean }
 
 const handleSubmit = async (data: FormData) => {
@@ -88,15 +88,15 @@ const handleSubmit = async (data: FormData) => {
 
 ### Using with Server Actions
 
-`InferSchema` is especially useful for server actions where you need to type the incoming data:
+`InferType` is especially useful for server actions where you need to type the incoming data:
 
 ```tsx title="actions.ts"
 "use server";
 
-import { InferSchema } from "@buildnbuzz/buzzform";
+import { InferType } from "@buildnbuzz/buzzform";
 import { signupSchema } from "./schema";
 
-type SignupData = InferSchema<typeof signupSchema>;
+type SignupData = InferType<typeof signupSchema>;
 
 export async function signup(data: SignupData) {
   // Fully typed server action

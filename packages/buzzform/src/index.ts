@@ -93,6 +93,7 @@ export type {
     FieldsToShape,
     SchemaBuilder,
     SchemaBuilderMap,
+    InferType,
     InferSchema,
 } from './types';
 

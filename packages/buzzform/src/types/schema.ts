@@ -1,110 +1,93 @@
-import type { z } from 'zod';
-import type { Field } from './field';
+import type { z } from "zod";
+import type { Field } from "./field";
 
-// =============================================================================
-// TYPE-LEVEL MAPPING: Field → Zod Type
-// =============================================================================
+type ExtractL1<F> = F extends {
+  type: "row" | "collapsible";
+  fields: infer Nested extends readonly Field[];
+}
+  ? Nested[number]
+  : F extends { type: "tabs"; tabs: readonly (infer T)[] }
+  ? T extends { fields: infer TabFields extends readonly Field[] }
+  ? TabFields[number]
+  : never
+  : F;
 
-/**
- * Maps a BuzzForm field definition to its corresponding Zod type.
- * Used for type inference in createSchema.
- *
- * Order matters for conditional types - more specific matches first.
- */
-export type FieldToZod<F extends Field> =
-    // If field has an explicit schema, use it
-    F extends { schema: infer S extends z.ZodTypeAny } ? S :
-    // Text-like fields with hasMany
-    F extends { type: 'text'; hasMany: true } ? z.ZodArray<z.ZodString> :
-    F extends { type: 'email'; hasMany: true } ? z.ZodArray<z.ZodString> :
-    // Text-like fields (single)
-    F extends { type: 'text' } ? z.ZodString :
-    F extends { type: 'email' } ? z.ZodString :
-    F extends { type: 'password' } ? z.ZodString :
-    F extends { type: 'textarea' } ? z.ZodString :
-    // Number
-    F extends { type: 'number' } ? z.ZodNumber :
-    // Date
-    F extends { type: 'date' } ? z.ZodDate :
-    F extends { type: 'datetime' } ? z.ZodDate :
-    // Boolean
-    F extends { type: 'checkbox' } ? z.ZodBoolean :
-    F extends { type: 'switch' } ? z.ZodBoolean :
-    // Select with hasMany - uses union type (string | number | boolean)
-    F extends { type: 'select'; hasMany: true } ? z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>> :
-    F extends { type: 'select' } ? z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]> :
-    // Radio - uses union type (string | number | boolean)
-    F extends { type: 'radio' } ? z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]> :
-    // Tags (always array of strings)
-    F extends { type: 'tags' } ? z.ZodArray<z.ZodString> :
-    // Upload
-    F extends { type: 'upload'; hasMany: true } ? z.ZodArray<z.ZodUnion<[z.ZodType<File>, z.ZodString]>> :
-    F extends { type: 'upload' } ? z.ZodUnion<[z.ZodType<File>, z.ZodString]> :
-    // Fallback
-    z.ZodTypeAny;
+type ExtractL2<F> = ExtractL1<ExtractL1<F>>;
+type ExtractL3<F> = ExtractL1<ExtractL2<F>>;
+type ExtractL4<F> = ExtractL1<ExtractL3<F>>;
 
-// =============================================================================
-// TYPE-LEVEL MAPPING: Fields Array → Object Shape
-// =============================================================================
+type FlattenedFields<F> = ExtractL4<F>;
 
-/**
- * Transforms an array of field definitions into the shape of a Zod object.
- * Only includes fields with a `name` property (data fields).
- *
- * Uses the `const T` generic to preserve literal field names.
- *
- * @example
- * const fields = [
- *   { type: 'text', name: 'email' },
- *   { type: 'number', name: 'age' },
- * ] as const;
- *
- * type Shape = FieldsToShape<typeof fields>;
- * // { email: z.ZodString; age: z.ZodNumber }
- */
-export type FieldsToShape<T extends readonly Field[]> = {
-    [K in T[number]as K extends { name: infer N extends string } ? N : never]:
-    K extends { name: string } ? FieldToZod<K> : never
+type MakeOptional<T extends z.ZodTypeAny, F extends Field> = F extends {
+  required: true;
+}
+  ? T
+  : z.ZodOptional<T>;
+
+type InnerFieldsShape<T extends readonly Field[]> = {
+  [K in FlattenedFields<T[number]> as K extends { name: infer N extends string } ? N : never]:
+  K extends Field ? InnerFieldToZod<K> : never;
 };
 
-// =============================================================================
-// SCHEMA BUILDER TYPE
-// =============================================================================
+type InnerFieldToZod<F extends Field> = MakeOptional<InnerBaseFieldType<F>, F>;
 
-/**
- * Function signature for field schema builders.
- * Each field type has a builder that converts the field config to a Zod schema.
- */
-export type SchemaBuilder<TField extends Field = Field> = (field: TField) => z.ZodTypeAny;
+type InnerBaseFieldType<F extends Field> =
+  F extends { schema: infer S extends z.ZodTypeAny }
+  ? S
+  : F extends { type: "text" }
+  ? z.ZodString
+  : F extends { type: "email" }
+  ? z.ZodString
+  : F extends { type: "password" }
+  ? z.ZodString
+  : F extends { type: "textarea" }
+  ? z.ZodString
+  : F extends { type: "number" }
+  ? z.ZodNumber
+  : F extends { type: "date" }
+  ? z.ZodDate
+  : F extends { type: "datetime" }
+  ? z.ZodDate
+  : F extends { type: "checkbox" }
+  ? z.ZodBoolean
+  : F extends { type: "switch" }
+  ? z.ZodBoolean
+  : F extends { type: "select"; hasMany: true }
+  ? z.ZodArray<z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>>
+  : F extends { type: "select" }
+  ? z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>
+  : F extends { type: "radio" }
+  ? z.ZodUnion<[z.ZodString, z.ZodNumber, z.ZodBoolean]>
+  : F extends { type: "tags" }
+  ? z.ZodArray<z.ZodString>
+  : F extends { type: "upload"; hasMany: true }
+  ? z.ZodArray<z.ZodUnion<[z.ZodType<File>, z.ZodString]>>
+  : F extends { type: "upload" }
+  ? z.ZodUnion<[z.ZodType<File>, z.ZodString]>
+  : F extends { type: "group"; fields: infer Nested extends readonly Field[] }
+  ? z.ZodObject<InnerFieldsShape<Nested>>
+  : F extends { type: "array"; fields: infer Nested extends readonly Field[] }
+  ? z.ZodArray<z.ZodObject<InnerFieldsShape<Nested>>>
+  : z.ZodTypeAny;
 
-/**
- * Map of field types to their schema builders.
- */
+export type FieldToZod<F extends Field> = MakeOptional<InnerBaseFieldType<F>, F>;
+
+export type FieldsToShape<T extends readonly Field[]> = InnerFieldsShape<T>;
+
+export type SchemaBuilder<TField extends Field = Field> = (
+  field: TField,
+) => z.ZodTypeAny;
+
 export type SchemaBuilderMap = {
-    [K in Field['type']]?: SchemaBuilder<Extract<Field, { type: K }>>;
+  [K in Field["type"]]?: SchemaBuilder<Extract<Field, { type: K }>>;
 };
-
-// =============================================================================
-// INFER SCHEMA TYPE
-// =============================================================================
 
 /**
  * Infer the TypeScript type from a BuzzForm schema.
- * 
- * Use this instead of `z.infer<typeof schema>` to avoid needing to import
- * `z` from `@buildnbuzz/buzzform/zod`.
- * 
- * @example
- * import { createSchema, type InferSchema } from '@buildnbuzz/buzzform';
- * 
- * const loginSchema = createSchema([
- *   { type: 'email', name: 'email', required: true },
- *   { type: 'password', name: 'password', required: true },
- * ]);
- * 
- * type LoginFormData = InferSchema<typeof loginSchema>;
- * // { email: string; password: string }
- * 
- * @see {@link https://form.buildnbuzz.com/docs/type-inference Type Inference Guide}
  */
-export type InferSchema<T extends z.ZodTypeAny> = z.infer<T>;
+export type InferType<T extends z.ZodTypeAny> = z.infer<T>;
+
+/**
+ * @deprecated Use `InferType` instead. This will be removed in a future version.
+ */
+export type InferSchema<T extends z.ZodTypeAny> = InferType<T>;
