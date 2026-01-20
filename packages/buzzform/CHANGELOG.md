@@ -1,5 +1,21 @@
 # @buildnbuzz/buzzform
 
+## 0.1.2
+
+### Patch Changes
+
+- a991440: **Features**
+  - Renamed `InferSchema` to `InferType` (backwards compatible)
+  - Improved type inference for nested structures
+
+  **Chores**
+  - Excluded dev branch from CI workflow
+  - Simplified release condition
+
+  **Documentation**
+  - Updated docs to use `InferType`
+  - Fixed table formatting
+
 ## 0.1.1
 
 ### Patch Changes
