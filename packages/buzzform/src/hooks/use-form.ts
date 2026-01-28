@@ -18,7 +18,7 @@ function extractDefaultsFromFields(fields?: Field[]): Record<string, unknown> | 
             defaults[field.name] = field.defaultValue;
             hasDefaults = true;
         }
-        // Handle nested fields (group, array)
+        // Handle nested fields
         if ('fields' in field && Array.isArray(field.fields)) {
             const nestedDefaults = extractDefaultsFromFields(field.fields);
             if (nestedDefaults) {
@@ -31,22 +31,17 @@ function extractDefaultsFromFields(fields?: Field[]): Record<string, unknown> | 
     return hasDefaults ? defaults : undefined;
 }
 
-/**
- * Apply FormSettings to a FormAdapter.
- * Wraps handleSubmit to implement settings like submitOnlyWhenDirty.
- */
+// Apply FormSettings to a FormAdapter
 function applySettings<TData>(
     form: FormAdapter<TData>,
     settings?: FormSettings
 ): FormAdapter<TData> {
     if (!settings) return form;
 
-    // Wrap handleSubmit if submitOnlyWhenDirty is enabled
     if (settings.submitOnlyWhenDirty) {
         const originalHandleSubmit = form.handleSubmit;
 
         form.handleSubmit = (e?: React.FormEvent) => {
-            // Check if form is dirty before submitting
             if (!form.formState.isDirty) {
                 e?.preventDefault?.();
                 return;
@@ -55,8 +50,6 @@ function applySettings<TData>(
         };
     }
 
-    // Note: autoFocus is a hint for the renderer component
-    // We attach it to the form for the renderer to read
     if (settings) {
         form.settings = settings;
     }
@@ -95,42 +88,28 @@ export function useForm<TData extends Record<string, unknown> = Record<string, u
 ): FormAdapter<TData> {
     const globalConfig = useContext(FormConfigContext);
 
-    // Validate required options
-    if (!options.schema) {
-        throw new Error(
-            'useForm: schema is required. ' +
-            'Use createSchema([...]) to create a schema from fields, or pass a Zod schema directly.'
-        );
-    }
-
-    // Merge global config with per-form overrides
+    // Merge global config with overrides
     const adapter = options.adapter ?? globalConfig?.adapter;
     const resolverFn = globalConfig?.resolver;
     const mode = options.mode ?? globalConfig?.mode ?? 'onChange';
     const reValidateMode = options.reValidateMode ?? globalConfig?.reValidateMode ?? 'onChange';
 
-    // Validate adapter is available
-    if (!adapter) {
-        throw new Error(
-            'useForm: No adapter configured. ' +
-            'Either wrap your app in <FormProvider adapter={...}> or pass adapter in options.'
-        );
-    }
+    const resolver = options.schema && resolverFn ? resolverFn(options.schema) : undefined;
 
-    // Create resolver from schema
-    const resolver = resolverFn ? resolverFn(options.schema) : undefined;
-
-    // Extract default values
-    // Priority: explicit defaultValues > field defaultValues
-    const schemaWithFields = options.schema as typeof options.schema & { fields?: Field[] };
+    // Extract default values (useMemo must be unconditional)
+    const schemaWithFields = options.schema as (typeof options.schema & { fields?: Field[] }) | undefined;
     const fieldDefaults = useMemo(
-        () => extractDefaultsFromFields(schemaWithFields.fields),
-        [schemaWithFields.fields]
+        () => extractDefaultsFromFields(schemaWithFields?.fields),
+        [schemaWithFields?.fields]
     );
     const defaultValues = options.defaultValues ?? fieldDefaults;
 
-    // Call the adapter
-    const form = adapter({
+    // Call adapter unconditionally to maintain hook order
+    const effectiveAdapter = adapter ?? ((_opts: AdapterOptions) => {
+        throw new Error('useForm: No adapter configured.');
+    });
+
+    const form = effectiveAdapter({
         defaultValues,
         resolver,
         mode,
@@ -138,6 +117,20 @@ export function useForm<TData extends Record<string, unknown> = Record<string, u
         onSubmit: options.onSubmit,
     } as AdapterOptions) as FormAdapter<TData>;
 
-    // Apply settings (submitOnlyWhenDirty, etc.)
+    // Validation must happen after hooks
+    if (!options.schema) {
+        throw new Error(
+            'useForm: schema is required. ' +
+            'Use createSchema([...]) to create a schema from fields, or pass a Zod schema directly.'
+        );
+    }
+
+    if (!adapter) {
+        throw new Error(
+            'useForm: No adapter configured. ' +
+            'Either wrap your app in <FormProvider adapter={...}> or pass adapter in options.'
+        );
+    }
+
     return applySettings(form, options.settings);
 }

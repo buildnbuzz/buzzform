@@ -78,54 +78,36 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
-        uses: actions/github-script@v7
+        if: steps.check_changesets.outputs.should_release == 'true'
         env:
-          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          script: |
-            let publishedPackages = [];
-            try {
-              publishedPackages = JSON.parse(process.env.PUBLISHED_PACKAGES || '[]');
-            } catch (e) {
-              publishedPackages = [];
-            }
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PKG_NAME=$(node -p "require('./packages/buzzform/package.json').name")
+          PKG_VERSION=$(node -p "require('./packages/buzzform/package.json').version")
+          TAG_NAME="${PKG_NAME}@${PKG_VERSION}"
 
-            // If no packages were "officially" published this run, let's check the main package
-            if (publishedPackages.length === 0) {
-              const fs = require('fs');
-              const pkg = JSON.parse(fs.readFileSync('packages/buzzform/package.json', 'utf8'));
-              publishedPackages.push({ name: pkg.name, version: pkg.version });
-            }
+          echo "Package: $PKG_NAME@$PKG_VERSION"
 
-            for (const pkg of publishedPackages) {
-              const tagName = `${pkg.name}@${pkg.version}`;
-              try {
-                // Check if release already exists
-                try {
-                  await github.rest.repos.getReleaseByTag({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    tag: tagName,
-                  });
-                  console.log(`Release ${tagName} already exists, skipping.`);
-                  continue;
-                } catch (e) {
-                  // Release doesn't exist, proceed to create
-                }
+          # Check if this version exists on npm (confirms publish succeeded)
+          if ! npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
+            echo "❌ $PKG_NAME@$PKG_VERSION is NOT on npm, skipping release creation."
+            exit 0
+          fi
 
-                await github.rest.repos.createRelease({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  tag_name: tagName,
-                  name: `${pkg.name} v${pkg.version}`,
-                  body: `## ${pkg.name}@${pkg.version}\n\nSee the [CHANGELOG](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/main/packages/buzzform/CHANGELOG.md) for details.`,
-                  draft: false,
-                  prerelease: false,
-                });
-                console.log(`Created release for ${tagName}`);
-              } catch (error) {
-                console.error(`Failed to handle release for ${tagName}:`, error);
-              }
-            }
+          echo "✅ $PKG_NAME@$PKG_VERSION found on npm"
+
+          # Check if release already exists
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists, skipping."
+            exit 0
+          fi
+
+          # Create the release
+          echo "Creating GitHub release for $TAG_NAME..."
+          gh release create "$TAG_NAME" \
+            --title "$PKG_NAME v$PKG_VERSION" \
+            --notes "## ${PKG_NAME}@${PKG_VERSION}
+
+          See the [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/packages/buzzform/CHANGELOG.md) for details."
+
+          echo "✅ Successfully created release for $TAG_NAME"
