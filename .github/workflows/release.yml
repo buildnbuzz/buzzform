@@ -88,9 +88,23 @@ jobs:
 
           echo "Package: $PKG_NAME@$PKG_VERSION"
 
-          # Check if this version exists on npm (confirms publish succeeded)
-          if ! npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
-            echo "❌ $PKG_NAME@$PKG_VERSION is NOT on npm, skipping release creation."
+          # Check if this version exists on npm (with retries for registry propagation delay)
+          echo "Checking npm registry for $PKG_NAME@$PKG_VERSION..."
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          NPM_CHECK_SUCCESS=false
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            if npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
+              NPM_CHECK_SUCCESS=true
+              break
+            fi
+            echo "Attempt $i/$MAX_RETRIES: Package not yet visible on npm, waiting ${RETRY_DELAY}s..."
+            sleep $RETRY_DELAY
+          done
+
+          if [ "$NPM_CHECK_SUCCESS" = false ]; then
+            echo "❌ $PKG_NAME@$PKG_VERSION is NOT on npm after $MAX_RETRIES attempts, skipping release creation."
             exit 0
           fi
 
