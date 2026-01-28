@@ -1,5 +1,12 @@
 # @buildnbuzz/buzzform
 
+## 0.1.3
+
+### Patch Changes
+
+- 346aaab: - Resolved React hooks order violation in `useForm` by ensuring validation logic occurs after all hooks are initialized.
+  - Refactored GitHub release workflow to use `gh` CLI and added a reliable npm publication check to ensure releases are created accurately.
+
 ## 0.1.2
 
 ### Patch Changes
