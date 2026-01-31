@@ -5,11 +5,11 @@ import { BuilderDndProvider } from "../components/provider";
 import { PropertiesPanel } from "../components/properties/properties-panel";
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div>
+    <div className="h-screen flex flex-col">
       <BuilderDndProvider>
-        <SidebarProvider className="flex flex-col">
+        <SidebarProvider defaultOpen={true} className="flex flex-col h-full">
           <SiteHeader />
-          <div className="flex flex-1">
+          <div className="flex flex-1 overflow-hidden">
             <Sidebar />
             <SidebarInset>{children}</SidebarInset>
             <PropertiesPanel />

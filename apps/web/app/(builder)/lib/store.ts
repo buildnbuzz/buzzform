@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { nanoid } from 'nanoid';
-import type { Node, FieldType } from './types';
+import type { Node, FieldType, Viewport, BuilderMode } from './types';
 import { builderFieldRegistry } from './registry';
 
 type Store = {
@@ -20,6 +20,14 @@ type Store = {
         index: number;
     } | null;
     setDropIndicator: (value: { parentId: string | null; index: number } | null) => void;
+
+    // Canvas State
+    mode: BuilderMode;
+    setMode: (mode: BuilderMode) => void;
+    zoom: number;
+    setZoom: (zoom: number) => void;
+    viewport: Viewport;
+    setViewport: (viewport: Viewport) => void;
 
 };
 
@@ -56,6 +64,10 @@ export const useBuilderStore = create<Store>()(
         nodes: {},
         rootIds: [],
         selectedId: null,
+        mode: 'edit',
+        zoom: 0.9,
+        viewport: 'desktop',
+        collapsedFields: {},
 
         createNode: (type, parentId, index = 0) => {
             const id = nanoid();
@@ -216,5 +228,9 @@ export const useBuilderStore = create<Store>()(
 
         dropIndicator: null,
         setDropIndicator: (value) => set({ dropIndicator: value }),
+
+        setMode: (mode) => set({ mode }),
+        setZoom: (zoom) => set({ zoom }),
+        setViewport: (viewport) => set({ viewport }),
     }))
 );

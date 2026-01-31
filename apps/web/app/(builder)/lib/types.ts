@@ -47,3 +47,6 @@ export type BuilderFieldRegistry = Partial<{
     [K in FieldType]: BuilderFieldRegistryEntry<Extract<Field, { type: K }>>;
 }>;
 
+export type Viewport = 'desktop' | 'tablet' | 'mobile';
+
+export type BuilderMode = 'edit' | 'preview';

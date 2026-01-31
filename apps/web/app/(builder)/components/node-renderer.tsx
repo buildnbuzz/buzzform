@@ -9,10 +9,12 @@ import { useBuilderFormContext } from "./builder-form-context";
 import { FieldRenderer } from "@/registry/base/fields/render";
 import { builderFieldRegistry } from "../lib/registry";
 import { NodeActionsToolbar } from "./node-actions-toolbar";
+import { useState } from "react";
 
 export function NodeRenderer({ id }: { id: string }) {
   const node = useBuilderStore((s) => s.nodes[id]);
   const { form, mode } = useBuilderFormContext();
+  const [isHovered, setIsHovered] = useState(false);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id });
@@ -71,9 +73,9 @@ export function NodeRenderer({ id }: { id: string }) {
       className={cn(
         "absolute right-2 top-2 z-20",
         "transition-all duration-200",
-        isSelected
+        isSelected || isHovered
           ? "opacity-100 pointer-events-auto"
-          : "opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto",
+          : "opacity-0 pointer-events-none",
       )}
     >
       <NodeActionsToolbar
@@ -84,10 +86,10 @@ export function NodeRenderer({ id }: { id: string }) {
   );
 
   const wrapperClasses = cn(
-    "group relative mb-2 touch-none rounded-lg border transition-all hover:p-4",
+    "relative mb-2 touch-none rounded-lg border transition-all hover:p-2",
     isSelected
-      ? "border-primary ring-1 ring-primary/20 p-4"
-      : "border-transparent hover:border-border/50",
+      ? "border-primary/50 ring-2 ring-primary/10 p-2 bg-primary/5"
+      : "border-transparent hover:border-border/40",
   );
 
   // For layout containers
@@ -100,6 +102,8 @@ export function NodeRenderer({ id }: { id: string }) {
         {...listeners}
         data-id={id}
         onClick={handleSelect}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={wrapperClasses}
       >
         {isEditMode && actionToolbar}
@@ -117,6 +121,8 @@ export function NodeRenderer({ id }: { id: string }) {
       {...listeners}
       data-id={id}
       onClick={handleSelect}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={wrapperClasses}
     >
       {isEditMode && actionToolbar}
