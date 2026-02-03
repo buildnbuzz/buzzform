@@ -12,7 +12,7 @@ export function PreviewForm() {
   return (
     <FormContent noValidate>
       <FormFields />
-      <FormActions className="mt-8">
+      <FormActions className="mt-4" align="start">
         <FormSubmit>Submit</FormSubmit>
       </FormActions>
     </FormContent>

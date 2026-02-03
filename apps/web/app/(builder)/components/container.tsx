@@ -40,7 +40,7 @@ export function Container({
       </SortableContext>
 
       {isRootContainer && (
-        <FormActions className="mt-8">
+        <FormActions className="mt-4" align="start">
           <FormSubmit>Submit</FormSubmit>
         </FormActions>
       )}
