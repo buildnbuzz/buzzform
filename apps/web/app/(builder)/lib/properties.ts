@@ -55,19 +55,142 @@ export function extractDefaults(fields: Field[]): Record<string, unknown> {
 }
 
 /**
+ * Sanitizes field constraints to prevent invalid min/max combinations.
+ */
+export function sanitizeFieldConstraints<T extends Record<string, unknown>>(field: T): T {
+    const result = { ...field };
+
+    // Text fields: minLength/maxLength
+    if ("minLength" in result && "maxLength" in result) {
+        const min = result.minLength as number | undefined;
+        const max = result.maxLength as number | undefined;
+        if (min !== undefined && max !== undefined && min > max) {
+            delete result.minLength;
+        }
+    }
+
+    // Number fields: min/max
+    if ("min" in result && "max" in result) {
+        const min = result.min as number | undefined;
+        const max = result.max as number | undefined;
+        if (min !== undefined && max !== undefined && min > max) {
+            delete result.min;
+        }
+    }
+
+    // Tags fields: minTags/maxTags
+    if ("minTags" in result && "maxTags" in result) {
+        const min = result.minTags as number | undefined;
+        const max = result.maxTags as number | undefined;
+        if (min !== undefined && max !== undefined && min > max) {
+            delete result.minTags;
+        }
+    }
+
+    // Upload fields: minFiles/maxFiles
+    if ("minFiles" in result && "maxFiles" in result) {
+        const min = result.minFiles as number | undefined;
+        const max = result.maxFiles as number | undefined;
+        if (min !== undefined && max !== undefined && min > max) {
+            delete result.minFiles;
+        }
+    }
+
+    // Date/datetime fields: minDate/maxDate
+    if ("minDate" in result && "maxDate" in result) {
+        const min = result.minDate as string | Date | undefined;
+        const max = result.maxDate as string | Date | undefined;
+        if (min && max) {
+            const minTime = new Date(min).getTime();
+            const maxTime = new Date(max).getTime();
+            if (!isNaN(minTime) && !isNaN(maxTime) && minTime > maxTime) {
+                delete result.minDate;
+            }
+        }
+    }
+
+    return result;
+}
+
+/**
  * Flattens field props to form values for the properties editor.
  * Excludes structural props like children, fields, and type.
  * Deep clones values to avoid frozen object references from Zustand/immer.
+ *
+ * @param field - The field to flatten
+ * @param propertyConfig - Optional property config to pre-create parent objects for nested paths
  */
-export function flattenFieldToFormValues(field: Field): Record<string, unknown> {
+export function flattenFieldToFormValues(
+    field: Field,
+    propertyConfig?: Field[]
+): Record<string, unknown> {
     const values: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(field)) {
         if (key === "children" || key === "fields" || key === "type") continue;
         // Deep clone to break frozen object references
         values[key] = deepClone(value);
     }
+
+    // Pre-create parent objects for nested paths from property config
+    if (propertyConfig) {
+        const nestedPaths = collectNestedPaths(propertyConfig);
+        ensureNestedParents(values, nestedPaths);
+    }
+
     return values;
 }
+
+/**
+ * Collects all field names with dot-notation from a property config.
+ */
+export function collectNestedPaths(fields: Field[]): string[] {
+    const paths: string[] = [];
+
+    const walk = (f: Field) => {
+        if ("name" in f && typeof f.name === "string" && f.name.includes(".")) {
+            paths.push(f.name);
+        }
+        if ("fields" in f && Array.isArray(f.fields)) {
+            f.fields.forEach(walk);
+        }
+        if ("tabs" in f && Array.isArray(f.tabs)) {
+            for (const tab of f.tabs) {
+                tab.fields.forEach(walk);
+            }
+        }
+    };
+
+    fields.forEach(walk);
+    return paths;
+}
+
+/**
+ * Ensures parent objects exist for all nested paths.
+ * For example, if paths include "criteria.requireLowercase",
+ * this ensures `values.criteria` is an extensible object.
+ */
+function ensureNestedParents(
+    values: Record<string, unknown>,
+    paths: string[]
+): void {
+    for (const path of paths) {
+        const parts = path.split(".");
+        // Skip the last part (the actual field name), only create parents
+        let current = values;
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i];
+            if (!(part in current) || current[part] === null || current[part] === undefined) {
+                // Create a new extensible object
+                current[part] = {};
+            } else if (typeof current[part] === "object" && !Array.isArray(current[part])) {
+                // If it exists but might be frozen, deep clone it to make it extensible
+                current[part] = deepClone(current[part]);
+            }
+            current = current[part] as Record<string, unknown>;
+        }
+    }
+}
+
 
 /**
  * Unflattens form values with dot notation (e.g., { "props.foo": "bar" })
@@ -125,4 +248,44 @@ export function generateSchemaKey(fields: Field[]): string {
 
     fields.forEach(walk);
     return parts.join("|");
+}
+
+/**
+ * Get a nested value from an object using dot notation path.
+ */
+export function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
+    return path.split(".").reduce<unknown>((acc, key) => {
+        if (acc && typeof acc === "object" && acc !== null) {
+            return (acc as Record<string, unknown>)[key];
+        }
+        return undefined;
+    }, obj);
+}
+
+/**
+ * Ensures parent objects in the form values are mutable (not frozen).
+ * This is needed when working with Zustand/immer frozen objects.
+ */
+export function ensureMutableParents(
+    form: { getValues: () => unknown; setValue: (name: string, value: unknown, opts?: { shouldDirty?: boolean }) => void },
+    path: string
+): void {
+    const parts = path.split(".");
+    if (parts.length <= 1) return;
+
+    const values = form.getValues() as Record<string, unknown>;
+
+    for (let depth = 0; depth < parts.length - 1; depth++) {
+        const parentPath = parts.slice(0, depth + 1).join(".");
+        const parentValue = getNestedValue(values, parentPath);
+
+        if (parentValue === undefined || parentValue === null) {
+            form.setValue(parentPath, {}, { shouldDirty: false });
+        } else if (
+            typeof parentValue === "object" &&
+            Object.isFrozen(parentValue)
+        ) {
+            form.setValue(parentPath, deepClone(parentValue), { shouldDirty: false });
+        }
+    }
 }

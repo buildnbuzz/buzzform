@@ -1,6 +1,7 @@
 import type { Field } from '@buildnbuzz/buzzform';
 import type { Node } from './types';
 import { isContainerType, isDataField } from './types';
+import { sanitizeFieldConstraints } from './properties';
 
 /**
  * Convert builder nodes to a BuzzForm Field array.
@@ -22,11 +23,14 @@ export function nodeToField(nodes: Record<string, Node>, id: string): Field | nu
     // Reorder properties for better readability
     const { type, name, label, ...rest } = field as unknown as Record<string, unknown>;
 
+    // Sanitize constraints to prevent invalid combinations (e.g., minLength > maxLength)
+    const sanitizedRest = sanitizeFieldConstraints(rest);
+
     const orderedField = {
         type,
         ...(name ? { name } : {}),
         ...(label ? { label } : {}),
-        ...rest,
+        ...sanitizedRest,
     };
 
     // For container fields, recursively convert children
