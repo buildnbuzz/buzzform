@@ -21,6 +21,8 @@
     "@hugeicons/react": "^1.1.4",
     "@phosphor-icons/react": "^2.1.10",
     "@remixicon/react": "^4.8.0",
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.94.0",
     "@tabler/icons-react": "^3.36.1",
     "@types/mdx": "^2.0.13",
     "@vercel/analytics": "^1.6.1",
