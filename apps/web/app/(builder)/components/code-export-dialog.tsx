@@ -27,7 +27,7 @@ export function CodeExportDialog() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" className="gap-2">
             <HugeiconsIcon icon={SourceCodeIcon} />
             Export
           </Button>
