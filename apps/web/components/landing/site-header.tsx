@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GithubIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, GithubIcon } from "@hugeicons/core-free-icons";
 import { siteConfig, navLinks } from "@/lib/constants";
 import { MobileNav } from "@/components/landing/mobile-nav";
 
@@ -11,15 +11,16 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container mx-auto flex h-14 items-center px-4 md:px-8">
-        <Link href="/" className="mr-4 flex items-center space-x-2">
-          <Image
-            src={siteConfig.logo}
-            alt={siteConfig.name}
-            width={24}
-            height={24}
-            className="invert dark:invert-0"
-          />
-          <span className="hidden font-bold md:inline-block">
+        <Link href="/" className="mr-4 flex items-center gap-2">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg invert dark:invert-0">
+            <Image
+              src={siteConfig.logo}
+              alt={siteConfig.name}
+              width={24}
+              height={24}
+            />
+          </div>
+          <span className="hidden text-sm font-semibold tracking-tight md:inline-block">
             {siteConfig.name}
           </span>
         </Link>
@@ -50,6 +51,17 @@ export function SiteHeader() {
             }
           />
           <ThemeToggle />
+          <Button
+            size="sm"
+            className="gap-2 h-8 hidden sm:flex"
+            nativeButton={false}
+            render={
+              <Link href="/builder">
+                <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+                Create Form
+              </Link>
+            }
+          />
           <MobileNav />
         </div>
       </div>

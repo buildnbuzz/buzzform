@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { GithubIcon } from "@hugeicons/core-free-icons";
+import { Add01Icon, GithubIcon } from "@hugeicons/core-free-icons";
 import { siteConfig } from "@/lib/constants";
 
 /**
@@ -44,6 +44,17 @@ export function ExamplesHeader() {
           }
         />
         <ThemeToggle />
+        <Button
+          size="sm"
+          className="gap-2 h-8 hidden sm:flex"
+          nativeButton={false}
+          render={
+            <Link href="/builder">
+              <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+              Create Form
+            </Link>
+          }
+        />
         <SidebarTrigger className="md:hidden" />
       </div>
     </header>

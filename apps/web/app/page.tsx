@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { SiteFooter } from "@/components/landing/site-footer";
 import { UsageSection } from "@/components/landing/usage-section";
 import { SiteHeader } from "@/components/landing/site-header";
+import { BuilderCtaSection } from "@/components/landing/builder-cta-section";
 
 export const metadata: Metadata = {
   title: "BuzzForm - Beautiful, Type-Safe React Forms",
@@ -57,6 +58,7 @@ export default function Page() {
         <HeroSection />
         <UsageSection />
         <FeaturesSection />
+        <BuilderCtaSection />
       </main>
       <SiteFooter />
     </div>
