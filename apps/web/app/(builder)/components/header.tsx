@@ -10,6 +10,7 @@ import { useBuilderStore } from "../lib/store";
 import { SaveIndicator } from "./header/save-indicator";
 import { NewFormButton } from "./header/new-form-button";
 import { FormName } from "./header/form-name";
+import { CloudSaveDialog } from "./header/cloud-save-dialog";
 
 export function SiteHeader() {
   const hasContent = useBuilderStore((state) => state.rootIds.length > 0);
@@ -22,7 +23,9 @@ export function SiteHeader() {
             <div className="flex aspect-square size-8 items-center justify-center rounded-lg invert dark:invert-0">
               <Image src="/bb-icon.svg" alt="Logo" width={24} height={24} />
             </div>
-            <span className="text-sm font-semibold tracking-tight">Buildnbuzz</span>
+            <span className="text-sm font-semibold tracking-tight">
+              Buildnbuzz
+            </span>
           </Link>
           <Separator
             orientation="vertical"
@@ -41,6 +44,7 @@ export function SiteHeader() {
           )}
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <CloudSaveDialog />
             <CodeExportDialog />
             <NewFormButton />
           </div>
