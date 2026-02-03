@@ -8,6 +8,8 @@ import { nanoid } from 'nanoid';
 import type { Node, FieldType, Viewport, BuilderMode } from './types';
 import { builderFieldRegistry } from './registry';
 
+type SaveStatus = 'idle' | 'saving' | 'saved';
+
 type BuilderState = {
     nodes: Record<string, Node>;
     rootIds: string[];
@@ -16,6 +18,10 @@ type BuilderState = {
     mode: BuilderMode;
     zoom: number;
     viewport: Viewport;
+    formId: string;
+    formName: string;
+    saveStatus: SaveStatus;
+    lastSavedAt: number | null;
 };
 
 type BuilderActions = {
@@ -30,6 +36,9 @@ type BuilderActions = {
     setZoom: (zoom: number) => void;
     setViewport: (viewport: Viewport) => void;
     clearState: () => void;
+    setSaveStatus: (status: SaveStatus, timestamp?: number) => void;
+    setFormName: (name: string) => void;
+    setFormId: (id: string) => void;
 };
 
 type Store = BuilderState & BuilderActions;
@@ -44,6 +53,10 @@ const INITIAL_STATE: BuilderState = {
     mode: 'edit',
     zoom: 0.9,
     viewport: 'desktop',
+    formId: nanoid(),
+    formName: 'Untitled form',
+    saveStatus: 'idle',
+    lastSavedAt: null,
 };
 
 function mergeUpdates<T extends object>(target: T, source: Partial<T>) {
@@ -231,7 +244,22 @@ export const useBuilderStore = create<Store>()(
                 setMode: (mode) => set({ mode }),
                 setZoom: (zoom) => set({ zoom }),
                 setViewport: (viewport) => set({ viewport }),
-                clearState: () => set(INITIAL_STATE),
+                clearState: () => {
+                    const temporal = useBuilderStore.temporal.getState();
+                    temporal.pause();
+                    temporal.clear();
+                    set((state) => {
+                        Object.assign(state, INITIAL_STATE);
+                        state.formId = nanoid();
+                    });
+                    temporal.resume();
+                },
+                setSaveStatus: (saveStatus, timestamp) => set({
+                    saveStatus,
+                    lastSavedAt: timestamp ?? (saveStatus === 'saved' ? Date.now() : undefined)
+                }),
+                setFormName: (name) => set({ formName: name }),
+                setFormId: (id) => set({ formId: id }),
             })),
             {
                 partialize: (state): TrackedState => ({
@@ -267,8 +295,15 @@ export const useBuilderStore = create<Store>()(
                 rootIds: state.rootIds,
                 zoom: state.zoom,
                 viewport: state.viewport,
+                formId: state.formId,
+                formName: state.formName,
             }),
             version: 1,
+            onRehydrateStorage: () => (state) => {
+                if (state) {
+                    state.setSaveStatus('saved');
+                }
+            },
         }
     )
 );
@@ -292,3 +327,20 @@ export function useUndoRedo() {
 
     return { undo, redo, clear, canUndo, canRedo };
 }
+
+let saveStatusTimeout: ReturnType<typeof setTimeout> | null = null;
+useBuilderStore.subscribe(
+    (state, prevState) => {
+        if (
+            state.nodes !== prevState.nodes ||
+            state.rootIds !== prevState.rootIds ||
+            state.formName !== prevState.formName
+        ) {
+            state.setSaveStatus('saving');
+            if (saveStatusTimeout) clearTimeout(saveStatusTimeout);
+            saveStatusTimeout = setTimeout(() => {
+                useBuilderStore.getState().setSaveStatus('saved', Date.now());
+            }, 600);
+        }
+    }
+);
