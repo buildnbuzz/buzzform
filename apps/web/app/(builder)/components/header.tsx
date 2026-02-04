@@ -24,7 +24,7 @@ export function SiteHeader() {
               <Image src="/bb-icon.svg" alt="Logo" width={24} height={24} />
             </div>
             <span className="text-sm font-semibold tracking-tight">
-              Buildnbuzz
+              BuzzForm
             </span>
           </Link>
           <Separator
