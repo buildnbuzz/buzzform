@@ -7,6 +7,7 @@ import type { TemporalState } from 'zundo';
 import { nanoid } from 'nanoid';
 import type { Node, FieldType, Viewport, BuilderMode } from './types';
 import { builderFieldRegistry } from './registry';
+import { sanitizeFieldDefaults } from './properties';
 
 type SaveStatus = 'idle' | 'saving' | 'saved';
 
@@ -152,6 +153,7 @@ export const useBuilderStore = create<Store>()(
                         const node = state.nodes[id];
                         if (node) {
                             mergeUpdates(node.field, updates);
+                            sanitizeFieldDefaults(node.field as unknown as Record<string, unknown>);
                         }
                     });
                 },

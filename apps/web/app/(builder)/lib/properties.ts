@@ -113,6 +113,45 @@ export function sanitizeFieldConstraints<T extends Record<string, unknown>>(fiel
 }
 
 /**
+ * Ensure defaultValue stays in sync with options for option-based fields.
+ * Clears invalid defaults when options are removed/changed.
+ */
+export function sanitizeFieldDefaults<T extends Record<string, unknown>>(field: T): T {
+    const options = (field as Record<string, unknown>).options;
+    if (!Array.isArray(options)) return field;
+
+    const optionValues = options
+        .map((opt) => (typeof opt === "string" ? opt : (opt as { value?: unknown }).value))
+        .filter((val) => val !== undefined && val !== null && val !== "");
+
+    if (optionValues.length === 0) {
+        if ("defaultValue" in field) {
+            (field as Record<string, unknown>).defaultValue = undefined;
+        }
+        return field;
+    }
+
+    const defaultValue = (field as Record<string, unknown>).defaultValue;
+    if (defaultValue === undefined || defaultValue === null || defaultValue === "") return field;
+
+    if (Array.isArray(defaultValue)) {
+        const filtered = defaultValue.filter((val) =>
+            optionValues.some((opt) => opt === val),
+        );
+        (field as Record<string, unknown>).defaultValue =
+            filtered.length > 0 ? filtered : undefined;
+        return field;
+    }
+
+    const isValid = optionValues.some((opt) => opt === defaultValue);
+    if (!isValid) {
+        (field as Record<string, unknown>).defaultValue = undefined;
+    }
+
+    return field;
+}
+
+/**
  * Flattens field props to form values for the properties editor.
  * Excludes structural props like children, fields, and type.
  * Deep clones values to avoid frozen object references from Zustand/immer.

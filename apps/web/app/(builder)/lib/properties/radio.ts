@@ -71,6 +71,17 @@ export const radioFieldProperties: Field[] = [
                         ],
                     },
                     {
+                        type: "select",
+                        name: "defaultValue",
+                        label: "Default Value",
+                        description: "Preselect an option (optional)",
+                        options: async (context) =>
+                            Array.isArray(context?.data?.options)
+                                ? context.data.options
+                                : [],
+                        dependencies: ["options"],
+                    },
+                    {
                         type: "switch",
                         name: "hidden",
                         label: "Hidden",

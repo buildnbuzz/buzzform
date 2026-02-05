@@ -116,6 +116,7 @@ export const builderFieldRegistry: BuilderFieldRegistry = {
         defaultProps: {
             type: 'radio',
             label: 'Radio',
+            defaultValue: 'option1',
             options: [
                 { label: 'Option 1', value: 'option1' },
                 { label: 'Option 2', value: 'option2' },
@@ -131,8 +132,10 @@ export const builderFieldRegistry: BuilderFieldRegistry = {
     },
     switch: {
         kind: 'data',
-        sidebar: { label: 'Switch', icon: ToggleOnIcon, category: 'selection' },
-        defaultProps: { type: 'switch', label: 'Switch' },
+        sidebar: { label: 'Switch', icon: ToggleOnIcon, category: 'selection', },
+        defaultProps: {
+            type: 'switch', label: 'Switch', defaultValue: false,
+        },
         properties: switchFieldProperties,
     },
 
