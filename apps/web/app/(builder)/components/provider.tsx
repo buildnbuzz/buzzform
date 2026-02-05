@@ -282,12 +282,13 @@ function DragOverlayItem({ id }: { id: string }) {
   return (
     <div
       className={cn(
-        "bg-card/95 backdrop-blur-md border-2 shadow-2xl rounded-xl p-3 min-w-52",
+        "bg-card/95 backdrop-blur-md border-2 shadow-2xl rounded-xl p-3 min-w-80",
         "cursor-grabbing animate-in fade-in-0 zoom-in-95 duration-150",
         isFromSidebar
           ? "border-primary/50 shadow-primary/10"
           : "border-border shadow-black/10",
       )}
+      style={{ minWidth: 320 }}
     >
       <div className="flex items-center gap-3">
         {/* Icon container */}
@@ -307,13 +308,25 @@ function DragOverlayItem({ id }: { id: string }) {
           <div className="text-sm font-semibold text-foreground truncate">
             {isFromSidebar ? `New ${label}` : (fieldName ?? label)}
           </div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
             <HugeiconsIcon
               icon={isFromSidebar ? Add01Icon : Move01Icon}
               size={10}
               strokeWidth={2}
             />
-            <span>{isFromSidebar ? "Adding new field" : "Moving field"}</span>
+            <span>
+              {isFromSidebar
+                ? (
+                    <>
+                      Adding new field, press
+                      <kbd className="ml-1 inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground/80">
+                        Esc
+                      </kbd>
+                      <span className="ml-1">to cancel</span>
+                    </>
+                  )
+                : "Moving field"}
+            </span>
           </div>
         </div>
       </div>
