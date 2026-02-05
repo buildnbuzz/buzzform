@@ -1,4 +1,15 @@
+import { z } from "zod";
 import type { Field } from "@buildnbuzz/buzzform";
+import { DefaultValueSelect } from "../../components/properties/default-value-select";
+
+const selectDefaultValueSchema = z
+    .union([
+        z.string(),
+        z.number(),
+        z.boolean(),
+        z.array(z.union([z.string(), z.number(), z.boolean()])),
+    ])
+    .optional();
 
 export const selectFieldProperties: Field[] = [
     {
@@ -74,6 +85,20 @@ export const selectFieldProperties: Field[] = [
                                 rows: 2,
                             },
                         ],
+                    },
+                    {
+                        type: "select",
+                        name: "defaultValue",
+                        label: "Default Value",
+                        description: "Preselect a value",
+                        component: DefaultValueSelect,
+                        // @ts-expect-error: schema allows undefined but SelectField["defaultValue"] doesn't (will be fixed in package)
+                        schema: selectDefaultValueSchema,
+                        options: async (context) =>
+                            Array.isArray(context?.data?.options)
+                                ? context.data.options
+                                : [],
+                        dependencies: ["options"],
                     },
                     {
                         type: "switch",
