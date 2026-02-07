@@ -10,6 +10,7 @@
     "@buzzform/text",
     "@buzzform/textarea",
     "@buzzform/checkbox",
+    "@buzzform/checkbox-group",
     "@buzzform/password",
     "@buzzform/switch",
     "@buzzform/radio",

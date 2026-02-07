@@ -107,6 +107,21 @@
       ]
     },
     {
+      "name": "checkbox-group",
+      "type": "registry:ui",
+      "title": "CheckboxGroupField",
+      "description": "A checkbox group field component for BuzzForm. Supports multi-select arrays, static or async options, min/max selected constraints, and default/card variants.",
+      "dependencies": ["@buildnbuzz/buzzform"],
+      "registryDependencies": ["@buzzform/init", "checkbox", "field"],
+      "files": [
+        {
+          "path": "registry/base/fields/checkbox-group.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/checkbox-group.tsx"
+        }
+      ]
+    },
+    {
       "name": "password",
       "type": "registry:ui",
       "title": "PasswordField",
@@ -390,6 +405,7 @@
         "@buzzform/text",
         "@buzzform/textarea",
         "@buzzform/checkbox",
+        "@buzzform/checkbox-group",
         "@buzzform/password",
         "@buzzform/switch",
         "@buzzform/radio",
