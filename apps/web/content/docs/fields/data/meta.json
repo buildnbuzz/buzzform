@@ -9,6 +9,7 @@
     "select",
     "radio",
     "checkbox",
+    "checkbox-group",
     "switch",
     "tags",
     "upload"

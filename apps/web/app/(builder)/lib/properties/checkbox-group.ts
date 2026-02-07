@@ -1,17 +1,6 @@
-import { z } from "zod";
 import type { Field } from "@buildnbuzz/buzzform";
-import { DefaultValueSelect } from "../../components/properties/default-value-select";
 
-const selectDefaultValueSchema = z
-  .union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.array(z.union([z.string(), z.number(), z.boolean()])),
-  ])
-  .optional();
-
-export const selectFieldProperties: Field[] = [
+export const checkboxGroupFieldProperties: Field[] = [
   {
     type: "tabs",
     ui: {
@@ -35,15 +24,8 @@ export const selectFieldProperties: Field[] = [
             type: "text",
             name: "label",
             label: "Label",
-            description: "Display label shown above the field",
-            placeholder: "Select Option",
-          },
-          {
-            type: "text",
-            name: "placeholder",
-            label: "Placeholder",
-            description: "Placeholder text inside the field",
-            placeholder: "Choose an option",
+            description: "Display label shown above the checkbox group",
+            placeholder: "Select all that apply",
           },
           {
             type: "textarea",
@@ -90,20 +72,11 @@ export const selectFieldProperties: Field[] = [
             type: "select",
             name: "defaultValue",
             label: "Default Value",
-            description: "Preselect a value",
-            component: DefaultValueSelect,
-            // @ts-expect-error: schema allows undefined but SelectField["defaultValue"] doesn't (will be fixed in package)
-            schema: selectDefaultValueSchema,
+            description: "Preselect one or more options",
+            hasMany: true,
             options: async (context) =>
               Array.isArray(context?.data?.options) ? context.data.options : [],
             dependencies: ["options"],
-          },
-          {
-            type: "switch",
-            name: "hasMany",
-            label: "Multiple Selection",
-            description: "Allow selecting multiple options",
-            ui: { alignment: "between" },
           },
           {
             type: "switch",
@@ -135,28 +108,22 @@ export const selectFieldProperties: Field[] = [
             type: "switch",
             name: "required",
             label: "Required",
-            description: "User must select an option",
+            description: "User must select at least one option",
             ui: { alignment: "between" },
           },
           {
             type: "number",
             name: "minSelected",
             label: "Min Selected",
-            description:
-              "Minimum number of options to select (multi-select only)",
+            description: "Minimum number of options to select",
             min: 0,
-            condition: (data) =>
-              (data as { hasMany?: boolean }).hasMany === true,
           },
           {
             type: "number",
             name: "maxSelected",
             label: "Max Selected",
-            description:
-              "Maximum number of options to select (multi-select only)",
+            description: "Maximum number of options to select",
             min: 1,
-            condition: (data) =>
-              (data as { hasMany?: boolean }).hasMany === true,
           },
         ],
       },
@@ -187,39 +154,61 @@ export const selectFieldProperties: Field[] = [
             ],
           },
           {
-            type: "switch",
-            name: "ui.isSearchable",
-            label: "Searchable",
-            description: "Enable search/filter functionality",
-            ui: { alignment: "between" },
+            type: "select",
+            name: "ui.direction",
+            label: "Direction",
+            description: "Layout direction (for default variant)",
+            options: [
+              { label: "Vertical", value: "vertical" },
+              { label: "Horizontal", value: "horizontal" },
+            ],
+          },
+          {
+            type: "select",
+            name: "ui.columns",
+            label: "Columns",
+            description: "Grid columns (responsive, 1 on mobile)",
+            condition: (data) =>
+              (data as { ui?: { direction?: string } }).ui?.direction ==
+              "horizontal",
+            options: [
+              { label: "1 Column", value: 1 },
+              { label: "2 Columns", value: 2 },
+              { label: "3 Columns", value: 3 },
+              { label: "4 Columns", value: 4 },
+            ],
+          },
+          {
+            type: "select",
+            name: "ui.variant",
+            label: "Variant",
+            description: "Visual style variant",
+            options: [
+              { label: "Default", value: "default" },
+              { label: "Card", value: "card" },
+            ],
+          },
+          {
+            type: "select",
+            name: "ui.card.size",
+            label: "Card Size",
+            description: "Size preset for card variant",
+            condition: (data) =>
+              (data as { ui?: { variant?: string } }).ui?.variant === "card",
+            options: [
+              { label: "Small", value: "sm" },
+              { label: "Medium", value: "md" },
+              { label: "Large", value: "lg" },
+            ],
           },
           {
             type: "switch",
-            name: "ui.isClearable",
-            label: "Clearable",
-            description: "Show clear button to reset selection",
+            name: "ui.card.bordered",
+            label: "Card Bordered",
+            description: "Show border around cards",
+            condition: (data) =>
+              (data as { ui?: { variant?: string } }).ui?.variant === "card",
             ui: { alignment: "between" },
-          },
-          {
-            type: "number",
-            name: "ui.maxVisibleChips",
-            label: "Max Visible Chips",
-            description: "Maximum chips shown (for multiple selection)",
-            min: 1,
-          },
-          {
-            type: "text",
-            name: "ui.emptyMessage",
-            label: "Empty Message",
-            description: "Message when no options available",
-            placeholder: "No options available",
-          },
-          {
-            type: "text",
-            name: "ui.loadingMessage",
-            label: "Loading Message",
-            description: "Message while loading options",
-            placeholder: "Loading...",
           },
         ],
       },

@@ -43,17 +43,19 @@ export function SelectFieldDemo() {
 
 ## Properties
 
-| Prop           | Type                | Default | Description                 |
-| -------------- | ------------------- | ------- | --------------------------- |
-| `options`      | `Array \| Function` | -       | Static or async options     |
-| `dependencies` | `string[]`          | -       | Fields that trigger refetch |
-| `hasMany`      | `boolean`           | `false` | Allow multiple selections   |
+| Prop           | Type                | Default | Description                    |
+| -------------- | ------------------- | ------- | ------------------------------ |
+| `options`      | `Array \| Function` | -       | Static or async options        |
+| `dependencies` | `string[]`          | -       | Fields that trigger refetch    |
+| `hasMany`      | `boolean`           | `false` | Allow multiple selections      |
+| `minSelected`  | `number`            | -       | Minimum selections (`hasMany`) |
+| `maxSelected`  | `number`            | -       | Maximum selections (`hasMany`) |
 
 ## UI Options
 
 | Option               | Type      | Default        | Description                   |
 | -------------------- | --------- | -------------- | ----------------------------- |
-| `ui.isSearchable`    | `boolean` | `false`        | Enable search filtering       |
+| `ui.isSearchable`    | `boolean` | `true`         | Enable search filtering       |
 | `ui.isClearable`     | `boolean` | `false`        | Show clear button             |
 | `ui.maxVisibleChips` | `number`  | -              | Limit visible chips (hasMany) |
 | `ui.emptyMessage`    | `string`  | `"No options"` | Empty state message           |
