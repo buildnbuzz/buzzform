@@ -94,14 +94,14 @@ function valueToString(value: OptionValue): string {
 
 function stringToValue(
   str: string,
-  options: SelectOption[]
+  options: SelectOption[],
 ): OptionValue | undefined {
   const option = options.find((opt) => valueToString(opt.value) === str);
   return option?.value;
 }
 
 function isAsyncOptions(
-  options: SelectFieldType["options"]
+  options: SelectFieldType["options"],
 ): options is (context: ValidationContext) => Promise<SelectOption[]> {
   return typeof options === "function";
 }
@@ -111,7 +111,7 @@ function useAsyncOptions(
   dependencies: string[] | undefined,
   formValues: Record<string, unknown>,
   siblingData: Record<string, unknown>,
-  path: string
+  path: string,
 ): {
   resolvedOptions: SelectOption[];
   isLoading: boolean;
@@ -124,7 +124,7 @@ function useAsyncOptions(
       ? Array.isArray(options)
         ? options.map(normalizeSelectOption)
         : []
-      : []
+      : [],
   );
   const [isLoading, setIsLoading] = useState(isAsync);
 
@@ -216,12 +216,13 @@ export function SelectField({
     field.dependencies,
     formValues,
     siblingData,
-    path
+    path,
   );
 
   const isSearchable = field.ui?.isSearchable !== false;
   const isClearable = field.ui?.isClearable ?? !field.required;
   const maxVisibleChips = field.ui?.maxVisibleChips ?? 3;
+  const maxSelected = field.hasMany ? field.maxSelected : undefined;
   const emptyMessage = field.ui?.emptyMessage ?? "No results found";
   const loadingMessage = field.ui?.loadingMessage ?? "Loading...";
   const placeholder =
@@ -235,7 +236,7 @@ export function SelectField({
     }
     const query = searchValue.toLowerCase();
     return resolvedOptions.filter((opt) =>
-      getSelectOptionLabelString(opt).toLowerCase().includes(query)
+      getSelectOptionLabelString(opt).toLowerCase().includes(query),
     );
   })();
 
@@ -259,6 +260,17 @@ export function SelectField({
     const actualValues = stringValues
       .map((sv) => stringToValue(sv, resolvedOptions))
       .filter((v): v is OptionValue => v !== undefined);
+
+    const hasMaxLimit = typeof maxSelected === "number" && maxSelected >= 0;
+    const isGrowingSelection = actualValues.length > multiValues.length;
+    if (
+      hasMaxLimit &&
+      isGrowingSelection &&
+      actualValues.length > maxSelected
+    ) {
+      return;
+    }
+
     form.setValue(path, actualValues, {
       shouldDirty: true,
       shouldValidate: true,
@@ -273,9 +285,11 @@ export function SelectField({
   const multiValues = !Array.isArray(rawValue)
     ? []
     : (rawValue as OptionValue[]).map(valueToString);
+  const hasMaxLimit = typeof maxSelected === "number" && maxSelected >= 0;
+  const isAtMaxSelection = hasMaxLimit && multiValues.length >= maxSelected;
 
   const selectedOption = resolvedOptions.find(
-    (o) => singleValue !== null && valueToString(o.value) === singleValue
+    (o) => singleValue !== null && valueToString(o.value) === singleValue,
   );
 
   const renderOptionContent = (option: ExtendedSelectOption) => (
@@ -320,7 +334,7 @@ export function SelectField({
           <ComboboxChips className="min-h-8 w-full px-2">
             {visibleChips.map((val, index) => {
               const opt = resolvedOptions.find(
-                (o) => valueToString(o.value) === val
+                (o) => valueToString(o.value) === val,
               );
               return (
                 <ComboboxChip key={`${val}-${index}`}>
@@ -363,7 +377,11 @@ export function SelectField({
                   <ComboboxItem
                     key={`${valueToString(option.value)}-${i}`}
                     value={valueToString(option.value)}
-                    disabled={option.disabled}
+                    disabled={
+                      option.disabled ||
+                      (isAtMaxSelection &&
+                        !multiValues.includes(valueToString(option.value)))
+                    }
                     className="py-2 px-2.5"
                   >
                     {renderOptionContent(option)}

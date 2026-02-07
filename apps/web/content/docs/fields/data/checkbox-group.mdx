@@ -1,0 +1,59 @@
+---
+title: Checkbox Group Field
+description: Multi-select checkbox group that stores selected values in a single array field.
+---
+
+# Checkbox Group Field
+
+The `checkbox-group` field renders multiple checkbox options and stores selected values as an array.
+
+## Usage
+
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  {
+    type: "checkbox-group",
+    name: "interests",
+    label: "Select your interests",
+    required: true,
+    options: [
+      { label: "Design", value: "design" },
+      { label: "Development", value: "development" },
+      { label: "Marketing", value: "marketing" },
+    ],
+  },
+]);
+```
+
+## Data Shape
+
+Selected values are submitted as a single array:
+
+```json
+{
+  "interests": ["design", "marketing"]
+}
+```
+
+## Properties
+
+| Prop           | Type                                     | Default     | Description                                     |
+| -------------- | ---------------------------------------- | ----------- | ----------------------------------------------- |
+| `options`      | `SelectOption[] \| string[] \| async fn` | -           | Available options                               |
+| `dependencies` | `string[]`                               | `undefined` | Re-fetch async options when dependencies change |
+| `required`     | `boolean`                                | `false`     | Require at least one selection                  |
+| `minSelected`  | `number`                                 | `undefined` | Minimum selected options                        |
+| `maxSelected`  | `number`                                 | `undefined` | Maximum selected options                        |
+| `defaultValue` | `(string \| number \| boolean)[]`        | `[]`        | Initial selected values                         |
+
+## UI Options
+
+| Prop               | Type                         | Default      | Description                          |
+| ------------------ | ---------------------------- | ------------ | ------------------------------------ |
+| `ui.variant`       | `"default" \| "card"`        | `"default"`  | Option presentation style            |
+| `ui.direction`     | `"vertical" \| "horizontal"` | `"vertical"` | Layout direction for default variant |
+| `ui.columns`       | `1 \| 2 \| 3 \| 4`           | `1`          | Responsive grid columns              |
+| `ui.card.size`     | `"sm" \| "md" \| "lg"`       | `"md"`       | Card size preset                     |
+| `ui.card.bordered` | `boolean`                    | `true`       | Show card borders                    |
