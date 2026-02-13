@@ -114,10 +114,18 @@ export function TabsField({
       ? field.tabs.findIndex((t) => t.name === defaultTab)
       : defaultTab;
 
-  const safeDefaultTab = Math.min(
+  const clampedDefaultTab = Math.min(
     Math.max(0, resolvedDefaultTab === -1 ? 0 : resolvedDefaultTab),
     field.tabs.length - 1
   );
+
+  const firstEnabledTab = field.tabs.findIndex((t) => t.disabled !== true);
+  const safeDefaultTab =
+    field.tabs[clampedDefaultTab]?.disabled === true
+      ? firstEnabledTab >= 0
+        ? firstEnabledTab
+        : 0
+      : clampedDefaultTab;
 
   return (
     <Tabs defaultValue={String(safeDefaultTab)} className="w-full">

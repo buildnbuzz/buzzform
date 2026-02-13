@@ -44,7 +44,11 @@ export function Canvas() {
   const setZoom = useBuilderStore((state) => state.setZoom);
 
   // Only use droppable in edit mode
-  const { setNodeRef } = useDroppable({ id: "root", disabled: isPreviewMode });
+  const { setNodeRef } = useDroppable({
+    id: "root",
+    data: { parentId: null, parentSlot: null },
+    disabled: isPreviewMode,
+  });
 
   // Handle Ctrl+Wheel zoom
   useEffect(() => {

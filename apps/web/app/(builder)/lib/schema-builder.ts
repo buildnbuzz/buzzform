@@ -1,7 +1,8 @@
-import type { Field } from '@buildnbuzz/buzzform';
+import type { Field, TabsField } from '@buildnbuzz/buzzform';
 import type { Node } from './types';
 import { isContainerType, isDataField } from './types';
 import { sanitizeFieldConstraints } from './properties';
+import { getNodeChildren, getTabSlotKeys } from './node-children';
 
 /**
  * Recursively removes empty objects, empty arrays, null, and undefined values.
@@ -49,7 +50,7 @@ export function nodeToField(nodes: Record<string, Node>, id: string): Field | nu
     const node = nodes[id];
     if (!node) return null;
 
-    const { field, children } = node;
+    const { field } = node;
 
     // Reorder properties for better readability
     const { type, name, label, ...rest } = field as unknown as Record<string, unknown>;
@@ -68,9 +69,43 @@ export function nodeToField(nodes: Record<string, Node>, id: string): Field | nu
     };
 
 
+    if (field.type === 'tabs') {
+        const tabsField = field as TabsField;
+        const tabs = Array.isArray(tabsField.tabs) ? tabsField.tabs : [];
+        const slots = getTabSlotKeys(tabs);
+
+        const normalizedTabs = tabs.map((tab, tabIndex) => {
+            const slot = slots[tabIndex];
+            const childIds =
+                (node.tabChildren?.[slot] && node.tabChildren[slot].length > 0)
+                    ? node.tabChildren[slot]
+                    : tabIndex === 0 && node.children.length > 0
+                        ? node.children
+                        : [];
+
+            const nestedFields = childIds
+                .map((childId) => nodeToField(nodes, childId))
+                .filter(Boolean) as Field[];
+
+            const tabRest = { ...(tab as unknown as Record<string, unknown>) };
+            delete tabRest.fields;
+            const cleanedTabRest = cleanEmptyValues(tabRest);
+
+            return {
+                ...cleanedTabRest,
+                fields: nestedFields,
+            };
+        });
+
+        return {
+            ...(orderedField as Record<string, unknown>),
+            tabs: normalizedTabs,
+        } as Field;
+    }
+
     if (isContainerType(field.type) && 'fields' in field) {
-        const nestedFields = children.length > 0
-            ? children
+        const nestedFields = node.children.length > 0
+            ? node.children
                 .map((childId) => nodeToField(nodes, childId))
                 .filter(Boolean) as Field[]
             : [];
@@ -103,7 +138,7 @@ export function getAllFieldNames(
                 names.add(node.field.name);
             }
 
-            traverse(node.children);
+            traverse(getNodeChildren(node));
         }
     }
 

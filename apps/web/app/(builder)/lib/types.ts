@@ -7,7 +7,9 @@ export type Node = {
     id: string;
     field: Field;
     parentId: string | null;
+    parentSlot: string | null;
     children: string[];
+    tabChildren?: Record<string, string[]>;
 };
 
 export function isContainerType(type: FieldType): boolean {

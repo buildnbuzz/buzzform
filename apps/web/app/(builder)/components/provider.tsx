@@ -22,6 +22,7 @@ import {
   isDescendant,
   isInsideContainerPadding,
 } from "../lib/utils";
+import { getChildList } from "../lib/node-children";
 import { builderFieldRegistry } from "../lib/registry";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, Move01Icon, TextIcon } from "@hugeicons/core-free-icons";
@@ -64,9 +65,15 @@ export function BuilderDndProvider({
     const { over, activatorEvent, active } = event;
 
     const isSidebarDrag = Boolean(active.data.current?.from === "sidebar");
-    if (!over) return;
-
     const store = useBuilderStore.getState();
+
+    if (!over) {
+      if (store.dropIndicator !== null) {
+        setDropIndicator(null);
+      }
+      return;
+    }
+
     const { nodes, rootIds } = store;
 
     const activeId = active.id as string;
@@ -78,13 +85,17 @@ export function BuilderDndProvider({
     // -----------------------------
     // Clean ID for DropZone
     // -----------------------------
-    let overId = over.id as string;
-    let isDropZone = false;
-
-    if (overId.endsWith("-dropzone")) {
-      overId = overId.replace("-dropzone", "");
-      isDropZone = true;
-    }
+    const overRawId = over.id as string;
+    const overData = (over.data.current ?? {}) as {
+      parentId?: string | null;
+      parentSlot?: string | null;
+    };
+    const isDropZone = overRawId.endsWith("-dropzone");
+    const overId = isDropZone
+      ? overData.parentId === null
+        ? "root"
+        : (overData.parentId ?? overRawId.replace("-dropzone", ""))
+      : overRawId;
 
     // -----------------------------
     // 1️⃣ Measure real DOM geometry
@@ -141,7 +152,20 @@ export function BuilderDndProvider({
     // -----------------------------
     // 3️⃣ Translate to tree location
     // -----------------------------
-    const location = getDropLocation(nodes, rootIds, overId, position);
+    const location =
+      isDropZone && typeof overData.parentId !== "undefined"
+        ? (() => {
+            const parentId = overData.parentId ?? null;
+            const parentSlot = overData.parentSlot ?? null;
+            const siblings = getChildList(nodes, rootIds, parentId, parentSlot);
+
+            return {
+              parentId,
+              parentSlot,
+              index: siblings.length,
+            };
+          })()
+        : getDropLocation(nodes, rootIds, overId, position);
 
     if (!location) {
       setDropIndicator(null);
@@ -150,6 +174,13 @@ export function BuilderDndProvider({
 
     const { parentId } = location;
     const parentType = parentId ? (nodes[parentId]?.field?.type ?? null) : null;
+    if (parentType === "tabs" && parentId) {
+      const tabCount = nodes[parentId]?.field.type === "tabs" ? nodes[parentId].field.tabs.length : 0;
+      if (tabCount === 0) {
+        setDropIndicator(null);
+        return;
+      }
+    }
 
     // -----------------------------
     // 4️⃣ Drop rules (canDrop)
@@ -175,6 +206,7 @@ export function BuilderDndProvider({
     const currentIndicator = store.dropIndicator;
     if (
       currentIndicator?.parentId === location.parentId &&
+      currentIndicator?.parentSlot === location.parentSlot &&
       currentIndicator?.index === location.index
     ) {
       return;
@@ -191,10 +223,17 @@ export function BuilderDndProvider({
 
     const store = useBuilderStore.getState();
     const { nodes, rootIds, dropIndicator } = store;
+    const clearDragState = () => {
+      store.setDropIndicator(null);
+      setActiveId(null);
+    };
 
-    if (!dropIndicator) return;
+    if (!dropIndicator) {
+      clearDragState();
+      return;
+    }
 
-    const { parentId, index } = dropIndicator;
+    const { parentId, parentSlot, index } = dropIndicator;
     const activeId = active.id as string;
 
     const isSidebarDrag = Boolean(active.data.current?.from === "sidebar");
@@ -210,14 +249,30 @@ export function BuilderDndProvider({
       }
 
       const oldParentId = node.parentId;
-      const oldSiblings =
-        oldParentId === null ? rootIds : nodes[oldParentId].children;
+      const oldParentSlot = node.parentSlot ?? null;
+      const oldSiblings = getChildList(
+        nodes,
+        rootIds,
+        oldParentId,
+        oldParentSlot,
+      );
 
       const oldIndex = oldSiblings.indexOf(activeId);
+      const adjustedIndex =
+        oldParentId === parentId &&
+        oldParentSlot === parentSlot &&
+        oldIndex !== -1 &&
+        oldIndex < index
+          ? index - 1
+          : index;
 
       // If nothing actually changed, do nothing
-      if (oldParentId === parentId && oldIndex === index) {
-        store.setDropIndicator(null);
+      if (
+        oldParentId === parentId &&
+        oldParentSlot === parentSlot &&
+        oldIndex === adjustedIndex
+      ) {
+        clearDragState();
         return;
       }
     }
@@ -226,16 +281,15 @@ export function BuilderDndProvider({
     // 2️⃣ COMMIT THE MOVE
     // --------------------------------------------------
     if (isSidebarDrag) {
-      store.createNode(active?.data?.current?.type, parentId, index);
+      store.createNode(active?.data?.current?.type, parentId, index, parentSlot);
     } else {
-      store.moveNode(activeId, parentId, index);
+      store.moveNode(activeId, parentId, index, parentSlot);
     }
 
     // --------------------------------------------------
     // 3️⃣ CLEANUP
     // --------------------------------------------------
-    store.setDropIndicator(null);
-    setActiveId(null);
+    clearDragState();
   }
 
   return (

@@ -25,6 +25,7 @@ import type { BuilderNodeRendererProps } from "./types";
 import { RowLayout } from "../components/layouts/row";
 import { GroupLayout } from "../components/layouts/group";
 import { CollapsibleLayout } from "../components/layouts/collapsible";
+import { TabsLayout } from "../components/layouts/tabs";
 import { textFieldProperties } from "./properties/text";
 import { emailFieldProperties } from "./properties/email";
 import { passwordFieldProperties } from "./properties/password";
@@ -42,6 +43,7 @@ import { switchFieldProperties } from "./properties/switch";
 import { rowFieldProperties } from "./properties/row";
 import { groupFieldProperties } from "./properties/group";
 import { collapsibleFieldProperties } from "./properties/collapsible";
+import { tabsFieldProperties } from "./properties/tabs";
 
 export const builderFieldRegistry: BuilderFieldRegistry = {
   text: {
@@ -202,9 +204,17 @@ export const builderFieldRegistry: BuilderFieldRegistry = {
       label: "Tabs",
       icon: Layout01Icon,
       category: "layout",
-      disabled: true,
     },
-    defaultProps: { type: "tabs", tabs: [] },
+    defaultProps: {
+      type: "tabs",
+      tabs: [
+        { name: "tab1", label: "Tab 1", fields: [] },
+        { name: "tab2", label: "Tab 2", fields: [] },
+      ],
+      ui: { defaultTab: "tab1" },
+    },
+    renderer: TabsLayout as unknown as ComponentType<BuilderNodeRendererProps>,
+    properties: tabsFieldProperties,
   },
   array: {
     kind: "layout",

@@ -8,14 +8,26 @@ import { nanoid } from "nanoid";
 import type { Node, FieldType, Viewport, BuilderMode } from "./types";
 import { builderFieldRegistry } from "./registry";
 import { sanitizeFieldDefaults } from "./properties";
+import {
+  ensureChildList,
+  getChildList,
+  getNodeChildren,
+  getTabSlotKeys,
+} from "./node-children";
+import type { TabsField } from "@buildnbuzz/buzzform";
 
 type SaveStatus = "idle" | "saving" | "saved";
 
 type BuilderState = {
   nodes: Record<string, Node>;
   rootIds: string[];
+  activeTabs: Record<string, string>;
   selectedId: string | null;
-  dropIndicator: { parentId: string | null; index: number } | null;
+  dropIndicator: {
+    parentId: string | null;
+    parentSlot: string | null;
+    index: number;
+  } | null;
   mode: BuilderMode;
   zoom: number;
   viewport: Viewport;
@@ -30,12 +42,19 @@ type BuilderActions = {
     type: FieldType,
     parentId: string | null,
     index?: number,
+    parentSlot?: string | null,
   ) => void;
-  moveNode: (id: string, newParentId: string | null, index: number) => void;
+  moveNode: (
+    id: string,
+    newParentId: string | null,
+    index: number,
+    newParentSlot?: string | null,
+  ) => void;
   selectNode: (id: string | null) => void;
   updateNode: (id: string, updates: Partial<Node["field"]>) => void;
   removeNode: (id: string) => void;
   duplicateNode: (id: string) => void;
+  setActiveTab: (nodeId: string, slot: string) => void;
   setDropIndicator: (value: BuilderState["dropIndicator"]) => void;
   setMode: (mode: BuilderMode) => void;
   setZoom: (zoom: number) => void;
@@ -53,6 +72,7 @@ type TrackedState = Pick<BuilderState, "nodes" | "rootIds">;
 const INITIAL_STATE: BuilderState = {
   nodes: {},
   rootIds: [],
+  activeTabs: {},
   selectedId: null,
   dropIndicator: null,
   mode: "edit",
@@ -85,6 +105,177 @@ function mergeUpdates<T extends object>(target: T, source: Partial<T>) {
   }
 }
 
+function removeNodeTree(
+  nodes: Record<string, Node>,
+  activeTabs: Record<string, string>,
+  nodeId: string,
+) {
+  const node = nodes[nodeId];
+  if (!node) return;
+
+  const childIds = getNodeChildren(node);
+  for (const childId of childIds) {
+    removeNodeTree(nodes, activeTabs, childId);
+  }
+
+  delete nodes[nodeId];
+  delete activeTabs[nodeId];
+}
+
+function initializeTabsChildren(node: Node) {
+  if (node.field.type !== "tabs") return;
+
+  const slots = getTabSlotKeys(node.field.tabs);
+  const existing = node.tabChildren ?? {};
+  const next: Record<string, string[]> = {};
+
+  for (const slot of slots) {
+    next[slot] = existing[slot] ? [...existing[slot]] : [];
+  }
+
+  node.tabChildren = next;
+  node.children = [];
+}
+
+function syncTabsChildren(
+  state: Pick<BuilderState, "nodes" | "activeTabs">,
+  node: Node,
+  previousTabs: TabsField["tabs"],
+) {
+  if (node.field.type !== "tabs") return;
+
+  const tabsField = node.field as TabsField;
+  tabsField.tabs = tabsField.tabs.map((tab) => ({
+    ...tab,
+    fields: [],
+  }));
+
+  const nextTabs = tabsField.tabs;
+  const prevSlots = getTabSlotKeys(previousTabs);
+  const nextSlots = getTabSlotKeys(nextTabs);
+  const prevChildren = node.tabChildren ?? {};
+  const nextChildren: Record<string, string[]> = {};
+
+  const usedPreviousIndexes = new Set<number>();
+  const previousNameToIndex = new Map<string, number>();
+
+  previousTabs.forEach((tab, index) => {
+    const name = typeof tab.name === "string" ? tab.name.trim() : "";
+    if (name && !previousNameToIndex.has(name)) {
+      previousNameToIndex.set(name, index);
+    }
+  });
+
+  nextTabs.forEach((tab, index) => {
+    const nextSlot = nextSlots[index];
+    const nextName = typeof tab.name === "string" ? tab.name.trim() : "";
+
+    let sourceIndex = -1;
+    const nameMatchIndex = nextName ? previousNameToIndex.get(nextName) : undefined;
+
+    if (
+      typeof nameMatchIndex === "number" &&
+      !usedPreviousIndexes.has(nameMatchIndex)
+    ) {
+      sourceIndex = nameMatchIndex;
+    } else if (index < prevSlots.length && !usedPreviousIndexes.has(index)) {
+      sourceIndex = index;
+    }
+
+    if (sourceIndex !== -1) {
+      usedPreviousIndexes.add(sourceIndex);
+      const sourceSlot = prevSlots[sourceIndex];
+      nextChildren[nextSlot] = [...(prevChildren[sourceSlot] ?? [])];
+    } else {
+      nextChildren[nextSlot] = [];
+    }
+  });
+
+  const assignedIds = new Set<string>();
+  for (const slot of nextSlots) {
+    for (const childId of nextChildren[slot] ?? []) {
+      assignedIds.add(childId);
+    }
+  }
+
+  const orphanedIds: string[] = [];
+  for (const sourceIds of Object.values(prevChildren)) {
+    for (const childId of sourceIds) {
+      if (!assignedIds.has(childId)) {
+        orphanedIds.push(childId);
+      }
+    }
+  }
+
+  if (nextSlots.length > 0 && orphanedIds.length > 0) {
+    nextChildren[nextSlots[0]].push(...orphanedIds);
+  }
+
+  node.tabChildren = nextChildren;
+  node.children = [];
+
+  if (nextSlots.length === 0) {
+    for (const childId of orphanedIds) {
+      removeNodeTree(state.nodes, state.activeTabs, childId);
+    }
+    return;
+  }
+
+  for (const [slot, ids] of Object.entries(nextChildren)) {
+    for (const childId of ids) {
+      const childNode = state.nodes[childId];
+      if (!childNode) continue;
+      childNode.parentId = node.id;
+      childNode.parentSlot = slot;
+    }
+  }
+}
+
+function resolveDefaultTabIndex(tabs: TabsField["tabs"], defaultTab?: string | number) {
+  if (tabs.length === 0) return -1;
+
+  if (typeof defaultTab === "number") {
+    return Math.min(Math.max(0, defaultTab), tabs.length - 1);
+  }
+
+  if (typeof defaultTab === "string") {
+    return tabs.findIndex((tab) => tab.name === defaultTab);
+  }
+
+  return 0;
+}
+
+function sanitizeTabsDefaultTab(field: TabsField) {
+  const tabs = field.tabs ?? [];
+  if (tabs.length === 0) {
+    if (field.ui?.defaultTab !== undefined) {
+      if (field.ui) delete field.ui.defaultTab;
+    }
+    return;
+  }
+
+  const currentDefaultIndex = resolveDefaultTabIndex(tabs, field.ui?.defaultTab);
+  const isCurrentValid =
+    currentDefaultIndex >= 0 &&
+    currentDefaultIndex < tabs.length &&
+    tabs[currentDefaultIndex]?.disabled !== true;
+
+  if (isCurrentValid) return;
+
+  const firstEnabledIndex = tabs.findIndex((tab) => tab.disabled !== true);
+  const fallbackIndex = firstEnabledIndex >= 0 ? firstEnabledIndex : 0;
+  const fallbackTab = tabs[fallbackIndex];
+
+  if (!field.ui) field.ui = {};
+
+  const fallbackName =
+    typeof fallbackTab?.name === "string" && fallbackTab.name.trim().length > 0
+      ? fallbackTab.name.trim()
+      : undefined;
+
+  field.ui.defaultTab = fallbackName ?? fallbackIndex;
+}
+
 let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingState: TrackedState | null = null;
 
@@ -94,7 +285,7 @@ export const useBuilderStore = create<Store>()(
       immer((set) => ({
         ...INITIAL_STATE,
 
-        createNode: (type, parentId, index = 0) => {
+        createNode: (type, parentId, index = 0, parentSlot = null) => {
           const id = nanoid();
           const entry = builderFieldRegistry[type];
           if (!entry) return;
@@ -112,43 +303,62 @@ export const useBuilderStore = create<Store>()(
               id,
               field: fieldProps as Node["field"],
               parentId,
+              parentSlot: null,
               children: [],
             };
 
-            if (parentId === null) {
-              state.rootIds.splice(index, 0, id);
-            } else {
-              state.nodes[parentId].children.splice(index, 0, id);
-            }
+            initializeTabsChildren(state.nodes[id]);
+
+            const { list, resolvedSlot } = ensureChildList(
+              state.nodes,
+              state.rootIds,
+              parentId,
+              parentSlot,
+            );
+
+            state.nodes[id].parentSlot = resolvedSlot;
+            list.splice(index, 0, id);
 
             state.selectedId = id;
           });
         },
 
-        moveNode: (id, newParentId, index) => {
+        moveNode: (id, newParentId, index, newParentSlot = null) => {
           set((state) => {
             const node = state.nodes[id];
             if (!node) return;
 
             const oldParentId = node.parentId;
-            const oldList =
-              oldParentId === null
-                ? state.rootIds
-                : state.nodes[oldParentId].children;
+            const oldParentSlot = node.parentSlot ?? null;
+            const oldList = getChildList(
+              state.nodes,
+              state.rootIds,
+              oldParentId,
+              oldParentSlot,
+            );
 
             const oldIndex = oldList.indexOf(id);
-            oldList.splice(oldIndex, 1);
+            if (oldIndex !== -1) {
+              oldList.splice(oldIndex, 1);
+            }
 
-            if (oldParentId === newParentId && oldIndex < index) {
+            if (
+              oldParentId === newParentId &&
+              oldParentSlot === newParentSlot &&
+              oldIndex !== -1 &&
+              oldIndex < index
+            ) {
               index -= 1;
             }
 
             node.parentId = newParentId;
-
-            const newList =
-              newParentId === null
-                ? state.rootIds
-                : state.nodes[newParentId].children;
+            const { list: newList, resolvedSlot } = ensureChildList(
+              state.nodes,
+              state.rootIds,
+              newParentId,
+              newParentSlot,
+            );
+            node.parentSlot = resolvedSlot;
 
             newList.splice(index, 0, id);
           });
@@ -160,7 +370,18 @@ export const useBuilderStore = create<Store>()(
           set((state) => {
             const node = state.nodes[id];
             if (node) {
+              const previousTabs =
+                node.field.type === "tabs"
+                  ? [...(node.field as TabsField).tabs]
+                  : null;
+
               mergeUpdates(node.field, updates);
+
+              if (node.field.type === "tabs") {
+                syncTabsChildren(state, node, previousTabs ?? []);
+                sanitizeTabsDefaultTab(node.field as TabsField);
+              }
+
               sanitizeFieldDefaults(
                 node.field as unknown as Record<string, unknown>,
               );
@@ -173,23 +394,18 @@ export const useBuilderStore = create<Store>()(
             const node = state.nodes[id];
             if (!node) return;
 
-            const removeRecursive = (nodeId: string) => {
-              const n = state.nodes[nodeId];
-              if (n) {
-                n.children.forEach(removeRecursive);
-                delete state.nodes[nodeId];
-              }
-            };
-
             const parentId = node.parentId;
-            const list =
-              parentId === null
-                ? state.rootIds
-                : state.nodes[parentId].children;
+            const parentSlot = node.parentSlot ?? null;
+            const list = getChildList(
+              state.nodes,
+              state.rootIds,
+              parentId,
+              parentSlot,
+            );
             const idx = list.indexOf(id);
             if (idx !== -1) list.splice(idx, 1);
 
-            removeRecursive(id);
+            removeNodeTree(state.nodes, state.activeTabs, id);
 
             if (state.selectedId === id) {
               state.selectedId = null;
@@ -205,8 +421,10 @@ export const useBuilderStore = create<Store>()(
             const cloneRecursive = (
               nodeId: string,
               newParentId: string | null,
+              newParentSlot: string | null,
             ): string => {
               const sourceNode = state.nodes[nodeId];
+              if (!sourceNode) return "";
               const newId = nanoid();
 
               const newField = { ...sourceNode.field };
@@ -232,25 +450,51 @@ export const useBuilderStore = create<Store>()(
                 id: newId,
                 field: newField,
                 parentId: newParentId,
+                parentSlot: newParentSlot,
                 children: [],
               };
 
               state.nodes[newId] = newNode;
 
-              newNode.children = sourceNode.children.map((childId) =>
-                cloneRecursive(childId, newId),
-              );
+              if (sourceNode.field.type === "tabs") {
+                const sourceTabsNode = sourceNode as Node & {
+                  field: TabsField;
+                };
+                const sourceSlots = getTabSlotKeys(sourceTabsNode.field.tabs);
+                const nextTabChildren: Record<string, string[]> = {};
+
+                for (const slot of sourceSlots) {
+                  const childrenInSlot = sourceNode.tabChildren?.[slot] ?? [];
+                  nextTabChildren[slot] = childrenInSlot
+                    .map((childId) => cloneRecursive(childId, newId, slot))
+                    .filter(Boolean);
+                }
+
+                newNode.tabChildren = nextTabChildren;
+              } else {
+                newNode.children = sourceNode.children
+                  .map((childId) => cloneRecursive(childId, newId, null))
+                  .filter(Boolean);
+              }
 
               return newId;
             };
 
-            const newRootId = cloneRecursive(id, originalNode.parentId);
+            const newRootId = cloneRecursive(
+              id,
+              originalNode.parentId,
+              originalNode.parentSlot ?? null,
+            );
+            if (!newRootId) return;
 
             const parentId = originalNode.parentId;
-            const list =
-              parentId === null
-                ? state.rootIds
-                : state.nodes[parentId].children;
+            const parentSlot = originalNode.parentSlot ?? null;
+            const list = getChildList(
+              state.nodes,
+              state.rootIds,
+              parentId,
+              parentSlot,
+            );
             const originalIndex = list.indexOf(id);
 
             if (originalIndex !== -1) {
@@ -260,6 +504,11 @@ export const useBuilderStore = create<Store>()(
             state.selectedId = newRootId;
           });
         },
+
+        setActiveTab: (nodeId, slot) =>
+          set((state) => {
+            state.activeTabs[nodeId] = slot;
+          }),
 
         setDropIndicator: (value) => set({ dropIndicator: value }),
         setMode: (mode) => set({ mode }),
@@ -321,7 +570,67 @@ export const useBuilderStore = create<Store>()(
         formId: state.formId,
         formName: state.formName,
       }),
-      version: 1,
+      version: 2,
+      migrate: (persistedState, version) => {
+        if (!persistedState || typeof persistedState !== "object") {
+          return persistedState;
+        }
+
+        const state = persistedState as {
+          nodes?: Record<string, Node>;
+          rootIds?: string[];
+        };
+
+        if (!state.nodes || version >= 2) {
+          return persistedState;
+        }
+
+        for (const node of Object.values(state.nodes)) {
+          if (!Array.isArray(node.children)) {
+            node.children = [];
+          }
+
+          if (typeof node.parentSlot !== "string" && node.parentSlot !== null) {
+            node.parentSlot = null;
+          }
+
+          if (node.field.type === "tabs") {
+            const legacyChildren = [...node.children];
+            initializeTabsChildren(node);
+
+            const hasLegacyChildren = legacyChildren.length > 0;
+            if (hasLegacyChildren) {
+              const slots = getTabSlotKeys(node.field.tabs);
+              const firstSlot = slots[0];
+              if (firstSlot) {
+                const existing = node.tabChildren?.[firstSlot] ?? [];
+                node.tabChildren = {
+                  ...(node.tabChildren ?? {}),
+                  [firstSlot]: [...existing, ...legacyChildren],
+                };
+              }
+            }
+          }
+        }
+
+        for (const node of Object.values(state.nodes)) {
+          const parent = node.parentId ? state.nodes[node.parentId] : null;
+          if (!parent) {
+            node.parentSlot = null;
+            continue;
+          }
+
+          if (parent.field.type === "tabs") {
+            const slots = getTabSlotKeys(parent.field.tabs);
+            const firstSlot = slots[0] ?? null;
+            node.parentSlot = node.parentSlot ?? firstSlot;
+          } else {
+            node.parentSlot = null;
+          }
+        }
+
+        return persistedState;
+      },
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setSaveStatus("saved");

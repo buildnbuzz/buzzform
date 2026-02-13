@@ -7,7 +7,6 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
-import { useBuilderStore } from "../../lib/store";
 import { EditableNode } from "../editable-node";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -18,6 +17,7 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react";
 import { FolderIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { GroupField } from "@buildnbuzz/buzzform";
+import { useDropIndicatorIndex } from "../../hooks/use-drop-indicator-index";
 
 interface GroupLayoutProps {
   id: string;
@@ -38,13 +38,11 @@ export function GroupLayout({ id, field, childrenIds }: GroupLayoutProps) {
   const defaultCollapsed = field.ui?.collapsed ?? false;
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
-  const indicatorIndex = useBuilderStore((s) =>
-    s.dropIndicator?.parentId === id ? s.dropIndicator.index : null,
-  );
+  const indicatorIndex = useDropIndicatorIndex(id);
 
   const { setNodeRef, isOver } = useDroppable({
     id: `${id}-dropzone`,
-    data: { type: "group" },
+    data: { type: "group", parentId: id, parentSlot: null },
   });
 
   const isEmpty = childrenIds.length === 0;

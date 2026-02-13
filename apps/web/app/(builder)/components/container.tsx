@@ -5,19 +5,19 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { EditableNode } from "./editable-node";
-import { useBuilderStore } from "../lib/store";
 import { FormActions, FormSubmit } from "@/registry/base/form";
+import { useDropIndicatorIndex } from "../hooks/use-drop-indicator-index";
 
 export function Container({
   childrenIds,
   parentId = null,
+  parentSlot = null,
 }: {
   childrenIds: string[];
   parentId?: string | null;
+  parentSlot?: string | null;
 }) {
-  const indicatorIndex = useBuilderStore((s) =>
-    s.dropIndicator?.parentId === parentId ? s.dropIndicator.index : null,
-  );
+  const indicatorIndex = useDropIndicatorIndex(parentId, parentSlot);
 
   // Only show submit button for root container
   const isRootContainer = parentId === null;
