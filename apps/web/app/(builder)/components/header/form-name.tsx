@@ -47,6 +47,7 @@ export function FormName() {
         }}
         placeholder={DEFAULT_NAME}
         aria-label="Form name"
+        suppressHydrationWarning
         className={cn(
           "h-8 w-full min-w-0 max-w-60 bg-transparent px-2 pr-8 text-sm font-medium text-foreground",
           "rounded-md border border-transparent transition-colors",
