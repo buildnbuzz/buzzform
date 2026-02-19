@@ -22,6 +22,7 @@ type BuilderState = {
   nodes: Record<string, Node>;
   rootIds: string[];
   activeTabs: Record<string, string>;
+  collapsedNodes: Record<string, boolean>;
   selectedId: string | null;
   dropIndicator: {
     parentId: string | null;
@@ -56,6 +57,8 @@ type BuilderActions = {
   duplicateNode: (id: string) => void;
   setActiveTab: (nodeId: string, slot: string) => void;
   setDropIndicator: (value: BuilderState["dropIndicator"]) => void;
+  toggleCollapsed: (nodeId: string) => void;
+  setCollapsed: (nodeId: string, collapsed: boolean) => void;
   setMode: (mode: BuilderMode) => void;
   setZoom: (zoom: number) => void;
   setViewport: (viewport: Viewport) => void;
@@ -73,6 +76,7 @@ const INITIAL_STATE: BuilderState = {
   nodes: {},
   rootIds: [],
   activeTabs: {},
+  collapsedNodes: {},
   selectedId: null,
   dropIndicator: null,
   mode: "edit",
@@ -120,6 +124,20 @@ function removeNodeTree(
 
   delete nodes[nodeId];
   delete activeTabs[nodeId];
+}
+
+function removeCollapsedNodes(
+  collapsedNodes: Record<string, boolean>,
+  nodes: Record<string, Node>,
+  nodeId: string,
+) {
+  delete collapsedNodes[nodeId];
+  const node = nodes[nodeId];
+  if (!node) return;
+  const childIds = getNodeChildren(node);
+  for (const childId of childIds) {
+    removeCollapsedNodes(collapsedNodes, nodes, childId);
+  }
 }
 
 function initializeTabsChildren(node: Node) {
@@ -405,6 +423,7 @@ export const useBuilderStore = create<Store>()(
             const idx = list.indexOf(id);
             if (idx !== -1) list.splice(idx, 1);
 
+            removeCollapsedNodes(state.collapsedNodes, state.nodes, id);
             removeNodeTree(state.nodes, state.activeTabs, id);
 
             if (state.selectedId === id) {
@@ -511,6 +530,18 @@ export const useBuilderStore = create<Store>()(
           }),
 
         setDropIndicator: (value) => set({ dropIndicator: value }),
+        toggleCollapsed: (nodeId) =>
+          set((state) => {
+            state.collapsedNodes[nodeId] = !state.collapsedNodes[nodeId];
+          }),
+        setCollapsed: (nodeId, collapsed) =>
+          set((state) => {
+            if (collapsed) {
+              state.collapsedNodes[nodeId] = true;
+            } else {
+              delete state.collapsedNodes[nodeId];
+            }
+          }),
         setMode: (mode) => set({ mode }),
         setZoom: (zoom) => set({ zoom }),
         setViewport: (viewport) => set({ viewport }),

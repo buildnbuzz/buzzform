@@ -1,5 +1,29 @@
 import type { Field } from "@buildnbuzz/buzzform";
 
+type LayoutData = {
+  ui?: {
+    variant?: string;
+    direction?: string;
+  };
+};
+
+function getLayoutSettings(data: unknown) {
+  const ui = (data as LayoutData).ui;
+  return {
+    variant: ui?.variant ?? "default",
+    direction: ui?.direction ?? "vertical",
+  };
+}
+
+function isCardVariant(data: unknown) {
+  return getLayoutSettings(data).variant === "card";
+}
+
+function shouldShowColumns(data: unknown) {
+  const { variant, direction } = getLayoutSettings(data);
+  return variant === "card" || direction === "horizontal";
+}
+
 export const checkboxGroupFieldProperties: Field[] = [
   {
     type: "tabs",
@@ -155,31 +179,6 @@ export const checkboxGroupFieldProperties: Field[] = [
           },
           {
             type: "select",
-            name: "ui.direction",
-            label: "Direction",
-            description: "Layout direction (for default variant)",
-            options: [
-              { label: "Vertical", value: "vertical" },
-              { label: "Horizontal", value: "horizontal" },
-            ],
-          },
-          {
-            type: "select",
-            name: "ui.columns",
-            label: "Columns",
-            description: "Grid columns (responsive, 1 on mobile)",
-            condition: (data) =>
-              (data as { ui?: { direction?: string } }).ui?.direction ==
-              "horizontal",
-            options: [
-              { label: "1 Column", value: 1 },
-              { label: "2 Columns", value: 2 },
-              { label: "3 Columns", value: 3 },
-              { label: "4 Columns", value: 4 },
-            ],
-          },
-          {
-            type: "select",
             name: "ui.variant",
             label: "Variant",
             description: "Visual style variant",
@@ -190,11 +189,34 @@ export const checkboxGroupFieldProperties: Field[] = [
           },
           {
             type: "select",
+            name: "ui.direction",
+            label: "Direction",
+            description: "Layout direction (for default variant)",
+            condition: (data) => !isCardVariant(data),
+            options: [
+              { label: "Vertical", value: "vertical" },
+              { label: "Horizontal", value: "horizontal" },
+            ],
+          },
+          {
+            type: "select",
+            name: "ui.columns",
+            label: "Columns",
+            description: "Grid columns (responsive, 1 on mobile)",
+            condition: shouldShowColumns,
+            options: [
+              { label: "1 Column", value: 1 },
+              { label: "2 Columns", value: 2 },
+              { label: "3 Columns", value: 3 },
+              { label: "4 Columns", value: 4 },
+            ],
+          },
+          {
+            type: "select",
             name: "ui.card.size",
             label: "Card Size",
             description: "Size preset for card variant",
-            condition: (data) =>
-              (data as { ui?: { variant?: string } }).ui?.variant === "card",
+            condition: isCardVariant,
             options: [
               { label: "Small", value: "sm" },
               { label: "Medium", value: "md" },
@@ -206,8 +228,7 @@ export const checkboxGroupFieldProperties: Field[] = [
             name: "ui.card.bordered",
             label: "Card Bordered",
             description: "Show border around cards",
-            condition: (data) =>
-              (data as { ui?: { variant?: string } }).ui?.variant === "card",
+            condition: isCardVariant,
             ui: { alignment: "between" },
           },
         ],

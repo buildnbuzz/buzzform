@@ -25,6 +25,9 @@ import {
 import { cn } from "@/lib/utils";
 
 type OptionValue = string | number | boolean;
+type OptionGroupVariant = "default" | "card";
+type OptionGroupDirection = "vertical" | "horizontal";
+type OptionGroupColumns = 1 | 2 | 3 | 4;
 
 export interface CheckboxGroupFieldProps {
   field: CheckboxGroupFieldType;
@@ -39,6 +42,35 @@ export interface CheckboxGroupFieldProps {
   isDisabled: boolean;
   isReadOnly: boolean;
   error?: string;
+}
+
+function getGridColumnsClass(columns: OptionGroupColumns | undefined) {
+  if (columns === 2) return "sm:grid-cols-2";
+  if (columns === 3) return "sm:grid-cols-2 md:grid-cols-3";
+  if (columns === 4) return "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+  return undefined;
+}
+
+function getOptionGroupLayoutClassName({
+  variant = "default",
+  direction = "vertical",
+  columns,
+}: {
+  variant?: OptionGroupVariant;
+  direction?: OptionGroupDirection;
+  columns?: OptionGroupColumns;
+}) {
+  const usesGridColumns = variant === "card" || direction === "horizontal";
+  const effectiveColumns = usesGridColumns ? columns : undefined;
+
+  if (!effectiveColumns || effectiveColumns === 1) {
+    if (variant === "default" && direction === "horizontal") {
+      return "flex flex-wrap gap-x-4 gap-y-2";
+    }
+    return "flex flex-col gap-2";
+  }
+
+  return cn("grid gap-2", getGridColumnsClass(effectiveColumns));
 }
 
 function valueToString(value: OptionValue): string {
@@ -183,22 +215,17 @@ export function CheckboxGroupField({
 
   const variant = field.ui?.variant ?? "default";
   const direction = field.ui?.direction ?? "vertical";
-  const columns = field.ui?.columns ?? 1;
+  const columns = field.ui?.columns;
   const cardSize = field.ui?.card?.size ?? "md";
   const cardBordered = field.ui?.card?.bordered ?? true;
   const maxSelected = field.maxSelected;
 
   const isCardVariant = variant === "card";
-
-  const gridClasses = cn(
-    "grid gap-2",
-    direction === "horizontal" && columns === 1
-      ? "grid-flow-col auto-cols-fr"
-      : undefined,
-    columns === 2 && "sm:grid-cols-2",
-    columns === 3 && "sm:grid-cols-2 md:grid-cols-3",
-    columns === 4 && "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
-  );
+  const layoutClasses = getOptionGroupLayoutClassName({
+    variant,
+    direction,
+    columns,
+  });
 
   const handleToggle = (stringValue: string, checked: boolean) => {
     if (isReadOnly) return;
@@ -246,7 +273,7 @@ export function CheckboxGroupField({
       )}
 
       <div
-        className={gridClasses}
+        className={layoutClasses}
         role="group"
         aria-describedby={
           field.description ? `${fieldId}-description` : undefined
@@ -385,7 +412,7 @@ export function CheckboxGroupFieldSkeleton({
   const label = field.label !== false ? (field.label ?? field.name) : null;
   const variant = field.ui?.variant ?? "default";
   const direction = field.ui?.direction ?? "vertical";
-  const columns = field.ui?.columns ?? 1;
+  const columns = field.ui?.columns;
   const cardSize = field.ui?.card?.size ?? "md";
   const cardBordered = field.ui?.card?.bordered ?? true;
 
@@ -395,20 +422,16 @@ export function CheckboxGroupFieldSkeleton({
     6,
   );
 
-  const gridClasses = cn(
-    "grid gap-2",
-    direction === "horizontal" && columns === 1
-      ? "grid-flow-col auto-cols-fr"
-      : undefined,
-    columns === 2 && "sm:grid-cols-2",
-    columns === 3 && "sm:grid-cols-2 md:grid-cols-3",
-    columns === 4 && "sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
-  );
+  const layoutClasses = getOptionGroupLayoutClassName({
+    variant,
+    direction,
+    columns,
+  });
 
   return (
     <div className={cn("flex flex-col gap-2", field.style?.className)}>
       {label && <div className="h-4 w-32 animate-pulse rounded bg-muted" />}
-      <div className={gridClasses}>
+      <div className={layoutClasses}>
         {Array.from({ length: optionCount }).map((_, i) =>
           isCardVariant ? (
             <div

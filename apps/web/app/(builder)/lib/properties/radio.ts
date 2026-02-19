@@ -1,5 +1,29 @@
 import type { Field } from "@buildnbuzz/buzzform";
 
+type LayoutData = {
+    ui?: {
+        variant?: string;
+        direction?: string;
+    };
+};
+
+function getLayoutSettings(data: unknown) {
+    const ui = (data as LayoutData).ui;
+    return {
+        variant: ui?.variant ?? "default",
+        direction: ui?.direction ?? "vertical",
+    };
+}
+
+function isCardVariant(data: unknown) {
+    return getLayoutSettings(data).variant === "card";
+}
+
+function shouldShowColumns(data: unknown) {
+    const { variant, direction } = getLayoutSettings(data);
+    return variant === "card" || direction === "horizontal";
+}
+
 export const radioFieldProperties: Field[] = [
     {
         type: "tabs",
@@ -157,6 +181,7 @@ export const radioFieldProperties: Field[] = [
                         name: "ui.direction",
                         label: "Direction",
                         description: "Layout direction (for default variant)",
+                        condition: (data) => !isCardVariant(data),
                         options: [
                             { label: "Vertical", value: "vertical" },
                             { label: "Horizontal", value: "horizontal" },
@@ -167,6 +192,7 @@ export const radioFieldProperties: Field[] = [
                         name: "ui.columns",
                         label: "Columns",
                         description: "Grid columns (responsive, 1 on mobile)",
+                        condition: shouldShowColumns,
                         options: [
                             { label: "1 Column", value: 1 },
                             { label: "2 Columns", value: 2 },
@@ -179,6 +205,7 @@ export const radioFieldProperties: Field[] = [
                         name: "ui.card.size",
                         label: "Card Size",
                         description: "Size preset for card variant",
+                        condition: isCardVariant,
                         options: [
                             { label: "Small", value: "sm" },
                             { label: "Medium", value: "md" },
@@ -190,6 +217,7 @@ export const radioFieldProperties: Field[] = [
                         name: "ui.card.bordered",
                         label: "Card Bordered",
                         description: "Show border around cards",
+                        condition: isCardVariant,
                         ui: { alignment: "between" },
                     },
                 ],

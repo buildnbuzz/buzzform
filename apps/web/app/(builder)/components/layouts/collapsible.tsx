@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -18,6 +18,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowShrink02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { CollapsibleField } from "@buildnbuzz/buzzform";
 import { useDropIndicatorIndex } from "../../hooks/use-drop-indicator-index";
+import { useBuilderStore } from "../../lib/store";
 
 interface CollapsibleLayoutProps {
   id: string;
@@ -40,7 +41,24 @@ export function CollapsibleLayout({
   const variant = field.ui?.variant ?? "bordered";
   const spacing = field.ui?.spacing ?? "md";
   const defaultCollapsed = field.collapsed ?? false;
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  // Read collapsed state from store; initialize from field default on first encounter
+  const isCollapsed = useBuilderStore(
+    (s) => s.collapsedNodes[id] ?? defaultCollapsed,
+  );
+  const toggleCollapsed = useBuilderStore((s) => s.toggleCollapsed);
+  const setCollapsed = useBuilderStore((s) => s.setCollapsed);
+
+  // Sync initial field default into store on first mount
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (defaultCollapsed) {
+        setCollapsed(id, true);
+      }
+    }
+  }, [id, defaultCollapsed, setCollapsed]);
 
   const indicatorIndex = useDropIndicatorIndex(id);
 
@@ -128,15 +146,9 @@ export function CollapsibleLayout({
   // === GHOST VARIANT ===
   if (variant === "ghost") {
     return (
-      <Collapsible
-        open={!isCollapsed}
-        onOpenChange={(open) => setIsCollapsed(!open)}
-      >
+      <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
         <div className="w-full">
-          <CollapsibleTrigger
-            className="w-full px-2 py-2 rounded-md flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
+          <CollapsibleTrigger className="w-full px-2 py-2 rounded-md flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer">
             {renderHeaderContent()}
             {renderChevron(14)}
           </CollapsibleTrigger>
@@ -151,15 +163,9 @@ export function CollapsibleLayout({
   // === BORDERED VARIANT (DEFAULT) ===
   if (variant === "bordered" || variant === "flat") {
     return (
-      <Collapsible
-        open={!isCollapsed}
-        onOpenChange={(open) => setIsCollapsed(!open)}
-      >
+      <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
         <div className="w-full border border-dashed border-border rounded-lg overflow-hidden">
-          <CollapsibleTrigger
-            className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer"
-            onClick={() => setIsCollapsed(!isCollapsed)}
-          >
+          <CollapsibleTrigger className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer">
             {renderHeaderContent()}
             {renderChevron(14)}
           </CollapsibleTrigger>
@@ -173,10 +179,7 @@ export function CollapsibleLayout({
 
   // === CARD VARIANT ===
   return (
-    <Collapsible
-      open={!isCollapsed}
-      onOpenChange={(open) => setIsCollapsed(!open)}
-    >
+    <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
       <Card className="w-full py-0 gap-0">
         <CardHeader className="p-0 border-b-0">
           <CollapsibleTrigger
@@ -185,7 +188,6 @@ export function CollapsibleLayout({
               "hover:bg-muted/75 bg-muted/50 transition-colors select-none cursor-pointer",
               !isCollapsed && "border-b",
             )}
-            onClick={() => setIsCollapsed(!isCollapsed)}
           >
             {renderHeaderContent()}
             {renderChevron()}

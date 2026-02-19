@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -19,6 +19,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { Menu01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { ArrayField } from "@buildnbuzz/buzzform";
 import { useDropIndicatorIndex } from "../../hooks/use-drop-indicator-index";
+import { useBuilderStore } from "../../lib/store";
 
 interface ArrayLayoutProps {
   id: string;
@@ -27,7 +28,24 @@ interface ArrayLayoutProps {
 }
 
 export function ArrayLayout({ id, field, childrenIds }: ArrayLayoutProps) {
-  const [isCollapsed, setIsCollapsed] = useState(field.ui?.collapsed ?? false);
+  const defaultCollapsed = field.ui?.collapsed ?? false;
+
+  const isCollapsed = useBuilderStore(
+    (s) => s.collapsedNodes[id] ?? defaultCollapsed,
+  );
+  const toggleCollapsed = useBuilderStore((s) => s.toggleCollapsed);
+  const setCollapsed = useBuilderStore((s) => s.setCollapsed);
+
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (defaultCollapsed) {
+        setCollapsed(id, true);
+      }
+    }
+  }, [id, defaultCollapsed, setCollapsed]);
+
   const indicatorIndex = useDropIndicatorIndex(id);
 
   const { setNodeRef, isOver } = useDroppable({
@@ -77,10 +95,7 @@ export function ArrayLayout({ id, field, childrenIds }: ArrayLayoutProps) {
   );
 
   return (
-    <Collapsible
-      open={!isCollapsed}
-      onOpenChange={(open) => setIsCollapsed(!open)}
-    >
+    <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
       <Card className="w-full py-0 gap-0 border-dashed">
         <CardHeader className="p-0 border-b-0">
           <CollapsibleTrigger
@@ -89,7 +104,6 @@ export function ArrayLayout({ id, field, childrenIds }: ArrayLayoutProps) {
               "hover:bg-muted/75 bg-muted/50 transition-colors select-none cursor-pointer",
               !isCollapsed && "border-b",
             )}
-            onClick={() => setIsCollapsed(!isCollapsed)}
           >
             <div className="flex min-w-0 flex-1 items-center gap-2">
               <HugeiconsIcon
@@ -102,7 +116,8 @@ export function ArrayLayout({ id, field, childrenIds }: ArrayLayoutProps) {
                 {field.label || "Array"}
               </span>
               <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">
-                {childrenIds.length} {childrenIds.length === 1 ? "field" : "fields"}
+                {childrenIds.length}{" "}
+                {childrenIds.length === 1 ? "field" : "fields"}
               </Badge>
               {typeof field.minRows === "number" && (
                 <Badge

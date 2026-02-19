@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -18,6 +18,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { FolderIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
 import type { GroupField } from "@buildnbuzz/buzzform";
 import { useDropIndicatorIndex } from "../../hooks/use-drop-indicator-index";
+import { useBuilderStore } from "../../lib/store";
 
 interface GroupLayoutProps {
   id: string;
@@ -36,7 +37,22 @@ export function GroupLayout({ id, field, childrenIds }: GroupLayoutProps) {
   const variant = field.ui?.variant ?? "card";
   const spacing = field.ui?.spacing ?? "md";
   const defaultCollapsed = field.ui?.collapsed ?? false;
-  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
+
+  const isCollapsed = useBuilderStore(
+    (s) => s.collapsedNodes[id] ?? defaultCollapsed,
+  );
+  const toggleCollapsed = useBuilderStore((s) => s.toggleCollapsed);
+  const setCollapsed = useBuilderStore((s) => s.setCollapsed);
+
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      if (defaultCollapsed) {
+        setCollapsed(id, true);
+      }
+    }
+  }, [id, defaultCollapsed, setCollapsed]);
 
   const indicatorIndex = useDropIndicatorIndex(id);
 
@@ -128,16 +144,10 @@ export function GroupLayout({ id, field, childrenIds }: GroupLayoutProps) {
   // === BORDERED VARIANT ===
   if (variant === "bordered") {
     return (
-      <Collapsible
-        open={!isCollapsed}
-        onOpenChange={(open) => setIsCollapsed(!open)}
-      >
+      <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
         <div className="w-full border border-dashed border-border rounded-lg overflow-hidden">
           {label && (
-            <CollapsibleTrigger
-              className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer"
-              onClick={() => setIsCollapsed(!isCollapsed)}
-            >
+            <CollapsibleTrigger className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer">
               <div className="flex items-center gap-2">
                 <HugeiconsIcon
                   icon={FolderIcon}
@@ -170,10 +180,7 @@ export function GroupLayout({ id, field, childrenIds }: GroupLayoutProps) {
 
   // === CARD VARIANT (DEFAULT) ===
   return (
-    <Collapsible
-      open={!isCollapsed}
-      onOpenChange={(open) => setIsCollapsed(!open)}
-    >
+    <Collapsible open={!isCollapsed} onOpenChange={() => toggleCollapsed(id)}>
       <Card className="w-full py-0 gap-0">
         {label && (
           <CardHeader className="p-0 border-b-0">
@@ -183,7 +190,6 @@ export function GroupLayout({ id, field, childrenIds }: GroupLayoutProps) {
                 "hover:bg-muted/75 bg-muted/50 transition-colors select-none cursor-pointer",
                 !isCollapsed && "border-b",
               )}
-              onClick={() => setIsCollapsed(!isCollapsed)}
             >
               <div className="flex items-center gap-2">
                 <HugeiconsIcon
