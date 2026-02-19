@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,11 @@ import type { Field } from "@buildnbuzz/buzzform";
 import { Badge } from "@/components/ui/badge";
 
 // EditableNode: Edit mode wrapper with DnD, selection, and toolbar
-export function EditableNode({ id }: { id: string }) {
+export const EditableNode = React.memo(function EditableNode({
+  id,
+}: {
+  id: string;
+}) {
   const node = useBuilderStore((s) => s.nodes[id]);
   const { form } = useFormContext();
   const [isHovered, setIsHovered] = useState(false);
@@ -25,8 +29,7 @@ export function EditableNode({ id }: { id: string }) {
   const selectNode = useBuilderStore((s) => s.selectNode);
   const removeNode = useBuilderStore((s) => s.removeNode);
   const duplicateNode = useBuilderStore((s) => s.duplicateNode);
-  const selectedId = useBuilderStore((s) => s.selectedId);
-  const isSelected = selectedId === id;
+  const isSelected = useBuilderStore((s) => s.selectedId === id);
 
   if (!node) return null;
 
@@ -168,4 +171,4 @@ export function EditableNode({ id }: { id: string }) {
       </div>
     </div>
   );
-}
+});

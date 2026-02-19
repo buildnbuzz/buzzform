@@ -175,7 +175,10 @@ export function BuilderDndProvider({
     const { parentId } = location;
     const parentType = parentId ? (nodes[parentId]?.field?.type ?? null) : null;
     if (parentType === "tabs" && parentId) {
-      const tabCount = nodes[parentId]?.field.type === "tabs" ? nodes[parentId].field.tabs.length : 0;
+      const tabCount =
+        nodes[parentId]?.field.type === "tabs"
+          ? nodes[parentId].field.tabs.length
+          : 0;
       if (tabCount === 0) {
         setDropIndicator(null);
         return;
@@ -281,7 +284,12 @@ export function BuilderDndProvider({
     // 2️⃣ COMMIT THE MOVE
     // --------------------------------------------------
     if (isSidebarDrag) {
-      store.createNode(active?.data?.current?.type, parentId, index, parentSlot);
+      store.createNode(
+        active?.data?.current?.type,
+        parentId,
+        index,
+        parentSlot,
+      );
     } else {
       store.moveNode(activeId, parentId, index, parentSlot);
     }
@@ -314,8 +322,7 @@ export function BuilderDndProvider({
 }
 
 function DragOverlayItem({ id }: { id: string }) {
-  const store = useBuilderStore();
-  const node = store.nodes[id];
+  const node = useBuilderStore((s) => s.nodes[id]);
 
   // Determine if this is a sidebar drag (new field) or canvas drag (existing field)
   const isFromSidebar = id.startsWith("sidebar-");
@@ -369,17 +376,17 @@ function DragOverlayItem({ id }: { id: string }) {
               strokeWidth={2}
             />
             <span>
-              {isFromSidebar
-                ? (
-                    <>
-                      Adding new field, press
-                      <kbd className="ml-1 inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground/80">
-                        Esc
-                      </kbd>
-                      <span className="ml-1">to cancel</span>
-                    </>
-                  )
-                : "Moving field"}
+              {isFromSidebar ? (
+                <>
+                  Adding new field, press
+                  <kbd className="ml-1 inline-flex items-center rounded border border-border bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground/80">
+                    Esc
+                  </kbd>
+                  <span className="ml-1">to cancel</span>
+                </>
+              ) : (
+                "Moving field"
+              )}
             </span>
           </div>
         </div>
