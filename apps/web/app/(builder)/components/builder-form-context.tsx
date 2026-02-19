@@ -6,7 +6,8 @@ import { createSchema, type Field } from "@buildnbuzz/buzzform";
 import { Form, useFormContext } from "@/registry/base/form";
 import { useBuilderStore } from "../lib/store";
 import { nodesToFields } from "../lib/schema-builder";
-import { extractDefaults, generateSchemaKey } from "../lib/properties";
+import { extractDefaults } from "../lib/properties";
+import { syncRuntimeForm, computeSchemaSignature } from "../lib/core/sync";
 
 export type BuilderMode = "edit" | "preview";
 
@@ -17,7 +18,6 @@ interface BuilderContextValue {
 
 const BuilderContext = createContext<BuilderContextValue | null>(null);
 
-// Hook to access builder-specific context (mode)
 export function useBuilderContext() {
   const ctx = useContext(BuilderContext);
   if (!ctx) {
@@ -28,14 +28,12 @@ export function useBuilderContext() {
   return ctx;
 }
 
-// Combined hook for convenience (builder + form context)
 export function useBuilderFormContext() {
   const builderCtx = useBuilderContext();
   const formCtx = useFormContext();
   return { ...builderCtx, ...formCtx };
 }
 
-// Re-export form context for components that only need form state
 export { useFormContext } from "@/registry/base/form";
 
 interface BuilderFormProviderProps {
@@ -52,21 +50,28 @@ export function BuilderFormProvider({
   const nodes = useBuilderStore((s) => s.nodes);
   const rootIds = useBuilderStore((s) => s.rootIds);
 
-  const fields = nodesToFields(nodes, rootIds);
-  const schema = createSchema(fields);
-
-  // Extract default values with deep cloning to avoid frozen object references
+  // Memoize derivation pipeline to prevent recomputation on unrelated store updates
+  const fields = React.useMemo(
+    () => nodesToFields(nodes, rootIds),
+    [nodes, rootIds],
+  );
+  const schema = React.useMemo(() => createSchema(fields), [fields]);
   const defaultValues = React.useMemo(() => extractDefaults(fields), [fields]);
 
-  // Generate a stable key to force form remount when structural changes occur
-  const schemaKey = React.useMemo(() => generateSchemaKey(fields), [fields]);
+  // Deterministic signature triggers sync only on structural changes
+  const schemaSignature = React.useMemo(
+    () => computeSchemaSignature(fields, defaultValues),
+    [fields, defaultValues],
+  );
 
-  const builderValue: BuilderContextValue = { mode, fields };
+  const builderValue = React.useMemo<BuilderContextValue>(
+    () => ({ mode, fields }),
+    [mode, fields],
+  );
 
   return (
     <BuilderContext.Provider value={builderValue}>
       <Form
-        key={schemaKey}
         schema={schema}
         fields={fields}
         defaultValues={defaultValues}
@@ -74,8 +79,53 @@ export function BuilderFormProvider({
         mode="onBlur"
         showSubmit={false}
       >
+        <BuilderFormStateSync
+          fields={fields}
+          defaultValues={defaultValues}
+          schemaSignature={schemaSignature}
+        />
         {children}
       </Form>
     </BuilderContext.Provider>
   );
+}
+
+/**
+ * Syncs RHF form state with document changes without remounting.
+ * Preserves scroll position and internal state.
+ */
+function BuilderFormStateSync({
+  fields,
+  defaultValues,
+  schemaSignature,
+}: {
+  fields: readonly Field[];
+  defaultValues: Record<string, unknown>;
+  schemaSignature: string;
+}) {
+  const { form } = useFormContext();
+  const previousSignatureRef = React.useRef<string | null>(null);
+
+  React.useEffect(() => {
+    // First mount: record signature, don't reset
+    if (previousSignatureRef.current === null) {
+      previousSignatureRef.current = schemaSignature;
+      return;
+    }
+
+    // Skip sync if signature matches (cosmetic changes)
+    if (previousSignatureRef.current === schemaSignature) {
+      return;
+    }
+
+    previousSignatureRef.current = schemaSignature;
+
+    // Deterministic sync: preserve values, apply defaults, prune helpers
+    const currentValues = form.getValues() as Record<string, unknown>;
+    const nextValues = syncRuntimeForm(currentValues, fields, defaultValues);
+
+    form.reset(nextValues);
+  }, [defaultValues, fields, form, schemaSignature]);
+
+  return null;
 }
