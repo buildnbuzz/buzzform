@@ -141,13 +141,19 @@ function toDocumentNodes(
   const output: Record<string, BuilderDocumentNode> = {};
 
   for (const [nodeId, node] of Object.entries(nodes)) {
+    const clonedField = deepClone(node.field) as unknown;
+    const sanitizedField =
+      pruneEmptyObjectProperties(clonedField, true) ?? clonedField;
+
     output[nodeId] = {
       id: node.id,
-      field: deepClone(node.field) as unknown as BuilderDocumentNode["field"],
+      field: sanitizedField as BuilderDocumentNode["field"],
       parentId: node.parentId,
       parentSlot: node.parentSlot,
       children: [...node.children],
-      ...(node.tabChildren ? { tabChildren: cloneTabChildren(node.tabChildren) } : {}),
+      ...(hasEntries(node.tabChildren)
+        ? { tabChildren: cloneTabChildren(node.tabChildren) }
+        : {}),
     };
   }
 
@@ -183,6 +189,15 @@ function cloneTabChildren(
   }
 
   return output;
+}
+
+function hasEntries<T extends Record<string, unknown>>(
+  record: T | undefined,
+): record is T {
+  if (!record) {
+    return false;
+  }
+  return Object.keys(record).length > 0;
 }
 
 function toBuilderDocumentType(parsed: ParsedBuilderDocument): BuilderDocument {
@@ -232,6 +247,51 @@ function deepClone<T>(value: T): T {
     }
   }
   return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function pruneEmptyObjectProperties(
+  value: unknown,
+  keepRootObject = false,
+): unknown {
+  if (Array.isArray(value)) {
+    const items: unknown[] = [];
+
+    for (const item of value) {
+      const sanitized = pruneEmptyObjectProperties(item);
+      if (sanitized !== undefined) {
+        items.push(sanitized);
+      }
+    }
+
+    return items;
+  }
+
+  if (!isPlainObject(value)) {
+    return value;
+  }
+
+  const output: Record<string, unknown> = {};
+
+  for (const [key, entry] of Object.entries(value)) {
+    const sanitized = pruneEmptyObjectProperties(entry);
+    if (sanitized !== undefined) {
+      output[key] = sanitized;
+    }
+  }
+
+  if (Object.keys(output).length === 0 && !keepRootObject) {
+    return undefined;
+  }
+
+  return output;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const proto = Object.getPrototypeOf(value);
+  return proto === Object.prototype || proto === null;
 }
 
 function normalizeString(value: unknown): string | undefined {

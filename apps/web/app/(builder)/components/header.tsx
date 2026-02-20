@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CodeExportDialog } from "./code-export-dialog";
+import { ExportSheet } from "./export-sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { useBuilderStore } from "../lib/store";
@@ -45,7 +45,7 @@ export function SiteHeader() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CloudSaveDialog />
-            <CodeExportDialog />
+            <ExportSheet />
             <NewFormButton />
           </div>
         </div>
