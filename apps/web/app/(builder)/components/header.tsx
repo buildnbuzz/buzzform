@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CodeExportDialog } from "./code-export-dialog";
+import { ExportSheet } from "./export-sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import { useBuilderStore } from "../lib/store";
 
 import { SaveIndicator } from "./header/save-indicator";
-import { NewFormButton } from "./header/new-form-button";
+import { FormManagerDialog } from "./header/form-manager-dialog";
 import { FormName } from "./header/form-name";
 import { CloudSaveDialog } from "./header/cloud-save-dialog";
 
@@ -45,8 +45,8 @@ export function SiteHeader() {
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CloudSaveDialog />
-            <CodeExportDialog />
-            <NewFormButton />
+            <ExportSheet />
+            <FormManagerDialog />
           </div>
         </div>
       </div>

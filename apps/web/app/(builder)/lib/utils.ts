@@ -109,3 +109,27 @@ export function isInsideContainerPadding(
 
     return pointerY >= rect.top && pointerY <= rect.bottom;
 }
+
+export function toSafeFileName(input: string): string {
+    const normalized = input.trim().toLowerCase();
+    const slug = normalized
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60);
+
+    return slug || "form";
+}
+
+export function downloadTextFile(
+    content: string,
+    fileName: string,
+    mimeType: string,
+) {
+    const blob = new Blob([content], { type: mimeType });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(objectUrl);
+}

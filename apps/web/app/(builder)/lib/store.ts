@@ -8,6 +8,8 @@ import { nanoid } from "nanoid";
 import type { Node, FieldType, Viewport, BuilderMode } from "./types";
 import { builderFieldRegistry } from "./registry";
 import { sanitizeFieldDefaults } from "./properties";
+import { toBuilderDocument } from "./persistence/document";
+import { getBrowserLocalStorageProvider } from "./persistence/local-storage-provider";
 import {
   ensureChildList,
   getChildList,
@@ -63,6 +65,7 @@ type BuilderActions = {
   setZoom: (zoom: number) => void;
   setViewport: (viewport: Viewport) => void;
   clearState: () => void;
+  loadDocumentState: (state: Pick<BuilderState, "nodes" | "rootIds" | "formId" | "formName">) => void;
   setSaveStatus: (status: SaveStatus, timestamp?: number) => void;
   setFormName: (name: string) => void;
   setFormId: (id: string) => void;
@@ -71,6 +74,10 @@ type BuilderActions = {
 type Store = BuilderState & BuilderActions;
 
 type TrackedState = Pick<BuilderState, "nodes" | "rootIds">;
+type PersistableDocumentState = Pick<
+  BuilderState,
+  "nodes" | "rootIds" | "formId" | "formName"
+>;
 
 const INITIAL_STATE: BuilderState = {
   nodes: {},
@@ -555,6 +562,21 @@ export const useBuilderStore = create<Store>()(
           });
           temporal.resume();
         },
+        loadDocumentState: (documentState) => {
+          const temporal = useBuilderStore.temporal.getState();
+          temporal.pause();
+          temporal.clear();
+          set((state) => {
+            Object.assign(state, INITIAL_STATE);
+            state.nodes = documentState.nodes;
+            state.rootIds = [...documentState.rootIds];
+            state.formId = documentState.formId;
+            state.formName = documentState.formName;
+            state.saveStatus = "saved";
+            state.lastSavedAt = Date.now();
+          });
+          temporal.resume();
+        },
         setSaveStatus: (saveStatus, timestamp) =>
           set({
             saveStatus,
@@ -691,17 +713,62 @@ export function useUndoRedo() {
   return { undo, redo, clear, canUndo, canRedo };
 }
 
-let saveStatusTimeout: ReturnType<typeof setTimeout> | null = null;
+const SAVE_DEBOUNCE_MS = 600;
+let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+let saveRevision = 0;
+
 useBuilderStore.subscribe((state, prevState) => {
   if (
-    state.nodes !== prevState.nodes ||
-    state.rootIds !== prevState.rootIds ||
-    state.formName !== prevState.formName
+    state.nodes === prevState.nodes &&
+    state.rootIds === prevState.rootIds &&
+    state.formName === prevState.formName &&
+    state.formId === prevState.formId
   ) {
-    state.setSaveStatus("saving");
-    if (saveStatusTimeout) clearTimeout(saveStatusTimeout);
-    saveStatusTimeout = setTimeout(() => {
-      useBuilderStore.getState().setSaveStatus("saved", Date.now());
-    }, 600);
+    return;
   }
+
+  state.setSaveStatus("saving");
+
+  const snapshot: PersistableDocumentState = {
+    nodes: state.nodes,
+    rootIds: state.rootIds,
+    formId: state.formId,
+    formName: state.formName,
+  };
+
+  saveRevision += 1;
+  const currentRevision = saveRevision;
+
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+
+  saveTimeout = setTimeout(() => {
+    saveTimeout = null;
+    void persistBuilderDocument(snapshot, currentRevision);
+  }, SAVE_DEBOUNCE_MS);
 });
+
+async function persistBuilderDocument(
+  snapshot: PersistableDocumentState,
+  revision: number,
+) {
+  try {
+    const provider = getBrowserLocalStorageProvider();
+    const document = toBuilderDocument(snapshot, { updatedAt: Date.now() });
+
+    await provider.save(snapshot.formId, document);
+
+    if (revision === saveRevision) {
+      useBuilderStore.getState().setSaveStatus("saved", document.updatedAt);
+    }
+  } catch (error) {
+    if (revision === saveRevision) {
+      useBuilderStore.getState().setSaveStatus("idle");
+    }
+
+    if (process.env.NODE_ENV === "development") {
+      console.error("[builder-persistence] Local save failed.", error);
+    }
+  }
+}
