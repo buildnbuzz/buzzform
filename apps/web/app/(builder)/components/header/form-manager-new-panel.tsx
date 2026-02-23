@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -11,25 +12,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Add01Icon,
   Alert01Icon,
+  Copy01Icon,
   File02Icon,
   Upload01Icon,
 } from "@hugeicons/core-free-icons";
-import {
-  fromBuilderDocument,
-  parseBuilderDocumentJson,
-  type BuilderDocumentState,
-} from "../../lib/persistence";
 import { useBuilderStore } from "../../lib/store";
 import { toast } from "sonner";
+import {
+  parseImportedFormJson,
+  type ImportPayloadFormat,
+} from "../../lib/import-json";
+import type { BuilderDocumentState } from "../../lib/persistence";
 
 const MIN_IMPORT_FEEDBACK_MS = 500;
 
+const IMPORT_FORMAT_LABELS: Record<ImportPayloadFormat, string> = {
+  "builder-backup": "Builder Backup",
+  "buzzform-schema": "BuzzForm Schema",
+};
+
 type PendingImport = {
-  fileName: string;
+  sourceName: string;
+  format: ImportPayloadFormat;
   formName: string;
   nodeCount: number;
   state: BuilderDocumentState;
@@ -46,6 +55,17 @@ type FormManagerPendingImportStateProps = {
   onClearSelection: () => void;
 };
 
+type FormManagerPasteImportStateProps = {
+  value: string;
+  isImporting: boolean;
+  onChangeValue: (value: string) => void;
+  onBack: () => void;
+  onPasteFromClipboard: () => void;
+  onImport: () => void;
+  onDragOver: (event: React.DragEvent<HTMLDivElement>) => void;
+  onDrop: (event: React.DragEvent<HTMLDivElement>) => void;
+};
+
 function FormManagerPendingImportState({
   pendingImport,
   isImporting,
@@ -59,13 +79,19 @@ function FormManagerPendingImportState({
           <HugeiconsIcon icon={File02Icon} size={32} strokeWidth={1.5} />
         </div>
 
-        <div className="space-y-1.5 text-center">
+        <div className="space-y-2 text-center">
           <h3 className="text-xl font-semibold tracking-tight">
             {pendingImport.formName}
           </h3>
-          <p className="text-sm text-muted-foreground">
-            {pendingImport.fileName}
-          </p>
+          <p className="text-sm text-muted-foreground">{pendingImport.sourceName}</p>
+          <div className="flex items-center justify-center gap-2">
+            <Badge variant="outline">
+              {IMPORT_FORMAT_LABELS[pendingImport.format]}
+            </Badge>
+            <span className="text-xs text-muted-foreground">
+              {pendingImport.nodeCount} nodes
+            </span>
+          </div>
         </div>
       </div>
 
@@ -84,7 +110,7 @@ function FormManagerPendingImportState({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mt-1">
+        <div className="mt-1 grid grid-cols-2 gap-2">
           <Button
             variant="outline"
             onClick={onClearSelection}
@@ -107,11 +133,84 @@ function FormManagerPendingImportState({
   );
 }
 
+function FormManagerPasteImportState({
+  value,
+  isImporting,
+  onChangeValue,
+  onBack,
+  onPasteFromClipboard,
+  onImport,
+  onDragOver,
+  onDrop,
+}: FormManagerPasteImportStateProps) {
+  return (
+    <div className="flex min-h-0 w-full flex-1 flex-col gap-3 animate-in fade-in duration-200">
+      <div className="space-y-1">
+        <h3 className="text-lg font-semibold tracking-tight">Import JSON</h3>
+        <p className="text-sm text-muted-foreground">
+          Paste a BuzzForm schema or Builder backup JSON.
+        </p>
+      </div>
+
+      <div
+        className="h-56 min-h-0 overflow-hidden rounded-lg border border-dashed border-border/70 p-2 transition-colors hover:border-primary/50"
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+      >
+        <Textarea
+          value={value}
+          onChange={(event) => onChangeValue(event.target.value)}
+          placeholder='[\n  { "type": "text", "name": "email", "label": "Email" }\n]'
+          wrap="off"
+          className="h-full min-h-0 resize-none overflow-x-auto overflow-y-auto border-0 bg-transparent font-mono text-xs whitespace-pre shadow-none field-sizing-fixed focus-visible:ring-0"
+        />
+      </div>
+
+      <div className="mt-auto flex flex-wrap justify-end gap-2">
+        <Button variant="ghost" onClick={onBack} disabled={isImporting}>
+          Back
+        </Button>
+        <Button
+          variant="outline"
+          onClick={onPasteFromClipboard}
+          disabled={isImporting}
+        >
+          <HugeiconsIcon
+            icon={Copy01Icon}
+            size={16}
+            className="mr-2"
+            strokeWidth={2}
+          />
+          Paste from Clipboard
+        </Button>
+        <Button
+          onClick={onImport}
+          disabled={isImporting || value.trim().length === 0}
+        >
+          {isImporting ? (
+            <Spinner className="mr-2 size-4" />
+          ) : (
+            <HugeiconsIcon
+              icon={Upload01Icon}
+              size={16}
+              className="mr-2"
+              strokeWidth={2}
+            />
+          )}
+          Validate JSON
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
   const [isImporting, setIsImporting] = React.useState(false);
   const [pendingImport, setPendingImport] =
     React.useState<PendingImport | null>(null);
   const [importError, setImportError] = React.useState<string | null>(null);
+  const [isPasteMode, setIsPasteMode] = React.useState(false);
+  const [pastedJson, setPastedJson] = React.useState("");
 
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const clearState = useBuilderStore((state) => state.clearState);
@@ -140,6 +239,67 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
     fileInputRef.current?.click();
   };
 
+  const handleOpenPasteMode = () => {
+    if (isImporting) return;
+    setImportError(null);
+    setIsPasteMode(true);
+  };
+
+  const handleClosePasteMode = () => {
+    if (isImporting) return;
+    setImportError(null);
+    setIsPasteMode(false);
+  };
+
+  const processImportJson = React.useCallback(
+    async ({
+      json,
+      sourceName,
+      formNameHint,
+      closePasteModeOnSuccess,
+    }: {
+      json: string;
+      sourceName: string;
+      formNameHint?: string;
+      closePasteModeOnSuccess: boolean;
+    }) => {
+      const startedAt = Date.now();
+      setImportError(null);
+      setPendingImport(null);
+      setIsImporting(true);
+
+      try {
+        const parsed = parseImportedFormJson(json, { formNameHint });
+        setPendingImport({
+          sourceName,
+          format: parsed.format,
+          formName: parsed.state.formName,
+          nodeCount: Object.keys(parsed.state.nodes).length,
+          state: parsed.state,
+        });
+
+        if (closePasteModeOnSuccess) {
+          setIsPasteMode(false);
+        }
+      } catch (error) {
+        const rawMessage =
+          error instanceof Error ? error.message : "Failed to import JSON.";
+        const message = `Invalid import JSON: ${rawMessage}`;
+        setImportError(message);
+        toast.error(message);
+      } finally {
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < MIN_IMPORT_FEEDBACK_MS) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, MIN_IMPORT_FEEDBACK_MS - elapsed),
+          );
+        }
+        setIsImporting(false);
+      }
+    },
+    [],
+  );
+
   const handleFileImport = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
@@ -147,36 +307,90 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
     event.target.value = "";
     if (!file) return;
 
-    const startedAt = Date.now();
-    setImportError(null);
-    setPendingImport(null);
-    setIsImporting(true);
+    const contents = await file.text();
+    await processImportJson({
+      json: contents,
+      sourceName: file.name,
+      formNameHint: toFormNameHint(file.name),
+      closePasteModeOnSuccess: false,
+    });
+  };
 
-    try {
-      const contents = await file.text();
-      const document = parseBuilderDocumentJson(contents);
-      const importedState = fromBuilderDocument(document);
-      setPendingImport({
-        fileName: file.name,
-        formName: importedState.formName,
-        nodeCount: Object.keys(importedState.nodes).length,
-        state: importedState,
-      });
-    } catch (error) {
-      const rawMessage =
-        error instanceof Error ? error.message : "Failed to import file.";
-      const message = `Invalid BuzzForm file: ${rawMessage}`;
+  const handleImportPastedJson = async () => {
+    const trimmedJson = pastedJson.trim();
+    if (!trimmedJson) {
+      const message = "Paste JSON content before importing.";
       setImportError(message);
       toast.error(message);
-    } finally {
-      const elapsed = Date.now() - startedAt;
-      if (elapsed < MIN_IMPORT_FEEDBACK_MS) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, MIN_IMPORT_FEEDBACK_MS - elapsed),
-        );
-      }
-      setIsImporting(false);
+      return;
     }
+
+    await processImportJson({
+      json: trimmedJson,
+      sourceName: "Pasted JSON",
+      closePasteModeOnSuccess: true,
+    });
+  };
+
+  const handlePasteFromClipboard = async () => {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.readText) {
+      toast.error("Clipboard access is not available. Paste manually.");
+      return;
+    }
+
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (!clipboardText.trim()) {
+        toast.error("Clipboard is empty.");
+        return;
+      }
+
+      setPastedJson(clipboardText);
+      setImportError(null);
+      toast.success("Pasted JSON from clipboard");
+    } catch {
+      toast.error("Clipboard access was denied. Paste JSON manually.");
+    }
+  };
+
+  const handlePasteDropZoneDragOver = (
+    event: React.DragEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+  };
+
+  const handlePasteDropZoneDrop = async (
+    event: React.DragEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+    if (isImporting) return;
+
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      try {
+        const droppedContents = await file.text();
+        if (!droppedContents.trim()) {
+          toast.error("Dropped file is empty.");
+          return;
+        }
+        setPastedJson(droppedContents);
+        setImportError(null);
+        toast.success(`Loaded JSON from "${file.name}"`);
+      } catch {
+        toast.error("Failed to read dropped file.");
+      }
+      return;
+    }
+
+    const droppedText = event.dataTransfer.getData("text/plain");
+    if (!droppedText.trim()) {
+      toast.error("Dropped content is empty.");
+      return;
+    }
+
+    setPastedJson(droppedText);
+    setImportError(null);
+    toast.success("Loaded dropped text");
   };
 
   React.useEffect(() => resetImportState, [resetImportState]);
@@ -194,8 +408,19 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
             onConfirmImport={handleConfirmImport}
             onClearSelection={resetImportState}
           />
+        ) : isPasteMode ? (
+          <FormManagerPasteImportState
+            value={pastedJson}
+            isImporting={isImporting}
+            onChangeValue={setPastedJson}
+            onBack={handleClosePasteMode}
+            onPasteFromClipboard={handlePasteFromClipboard}
+            onImport={handleImportPastedJson}
+            onDragOver={handlePasteDropZoneDragOver}
+            onDrop={handlePasteDropZoneDrop}
+          />
         ) : (
-          <div className="grid w-full flex-1 gap-4 sm:grid-cols-2">
+          <div className="grid w-full flex-1 gap-4 sm:grid-cols-3">
             <Card
               className="group flex cursor-pointer flex-col justify-center transition-all duration-200 hover:ring-1 hover:ring-primary/50"
               onClick={handleNewForm}
@@ -239,8 +464,26 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
                 <CardDescription>
                   {isImporting
                     ? "Checking JSON before import"
-                    : "Restore from .json"}
+                    : "Load .json from disk"}
                 </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card
+              className="group flex cursor-pointer flex-col justify-center transition-all duration-200 hover:ring-1 hover:ring-primary/50"
+              onClick={handleOpenPasteMode}
+            >
+              <CardContent className="flex justify-center pb-2 pt-6">
+                <HugeiconsIcon
+                  icon={Copy01Icon}
+                  size={32}
+                  strokeWidth={1.5}
+                  className="text-muted-foreground transition-all duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:text-primary"
+                />
+              </CardContent>
+              <CardHeader className="justify-center text-center">
+                <CardTitle className="text-lg">Import JSON</CardTitle>
+                <CardDescription>Paste schema from clipboard</CardDescription>
               </CardHeader>
             </Card>
           </div>
@@ -264,4 +507,13 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
       />
     </div>
   );
+}
+
+function toFormNameHint(sourceName: string): string | undefined {
+  const normalized = sourceName
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .trim();
+
+  return normalized.length > 0 ? normalized : undefined;
 }

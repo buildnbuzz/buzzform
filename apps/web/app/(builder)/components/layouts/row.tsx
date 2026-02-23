@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -58,12 +59,10 @@ export function RowLayout({ id, childrenIds }: RowLayoutProps) {
             strategy={horizontalListSortingStrategy}
           >
             {childrenIds.map((childId, index) => (
-              <>
-                {indicatorIndex === index && (
-                  <DropLineVertical key={`indicator-${index}`} />
-                )}
+              <React.Fragment key={childId}>
+                {indicatorIndex === index && <DropLineVertical />}
                 <EditableNode key={childId} id={childId} />
-              </>
+              </React.Fragment>
             ))}
             {indicatorIndex === childrenIds.length && <DropLineVertical />}
           </SortableContext>

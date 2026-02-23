@@ -37,7 +37,7 @@ export function FormManagerDialog() {
         }
       />
 
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Forms</DialogTitle>
           <DialogDescription>
