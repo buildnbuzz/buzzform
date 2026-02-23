@@ -255,12 +255,12 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
     async ({
       json,
       sourceName,
-      formNameHint,
+      schemaFileNameHint,
       closePasteModeOnSuccess,
     }: {
       json: string;
       sourceName: string;
-      formNameHint?: string;
+      schemaFileNameHint?: string;
       closePasteModeOnSuccess: boolean;
     }) => {
       const startedAt = Date.now();
@@ -269,13 +269,23 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
       setIsImporting(true);
 
       try {
-        const parsed = parseImportedFormJson(json, { formNameHint });
+        const parsed = parseImportedFormJson(json);
+        const importedState =
+          parsed.format === "buzzform-schema" &&
+          schemaFileNameHint &&
+          parsed.state.formName === "Imported Form"
+            ? {
+                ...parsed.state,
+                formName: schemaFileNameHint,
+              }
+            : parsed.state;
+
         setPendingImport({
           sourceName,
           format: parsed.format,
-          formName: parsed.state.formName,
-          nodeCount: Object.keys(parsed.state.nodes).length,
-          state: parsed.state,
+          formName: importedState.formName,
+          nodeCount: Object.keys(importedState.nodes).length,
+          state: importedState,
         });
 
         if (closePasteModeOnSuccess) {
@@ -311,7 +321,7 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
     await processImportJson({
       json: contents,
       sourceName: file.name,
-      formNameHint: toFormNameHint(file.name),
+      schemaFileNameHint: toFormNameHint(file.name),
       closePasteModeOnSuccess: false,
     });
   };
@@ -510,10 +520,21 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
 }
 
 function toFormNameHint(sourceName: string): string | undefined {
-  const normalized = sourceName
+  const normalizedBase = sourceName
     .replace(/\.[^/.]+$/, "")
     .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
-  return normalized.length > 0 ? normalized : undefined;
+  if (normalizedBase.length === 0) {
+    return undefined;
+  }
+
+  return normalizedBase
+    .split(" ")
+    .map((segment) => {
+      if (segment.length === 0) return segment;
+      return segment[0]!.toUpperCase() + segment.slice(1).toLowerCase();
+    })
+    .join(" ");
 }
