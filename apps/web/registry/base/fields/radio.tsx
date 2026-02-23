@@ -54,12 +54,12 @@ function getOptionGroupLayoutClassName({
   columns?: OptionGroupColumns;
 }) {
   const usesGridColumns = variant === "card" || direction === "horizontal";
-  const effectiveColumns = usesGridColumns ? columns : undefined;
+  // Default to 2 columns for horizontal direction so users see immediate feedback
+  const effectiveColumns = usesGridColumns
+    ? (columns ?? (direction === "horizontal" ? 2 : undefined))
+    : undefined;
 
   if (!effectiveColumns || effectiveColumns === 1) {
-    if (variant === "default" && direction === "horizontal") {
-      return "flex flex-wrap gap-x-4 gap-y-2";
-    }
     return "flex flex-col gap-2";
   }
 

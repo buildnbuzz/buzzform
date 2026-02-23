@@ -110,7 +110,10 @@ function mergeUpdates<T extends object>(target: T, source: Partial<T>) {
       !Array.isArray(targetValue)
     ) {
       mergeUpdates(targetValue as object, sourceValue as object);
-    } else if (sourceValue !== undefined) {
+    } else if (sourceValue === undefined) {
+      // Explicitly cleared — remove the key so field defaults take effect
+      delete target[key];
+    } else {
       target[key] = sourceValue as T[keyof T];
     }
   }
