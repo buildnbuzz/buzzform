@@ -2,10 +2,10 @@ import { z } from 'zod';
 import type { CheckboxField, SwitchField } from '../../types';
 
 export function createCheckboxFieldSchema(field: CheckboxField): z.ZodTypeAny {
-    let schema: z.ZodTypeAny = z.boolean({ error: 'Invalid value' });
+    let schema: z.ZodTypeAny = z.boolean({ error: 'Invalid value' }).default(false);
 
     if (field.required) {
-        schema = z.boolean({ error: 'This field is required' }).refine(val => val === true, {
+        schema = z.boolean({ error: 'Invalid value' }).default(false).refine(val => val === true, {
             error: 'This field is required',
         });
     }
@@ -14,10 +14,10 @@ export function createCheckboxFieldSchema(field: CheckboxField): z.ZodTypeAny {
 }
 
 export function createSwitchFieldSchema(field: SwitchField): z.ZodTypeAny {
-    let schema: z.ZodTypeAny = z.boolean({ error: 'Invalid value' });
+    let schema: z.ZodTypeAny = z.boolean({ error: 'Invalid value' }).default(false);
 
     if (field.required) {
-        schema = z.boolean({ error: 'This field is required' }).refine(val => val === true, {
+        schema = z.boolean({ error: 'Invalid value' }).default(false).refine(val => val === true, {
             error: 'This field is required',
         });
     }

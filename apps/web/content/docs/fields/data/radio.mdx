@@ -55,9 +55,16 @@ export function RadioFieldDemo() {
 | ------------------ | ---------------------------- | ------------ | ---------------- |
 | `ui.variant`       | `'default' \| 'card'`        | `'default'`  | Visual style     |
 | `ui.direction`     | `'vertical' \| 'horizontal'` | `'vertical'` | Layout direction |
-| `ui.columns`       | `1 \| 2 \| 3 \| 4`           | -            | Grid columns (card variant or horizontal default layout) |
+| `ui.columns`       | `number \| ""`               | -            | Grid columns. Use `""` (`Auto`) for natural horizontal flow instead of a fixed grid |
 | `ui.card.size`     | `'sm' \| 'md' \| 'lg'`       | `'md'`       | Card size        |
 | `ui.card.bordered` | `boolean`                    | `true`       | Show card border |
+
+## Auto Columns
+
+Use `ui.columns: ""` to enable `Auto` layout behavior.
+
+- In `default` + `horizontal` layout, options flow naturally in a wrapping row.
+- In card layouts, set a number when you want a fixed responsive grid.
 
 ## Variants
 

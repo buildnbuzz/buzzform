@@ -35,7 +35,7 @@ export interface RadioFieldProps {
 
 type OptionGroupVariant = "default" | "card";
 type OptionGroupDirection = "vertical" | "horizontal";
-type OptionGroupColumns = 1 | 2 | 3 | 4;
+type OptionGroupColumns = 1 | 2 | 3 | 4 | string | number | undefined;
 
 function getGridColumnsClass(columns: OptionGroupColumns | undefined) {
   if (columns === 2) return "sm:grid-cols-2";
@@ -53,11 +53,16 @@ function getOptionGroupLayoutClassName({
   direction?: OptionGroupDirection;
   columns?: OptionGroupColumns;
 }) {
-  const usesGridColumns = variant === "card" || direction === "horizontal";
-  // Default to 2 columns for horizontal direction so users see immediate feedback
-  const effectiveColumns = usesGridColumns
-    ? (columns ?? (direction === "horizontal" ? 2 : undefined))
-    : undefined;
+  const isCard = variant === "card";
+  const isHorizontal = direction === "horizontal";
+
+  // If horizontal and NO columns chosen, use fluid flex-row layout
+  if (isHorizontal && !columns) {
+    return "!flex flex-row flex-wrap gap-x-4 gap-y-2";
+  }
+
+  const effectiveColumns =
+    isCard || isHorizontal ? (columns ?? (isCard ? 2 : undefined)) : undefined;
 
   if (!effectiveColumns || effectiveColumns === 1) {
     return "flex flex-col gap-2";
@@ -95,6 +100,7 @@ export function RadioField({
   const cardBordered = field.ui?.card?.bordered ?? true;
 
   const isCardVariant = variant === "card";
+  const isHorizontal = direction === "horizontal";
 
   // Get options (only static for now, async would need useEffect)
   const options = Array.isArray(field.options) ? field.options : [];
@@ -163,7 +169,7 @@ export function RadioField({
 
             return (
               <label
-                key={val}
+                key={`${val}-${i}`}
                 htmlFor={id}
                 className={cn(
                   // Base styles
@@ -229,10 +235,11 @@ export function RadioField({
           // Default variant
           return (
             <Field
-              key={val}
+              key={`${val}-${i}`}
               orientation="horizontal"
               className={cn(
                 "items-center gap-2.5 space-y-0",
+                isHorizontal && !columns && "w-auto",
                 optDisabled && "opacity-50 cursor-not-allowed",
               )}
             >

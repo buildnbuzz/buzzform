@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 type OptionValue = string | number | boolean;
 type OptionGroupVariant = "default" | "card";
 type OptionGroupDirection = "vertical" | "horizontal";
-type OptionGroupColumns = 1 | 2 | 3 | 4;
+type OptionGroupColumns = 1 | 2 | 3 | 4 | string | number | undefined;
 
 export interface CheckboxGroupFieldProps {
   field: CheckboxGroupFieldType;
@@ -60,11 +60,16 @@ function getOptionGroupLayoutClassName({
   direction?: OptionGroupDirection;
   columns?: OptionGroupColumns;
 }) {
-  const usesGridColumns = variant === "card" || direction === "horizontal";
-  // Default to 2 columns for horizontal direction so users see immediate feedback
-  const effectiveColumns = usesGridColumns
-    ? (columns ?? (direction === "horizontal" ? 2 : undefined))
-    : undefined;
+  const isCard = variant === "card";
+  const isHorizontal = direction === "horizontal";
+
+  // If horizontal and NO columns chosen, use fluid flex-row layout
+  if (isHorizontal && !columns) {
+    return "!flex flex-row flex-wrap gap-x-4 gap-y-2";
+  }
+
+  const effectiveColumns =
+    isCard || isHorizontal ? (columns ?? (isCard ? 2 : undefined)) : undefined;
 
   if (!effectiveColumns || effectiveColumns === 1) {
     return "flex flex-col gap-2";
@@ -221,6 +226,7 @@ export function CheckboxGroupField({
   const maxSelected = field.maxSelected;
 
   const isCardVariant = variant === "card";
+  const isHorizontal = direction === "horizontal";
   const layoutClasses = getOptionGroupLayoutClassName({
     variant,
     direction,
@@ -370,6 +376,7 @@ export function CheckboxGroupField({
                 orientation="horizontal"
                 className={cn(
                   "items-center gap-2.5 space-y-0",
+                  isHorizontal && !columns && "w-auto",
                   optDisabled && "opacity-50 cursor-not-allowed",
                 )}
               >

@@ -191,9 +191,10 @@ export const radioFieldProperties: Field[] = [
                         type: "select",
                         name: "ui.columns",
                         label: "Columns",
-                        description: "Grid columns (responsive, 1 on mobile)",
+                        description: "Grid columns. Choose 'Auto' for natural flow.",
                         condition: shouldShowColumns,
                         options: [
+                            { label: "Auto", value: "" },
                             { label: "1 Column", value: 1 },
                             { label: "2 Columns", value: 2 },
                             { label: "3 Columns", value: 3 },

@@ -192,13 +192,13 @@ export interface BaseField<TValue = unknown, TData = Record<string, unknown>> {
    * @example disabled: (data) => !data.country // Disable until country is selected
    */
   disabled?:
-    | boolean
-    | ((data: TData, siblingData: Record<string, unknown>) => boolean);
+  | boolean
+  | ((data: TData, siblingData: Record<string, unknown>) => boolean);
 
   /** Hide the field from the form UI (static or conditional) */
   hidden?:
-    | boolean
-    | ((data: TData, siblingData: Record<string, unknown>) => boolean);
+  | boolean
+  | ((data: TData, siblingData: Record<string, unknown>) => boolean);
 
   /**
    * Make field read-only.
@@ -206,8 +206,8 @@ export interface BaseField<TValue = unknown, TData = Record<string, unknown>> {
    * @example readOnly: (data) => data.status === 'published'
    */
   readOnly?:
-    | boolean
-    | ((data: TData, siblingData: Record<string, unknown>) => boolean);
+  | boolean
+  | ((data: TData, siblingData: Record<string, unknown>) => boolean);
 
   // === Data ===
 
@@ -391,11 +391,11 @@ export interface DateField extends BaseField<Date> {
     inputFormat?: string;
     /** Quick date presets */
     presets?:
-      | boolean
-      | Array<{
-          label: string;
-          value: Date | (() => Date);
-        }>;
+    | boolean
+    | Array<{
+      label: string;
+      value: Date | (() => Date);
+    }>;
   };
 }
 
@@ -416,19 +416,19 @@ export interface DatetimeField extends BaseField<Date> {
     inputFormat?: string;
     /** Time picker config */
     timePicker?:
-      | boolean
-      | {
-          interval?: number;
-          use24hr?: boolean;
-          includeSeconds?: boolean;
-        };
+    | boolean
+    | {
+      interval?: number;
+      use24hr?: boolean;
+      includeSeconds?: boolean;
+    };
     /** Quick date presets */
     presets?:
-      | boolean
-      | Array<{
-          label: string;
-          value: Date | (() => Date);
-        }>;
+    | boolean
+    | Array<{
+      label: string;
+      value: Date | (() => Date);
+    }>;
   };
 }
 
@@ -459,9 +459,9 @@ export interface SelectField extends BaseField<
   type: "select";
   /** Options (static, string array, or async with context for dependent dropdowns) */
   options:
-    | SelectOption[]
-    | string[]
-    | ((context: ValidationContext) => Promise<SelectOption[]>);
+  | SelectOption[]
+  | string[]
+  | ((context: ValidationContext) => Promise<SelectOption[]>);
   /**
    * Field paths that trigger options refetch when changed.
    * Required when using async options that depend on other field values.
@@ -498,9 +498,9 @@ export interface CheckboxGroupField extends BaseField<
   type: "checkbox-group";
   /** Static array or async function for options */
   options:
-    | SelectOption[]
-    | string[]
-    | ((context: ValidationContext) => Promise<SelectOption[]>);
+  | SelectOption[]
+  | string[]
+  | ((context: ValidationContext) => Promise<SelectOption[]>);
   /** Paths that trigger options refetch when changed */
   dependencies?: string[];
   /** Minimum number of selections */
@@ -511,8 +511,8 @@ export interface CheckboxGroupField extends BaseField<
   ui?: {
     /** Layout direction */
     direction?: "vertical" | "horizontal";
-    /** Grid columns (responsive, 1 on mobile) */
-    columns?: 1 | 2 | 3 | 4;
+    /** Grid columns (responsive, 1 on mobile). Leave undefined/empty for Auto flow. */
+    columns?: number | string | undefined;
     /** Visual variant */
     variant?: "default" | "card";
     /** Card settings (for variant: 'card') */
@@ -556,9 +556,9 @@ export interface RadioField extends BaseField<string | number | boolean> {
   type: "radio";
   /** Static array or async function for options */
   options:
-    | SelectOption[]
-    | string[]
-    | ((context: ValidationContext) => Promise<SelectOption[]>);
+  | SelectOption[]
+  | string[]
+  | ((context: ValidationContext) => Promise<SelectOption[]>);
   /** Paths that trigger options refetch when changed */
   dependencies?: string[];
   ui?: {
@@ -566,8 +566,8 @@ export interface RadioField extends BaseField<string | number | boolean> {
     variant?: "default" | "card";
     /** Layout direction for 'default' variant */
     direction?: "vertical" | "horizontal";
-    /** Grid columns (responsive, 1 on mobile) */
-    columns?: 1 | 2 | 3 | 4;
+    /** Grid columns (responsive, 1 on mobile). Leave undefined or '' for Auto flow. */
+    columns?: number | string | undefined;
     /** Card settings (for variant: 'card') */
     card?: {
       /** Size preset ('sm', 'md', 'lg') */
@@ -629,11 +629,11 @@ export interface UploadField extends BaseField<
     size?: "xs" | "sm" | "md" | "lg" | "xl";
     /** Enable cropping */
     crop?:
-      | boolean
-      | {
-          aspectRatio?: number;
-          circular?: boolean;
-        };
+    | boolean
+    | {
+      aspectRatio?: number;
+      circular?: boolean;
+    };
     /** Show progress */
     showProgress?: boolean;
     /** Dropzone text */
