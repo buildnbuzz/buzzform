@@ -4,6 +4,8 @@ import "./globals.css";
 import { Providers } from "@/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { CookieConsent } from "@/components/analytics/cookie-consent";
+import { GTM } from "@/components/analytics/gtm";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -87,8 +89,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <GTM />
         <Providers>
           {children}
+          <CookieConsent />
           <Toaster position="bottom-right" richColors />
           <Analytics />
         </Providers>

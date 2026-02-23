@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { SiteHeader } from "@/components/landing/site-header";
 import { SiteFooter } from "@/components/landing/site-footer";
+import Link from "next/link";
 
 export const metadata = {
   title: `Privacy Policy`,
@@ -82,7 +83,11 @@ export default function PrivacyPage() {
                     We use analytics tools to understand how people interact with
                     BuzzForm. These tools may use cookies or similar technologies
                     to collect usage data. You can control cookies through your
-                    browser settings.
+                    browser settings. For details, review our{" "}
+                    <Link href="/cookies" className="underline underline-offset-4">
+                      Cookie Policy
+                    </Link>
+                    .
                   </p>
                 </section>
 
