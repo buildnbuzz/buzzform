@@ -730,14 +730,25 @@ useBuilderStore.subscribe((state, prevState) => {
     return;
   }
 
-  state.setSaveStatus("saving");
-
   const snapshot: PersistableDocumentState = {
     nodes: state.nodes,
     rootIds: state.rootIds,
     formId: state.formId,
     formName: state.formName,
   };
+
+  if (shouldSkipAutosave(snapshot, prevState)) {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+      saveTimeout = null;
+    }
+
+    saveRevision += 1;
+    state.setSaveStatus("idle");
+    return;
+  }
+
+  state.setSaveStatus("saving");
 
   saveRevision += 1;
   const currentRevision = saveRevision;
@@ -751,6 +762,26 @@ useBuilderStore.subscribe((state, prevState) => {
     void persistBuilderDocument(snapshot, currentRevision);
   }, SAVE_DEBOUNCE_MS);
 });
+
+function shouldSkipAutosave(
+  snapshot: PersistableDocumentState,
+  prevState: Store,
+): boolean {
+  const currentEmpty = isDocumentEmpty(snapshot.nodes, snapshot.rootIds);
+  if (!currentEmpty) {
+    return false;
+  }
+
+  const previousEmpty = isDocumentEmpty(prevState.nodes, prevState.rootIds);
+  const isNewFormSession = snapshot.formId !== prevState.formId;
+
+  // Skip saving untouched blank forms and blank renamed drafts.
+  return previousEmpty || isNewFormSession;
+}
+
+function isDocumentEmpty(nodes: Record<string, Node>, rootIds: string[]): boolean {
+  return rootIds.length === 0 && Object.keys(nodes).length === 0;
+}
 
 async function persistBuilderDocument(
   snapshot: PersistableDocumentState,
