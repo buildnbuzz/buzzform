@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateComponentCode } from "../lib/code-generator";
 import { toBuilderDocument } from "../lib/persistence";
+import { nodesToFields } from "../lib/schema-builder";
 import { downloadTextFile, toSafeFileName } from "../lib/utils";
 import { useBuilderStore } from "../lib/store";
 
@@ -67,12 +68,25 @@ export function ExportSheet() {
     return generateComponentCode(nodes, rootIds, formName);
   }, [open, nodes, rootIds, formName]);
 
+  const schemaJson = React.useMemo(() => {
+    if (!open) return "";
+    const fields = nodesToFields(nodes, rootIds);
+    return JSON.stringify(fields, null, 2);
+  }, [open, nodes, rootIds]);
+
   const downloadJson = React.useCallback(() => {
     if (!documentJson) return;
-    const fileName = `${toSafeFileName(formName)}.json`;
+    const fileName = `${toSafeFileName(formName)}-doc.json`;
     downloadTextFile(documentJson, fileName, "application/json");
-    toast.success("Builder backup exported");
+    toast.success("Builder Document exported");
   }, [documentJson, formName]);
+
+  const downloadSchema = React.useCallback(() => {
+    if (!schemaJson) return;
+    const fileName = `${toSafeFileName(formName)}.json`;
+    downloadTextFile(schemaJson, fileName, "application/json");
+    toast.success("BuzzForm schema exported");
+  }, [schemaJson, formName]);
 
   const downloadCode = React.useCallback(() => {
     if (!componentCode) return;
@@ -99,8 +113,8 @@ export function ExportSheet() {
         <SheetHeader className="border-b pr-12">
           <SheetTitle>Export Form</SheetTitle>
           <SheetDescription>
-            Export production-ready TSX for your app, or a BuzzForm file for
-            Builder import.
+            Export production-ready TSX, portable BuzzForm schema JSON, or a
+            Builder document file.
           </SheetDescription>
         </SheetHeader>
 
@@ -116,7 +130,12 @@ export function ExportSheet() {
             </TabsTrigger>
             <TabsTrigger value="json" className="gap-1.5">
               <HugeiconsIcon icon={File02Icon} size={16} strokeWidth={2} />
-              BuzzForm File
+              Builder Document
+              <Badge variant="outline">.json</Badge>
+            </TabsTrigger>
+            <TabsTrigger value="schema" className="gap-1.5">
+              <HugeiconsIcon icon={File02Icon} size={16} strokeWidth={2} />
+              BuzzForm Schema
               <Badge variant="outline">.json</Badge>
             </TabsTrigger>
           </TabsList>
@@ -172,11 +191,11 @@ export function ExportSheet() {
                       strokeWidth={1.8}
                       className="text-muted-foreground"
                     />
-                    BuzzForm file
+                    Builder document file
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Keep this as your editable BuzzForm source file to back up,
-                    share, and continue work later in BuzzForm Builder.
+                    Includes Builder metadata and node ids to fully restore your
+                    workspace exactly as-is.
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <Button
@@ -190,13 +209,57 @@ export function ExportSheet() {
                         size={16}
                         strokeWidth={2}
                       />
-                      Download BuzzForm File
+                      Download Builder Document
                     </Button>
                   </div>
                 </div>
 
                 <div className="[&_figure]:my-0!">
                   <DynamicCodeBlock lang="json" code={documentJson} />
+                </div>
+              </div>
+            </ScrollArea>
+          </TabsContent>
+
+          <TabsContent
+            value="schema"
+            className="min-h-0 flex-1 overflow-hidden"
+          >
+            <ScrollArea className="h-full px-4 py-2">
+              <div className="space-y-3 p-1">
+                <div className="rounded-lg border bg-muted/30 p-3">
+                  <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+                    <HugeiconsIcon
+                      icon={File02Icon}
+                      size={16}
+                      strokeWidth={1.8}
+                      className="text-muted-foreground"
+                    />
+                    BuzzForm schema
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Pure schema JSON for copy/paste import and runtime form
+                    generation.
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={downloadSchema}
+                    >
+                      <HugeiconsIcon
+                        icon={Download01Icon}
+                        size={16}
+                        strokeWidth={2}
+                      />
+                      Download BuzzForm Schema
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="[&_figure]:my-0!">
+                  <DynamicCodeBlock lang="json" code={schemaJson} />
                 </div>
               </div>
             </ScrollArea>
