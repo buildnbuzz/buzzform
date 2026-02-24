@@ -5,8 +5,9 @@ import Script from "next/script";
 import { COOKIE_CONSENT_STORAGE_KEY } from "./consent";
 
 export function GTM() {
+  const isProduction = process.env.NODE_ENV === "production";
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
-  if (!gtmId) {
+  if (!isProduction || !gtmId) {
     return null;
   }
 
