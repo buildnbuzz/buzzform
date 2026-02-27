@@ -72,6 +72,9 @@ export type {
 export type {
   BuzzFormSchema,
   FormSettings,
+  OutputType,
+  PathDelimiter,
+  OutputConfig,
   FormConfig,
   UseFormOptions,
 } from "./form";

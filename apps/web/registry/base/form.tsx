@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type {
-  Field,
-  FormAdapter,
-  UseFormOptions,
-} from "@buildnbuzz/buzzform";
+import type { Field, FormAdapter, UseFormOptions } from "@buildnbuzz/buzzform";
 import { useForm } from "@buildnbuzz/buzzform";
 
 import {
@@ -35,7 +31,7 @@ const FormContext = React.createContext<FormContextValue | null>(null);
 function useFormContext<TData = Record<string, unknown>>() {
   const ctx = React.useContext(FormContext);
   if (!ctx) throw new Error("useFormContext must be used within <Form>");
-  return ctx as FormContextValue<TData>;
+  return ctx as unknown as FormContextValue<TData>;
 }
 
 // Form
@@ -60,6 +56,7 @@ function Form<TData extends Record<string, unknown>>({
   defaultValues,
   onSubmit,
   mode,
+  output,
   settings: explicitSettings,
   adapter,
   className,
@@ -86,6 +83,7 @@ function Form<TData extends Record<string, unknown>>({
     defaultValues,
     onSubmit,
     mode,
+    output,
     settings,
     adapter,
   });
@@ -96,7 +94,7 @@ function Form<TData extends Record<string, unknown>>({
     return [];
   }, [explicitFields, schema]);
 
-  const contextValue = React.useMemo<FormContextValue<TData>>(
+  const contextValue = React.useMemo(
     () => ({
       form,
       fields,
@@ -105,7 +103,7 @@ function Form<TData extends Record<string, unknown>>({
       requireDirty,
       disableIfInvalid,
     }),
-    [form, fields, registry, disabled, requireDirty, disableIfInvalid]
+    [form, fields, registry, disabled, requireDirty, disableIfInvalid],
   );
 
   const content = children ?? (
@@ -118,7 +116,7 @@ function Form<TData extends Record<string, unknown>>({
   );
 
   return (
-    <FormContext.Provider value={contextValue as FormContextValue}>
+    <FormContext.Provider value={contextValue as unknown as FormContextValue}>
       {content}
     </FormContext.Provider>
   );
@@ -293,7 +291,7 @@ function FormActions({
         align === "center" && "justify-center",
         align === "end" && "justify-end",
         align === "between" && "justify-between",
-        className
+        className,
       )}
       {...props}
     />
@@ -319,7 +317,7 @@ function FormMessage({
       data-slot="form-message"
       className={cn(
         "rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive",
-        className
+        className,
       )}
       {...props}
     >

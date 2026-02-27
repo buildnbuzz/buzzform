@@ -82,6 +82,9 @@ export type {
 export type {
   BuzzFormSchema,
   FormSettings,
+  OutputType,
+  PathDelimiter,
+  OutputConfig,
   FormConfig,
   UseFormOptions,
 } from "./types";
@@ -134,6 +137,9 @@ export {
   resolveFieldState,
   getArrayRowLabel,
 } from "./lib";
+
+// Output transformation
+export { transformFormOutput } from "./lib";
 
 // Field style utilities
 export { getFieldWidthStyle } from "./lib";
