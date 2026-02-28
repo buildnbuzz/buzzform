@@ -93,7 +93,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <CookieConsent />
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="bottom-right" richColors closeButton />
           <Analytics />
         </Providers>
       </body>

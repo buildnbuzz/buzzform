@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useBuilderStore } from "../lib/store";
 import { useBuilderKeyboardShortcuts } from "../lib/use-keyboard-shortcuts";
@@ -17,20 +17,21 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { DragDropIcon } from "@hugeicons/core-free-icons";
+import {
+  DragDropIcon,
+  Copy01Icon,
+  Tick01Icon,
+} from "@hugeicons/core-free-icons";
 import { PreviewForm } from "./preview/preview-form";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export function Canvas() {
   useBuilderKeyboardShortcuts();
   const onSubmit = async (data: Record<string, unknown>) => {
     await new Promise((r) => setTimeout(r, 500));
     toast("Form Submitted!", {
-      description: (
-        <pre className="mt-2 max-h-72 overflow-auto rounded-md bg-zinc-950 p-3 text-xs text-zinc-100">
-          <code>{JSON.stringify(data, null, 2)}</code>
-        </pre>
-      ),
+      description: <SubmitToastContent data={data} />,
       duration: 10000,
     });
   };
@@ -135,3 +136,34 @@ const EmptyCanvas = () => {
     </Empty>
   );
 };
+
+function SubmitToastContent({ data }: { data: Record<string, unknown> }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="relative mt-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleCopy}
+        className="absolute right-2 top-2 h-7 w-7"
+        title="Copy JSON"
+      >
+        {copied ? (
+          <HugeiconsIcon icon={Tick01Icon} size={14} className="text-primary" />
+        ) : (
+          <HugeiconsIcon icon={Copy01Icon} size={14} />
+        )}
+      </Button>
+      <pre className="max-h-72 overflow-auto rounded-md bg-muted p-3 pt-6 text-xs text-muted-foreground sm:p-3 sm:pr-10 sm:pt-3">
+        <code>{JSON.stringify(data, null, 2)}</code>
+      </pre>
+    </div>
+  );
+}
