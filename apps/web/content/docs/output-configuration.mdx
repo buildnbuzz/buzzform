@@ -1,0 +1,99 @@
+---
+title: Output Configuration
+description: Control the shape of form data passed to your submit handler.
+---
+
+# Output Configuration
+
+By default, BuzzForm passes form data to your `onSubmit` handler as **hierarchical JSON** matching your schema structure. You can configure the output to flatten nested data into path-delimited keys instead.
+
+## Default Behavior
+
+With no output configuration, data is passed as nested objects:
+
+```tsx
+<Form
+  schema={schema}
+  onSubmit={(data) => {
+    // data = {
+    //   person: {
+    //     name: "John",
+    //     address: { street: "Main St", number: 5 }
+    //   }
+    // }
+  }}
+/>
+```
+
+## Path Output
+
+Set `output={{ type: "path" }}` to flatten nested data into dot-delimited path keys:
+
+```tsx
+<Form
+  schema={schema}
+  output={{ type: "path" }}
+  onSubmit={(data) => {
+    // data = {
+    //   "person.name": "John",
+    //   "person.address.street": "Main St",
+    //   "person.address.number": 5
+    // }
+  }}
+/>
+```
+
+### Custom Delimiter
+
+Change the path delimiter with the `delimiter` option:
+
+```tsx
+<Form
+  schema={schema}
+  output={{ type: "path", delimiter: "_" }}
+  onSubmit={(data) => {
+    // data = {
+    //   "person_name": "John",
+    //   "person_address_street": "Main St",
+    //   "person_address_number": 5
+    // }
+  }}
+/>
+```
+
+## API Reference
+
+### `OutputConfig`
+
+| Property    | Type                | Default | Description                                   |
+| ----------- | ------------------- | ------- | --------------------------------------------- |
+| `type`      | `'path'`            | -       | Flatten nested data into delimited path keys. |
+| `delimiter` | `'.' \| '-' \| '_'` | `'.'`   | Separator between path segments.              |
+
+### Available Delimiters
+
+| Delimiter | Example Key             |
+| --------- | ----------------------- |
+| `.`       | `person.address.street` |
+| `-`       | `person-address-street` |
+| `_`       | `person_address_street` |
+
+## Provider-Level Config
+
+Set output configuration globally via `FormProvider`:
+
+```tsx
+<FormProvider adapter={useRhf} resolver={zodResolver} output={{ type: "path" }}>
+  {children}
+</FormProvider>
+```
+
+Individual forms can override the provider config:
+
+```tsx
+// Uses provider's output config
+<Form schema={schemaA} onSubmit={handleA} />
+
+// Overrides with custom delimiter
+<Form schema={schemaB} output={{ type: "path", delimiter: "_" }} onSubmit={handleB} />
+```

@@ -23,23 +23,24 @@ import { Form } from "@/components/buzzform/form";
 
 ### Properties
 
-| Property           | Type                                   | Default          | Description                                  |
-| ------------------ | -------------------------------------- | ---------------- | -------------------------------------------- |
-| `schema`           | `BuzzFormSchema`                       | -                | Schema from `createSchema()`                 |
-| `fields`           | `Field[]`                              | -                | Override fields (if not using schema.fields) |
-| `defaultValues`    | `object \| function`                   | -                | Initial form values                          |
-| `onSubmit`         | `(data) => void`                       | -                | Submit handler                               |
-| `mode`             | `'onChange' \| 'onBlur' \| 'onSubmit'` | Provider default | Validation mode                              |
-| `adapter`          | `AdapterFactory`                       | Provider default | Form library adapter                         |
-| `settings`         | `FormSettings`                         | -                | Form behavior settings                       |
-| `disabled`         | `boolean`                              | `false`          | Disable entire form                          |
-| `requireDirty`     | `boolean`                              | `false`          | Only allow submit when dirty                 |
-| `disableIfInvalid` | `boolean`                              | `false`          | Disable submit until valid                   |
-| `showSubmit`       | `boolean`                              | `true`           | Show auto submit button                      |
-| `submitLabel`      | `string`                               | `"Submit"`       | Submit button text                           |
-| `submitClassName`  | `string`                               | -                | Submit button styling                        |
-| `registry`         | `FieldRegistry`                        | -                | Custom field registry                        |
-| `className`        | `string`                               | -                | Form container class                         |
+| Property           | Type                                   | Default          | Description                                            |
+| ------------------ | -------------------------------------- | ---------------- | ------------------------------------------------------ |
+| `schema`           | `BuzzFormSchema`                       | -                | Schema from `createSchema()`                           |
+| `fields`           | `Field[]`                              | -                | Override fields (if not using schema.fields)           |
+| `defaultValues`    | `object \| function`                   | -                | Initial form values                                    |
+| `onSubmit`         | `(data) => void`                       | -                | Submit handler                                         |
+| `mode`             | `'onChange' \| 'onBlur' \| 'onSubmit'` | Provider default | Validation mode                                        |
+| `adapter`          | `AdapterFactory`                       | Provider default | Form library adapter                                   |
+| `settings`         | `FormSettings`                         | -                | Form behavior settings                                 |
+| `disabled`         | `boolean`                              | `false`          | Disable entire form                                    |
+| `requireDirty`     | `boolean`                              | `false`          | Only allow submit when dirty                           |
+| `disableIfInvalid` | `boolean`                              | `false`          | Disable submit until valid                             |
+| `showSubmit`       | `boolean`                              | `true`           | Show auto submit button                                |
+| `submitLabel`      | `string`                               | `"Submit"`       | Submit button text                                     |
+| `submitClassName`  | `string`                               | -                | Submit button styling                                  |
+| `output`           | `OutputConfig`                         | -                | Output data shape ([docs](/docs/output-configuration)) |
+| `registry`         | `FieldRegistry`                        | -                | Custom field registry                                  |
+| `className`        | `string`                               | -                | Form container class                                   |
 
 ### Ref Access
 

@@ -50,13 +50,19 @@ type SerializableTabShape = {
 } & Record<string, unknown>;
 
 type SerializableFieldShape =
-  | ({ type: SerializableNamedLeafType; name: string } & Record<string, unknown>)
+  | ({ type: SerializableNamedLeafType; name: string } & Record<
+      string,
+      unknown
+    >)
   | ({
       type: "group" | "array";
       name: string;
       fields: SerializableFieldShape[];
     } & Record<string, unknown>)
-  | ({ type: "row"; fields: SerializableFieldShape[] } & Record<string, unknown>)
+  | ({ type: "row"; fields: SerializableFieldShape[] } & Record<
+      string,
+      unknown
+    >)
   | ({
       type: "collapsible";
       label: string;
@@ -73,65 +79,66 @@ function createNamedFieldSchema<const TType extends string>(type: TType) {
     .catchall(JsonValueSchema);
 }
 
-export const SerializableFieldSchema: z.ZodType<SerializableFieldShape> = z.lazy(() =>
-  z.discriminatedUnion("type", [
-    createNamedFieldSchema("text"),
-    createNamedFieldSchema("email"),
-    createNamedFieldSchema("password"),
-    createNamedFieldSchema("textarea"),
-    createNamedFieldSchema("number"),
-    createNamedFieldSchema("date"),
-    createNamedFieldSchema("datetime"),
-    createNamedFieldSchema("select"),
-    createNamedFieldSchema("checkbox-group"),
-    createNamedFieldSchema("checkbox"),
-    createNamedFieldSchema("switch"),
-    createNamedFieldSchema("radio"),
-    createNamedFieldSchema("tags"),
-    createNamedFieldSchema("upload"),
-    z
-      .object({
-        type: z.literal("group"),
-        name: z.string(),
-        fields: z.array(SerializableFieldSchema),
-      })
-      .catchall(JsonValueSchema),
-    z
-      .object({
-        type: z.literal("array"),
-        name: z.string(),
-        fields: z.array(SerializableFieldSchema),
-      })
-      .catchall(JsonValueSchema),
-    z
-      .object({
-        type: z.literal("row"),
-        fields: z.array(SerializableFieldSchema),
-      })
-      .catchall(JsonValueSchema),
-    z
-      .object({
-        type: z.literal("collapsible"),
-        label: z.string(),
-        fields: z.array(SerializableFieldSchema),
-      })
-      .catchall(JsonValueSchema),
-    z
-      .object({
-        type: z.literal("tabs"),
-        tabs: z.array(
-          z
-            .object({
-              name: z.string().optional(),
-              label: z.string(),
-              fields: z.array(SerializableFieldSchema),
-            })
-            .catchall(JsonValueSchema),
-        ),
-      })
-      .catchall(JsonValueSchema),
-  ]),
-);
+export const SerializableFieldSchema: z.ZodType<SerializableFieldShape> =
+  z.lazy(() =>
+    z.discriminatedUnion("type", [
+      createNamedFieldSchema("text"),
+      createNamedFieldSchema("email"),
+      createNamedFieldSchema("password"),
+      createNamedFieldSchema("textarea"),
+      createNamedFieldSchema("number"),
+      createNamedFieldSchema("date"),
+      createNamedFieldSchema("datetime"),
+      createNamedFieldSchema("select"),
+      createNamedFieldSchema("checkbox-group"),
+      createNamedFieldSchema("checkbox"),
+      createNamedFieldSchema("switch"),
+      createNamedFieldSchema("radio"),
+      createNamedFieldSchema("tags"),
+      createNamedFieldSchema("upload"),
+      z
+        .object({
+          type: z.literal("group"),
+          name: z.string(),
+          fields: z.array(SerializableFieldSchema),
+        })
+        .catchall(JsonValueSchema),
+      z
+        .object({
+          type: z.literal("array"),
+          name: z.string(),
+          fields: z.array(SerializableFieldSchema),
+        })
+        .catchall(JsonValueSchema),
+      z
+        .object({
+          type: z.literal("row"),
+          fields: z.array(SerializableFieldSchema),
+        })
+        .catchall(JsonValueSchema),
+      z
+        .object({
+          type: z.literal("collapsible"),
+          label: z.string(),
+          fields: z.array(SerializableFieldSchema),
+        })
+        .catchall(JsonValueSchema),
+      z
+        .object({
+          type: z.literal("tabs"),
+          tabs: z.array(
+            z
+              .object({
+                name: z.string().optional(),
+                label: z.string(),
+                fields: z.array(SerializableFieldSchema),
+              })
+              .catchall(JsonValueSchema),
+          ),
+        })
+        .catchall(JsonValueSchema),
+    ]),
+  );
 
 export const NodeDocumentSchema = z.object({
   id: z.string().optional(),
@@ -142,10 +149,22 @@ export const NodeDocumentSchema = z.object({
   tabChildren: z.record(z.string(), z.array(z.string())).optional(),
 });
 
-export const OutputConfigSchema = z.object({
-  type: z.enum(["default", "path"]),
-  delimiter: z.enum([".", "-", "_"]).optional(),
-}).optional();
+const RawOutputConfigSchema = z
+  .object({
+    type: z.enum(["default", "path"]),
+    delimiter: z.enum([".", "-", "_"]).optional(),
+  })
+  .optional();
+
+export const OutputConfigSchema = RawOutputConfigSchema.transform(
+  (val): { type: "path"; delimiter?: "." | "-" | "_" } | undefined => {
+    if (!val || val.type === "default") return undefined;
+    return {
+      type: val.type,
+      ...(val.delimiter ? { delimiter: val.delimiter } : {}),
+    };
+  },
+);
 
 export const BuilderDocumentSchema = z.object({
   schemaVersion: z.literal(CURRENT_BUILDER_DOCUMENT_SCHEMA_VERSION),

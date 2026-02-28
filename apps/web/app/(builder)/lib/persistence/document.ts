@@ -44,7 +44,8 @@ export function toBuilderDocument(
 
   return {
     schemaVersion: CURRENT_BUILDER_DOCUMENT_SCHEMA_VERSION,
-    builderVersion: normalizeString(options.builderVersion) ?? CURRENT_BUILDER_VERSION,
+    builderVersion:
+      normalizeString(options.builderVersion) ?? CURRENT_BUILDER_VERSION,
     formId: state.formId,
     formName: state.formName,
     outputConfig: state.outputConfig,
@@ -176,7 +177,9 @@ function toStateNodes(
       parentId: node.parentId,
       parentSlot: node.parentSlot,
       children: [...node.children],
-      ...(node.tabChildren ? { tabChildren: cloneTabChildren(node.tabChildren) } : {}),
+      ...(node.tabChildren
+        ? { tabChildren: cloneTabChildren(node.tabChildren) }
+        : {}),
     };
   }
 
@@ -214,7 +217,9 @@ function toBuilderDocumentType(parsed: ParsedBuilderDocument): BuilderDocument {
       parentId: node.parentId,
       parentSlot: node.parentSlot,
       children: [...node.children],
-      ...(node.tabChildren ? { tabChildren: cloneTabChildren(node.tabChildren) } : {}),
+      ...(node.tabChildren
+        ? { tabChildren: cloneTabChildren(node.tabChildren) }
+        : {}),
     };
   }
 
@@ -223,6 +228,7 @@ function toBuilderDocumentType(parsed: ParsedBuilderDocument): BuilderDocument {
     builderVersion: parsed.builderVersion,
     formId: parsed.formId,
     formName: parsed.formName,
+    outputConfig: parsed.outputConfig,
     nodes,
     rootIds: [...parsed.rootIds],
     createdAt: parsed.createdAt,

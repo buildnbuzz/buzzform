@@ -16,6 +16,7 @@
     "...fields",
     "---Reference---",
     "form-component",
-    "configuration"
+    "configuration",
+    "output-configuration"
   ]
 }
