@@ -145,7 +145,7 @@ export interface FormConfig {
    * Default output configuration for all forms.
    * Controls the shape of data passed to onSubmit.
    * Can be overridden per-form via UseFormOptions.
-   * @default { type: 'flat' }
+   * @default undefined (hierarchical JSON)
    */
   output?: OutputConfig;
 }
@@ -221,14 +221,13 @@ export interface UseFormOptions<TData = Record<string, unknown>> {
   // OUTPUT
   // =========================================================================
 
-  /**
-   * Output configuration for this form.
-   * Overrides the provider-level output config.
-   * Controls the shape of data passed to onSubmit.
-   * @default Uses provider config, or { type: 'flat' }
-   */
-  output?: OutputConfig;
-
+     /**
+     * Output configuration for this form.
+     * Overrides the provider-level output config.
+     * Controls the shape of data passed to onSubmit.
+     * @default undefined (defaults to hierarchical JSON if not specified here or in Provider)
+     */
+    output?: OutputConfig;
   // =========================================================================
   // BEHAVIOR
   // =========================================================================

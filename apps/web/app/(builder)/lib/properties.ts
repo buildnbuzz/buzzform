@@ -297,7 +297,9 @@ export function unflattenFormValues(
       current = current[part] as Record<string, unknown>;
     }
 
-    current[parts[parts.length - 1]] = values[key];
+    const value = values[key];
+    current[parts[parts.length - 1]] =
+      value && typeof value === "object" ? deepClone(value) : value;
   }
 
   return result;

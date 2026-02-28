@@ -41,6 +41,7 @@ export function ExportSheet() {
   const rootIds = useBuilderStore((state) => state.rootIds);
   const formId = useBuilderStore((state) => state.formId);
   const formName = useBuilderStore((state) => state.formName);
+  const outputConfig = useBuilderStore((state) => state.outputConfig);
 
   React.useEffect(() => {
     if (!open) return;
@@ -65,8 +66,8 @@ export function ExportSheet() {
 
   const componentCode = React.useMemo(() => {
     if (!open) return "";
-    return generateComponentCode(nodes, rootIds, formName);
-  }, [open, nodes, rootIds, formName]);
+    return generateComponentCode(nodes, rootIds, formName, outputConfig);
+  }, [open, nodes, rootIds, formName, outputConfig]);
 
   const schemaJson = React.useMemo(() => {
     if (!open) return "";

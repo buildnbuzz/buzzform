@@ -3,20 +3,14 @@
 import { useBuilderStore } from "../../lib/store";
 import { getRegistryEntry } from "../../lib/registry";
 import { PropertiesForm } from "./properties-form";
+import { GlobalSettingsForm } from "./global-settings-form";
 import {
   Sidebar,
   SidebarContent,
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Settings04Icon } from "@hugeicons/core-free-icons";
+import { Settings01Icon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { useEffect } from "react";
 
@@ -60,11 +54,11 @@ export function PropertiesPanel() {
         ) : (
           <div className="flex items-center gap-2 w-full">
             <HugeiconsIcon
-              icon={Settings04Icon}
+              icon={Settings01Icon}
               size={20}
               className="text-muted-foreground"
             />
-            <span className="font-semibold text-sm">Properties</span>
+            <span className="font-semibold text-sm">Form Settings</span>
           </div>
         )}
       </SidebarHeader>
@@ -72,19 +66,7 @@ export function PropertiesPanel() {
         {selectedNode && config ? (
           <PropertiesForm node={selectedNode} config={config} />
         ) : (
-          <div className="h-full flex flex-col items-center justify-center p-4">
-            <Empty className="border-none w-full">
-              <EmptyHeader>
-                <EmptyMedia variant="icon">
-                  <HugeiconsIcon icon={Settings04Icon} />
-                </EmptyMedia>
-                <EmptyTitle>No Field Selected</EmptyTitle>
-                <EmptyDescription>
-                  Select a field on the canvas to edit its properties.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          </div>
+          <GlobalSettingsForm />
         )}
       </SidebarContent>
     </Sidebar>

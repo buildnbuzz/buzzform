@@ -49,6 +49,7 @@ export function BuilderFormProvider({
 }: BuilderFormProviderProps) {
   const nodes = useBuilderStore((s) => s.nodes);
   const rootIds = useBuilderStore((s) => s.rootIds);
+  const outputConfig = useBuilderStore((s) => s.outputConfig);
 
   // Memoize derivation pipeline to prevent recomputation on unrelated store updates
   const fields = React.useMemo(
@@ -76,6 +77,7 @@ export function BuilderFormProvider({
         fields={fields}
         defaultValues={defaultValues}
         onSubmit={onSubmit ?? (() => {})}
+        output={outputConfig}
         mode="onBlur"
         showSubmit={false}
       >

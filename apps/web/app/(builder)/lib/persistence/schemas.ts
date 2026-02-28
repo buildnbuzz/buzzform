@@ -142,11 +142,17 @@ export const NodeDocumentSchema = z.object({
   tabChildren: z.record(z.string(), z.array(z.string())).optional(),
 });
 
+export const OutputConfigSchema = z.object({
+  type: z.enum(["default", "path"]),
+  delimiter: z.enum([".", "-", "_"]).optional(),
+}).optional();
+
 export const BuilderDocumentSchema = z.object({
   schemaVersion: z.literal(CURRENT_BUILDER_DOCUMENT_SCHEMA_VERSION),
   builderVersion: z.string(),
   formId: z.string(),
   formName: z.string(),
+  outputConfig: OutputConfigSchema,
   nodes: z.record(z.string(), NodeDocumentSchema),
   rootIds: z.array(z.string()),
   createdAt: z.number(),

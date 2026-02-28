@@ -16,7 +16,7 @@ import {
   getNodeChildren,
   getTabSlotKeys,
 } from "./node-children";
-import type { TabsField } from "@buildnbuzz/buzzform";
+import type { TabsField, OutputConfig } from "@buildnbuzz/buzzform";
 
 type SaveStatus = "idle" | "saving" | "saved";
 
@@ -36,6 +36,7 @@ type BuilderState = {
   viewport: Viewport;
   formId: string;
   formName: string;
+  outputConfig?: OutputConfig;
   saveStatus: SaveStatus;
   lastSavedAt: number | null;
 };
@@ -55,6 +56,9 @@ type BuilderActions = {
   ) => void;
   selectNode: (id: string | null) => void;
   updateNode: (id: string, updates: Partial<Node["field"]>) => void;
+  updateFormSettings: (
+    updates: Partial<Pick<BuilderState, "outputConfig">>,
+  ) => void;
   removeNode: (id: string) => void;
   duplicateNode: (id: string) => void;
   setActiveTab: (nodeId: string, slot: string) => void;
@@ -65,7 +69,12 @@ type BuilderActions = {
   setZoom: (zoom: number) => void;
   setViewport: (viewport: Viewport) => void;
   clearState: () => void;
-  loadDocumentState: (state: Pick<BuilderState, "nodes" | "rootIds" | "formId" | "formName">) => void;
+  loadDocumentState: (
+    state: Pick<
+      BuilderState,
+      "nodes" | "rootIds" | "formId" | "formName" | "outputConfig"
+    >,
+  ) => void;
   setSaveStatus: (status: SaveStatus, timestamp?: number) => void;
   setFormName: (name: string) => void;
   setFormId: (id: string) => void;
@@ -73,10 +82,10 @@ type BuilderActions = {
 
 type Store = BuilderState & BuilderActions;
 
-type TrackedState = Pick<BuilderState, "nodes" | "rootIds">;
+type TrackedState = Pick<BuilderState, "nodes" | "rootIds" | "outputConfig">;
 type PersistableDocumentState = Pick<
   BuilderState,
-  "nodes" | "rootIds" | "formId" | "formName"
+  "nodes" | "rootIds" | "formId" | "formName" | "outputConfig"
 >;
 
 const INITIAL_STATE: BuilderState = {
@@ -91,6 +100,7 @@ const INITIAL_STATE: BuilderState = {
   viewport: "desktop",
   formId: nanoid(),
   formName: "Untitled form",
+  outputConfig: undefined,
   saveStatus: "idle",
   lastSavedAt: null,
 };
@@ -199,7 +209,9 @@ function syncTabsChildren(
     const nextName = typeof tab.name === "string" ? tab.name.trim() : "";
 
     let sourceIndex = -1;
-    const nameMatchIndex = nextName ? previousNameToIndex.get(nextName) : undefined;
+    const nameMatchIndex = nextName
+      ? previousNameToIndex.get(nextName)
+      : undefined;
 
     if (
       typeof nameMatchIndex === "number" &&
@@ -259,7 +271,10 @@ function syncTabsChildren(
   }
 }
 
-function resolveDefaultTabIndex(tabs: TabsField["tabs"], defaultTab?: string | number) {
+function resolveDefaultTabIndex(
+  tabs: TabsField["tabs"],
+  defaultTab?: string | number,
+) {
   if (tabs.length === 0) return -1;
 
   if (typeof defaultTab === "number") {
@@ -282,7 +297,10 @@ function sanitizeTabsDefaultTab(field: TabsField) {
     return;
   }
 
-  const currentDefaultIndex = resolveDefaultTabIndex(tabs, field.ui?.defaultTab);
+  const currentDefaultIndex = resolveDefaultTabIndex(
+    tabs,
+    field.ui?.defaultTab,
+  );
   const isCurrentValid =
     currentDefaultIndex >= 0 &&
     currentDefaultIndex < tabs.length &&
@@ -413,6 +431,14 @@ export const useBuilderStore = create<Store>()(
               sanitizeFieldDefaults(
                 node.field as unknown as Record<string, unknown>,
               );
+            }
+          });
+        },
+
+        updateFormSettings: (updates) => {
+          set((state) => {
+            if ("outputConfig" in updates) {
+              state.outputConfig = updates.outputConfig;
             }
           });
         },
@@ -575,6 +601,7 @@ export const useBuilderStore = create<Store>()(
             state.rootIds = [...documentState.rootIds];
             state.formId = documentState.formId;
             state.formName = documentState.formName;
+            state.outputConfig = documentState.outputConfig;
             state.saveStatus = "saved";
             state.lastSavedAt = Date.now();
           });
@@ -593,10 +620,12 @@ export const useBuilderStore = create<Store>()(
         partialize: (state): TrackedState => ({
           nodes: state.nodes,
           rootIds: state.rootIds,
+          outputConfig: state.outputConfig,
         }),
         equality: (pastState, currentState) =>
           pastState.nodes === currentState.nodes &&
-          pastState.rootIds === currentState.rootIds,
+          pastState.rootIds === currentState.rootIds &&
+          pastState.outputConfig === currentState.outputConfig,
         limit: 50,
         handleSet: (handleSet) => (pastState) => {
           if (!pendingState) {
@@ -625,6 +654,7 @@ export const useBuilderStore = create<Store>()(
         viewport: state.viewport,
         formId: state.formId,
         formName: state.formName,
+        outputConfig: state.outputConfig,
       }),
       version: 2,
       migrate: (persistedState, version) => {
@@ -725,7 +755,8 @@ useBuilderStore.subscribe((state, prevState) => {
     state.nodes === prevState.nodes &&
     state.rootIds === prevState.rootIds &&
     state.formName === prevState.formName &&
-    state.formId === prevState.formId
+    state.formId === prevState.formId &&
+    state.outputConfig === prevState.outputConfig
   ) {
     return;
   }
@@ -735,6 +766,7 @@ useBuilderStore.subscribe((state, prevState) => {
     rootIds: state.rootIds,
     formId: state.formId,
     formName: state.formName,
+    outputConfig: state.outputConfig,
   };
 
   if (shouldSkipAutosave(snapshot, prevState)) {
@@ -779,7 +811,10 @@ function shouldSkipAutosave(
   return previousEmpty || isNewFormSession;
 }
 
-function isDocumentEmpty(nodes: Record<string, Node>, rootIds: string[]): boolean {
+function isDocumentEmpty(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+): boolean {
   return rootIds.length === 0 && Object.keys(nodes).length === 0;
 }
 
