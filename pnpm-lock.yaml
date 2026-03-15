@@ -57,6 +57,12 @@ importers:
       '@buildnbuzz/buzzform':
         specifier: workspace:*
         version: link:../../packages/buzzform
+      '@buildnbuzz/form-core':
+        specifier: workspace:*
+        version: link:../../packages/form-core
+      '@buildnbuzz/form-react':
+        specifier: workspace:*
+        version: link:../../packages/form-react
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
