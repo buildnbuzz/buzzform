@@ -4,9 +4,18 @@
   "type": "module",
   "private": true,
   "exports": {
-    "./base": "./base.js",
-    "./next-js": "./next.js",
-    "./react-internal": "./react-internal.js"
+    "./base": {
+      "types": "./base.d.ts",
+      "default": "./base.js"
+    },
+    "./next-js": {
+      "types": "./next.d.ts",
+      "default": "./next.js"
+    },
+    "./react-internal": {
+      "types": "./react-internal.d.ts",
+      "default": "./react-internal.js"
+    }
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
