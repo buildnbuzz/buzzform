@@ -5,3 +5,4 @@ export * from "./utils/path";
 export * from "./utils/walk";
 export * from "./utils/visibility";
 export * from "./utils/defaults";
+export * from "./utils/dependencies";
