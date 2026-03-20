@@ -5,6 +5,7 @@ import {
   deriveFieldChecks,
   runChecks,
   collectFieldValidationChecks,
+  validateFields,
 } from "./index";
 
 // ============================================================================
@@ -100,5 +101,241 @@ describe("collectFieldValidationChecks", () => {
     });
 
     expect(checks.map((c) => c.type)).toEqual(["max", "min"]);
+  });
+
+  it("does not include derived checks when disabled", () => {
+    const field = {
+      type: "text" as const,
+      name: "title",
+      required: true,
+      minLength: 2,
+      validate: {
+        onSubmit: {
+          checks: [{ type: "maxLength", message: "Too long", args: { max: 5 } }],
+        },
+      },
+    };
+
+    const checks = collectFieldValidationChecks(field, "submit", {
+      includeDerived: false,
+    });
+
+    expect(checks.map((c) => c.type)).toEqual(["maxLength"]);
+  });
+
+  it("avoids duplicating checks by type", () => {
+    const field = {
+      type: "text" as const,
+      name: "title",
+      required: true,
+      validate: {
+        onSubmit: {
+          checks: [{ type: "required", message: "Custom required" }],
+        },
+      },
+    };
+
+    const checks = collectFieldValidationChecks(field, "submit", {
+      includeDerived: true,
+    });
+
+    expect(checks.map((c) => c.type)).toEqual(["required"]);
+    expect(checks[0]?.message).toBe("Custom required");
+  });
+});
+
+// ============================================================================
+// Schema validation
+// ============================================================================
+
+describe("validateFields", () => {
+  it("validates derived required checks", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "title",
+        required: true,
+      },
+    ];
+
+    const result = await validateFields(fields, { title: "" }, { run: "blur" });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/title"]).toBe("This field is required.");
+  });
+
+  it("validates derived min/max + pattern for text", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "code",
+        minLength: 3,
+        maxLength: 5,
+        pattern: "^[A-Z]+$",
+      },
+    ];
+
+    const tooShort = await validateFields(
+      fields,
+      { code: "A" },
+      { run: "blur" },
+    );
+    expect(tooShort.errorsByPath["/code"]).toBe(
+      "Must be at least 3 characters.",
+    );
+
+    const tooLong = await validateFields(
+      fields,
+      { code: "ABCDEF" },
+      { run: "blur" },
+    );
+    expect(tooLong.errorsByPath["/code"]).toBe(
+      "Must be at most 5 characters.",
+    );
+
+    const invalidPattern = await validateFields(
+      fields,
+      { code: "AbC" },
+      { run: "blur" },
+    );
+    expect(invalidPattern.errorsByPath["/code"]).toBe("Invalid format.");
+  });
+
+  it("validates derived min/max for number", async () => {
+    const fields = [
+      {
+        type: "number" as const,
+        name: "age",
+        min: 18,
+        max: 65,
+      },
+    ];
+
+    const tooLow = await validateFields(fields, { age: 16 }, { run: "blur" });
+    expect(tooLow.errorsByPath["/age"]).toBe("Must be at least 18.");
+
+    const tooHigh = await validateFields(fields, { age: 70 }, { run: "blur" });
+    expect(tooHigh.errorsByPath["/age"]).toBe("Must be at most 65.");
+  });
+
+  it("validates derived min/max items for array", async () => {
+    const fields = [
+      {
+        type: "array" as const,
+        name: "tags",
+        minItems: 2,
+        maxItems: 3,
+        fields: [
+          {
+            type: "text" as const,
+            name: "label",
+          },
+        ],
+      },
+    ];
+
+    const tooFew = await validateFields(fields, { tags: ["a"] }, { run: "blur" });
+    expect(tooFew.errorsByPath["/tags"]).toBe("Select at least 2.");
+
+    const tooMany = await validateFields(
+      fields,
+      { tags: ["a", "b", "c", "d"] },
+      { run: "blur" },
+    );
+    expect(tooMany.errorsByPath["/tags"]).toBe("Select at most 3.");
+  });
+
+  it("skips fields gated by condition", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "secret",
+        required: true,
+        condition: { $data: "/show", eq: true },
+      },
+    ];
+
+    const result = await validateFields(fields, { show: false, secret: "" });
+
+    expect(result.valid).toBe(true);
+  });
+
+  it("does not include derived checks on submit by default", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "title",
+        required: true,
+      },
+    ];
+
+    const result = await validateFields(fields, { title: "" }, { run: "submit" });
+
+    expect(result.valid).toBe(true);
+    expect(result.errorsByPath["/title"]).toBeUndefined();
+  });
+
+  it("includes derived checks when derivedRun matches run", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "title",
+        required: true,
+      },
+    ];
+
+    const result = await validateFields(fields, { title: "" }, {
+      run: "submit",
+      derivedRun: "submit",
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/title"]).toBe("This field is required.");
+  });
+
+  it("includes derived checks when includeDerived is true", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "title",
+        required: true,
+      },
+    ];
+
+    const result = await validateFields(fields, { title: "" }, {
+      run: "submit",
+      includeDerived: true,
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/title"]).toBe("This field is required.");
+  });
+
+  it("validates array item fields when present", async () => {
+    const fields = [
+      {
+        type: "array" as const,
+        name: "items",
+        fields: [
+          {
+            type: "text" as const,
+            name: "label",
+            required: true,
+          },
+        ],
+      },
+    ];
+
+    const result = await validateFields(
+      fields,
+      { items: [{ label: "" }, { label: "ok" }] },
+      { run: "blur" },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/items/0/label"]).toBe(
+      "This field is required.",
+    );
+    expect(result.errorsByPath["/items/1/label"]).toBeUndefined();
   });
 });

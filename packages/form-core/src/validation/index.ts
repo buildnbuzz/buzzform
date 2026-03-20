@@ -7,6 +7,8 @@ import type {
   ValidatorArgsMap,
 } from "../types";
 import { resolveDynamicValue } from "../dynamic";
+import { evaluateVisibility } from "../conditions";
+import { escapePointer, getByPath } from "../utils/path";
 
 // ============================================================================
 // 1. VALIDATOR REGISTRY
@@ -168,6 +170,28 @@ export interface ValidationContext {
 
 export type ValidationRun = "change" | "blur" | "submit";
 
+/** Result of a schema validation run. */
+export interface ValidationResult {
+  /** True when no errors were found. */
+  valid: boolean;
+  /** Error messages keyed by JSON Pointer path. */
+  errorsByPath: Record<string, string>;
+}
+
+/** Options for validating a field schema. */
+export interface ValidateFieldsOptions {
+  /** Which validation group to run (defaults to submit). */
+  run?: ValidationRun;
+  /** When to include derived checks (defaults to blur). */
+  derivedRun?: ValidationRun;
+  /** Optional external context data. */
+  contextData?: Record<string, unknown>;
+  /** Custom validators registry. */
+  validators?: ValidationRegistry;
+  /** Whether to include built-in derived checks. */
+  includeDerived?: boolean;
+}
+
 export function shouldSkipCheck(check: ValidationCheck, value: unknown): boolean {
   const isEmpty = value === undefined || value === null || value === "";
   if (!isEmpty) return false;
@@ -214,6 +238,104 @@ export function collectFieldValidationChecks(
   }
 
   return merged;
+}
+
+function joinPointer(base: string, name: string): string {
+  const segment = escapePointer(name);
+  return base ? `${base}/${segment}` : `/${segment}`;
+}
+
+/**
+ * Validate a field schema against form data.
+ */
+export async function validateFields(
+  fields: readonly Field[],
+  formData: Record<string, unknown>,
+  options?: ValidateFieldsOptions,
+): Promise<ValidationResult> {
+  const errorsByPath: Record<string, string> = {};
+  const run = options?.run ?? "submit";
+  const derivedRun = options?.derivedRun ?? "blur";
+  const includeDerived = options?.includeDerived ?? derivedRun === run;
+  const ctx: ValidationContext = {
+    formData,
+    contextData: options?.contextData,
+  };
+
+  const visit = async (field: Field, basePath: string): Promise<void> => {
+    if (!evaluateVisibility(field.condition, ctx)) return;
+
+    if (hasFieldName(field)) {
+      const fieldPath = joinPointer(basePath, field.name);
+      const checks = collectFieldValidationChecks(field, run, {
+        includeDerived,
+      });
+
+      if (checks.length > 0) {
+        const value = getByPath(formData, fieldPath);
+        const message = await runChecks(
+          checks,
+          value,
+          ctx,
+          options?.validators,
+        );
+        if (message) errorsByPath[fieldPath] = message;
+      }
+
+      if (field.type === "group") {
+        for (const child of field.fields) {
+          await visit(child, fieldPath);
+        }
+        return;
+      }
+
+      if (field.type === "array") {
+        const value = getByPath(formData, fieldPath);
+        if (Array.isArray(value)) {
+          for (let i = 0; i < value.length; i += 1) {
+            const itemPath = `${fieldPath}/${i}`;
+            for (const child of field.fields) {
+              await visit(child, itemPath);
+            }
+          }
+        }
+        return;
+      }
+
+      return;
+    }
+
+    switch (field.type) {
+      case "row":
+      case "collapsible": {
+        for (const child of field.fields) {
+          await visit(child, basePath);
+        }
+        break;
+      }
+
+      case "tabs": {
+        for (const tab of field.tabs) {
+          for (const child of tab.fields) {
+            await visit(child, basePath);
+          }
+        }
+        break;
+      }
+
+      default:
+        break;
+    }
+  };
+
+  for (const field of fields) {
+    await visit(field, "");
+  }
+
+  return {
+    valid: Object.keys(errorsByPath).length === 0,
+    errorsByPath,
+  };
 }
 
 export async function runChecks(
