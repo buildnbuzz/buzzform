@@ -4,6 +4,8 @@ import sharedConfig from "../../vitest.shared";
 export default mergeConfig(
   sharedConfig,
   defineConfig({
-    // Add any package-specific vitest configuration here
+    test: {
+      include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    },
   }),
 );
