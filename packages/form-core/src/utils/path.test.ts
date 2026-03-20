@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getByPath } from "./path";
+import { getByPath, setByPath, escapePointer } from "./path";
 
 describe("getByPath", () => {
   it("returns root object for empty pointer", () => {
@@ -26,5 +26,18 @@ describe("getByPath", () => {
   it("unescapes JSON Pointer tokens", () => {
     const obj = { "a/b": { "c~d": 5 } };
     expect(getByPath(obj, "/a~1b/c~0d")).toBe(5);
+  });
+
+  it("sets values by JSON Pointer paths", () => {
+    const obj: Record<string, unknown> = {};
+    setByPath(obj, "/user/name", "Ada");
+    setByPath(obj, "/user/age", 42);
+
+    expect(obj).toEqual({ user: { name: "Ada", age: 42 } });
+  });
+
+  it("escapes JSON Pointer segments", () => {
+    expect(escapePointer("a/b")).toBe("a~1b");
+    expect(escapePointer("c~d")).toBe("c~0d");
   });
 });

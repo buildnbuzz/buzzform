@@ -1,4 +1,5 @@
 import type { Field, FieldOption } from "../types";
+import { escapePointer } from "./path";
 
 export interface WalkContext {
   /** JSON Pointer to the current field. */
@@ -12,10 +13,6 @@ export type WalkVisitor = (field: Field, ctx: WalkContext) => void;
 function joinPointer(base: string, segment: string): string {
   if (base === "") return `/${segment}`;
   return `${base}/${segment}`;
-}
-
-function escapePointer(segment: string): string {
-  return segment.replace(/~/g, "~0").replace(/\//g, "~1");
 }
 
 function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
@@ -69,7 +66,7 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
 /**
  * Walk all fields in a schema in depth-first order.
  */
-export function walkFields(fields: Field[], visitor: WalkVisitor): void {
+export function walkFields(fields: readonly Field[], visitor: WalkVisitor): void {
   for (const field of fields) {
     const path = "";
     walkField(field, { path, parents: [] }, visitor);
