@@ -94,7 +94,7 @@ export interface ValidatorArgsMap {
   required: Record<string, never>;
   minLength: { min?: number | DynamicNumber };
   maxLength: { max?: number | DynamicNumber };
-  pattern: { pattern?: RegExp | string | DynamicValue<RegExp | string> };
+  pattern: { pattern?: string };
   min: { min?: number | DynamicNumber };
   max: { max?: number | DynamicNumber };
   minItems: { min?: number | DynamicNumber };
@@ -220,16 +220,32 @@ export interface BaseField<TValue = unknown> {
 /** Text input field. */
 export interface TextField extends BaseField<string> {
   type: "text";
+  /** Minimum character length. */
+  minLength?: number;
+  /** Maximum character length. */
+  maxLength?: number;
+  /** Regex pattern the value must match. */
+  pattern?: string;
 }
 
 /** Multi-line text input field. */
 export interface TextareaField extends BaseField<string> {
   type: "textarea";
+  /** Minimum character length. */
+  minLength?: number;
+  /** Maximum character length. */
+  maxLength?: number;
+  /** Regex pattern the value must match. */
+  pattern?: string;
 }
 
 /** Numeric input field. */
 export interface NumberField extends BaseField<number> {
   type: "number";
+  /** Minimum numeric value. */
+  min?: number;
+  /** Maximum numeric value. */
+  max?: number;
 }
 
 /** Select input field. */
@@ -276,6 +292,10 @@ export interface ArrayField extends BaseField<unknown[]> {
   minRows?: number;
   /** Maximum items. */
   maxRows?: number;
+  /** Minimum item count (validation). */
+  minItems?: number;
+  /** Maximum item count (validation). */
+  maxItems?: number;
 }
 
 /** Option for select and radio fields. */
