@@ -385,6 +385,8 @@ export type Field = DataField | LayoutField;
 export interface FormSchema {
   /** Field list. */
   fields: Field[];
+  /** Form-level validation rules. */
+  validate?: ValidationConfig;
   /** Optional schema metadata. */
   meta?: Record<string, unknown>;
 }

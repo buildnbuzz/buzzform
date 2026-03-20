@@ -8,6 +8,8 @@ import {
   validateFields,
   validateField,
   validatePath,
+  validateSchema,
+  FORM_ERROR_PATH,
 } from "./index";
 
 // ============================================================================
@@ -461,5 +463,81 @@ describe("validatePath", () => {
     });
 
     expect(result.valid).toBe(true);
+  });
+});
+
+// ============================================================================
+// Schema-level validation
+// ============================================================================
+
+describe("validateSchema", () => {
+  it("runs form-level checks for the requested run", async () => {
+    const schema = {
+      fields: [],
+      validate: {
+        onBlur: {
+          checks: [{ type: "customFail", message: "Form invalid" }],
+        },
+      },
+    };
+
+    const result = await validateSchema(schema, {}, {
+      run: "blur",
+      validators: {
+        customFail: () => false,
+      },
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath[FORM_ERROR_PATH]).toBe("Form invalid");
+  });
+
+  it("does not run form-level checks for other runs", async () => {
+    const schema = {
+      fields: [],
+      validate: {
+        onSubmit: {
+          checks: [{ type: "customFail", message: "Form invalid" }],
+        },
+      },
+    };
+
+    const result = await validateSchema(schema, {}, {
+      run: "blur",
+      validators: {
+        customFail: () => false,
+      },
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.errorsByPath[FORM_ERROR_PATH]).toBeUndefined();
+  });
+
+  it("combines field errors with form-level errors", async () => {
+    const schema = {
+      fields: [
+        {
+          type: "text" as const,
+          name: "title",
+          required: true,
+        },
+      ],
+      validate: {
+        onBlur: {
+          checks: [{ type: "customFail", message: "Form invalid" }],
+        },
+      },
+    };
+
+    const result = await validateSchema(schema, { title: "" }, {
+      run: "blur",
+      validators: {
+        customFail: () => false,
+      },
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/title"]).toBe("This field is required.");
+    expect(result.errorsByPath[FORM_ERROR_PATH]).toBe("Form invalid");
   });
 });

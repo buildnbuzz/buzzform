@@ -1,6 +1,7 @@
 import type {
   Field,
   DataField,
+  FormSchema,
   ValidationCheck,
   ValidationConfig,
   ValidationGroup,
@@ -177,6 +178,9 @@ export interface ValidationResult {
   /** Error messages keyed by JSON Pointer path. */
   errorsByPath: Record<string, string>;
 }
+
+/** JSON Pointer key for form-level errors. */
+export const FORM_ERROR_PATH = "";
 
 /** Result of a single-field validation run. */
 export interface FieldValidationResult {
@@ -374,6 +378,35 @@ export async function validatePath(
   if (!field) return { valid: true };
 
   return validateField(field, path, formData, options);
+}
+
+/**
+ * Validate a full schema, including form-level checks.
+ */
+export async function validateSchema(
+  schema: FormSchema,
+  formData: Record<string, unknown>,
+  options?: ValidateFieldsOptions,
+): Promise<ValidationResult> {
+  const result = await validateFields(schema.fields, formData, options);
+
+  const run = options?.run ?? "submit";
+  const ctx: ValidationContext = {
+    formData,
+    contextData: options?.contextData,
+  };
+
+  const group = getValidationGroup(schema.validate, run);
+  const checks = group?.checks ?? [];
+  if (checks.length > 0) {
+    const message = await runChecks(checks, formData, ctx, options?.validators);
+    if (message) result.errorsByPath[FORM_ERROR_PATH] = message;
+  }
+
+  return {
+    valid: Object.keys(result.errorsByPath).length === 0,
+    errorsByPath: result.errorsByPath,
+  };
 }
 
 /**
