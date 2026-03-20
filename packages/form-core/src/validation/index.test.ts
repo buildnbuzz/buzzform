@@ -6,6 +6,8 @@ import {
   runChecks,
   collectFieldValidationChecks,
   validateFields,
+  validateField,
+  validatePath,
 } from "./index";
 
 // ============================================================================
@@ -337,5 +339,127 @@ describe("validateFields", () => {
       "This field is required.",
     );
     expect(result.errorsByPath["/items/1/label"]).toBeUndefined();
+  });
+});
+
+// ============================================================================
+// Single-field validation
+// ============================================================================
+
+describe("validateField", () => {
+  it("respects derivedRun default (blur)", async () => {
+    const field = {
+      type: "text" as const,
+      name: "title",
+      required: true,
+    };
+
+    const submitResult = await validateField(field, "/title", { title: "" }, {
+      run: "submit",
+    });
+    expect(submitResult.valid).toBe(true);
+
+    const blurResult = await validateField(field, "/title", { title: "" }, {
+      run: "blur",
+    });
+    expect(blurResult.valid).toBe(false);
+    expect(blurResult.error).toBe("This field is required.");
+  });
+
+  it("includes derived checks when includeDerived is true", async () => {
+    const field = {
+      type: "number" as const,
+      name: "age",
+      min: 18,
+    };
+
+    const result = await validateField(field, "/age", { age: 16 }, {
+      run: "submit",
+      includeDerived: true,
+    });
+
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("Must be at least 18.");
+  });
+});
+
+describe("validatePath", () => {
+  it("finds nested fields through groups, arrays, and layout", async () => {
+    const fields = [
+      {
+        type: "row" as const,
+        fields: [
+          {
+            type: "group" as const,
+            name: "profile",
+            fields: [
+              {
+                type: "array" as const,
+                name: "tags",
+                fields: [
+                  {
+                    type: "text" as const,
+                    name: "label",
+                    required: true,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    const result = await validatePath(
+      fields,
+      "/profile/tags/0/label",
+      { profile: { tags: [{ label: "" }] } },
+      { run: "blur" },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("This field is required.");
+  });
+
+  it("returns valid when path is not found", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "title",
+        required: true,
+      },
+    ];
+
+    const result = await validatePath(fields, "/missing", { title: "" }, {
+      run: "blur",
+    });
+
+    expect(result.valid).toBe(true);
+  });
+
+  it("skips validation when parent condition hides the field", async () => {
+    const fields = [
+      {
+        type: "group" as const,
+        name: "secret",
+        condition: { $data: "/show", eq: true },
+        fields: [
+          {
+            type: "text" as const,
+            name: "code",
+            required: true,
+          },
+        ],
+      },
+    ];
+
+    const result = await validatePath(fields, "/secret/code", {
+      show: false,
+      secret: { code: "" },
+    }, {
+      run: "blur",
+    });
+
+    expect(result.valid).toBe(true);
   });
 });

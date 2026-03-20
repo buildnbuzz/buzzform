@@ -178,6 +178,14 @@ export interface ValidationResult {
   errorsByPath: Record<string, string>;
 }
 
+/** Result of a single-field validation run. */
+export interface FieldValidationResult {
+  /** True when no error was found. */
+  valid: boolean;
+  /** Error message for the field, when invalid. */
+  error?: string;
+}
+
 /** Options for validating a field schema. */
 export interface ValidateFieldsOptions {
   /** Which validation group to run (defaults to submit). */
@@ -240,9 +248,132 @@ export function collectFieldValidationChecks(
   return merged;
 }
 
+/**
+ * Validate a single field against form data.
+ */
+export async function validateField(
+  field: Field,
+  path: string,
+  formData: Record<string, unknown>,
+  options?: ValidateFieldsOptions,
+): Promise<FieldValidationResult> {
+  const run = options?.run ?? "submit";
+  const derivedRun = options?.derivedRun ?? "blur";
+  const includeDerived = options?.includeDerived ?? derivedRun === run;
+  const ctx: ValidationContext = {
+    formData,
+    contextData: options?.contextData,
+  };
+
+  if (!evaluateVisibility(field.condition, ctx)) {
+    return { valid: true };
+  }
+
+  if (!hasFieldName(field)) {
+    return { valid: true };
+  }
+
+  const checks = collectFieldValidationChecks(field, run, {
+    includeDerived,
+  });
+
+  if (checks.length === 0) return { valid: true };
+
+  const value = getByPath(formData, path);
+  const message = await runChecks(checks, value, ctx, options?.validators);
+
+  if (message) return { valid: false, error: message };
+  return { valid: true };
+}
+
 function joinPointer(base: string, name: string): string {
   const segment = escapePointer(name);
   return base ? `${base}/${segment}` : `/${segment}`;
+}
+
+function parsePointer(pointer: string): string[] {
+  if (pointer === "") return [];
+  if (!pointer.startsWith("/")) return [];
+  return pointer
+    .split("/")
+    .slice(1)
+    .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"));
+}
+
+function isIndexSegment(segment: string): boolean {
+  if (segment.trim() === "") return false;
+  const n = Number(segment);
+  return Number.isInteger(n) && n >= 0;
+}
+
+function findFieldByPath(
+  fields: readonly Field[],
+  segments: string[],
+  ctx: ValidationContext,
+): Field | undefined {
+  if (segments.length === 0) return undefined;
+
+  for (const field of fields) {
+    if (!evaluateVisibility(field.condition, ctx)) continue;
+
+    if (!hasFieldName(field)) {
+      if (field.type === "row" || field.type === "collapsible") {
+        const found = findFieldByPath(field.fields, segments, ctx);
+        if (found) return found;
+      }
+
+      if (field.type === "tabs") {
+        for (const tab of field.tabs) {
+          const found = findFieldByPath(tab.fields, segments, ctx);
+          if (found) return found;
+        }
+      }
+
+      continue;
+    }
+
+    if (field.name !== segments[0]) continue;
+
+    if (segments.length === 1) return field;
+
+    if (field.type === "group") {
+      return findFieldByPath(field.fields, segments.slice(1), ctx);
+    }
+
+    if (field.type === "array") {
+      const next = segments[1];
+      if (next === undefined) return field;
+      if (!isIndexSegment(next)) return undefined;
+      if (segments.length === 2) return field;
+      return findFieldByPath(field.fields, segments.slice(2), ctx);
+    }
+
+    return field;
+  }
+
+  return undefined;
+}
+
+/**
+ * Validate a single field located by JSON Pointer path.
+ */
+export async function validatePath(
+  fields: readonly Field[],
+  path: string,
+  formData: Record<string, unknown>,
+  options?: ValidateFieldsOptions,
+): Promise<FieldValidationResult> {
+  const ctx: ValidationContext = {
+    formData,
+    contextData: options?.contextData,
+  };
+  const segments = parsePointer(path);
+  if (segments.length === 0) return { valid: true };
+
+  const field = findFieldByPath(fields, segments, ctx);
+  if (!field) return { valid: true };
+
+  return validateField(field, path, formData, options);
 }
 
 /**
