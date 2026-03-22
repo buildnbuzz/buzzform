@@ -43,6 +43,50 @@ describe("walkFields", () => {
     ]);
   });
 
+  it("uses wildcard paths for array item traversal by default", () => {
+    const fields: Field[] = [
+      {
+        type: "array",
+        name: "items",
+        fields: [{ type: "text", name: "label" }],
+      },
+    ];
+
+    const visited: string[] = [];
+
+    walkFields(fields, (field, ctx) => {
+      if ("name" in field) {
+        visited.push(`${ctx.path}/${field.name}`);
+      }
+    });
+
+    expect(visited).toEqual(["/items", "/items/*/label"]);
+  });
+
+  it("can keep array children on the container path when requested", () => {
+    const fields: Field[] = [
+      {
+        type: "array",
+        name: "items",
+        fields: [{ type: "text", name: "label" }],
+      },
+    ];
+
+    const visited: string[] = [];
+
+    walkFields(
+      fields,
+      (field, ctx) => {
+        if ("name" in field) {
+          visited.push(`${ctx.path}/${field.name}`);
+        }
+      },
+      { arrayItemPath: "container" },
+    );
+
+    expect(visited).toEqual(["/items", "/items/label"]);
+  });
+
   it("collects option values", () => {
     const field: Field = {
       type: "select",

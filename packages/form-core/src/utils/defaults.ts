@@ -28,38 +28,42 @@ function isStaticValue(value: unknown): boolean {
 export function extractDefaults(fields: readonly Field[]): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
-  walkFields(fields, (field, ctx) => {
-    if (!("name" in field) || typeof field.name !== "string") return;
+  walkFields(
+    fields,
+    (field, ctx) => {
+      if (!("name" in field) || typeof field.name !== "string") return;
 
-    const fullPath = ctx.path
-      ? `${ctx.path}/${escapePointer(field.name)}`
-      : `/${escapePointer(field.name)}`;
+      const fullPath = ctx.path
+        ? `${ctx.path}/${escapePointer(field.name)}`
+        : `/${escapePointer(field.name)}`;
 
-    const f = field as Field & { defaultValue?: unknown };
+      const f = field as Field & { defaultValue?: unknown };
 
-    if (f.type === "array") {
-      let val: unknown = [];
+      if (f.type === "array") {
+        let val: unknown = [];
+        if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
+          val = f.defaultValue;
+        }
+        setByPath(result, fullPath, val);
+        return;
+      }
+
+      if (f.type === "group") {
+        if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
+          setByPath(result, fullPath, f.defaultValue);
+        }
+        return;
+      }
+
+      let val: unknown = ZERO_VALUES[f.type] ?? "";
       if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
         val = f.defaultValue;
       }
+
       setByPath(result, fullPath, val);
-      return;
-    }
-
-    if (f.type === "group") {
-      if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
-        setByPath(result, fullPath, f.defaultValue);
-      }
-      return;
-    }
-
-    let val: unknown = ZERO_VALUES[f.type] ?? "";
-    if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
-      val = f.defaultValue;
-    }
-
-    setByPath(result, fullPath, val);
-  });
+    },
+    { arrayItemPath: "container" },
+  );
 
   return result;
 }

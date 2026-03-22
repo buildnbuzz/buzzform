@@ -10,12 +10,22 @@ export interface WalkContext {
 
 export type WalkVisitor = (field: Field, ctx: WalkContext) => void;
 
+export interface WalkFieldsOptions {
+  /** How array child paths should be represented during traversal. */
+  arrayItemPath?: "container" | "wildcard";
+}
+
 function joinPointer(base: string, segment: string): string {
   if (base === "") return `/${segment}`;
   return `${base}/${segment}`;
 }
 
-function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
+function walkField(
+  field: Field,
+  ctx: WalkContext,
+  visitor: WalkVisitor,
+  options: WalkFieldsOptions,
+): void {
   visitor(field, ctx);
 
   switch (field.type) {
@@ -23,7 +33,7 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
     case "collapsible": {
       const nextParents = [...ctx.parents, field];
       for (const child of field.fields) {
-        walkField(child, { path: ctx.path, parents: nextParents }, visitor);
+        walkField(child, { path: ctx.path, parents: nextParents }, visitor, options);
       }
       break;
     }
@@ -32,7 +42,7 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
       const nextParents = [...ctx.parents, field];
       for (const tab of field.tabs) {
         for (const child of tab.fields) {
-          walkField(child, { path: ctx.path, parents: nextParents }, visitor);
+          walkField(child, { path: ctx.path, parents: nextParents }, visitor, options);
         }
       }
       break;
@@ -42,7 +52,7 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
       const nextParents = [...ctx.parents, field];
       const groupPath = joinPointer(ctx.path, escapePointer(field.name));
       for (const child of field.fields) {
-        walkField(child, { path: groupPath, parents: nextParents }, visitor);
+        walkField(child, { path: groupPath, parents: nextParents }, visitor, options);
       }
       break;
     }
@@ -50,8 +60,10 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
     case "array": {
       const nextParents = [...ctx.parents, field];
       const arrayPath = joinPointer(ctx.path, escapePointer(field.name));
+      const itemPath =
+        options.arrayItemPath === "container" ? arrayPath : `${arrayPath}/*`;
       for (const child of field.fields) {
-        walkField(child, { path: arrayPath, parents: nextParents }, visitor);
+        walkField(child, { path: itemPath, parents: nextParents }, visitor, options);
       }
       break;
     }
@@ -66,10 +78,18 @@ function walkField(field: Field, ctx: WalkContext, visitor: WalkVisitor): void {
 /**
  * Walk all fields in a schema in depth-first order.
  */
-export function walkFields(fields: readonly Field[], visitor: WalkVisitor): void {
+export function walkFields(
+  fields: readonly Field[],
+  visitor: WalkVisitor,
+  options: WalkFieldsOptions = {},
+): void {
+  const normalizedOptions: WalkFieldsOptions = {
+    arrayItemPath: options.arrayItemPath ?? "wildcard",
+  };
+
   for (const field of fields) {
     const path = "";
-    walkField(field, { path, parents: [] }, visitor);
+    walkField(field, { path, parents: [] }, visitor, normalizedOptions);
   }
 }
 
