@@ -92,15 +92,19 @@ export type VisibilityCondition =
 /** Built-in validator argument map for v0.1. */
 export interface ValidatorArgsMap {
   required: Record<string, never>;
+  email: Record<string, never>;
   minLength: { min?: number | DynamicNumber };
   maxLength: { max?: number | DynamicNumber };
   pattern: { pattern?: string };
   min: { min?: number | DynamicNumber };
   max: { max?: number | DynamicNumber };
+  precision: { precision?: number | DynamicNumber };
+  step: { step?: number | DynamicNumber };
   minItems: { min?: number | DynamicNumber };
   maxItems: { max?: number | DynamicNumber };
   minSelected: { min?: number | DynamicNumber };
   maxSelected: { max?: number | DynamicNumber };
+  matches: { other?: DynamicValue<unknown> };
 }
 
 /** Names of built-in validators. */
@@ -246,6 +250,10 @@ export interface NumberField extends BaseField<number> {
   min?: number;
   /** Maximum numeric value. */
   max?: number;
+  /** Maximum allowed decimal precision. */
+  precision?: number;
+  /** Required multiple for numeric values. */
+  step?: number;
 }
 
 /** Select input field. */

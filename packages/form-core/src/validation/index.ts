@@ -104,6 +104,11 @@ const requiredValidator: ValidationFunction = (value: unknown) => {
 export const builtInValidators = {
   required: requiredValidator,
 
+  email: (value: unknown) => {
+    if (typeof value !== "string") return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  },
+
   minLength: (value: unknown, args?: ValidatorArgsMap["minLength"]) => {
     return minLengthLike(value, args as Record<string, unknown> | undefined, [
       "min",
@@ -136,6 +141,40 @@ export const builtInValidators = {
     return numberRange(value, args as Record<string, unknown> | undefined, "max");
   },
 
+  precision: (value: unknown, args?: ValidatorArgsMap["precision"]) => {
+    if (typeof value !== "number" || Number.isNaN(value)) return false;
+    const precision = getNumberArg(
+      args as Record<string, unknown> | undefined,
+      ["precision"],
+    );
+    if (precision === undefined) return true;
+    if (precision === 0) return Number.isInteger(value);
+
+    const factor = 10 ** precision;
+    if (!Number.isFinite(factor)) return false;
+    const scaled = value * factor;
+    if (!Number.isFinite(scaled)) return false;
+    const rounded = Math.round(scaled);
+    const epsilon = Number.EPSILON * Math.max(1, Math.abs(scaled));
+    return Math.abs(rounded - scaled) <= epsilon;
+  },
+
+  step: (value: unknown, args?: ValidatorArgsMap["step"]) => {
+    if (typeof value !== "number" || Number.isNaN(value)) return false;
+    const step = getNumberArg(
+      args as Record<string, unknown> | undefined,
+      ["step"],
+    );
+    if (step === undefined) return true;
+    if (step === 0) return false;
+
+    const ratio = value / step;
+    if (!Number.isFinite(ratio)) return false;
+    const rounded = Math.round(ratio);
+    const epsilon = Number.EPSILON * Math.max(1, Math.abs(ratio));
+    return Math.abs(rounded - ratio) <= epsilon;
+  },
+
   minItems: (value: unknown, args?: ValidatorArgsMap["minItems"]) => {
     return minLengthLike(value, args as Record<string, unknown> | undefined, [
       "min",
@@ -162,6 +201,10 @@ export const builtInValidators = {
       "max",
       "maxSelected",
     ]);
+  },
+
+  matches: (value: unknown, args?: ValidatorArgsMap["matches"]) => {
+    return value === args?.other;
   },
 };
 
@@ -603,6 +646,23 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         type: "max",
         message: `Must be at most ${field.max}.`,
         args: { max: field.max },
+      });
+    }
+    if (typeof field.precision === "number") {
+      checks.push({
+        type: "precision",
+        message:
+          field.precision === 0
+            ? "Must be an integer."
+            : `Must have at most ${field.precision} decimal places.`,
+        args: { precision: field.precision },
+      });
+    }
+    if (typeof field.step === "number") {
+      checks.push({
+        type: "step",
+        message: `Must be a multiple of ${field.step}.`,
+        args: { step: field.step },
       });
     }
   }

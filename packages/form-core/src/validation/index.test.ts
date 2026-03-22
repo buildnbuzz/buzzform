@@ -22,6 +22,11 @@ describe("builtInValidators", () => {
     expect(builtInValidators.required("ok")).toBe(true);
   });
 
+  it("validates email", () => {
+    expect(builtInValidators.email("ada@example.com")).toBe(true);
+    expect(builtInValidators.email("not-an-email")).toBe(false);
+  });
+
   it("validates min/max length", () => {
     expect(builtInValidators.minLength("hi", { min: 3 })).toBe(false);
     expect(builtInValidators.maxLength("hello", { max: 5 })).toBe(true);
@@ -37,9 +42,21 @@ describe("builtInValidators", () => {
     expect(builtInValidators.max(2, { max: 3 })).toBe(true);
   });
 
+  it("validates precision and step", () => {
+    expect(builtInValidators.precision(12.34, { precision: 2 })).toBe(true);
+    expect(builtInValidators.precision(12.345, { precision: 2 })).toBe(false);
+    expect(builtInValidators.step(12, { step: 3 })).toBe(true);
+    expect(builtInValidators.step(10, { step: 3 })).toBe(false);
+  });
+
   it("validates min/max items", () => {
     expect(builtInValidators.minItems([1], { min: 2 })).toBe(false);
     expect(builtInValidators.maxItems([1, 2], { max: 2 })).toBe(true);
+  });
+
+  it("validates matches", () => {
+    expect(builtInValidators.matches("abc", { other: "abc" })).toBe(true);
+    expect(builtInValidators.matches("abc", { other: "xyz" })).toBe(false);
   });
 });
 
@@ -65,6 +82,17 @@ describe("deriveFieldChecks", () => {
       "maxLength",
       "pattern",
     ]);
+  });
+
+  it("derives precision and step checks from number fields", () => {
+    const checks = deriveFieldChecks({
+      type: "number",
+      name: "amount",
+      precision: 2,
+      step: 0.5,
+    });
+
+    expect(checks.map((check) => check.type)).toEqual(["precision", "step"]);
   });
 });
 
@@ -220,6 +248,76 @@ describe("validateFields", () => {
 
     const tooHigh = await validateFields(fields, { age: 70 }, { run: "blur" });
     expect(tooHigh.errorsByPath["/age"]).toBe("Must be at most 65.");
+  });
+
+  it("validates derived precision and step for number", async () => {
+    const fields = [
+      {
+        type: "number" as const,
+        name: "amount",
+        precision: 2,
+        step: 0.5,
+      },
+    ];
+
+    const badPrecision = await validateFields(
+      fields,
+      { amount: 12.345 },
+      { run: "blur" },
+    );
+    expect(badPrecision.errorsByPath["/amount"]).toBe(
+      "Must have at most 2 decimal places.",
+    );
+
+    const badStep = await validateFields(
+      fields,
+      { amount: 1.3 },
+      { run: "blur", includeDerived: true },
+    );
+    expect(badStep.errorsByPath["/amount"]).toBe("Must be a multiple of 0.5.");
+  });
+
+  it("validates email and matches checks with resolved dynamic args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "email",
+        validate: {
+          onBlur: {
+            checks: [{ type: "email", message: "Invalid email." }],
+          },
+        },
+      },
+      {
+        type: "text" as const,
+        name: "confirmEmail",
+        validate: {
+          onBlur: {
+            checks: [
+              {
+                type: "matches",
+                message: "Emails must match.",
+                args: { other: { $data: "/email" } },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const badEmail = await validateFields(
+      fields,
+      { email: "wrong", confirmEmail: "wrong" },
+      { run: "blur" },
+    );
+    expect(badEmail.errorsByPath["/email"]).toBe("Invalid email.");
+
+    const mismatch = await validateFields(
+      fields,
+      { email: "ada@example.com", confirmEmail: "grace@example.com" },
+      { run: "blur" },
+    );
+    expect(mismatch.errorsByPath["/confirmEmail"]).toBe("Emails must match.");
   });
 
   it("validates derived min/max items for array", async () => {
