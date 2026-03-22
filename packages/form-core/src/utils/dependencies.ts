@@ -5,6 +5,7 @@ import type {
   ValidationConfig,
   ValidationCheck,
 } from "../types";
+import { deriveFieldChecks } from "../validation";
 
 function addDep(set: Set<string>, path: string | undefined): void {
   if (!path) return;
@@ -59,6 +60,15 @@ function extractFromValidationCheck(
   }
 }
 
+function extractFromValidationChecks(
+  checks: readonly ValidationCheck[],
+  deps: Set<string>,
+): void {
+  for (const check of checks) {
+    extractFromValidationCheck(check, deps);
+  }
+}
+
 function extractFromValidationConfig(
   validate: ValidationConfig | undefined,
   deps: Set<string>,
@@ -70,9 +80,7 @@ function extractFromValidationConfig(
   );
 
   for (const group of groups) {
-    for (const check of group!.checks) {
-      extractFromValidationCheck(check, deps);
-    }
+    extractFromValidationChecks(group!.checks, deps);
   }
 }
 
@@ -223,6 +231,8 @@ export function extractDependencies(field: Field): Set<string> {
     extractFromValidationConfig(field.validate as ValidationConfig, deps);
   }
 
+  extractFromValidationChecks(deriveFieldChecks(field), deps);
+
   if ("options" in field && Array.isArray(field.options)) {
     for (const option of field.options) {
       extractFromDynamicValue(option.label, deps);
@@ -252,23 +262,20 @@ export function extractDependenciesFromFields(fields: Field[]): Set<string> {
   const deps = new Set<string>();
 
   for (const field of fields) {
-    for (const dep of extractDependencies(field)) deps.add(dep);
+    extractDependencies(field).forEach((dep) => deps.add(dep));
 
     if (field.type === "row" || field.type === "collapsible") {
-      for (const dep of extractDependenciesFromFields(field.fields))
-        deps.add(dep);
+      extractDependenciesFromFields(field.fields).forEach((dep) => deps.add(dep));
     }
 
     if (field.type === "tabs") {
       for (const tab of field.tabs) {
-        for (const dep of extractDependenciesFromFields(tab.fields))
-          deps.add(dep);
+        extractDependenciesFromFields(tab.fields).forEach((dep) => deps.add(dep));
       }
     }
 
     if (field.type === "group" || field.type === "array") {
-      for (const dep of extractDependenciesFromFields(field.fields))
-        deps.add(dep);
+      extractDependenciesFromFields(field.fields).forEach((dep) => deps.add(dep));
     }
   }
 

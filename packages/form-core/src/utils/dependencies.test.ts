@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import type { Field } from "../types";
+import * as validation from "../validation";
 import {
   extractDependencies,
   extractDependenciesFromFields,
@@ -54,5 +55,29 @@ describe("extractDependencies", () => {
       "/rules/minTitle",
       "/user/name",
     ]);
+  });
+
+  it("includes dependencies from derived checks", () => {
+    const deriveSpy = vi
+      .spyOn(validation, "deriveFieldChecks")
+      .mockReturnValue([
+        {
+          type: "minLength",
+          message: "Too short",
+          args: { min: { $data: "/rules/minFromDerived" } },
+        },
+      ]);
+
+    const deps = Array.from(
+      extractDependencies({
+        type: "text",
+        name: "title",
+      }),
+    );
+
+    expect(deriveSpy).toHaveBeenCalledOnce();
+    expect(deps).toEqual(["/rules/minFromDerived"]);
+
+    deriveSpy.mockRestore();
   });
 });
