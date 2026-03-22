@@ -1,0 +1,84 @@
+{
+  "name": "@buildnbuzz/form-react",
+  "version": "0.1.0",
+  "description": "React primitives for BuzzForm.",
+  "author": "Parth Lad <parth@buildnbuzz.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildnbuzz/buzzform.git"
+  },
+  "homepage": "https://form.buildnbuzz.com",
+  "keywords": [
+    "forms",
+    "schema",
+    "validation",
+    "headless",
+    "tanstack-intent"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:types": "tsc --noEmit --project tsconfig.tests.json",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "intent:validate": "intent validate"
+  },
+  "dependencies": {
+    "@buildnbuzz/form-core": "workspace:^"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:^",
+    "@repo/typescript-config": "workspace:^",
+    "@tanstack/form-core": "^1.28.5",
+    "@tanstack/react-form": "^1.28.5",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^22.15.3",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "eslint": "^9.39.1",
+    "jsdom": "^28.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2",
+    "vitest": "^4.0.18"
+  },
+  "peerDependencies": {
+    "@tanstack/form-core": "^1.28.5",
+    "@tanstack/react-form": "^1.28.5",
+    "react": "^18 || ^19"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/form-core": {
+      "optional": false
+    },
+    "@tanstack/react-form": {
+      "optional": false
+    },
+    "react": {
+      "optional": false
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
