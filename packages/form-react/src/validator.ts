@@ -14,6 +14,7 @@ import {
   type ValidationRegistry,
   type ValidationRun,
 } from "@buildnbuzz/form-core";
+import type { UnknownData } from "./types";
 
 type StandardIssue = {
   message: string;
@@ -23,7 +24,7 @@ type StandardIssue = {
 /** Runtime options for building a Standard Schema validator from `FormSchema`. */
 export interface StandardValidatorOptions {
   customValidators?: ValidationRegistry;
-  contextData?: Record<string, unknown>;
+  contextData?: UnknownData;
   /** Which validation run should include derived (top-level) field checks. */
   derivedValidationMode?: ValidationRun;
 }
@@ -54,7 +55,7 @@ export function buildStandardSchemaValidator<TFormData>(
       version: 1,
       vendor: "buildnbuzz",
       validate: async (formData: unknown) => {
-        const data = formData as Record<string, unknown>;
+        const data = formData as UnknownData;
         const issues: StandardIssue[] = [];
 
         const fieldTasks: Array<Promise<StandardIssue | null>> = [];
@@ -129,7 +130,7 @@ function isDataField(field: FormSchema["fields"][number]): field is DataField {
 }
 
 function expandWildcardPointers(
-  data: Record<string, unknown>,
+  data: UnknownData,
   pointer: string,
 ): string[] {
   const segments = splitPointer(pointer);

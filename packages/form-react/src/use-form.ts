@@ -8,6 +8,7 @@ import { extractDefaults, transformFormOutput } from "@buildnbuzz/form-core";
 import type {
   AnyReactFormExtendedApi,
   AnyTanstackFormOptions,
+  UnknownData,
   UseFormOptions,
   UseFormOptionsWithSchema,
 } from "./types";
@@ -18,14 +19,14 @@ import { buildStandardSchemaValidator } from "./validator";
  */
 export function useForm<
   TSchema extends FormSchema,
-  TFormData extends Record<string, unknown> = Record<string, unknown>,
+  TFormData extends UnknownData = UnknownData,
 >(
   opts: UseFormOptionsWithSchema<TSchema, TFormData>,
 ): AnyReactFormExtendedApi<TFormData>;
-export function useForm<TFormData extends Record<string, unknown>>(
+export function useForm<TFormData extends UnknownData>(
   opts: UseFormOptions<TFormData>,
 ): AnyReactFormExtendedApi<TFormData>;
-export function useForm<TFormData extends Record<string, unknown>>(
+export function useForm<TFormData extends UnknownData>(
   opts: UseFormOptions<TFormData>,
 ): AnyReactFormExtendedApi<TFormData> {
   const {

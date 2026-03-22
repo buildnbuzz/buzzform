@@ -3,12 +3,18 @@ import type {
   FormOptions as TanstackFormOptions,
   ReactFormExtendedApi,
 } from "@tanstack/react-form";
+import type { FieldValidators } from "@tanstack/form-core";
+import type { ReactNode } from "react";
 import type {
+  DataField,
   FormSchema,
   OutputConfig,
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
+
+/** Shared dictionary type used by form-react runtime and API surfaces. */
+export type UnknownData = Record<string, unknown>;
 
 /**
  * TanStack Form options with validation slot generics widened to `any`.
@@ -49,7 +55,7 @@ export type AnyReactFormExtendedApi<TFormData> = ReactFormExtendedApi<
 /** Schema-aware options for `useForm`, keyed by explicit `TFormData`. */
 export interface UseFormOptionsWithSchema<
   TSchema extends FormSchema,
-  TFormData extends Record<string, unknown> = Record<string, unknown>,
+  TFormData extends UnknownData = UnknownData,
 > extends Omit<
     AnyTanstackFormOptions<TFormData>,
     "defaultValues" | "onSubmit"
@@ -61,7 +67,7 @@ export interface UseFormOptionsWithSchema<
   /** Optional custom validation registry. */
   customValidators?: ValidationRegistry;
   /** Optional context data used by dynamic validators. */
-  contextData?: Record<string, unknown>;
+  contextData?: UnknownData;
   /** Enables schema-derived submit validation. Defaults to `true`. */
   enableSchemaSubmitValidation?: boolean;
   /** Which validation run should include derived checks. Defaults to `submit`. */
@@ -74,5 +80,46 @@ export interface UseFormOptionsWithSchema<
 
 /** Convenience `useForm` options type using generic `FormSchema`. */
 export type UseFormOptions<
-  TFormData extends Record<string, unknown> = Record<string, unknown>,
+  TFormData extends UnknownData = UnknownData,
 > = UseFormOptionsWithSchema<FormSchema, TFormData>;
+
+/** TanStack field validators with validation slot generics widened to `any`. */
+export type AnyFieldValidators = FieldValidators<
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
+>;
+
+/** Minimal form API contract required by the headless `<Field>` wrapper. */
+export type FieldFormApi<
+  TFormData extends UnknownData = UnknownData,
+> = AnyReactFormExtendedApi<TFormData>;
+
+/** Props for the headless `<Field>` wrapper. */
+export interface FieldProps<
+  TFormData extends UnknownData = UnknownData,
+> {
+  /** Data field schema node. */
+  field: DataField;
+  /** TanStack form instance from `useForm`. */
+  form: FieldFormApi<TFormData>;
+  /** External data available to dynamic validation conditions and checks. */
+  contextData?: UnknownData;
+  /** Custom validators registry passed to `form-core` checks. */
+  customValidators?: ValidationRegistry;
+  /** Explicit TanStack validators merged with generated schema validators. */
+  validators?: AnyFieldValidators;
+  /** Which run includes derived checks (defaults to `blur`). */
+  derivedValidationMode?: ValidationRun;
+  /** Field UI content; rendered inside `form.Field` when mounted and visible. */
+  children: ReactNode;
+}

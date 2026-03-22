@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { useForm as tanstackUseForm } from "@tanstack/react-form";
 import type { FormSchema } from "@buildnbuzz/form-core";
 import { useForm } from "./use-form";
-import type { AnyReactFormExtendedApi, AnyTanstackFormOptions } from "./types";
+import type {
+  AnyReactFormExtendedApi,
+  AnyTanstackFormOptions,
+  UnknownData,
+} from "./types";
 import { buildStandardSchemaValidator } from "./validator";
 
 vi.mock("react", async () => {
@@ -49,7 +53,7 @@ describe("useForm", () => {
     });
 
     const call = vi.mocked(tanstackUseForm).mock
-      .calls[0]?.[0] as AnyTanstackFormOptions<Record<string, unknown>>;
+      .calls[0]?.[0] as AnyTanstackFormOptions<UnknownData>;
     expect(call.defaultValues).toEqual({ name: "Ada", age: 30 });
   });
 
@@ -62,7 +66,7 @@ describe("useForm", () => {
     useForm({ schema });
 
     const call = vi.mocked(tanstackUseForm).mock
-      .calls[0]?.[0] as AnyTanstackFormOptions<Record<string, unknown>>;
+      .calls[0]?.[0] as AnyTanstackFormOptions<UnknownData>;
     expect(call.validators?.onSubmitAsync).toBe(mockValidator);
   });
 
@@ -75,7 +79,7 @@ describe("useForm", () => {
     useForm({ schema, validators: userValidator });
 
     const call = vi.mocked(tanstackUseForm).mock
-      .calls[0]?.[0] as AnyTanstackFormOptions<Record<string, unknown>>;
+      .calls[0]?.[0] as AnyTanstackFormOptions<UnknownData>;
     expect(call.validators).toBe(userValidator);
   });
 
@@ -92,10 +96,10 @@ describe("useForm", () => {
     });
 
     const call = vi.mocked(tanstackUseForm).mock
-      .calls[0]?.[0] as AnyTanstackFormOptions<Record<string, unknown>>;
+      .calls[0]?.[0] as AnyTanstackFormOptions<UnknownData>;
     call.onSubmit?.({
       value: { user: { name: "Ada" } },
-      formApi: {} as AnyReactFormExtendedApi<Record<string, unknown>>,
+      formApi: {} as AnyReactFormExtendedApi<UnknownData>,
       meta: undefined as unknown,
     });
 
@@ -118,7 +122,7 @@ describe("useForm", () => {
     });
 
     const call = vi.mocked(tanstackUseForm).mock
-      .calls[0]?.[0] as AnyTanstackFormOptions<Record<string, unknown>>;
+      .calls[0]?.[0] as AnyTanstackFormOptions<UnknownData>;
     expect(call.onSubmit).toBe(onSubmit);
   });
 
