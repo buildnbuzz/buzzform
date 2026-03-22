@@ -3,10 +3,12 @@ import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   collectFieldValidationChecks,
   evaluateVisibility,
+  escapePointer,
   extractDependencies,
   getByPath,
   getValidationGroup,
   runChecks,
+  toDotNotation,
   type ValidationCheck,
   type ValidationRegistry,
 } from "@buildnbuzz/form-core";
@@ -17,6 +19,15 @@ import type {
   UnknownData,
 } from "./types";
 import { FieldContext } from "./contexts";
+
+function mergeListenTo(
+  generated?: string[],
+  provided?: string[],
+): string[] | undefined {
+  if (!generated) return provided;
+  if (!provided) return generated;
+  return Array.from(new Set([...generated, ...provided]));
+}
 
 const buildValidator = <TFormData extends UnknownData>(
   checks: ValidationCheck[],
@@ -55,6 +66,25 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   children,
 }: FieldProps<TFormData>) {
   const deps = useMemo(() => Array.from(extractDependencies(field)), [field]);
+  const fieldName = useMemo(() => {
+    const pointer = field.name.startsWith("/")
+      ? field.name
+      : `/${escapePointer(field.name)}`;
+    return toDotNotation(pointer);
+  }, [field.name]);
+
+  const validationListenTo = useMemo(() => {
+    if (deps.length === 0) return undefined;
+
+    const listenTo = new Set<string>();
+    for (const dep of deps) {
+      const dotPath = toDotNotation(dep);
+      if (!dotPath || dotPath === fieldName) continue;
+      listenTo.add(dotPath);
+    }
+
+    return listenTo.size > 0 ? Array.from(listenTo) : undefined;
+  }, [deps, fieldName]);
 
   const generatedValidators = useMemo(() => {
     const derivedRun = derivedValidationMode ?? "blur";
@@ -83,6 +113,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         customValidators,
       );
       next.onChangeAsyncDebounceMs = changeGroup?.debounceMs;
+      if (validationListenTo) next.onChangeListenTo = validationListenTo;
     }
     if (blurChecks.length > 0) {
       next.onBlurAsync = buildValidator(
@@ -92,6 +123,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         customValidators,
       );
       next.onBlurAsyncDebounceMs = blurGroup?.debounceMs;
+      if (validationListenTo) next.onBlurListenTo = validationListenTo;
     }
     if (submitChecks.length > 0) {
       next.onSubmitAsync = buildValidator(
@@ -102,12 +134,33 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       );
     }
     return next;
-  }, [field, form, contextData, customValidators, derivedValidationMode]);
+  }, [
+    field,
+    form,
+    contextData,
+    customValidators,
+    derivedValidationMode,
+    validationListenTo,
+  ]);
 
   const mergedValidators = useMemo(() => {
     if (!generatedValidators) return validators;
     if (!validators) return generatedValidators;
-    return { ...generatedValidators, ...validators };
+
+    const next: AnyFieldValidators = { ...generatedValidators, ...validators };
+    const onChangeListenTo = mergeListenTo(
+      generatedValidators.onChangeListenTo,
+      validators.onChangeListenTo,
+    );
+    if (onChangeListenTo) next.onChangeListenTo = onChangeListenTo;
+
+    const onBlurListenTo = mergeListenTo(
+      generatedValidators.onBlurListenTo,
+      validators.onBlurListenTo,
+    );
+    if (onBlurListenTo) next.onBlurListenTo = onBlurListenTo;
+
+    return next;
   }, [generatedValidators, validators]);
 
   const renderField = () => {

@@ -134,6 +134,65 @@ describe("Field", () => {
     expect(call.validators.onBlurAsync).toBe(explicit);
   });
 
+  it("auto-wires onChange/onBlur listenTo from schema dependencies", () => {
+    const field: DataField = {
+      type: "text",
+      name: "confirmPassword",
+      validate: {
+        onChange: {
+          checks: [
+            {
+              type: "matches",
+              message: "Must match password",
+              args: { other: { $data: "/password" } },
+            },
+          ],
+        },
+        onBlur: {
+          checks: [
+            {
+              type: "matches",
+              message: "Must match password",
+              args: { other: { $data: "/password" } },
+            },
+          ],
+        },
+      },
+    };
+
+    const { fieldSpy } = renderField({ field });
+    const call = fieldSpy.mock.calls[0]?.[0] as { validators: AnyFieldValidators };
+
+    expect(call.validators.onChangeListenTo).toEqual(["password"]);
+    expect(call.validators.onBlurListenTo).toEqual(["password"]);
+  });
+
+  it("merges generated and explicit listenTo values", () => {
+    const field: DataField = {
+      type: "text",
+      name: "confirmPassword",
+      validate: {
+        onChange: {
+          checks: [
+            {
+              type: "matches",
+              message: "Must match password",
+              args: { other: { $data: "/password" } },
+            },
+          ],
+        },
+      },
+    };
+
+    const { fieldSpy } = renderField({
+      field,
+      validators: { onChangeListenTo: ["email", "password"] },
+    });
+    const call = fieldSpy.mock.calls[0]?.[0] as { validators: AnyFieldValidators };
+
+    expect(call.validators.onChangeListenTo).toEqual(["password", "email"]);
+  });
+
   it("renders null and deletes field when condition is false", async () => {
     const field: DataField = {
       type: "text",
