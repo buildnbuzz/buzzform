@@ -126,6 +126,7 @@ export function fromDotNotation(path: string): string {
   return `/${path.split(".").join("/")}`;
 }
 
+/** Replace numeric array indices with "*" for schema path matching. */
 export function normalizeArrayIndicesToWildcard(pointer: string): string {
   if (pointer === "") return pointer;
   if (!pointer.startsWith("/")) return pointer;
@@ -138,6 +139,7 @@ export function normalizeArrayIndicesToWildcard(pointer: string): string {
     .join("/")}`;
 }
 
+/** Split a JSON Pointer into unescaped path segments. */
 export function splitPointer(pointer: string): string[] {
   return pointer
     .split("/")

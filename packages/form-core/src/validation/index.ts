@@ -22,16 +22,19 @@ import { walkFields } from "../utils/walk";
 
 type ValidatorReturn = boolean | Promise<boolean>;
 
+/** Validator function signature. */
 export type ValidationFunction<
   TValue = unknown,
   TArgs = Record<string, unknown>,
 > = (value: TValue, args?: TArgs, ctx?: ValidationContext) => ValidatorReturn;
 
+/** Validator registry shape used by adapters. */
 export type ValidationRegistry = Record<
   string,
   (...args: never[]) => ValidatorReturn
 >;
 
+/** Preserve validator map literal types. */
 export function defineValidators<const T extends ValidationRegistry>(
   validators: T,
 ): T {
@@ -101,6 +104,7 @@ const requiredValidator: ValidationFunction = (value: unknown) => {
   return true;
 };
 
+/** Built-in validators shipped with form-core. */
 export const builtInValidators = {
   required: requiredValidator,
 
@@ -212,11 +216,13 @@ export const builtInValidators = {
 // 3. VALIDATION RUNNER
 // ============================================================================
 
+/** Runtime context passed to validators. */
 export interface ValidationContext {
   formData: Record<string, unknown>;
   contextData?: Record<string, unknown>;
 }
 
+/** Validation run trigger. */
 export type ValidationRun = "change" | "blur" | "submit";
 
 /** Result of a schema validation run. */
@@ -252,12 +258,14 @@ export interface ValidateFieldsOptions {
   includeDerived?: boolean;
 }
 
+/** Determine if a check should be skipped for the provided value. */
 export function shouldSkipCheck(check: ValidationCheck, value: unknown): boolean {
   const isEmpty = value === undefined || value === null || value === "";
   if (!isEmpty) return false;
   return check.type !== "required";
 }
 
+/** Select the validation group for a trigger. */
 export function getValidationGroup(
   config: ValidationConfig | undefined,
   run: ValidationRun,
@@ -268,6 +276,7 @@ export function getValidationGroup(
   return config.onSubmit;
 }
 
+/** Collect checks for all validation groups. */
 export function collectValidationChecks(
   config: ValidationConfig | undefined,
 ): ValidationCheck[] {
@@ -279,6 +288,7 @@ export function collectValidationChecks(
   ];
 }
 
+/** Collect checks for a field and run group. */
 export function collectFieldValidationChecks(
   field: Field,
   run: ValidationRun,
@@ -303,6 +313,7 @@ export function collectFieldValidationChecks(
 /**
  * Validate a single field against form data.
  */
+/** Validate a single field against form data. */
 export async function validateField(
   field: Field,
   path: string,
@@ -529,6 +540,7 @@ export async function validateFields(
   };
 }
 
+/** Run a list of checks and return the first error message. */
 export async function runChecks(
   checks: ValidationCheck[],
   value: unknown,
@@ -551,6 +563,7 @@ export async function runChecks(
   return undefined;
 }
 
+/** Run a single validation check and return its result. */
 export function runValidationCheck(
   check: ValidationCheck,
   value: unknown,
@@ -598,6 +611,7 @@ export function runValidationCheck(
 // 4. DERIVED CHECKS
 // ============================================================================
 
+/** Derive built-in checks from field configuration. */
 export function deriveFieldChecks(field: Field): ValidationCheck[] {
   if (!hasFieldName(field)) return [];
   const checks: ValidationCheck[] = [];

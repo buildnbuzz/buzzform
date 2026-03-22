@@ -1,6 +1,7 @@
 import type { Field, FieldOption } from "../types";
 import { escapePointer } from "./path";
 
+/** Context provided to a walk visitor. */
 export interface WalkContext {
   /** JSON Pointer to the current field. */
   path: string;
@@ -8,8 +9,10 @@ export interface WalkContext {
   parents: Field[];
 }
 
+/** Visitor invoked for each field during traversal. */
 export type WalkVisitor = (field: Field, ctx: WalkContext) => void;
 
+/** Options for schema traversal behavior. */
 export interface WalkFieldsOptions {
   /** How array child paths should be represented during traversal. */
   arrayItemPath?: "container" | "wildcard";
