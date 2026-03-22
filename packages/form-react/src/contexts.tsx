@@ -3,6 +3,7 @@ import type { AnyFieldApi } from "@tanstack/form-core";
 import type { DataField, Field as CoreField } from "@buildnbuzz/form-core";
 import type { ComponentType, ReactNode } from "react";
 import type { FieldFormApi, UnknownData } from "./types";
+import { resolveDynamicValue } from "@buildnbuzz/form-core";
 
 /** Value exposed by `FieldContext` for field renderer components. */
 export interface FieldContextValue<TFormData extends UnknownData = UnknownData> {
@@ -50,6 +51,55 @@ export function useFormContext<
   TFormData extends UnknownData = UnknownData,
 >(): FieldFormApi<TFormData> {
   return useFieldContext<TFormData>().form;
+}
+
+/** Options for resolving dynamic field text. */
+export interface ResolvedFieldTextOptions {
+  /** Fallback used when a label is missing or resolves to null. */
+  labelFallback?: string;
+  /** Fallback used when a placeholder is missing or resolves to null. */
+  placeholderFallback?: string;
+  /** Fallback used when a description is missing or resolves to null. */
+  descriptionFallback?: string;
+}
+
+/**
+ * Resolves dynamic label/placeholder/description values for the active field.
+ */
+export function useResolvedFieldText<
+  TFormData extends UnknownData = UnknownData,
+  TField extends CoreField = CoreField,
+>(options: ResolvedFieldTextOptions = {}) {
+  const { field, formData, contextData } = useFieldContext<TFormData>() as unknown as {
+    field: TField;
+    formData: UnknownData;
+    contextData?: UnknownData;
+  };
+  const nameFallback = "name" in field ? field.name : "";
+  const labelValue = "label" in field ? field.label : undefined;
+  const placeholderValue = "placeholder" in field ? field.placeholder : undefined;
+  const descriptionValue = "description" in field ? field.description : undefined;
+
+  const resolveText = (value: unknown, fallback: string) => {
+    const resolved = resolveDynamicValue(
+      value as never,
+      formData,
+      contextData,
+    );
+    return resolved ?? fallback;
+  };
+
+  return {
+    label: resolveText(labelValue, options.labelFallback ?? nameFallback),
+    placeholder: resolveText(
+      placeholderValue,
+      options.placeholderFallback ?? "",
+    ),
+    description: resolveText(
+      descriptionValue,
+      options.descriptionFallback ?? "",
+    ),
+  };
 }
 
 /** Registry mapping field type strings to renderer components. */

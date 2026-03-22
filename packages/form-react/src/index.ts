@@ -9,6 +9,7 @@ export {
   useFieldContext,
   useFormContext,
   useRegistry,
+  useResolvedFieldText,
 } from "./contexts";
 
 export type {
@@ -29,4 +30,5 @@ export type {
   FieldContextValue,
   FieldRegistry,
   FormProviderProps,
+  ResolvedFieldTextOptions,
 } from "./contexts";

@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { defineValidators, type DataField } from "@buildnbuzz/form-core";
 import { Field } from "./field";
 import type { AnyFieldValidators, FieldFormApi, UnknownData } from "./types";
-import { useFieldContext, type FieldContextValue } from "./contexts";
+import {
+  useFieldContext,
+  useResolvedFieldText,
+  type FieldContextValue,
+} from "./contexts";
 
 function createFormHarness(values: UnknownData) {
   const fieldSpy = vi.fn();
@@ -59,6 +63,20 @@ function ContextReader({
   const ctx = useFieldContext();
   spy(ctx);
   return <div data-testid="ctx-reader" />;
+}
+
+function TextResolverReader({
+  spy,
+}: {
+  spy: (values: {
+    label: string;
+    placeholder: string;
+    description: string;
+  }) => void;
+}) {
+  const resolved = useResolvedFieldText();
+  spy(resolved);
+  return <div data-testid="text-resolver" />;
 }
 
 function renderField({
@@ -329,5 +347,32 @@ describe("Field", () => {
     expect(ctx.isDisabled).toBe(true);
     expect(ctx.isReadOnly).toBe(true);
     expect(ctx.fieldApi).toEqual({ name: "email" });
+  });
+
+  it("resolves dynamic label/placeholder/description values", () => {
+    const spy = vi.fn();
+    const field: DataField = {
+      type: "text",
+      name: "email",
+      label: { $data: "/labelValue" },
+      placeholder: { $context: "/placeholderValue" },
+      description: "Static description",
+    };
+
+    renderField({
+      field,
+      values: { labelValue: "Email" },
+      contextData: { placeholderValue: "Type your email" },
+      child: <TextResolverReader spy={spy} />,
+    });
+
+    const resolved = spy.mock.calls[0]?.[0] as {
+      label: string;
+      placeholder: string;
+      description: string;
+    };
+    expect(resolved.label).toBe("Email");
+    expect(resolved.placeholder).toBe("Type your email");
+    expect(resolved.description).toBe("Static description");
   });
 });
