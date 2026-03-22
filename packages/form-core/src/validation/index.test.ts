@@ -423,6 +423,32 @@ describe("validatePath", () => {
     expect(result.error).toBe("This field is required.");
   });
 
+  it("does not confuse numeric field names with array indices", async () => {
+    const fields = [
+      {
+        type: "group" as const,
+        name: "report",
+        fields: [
+          {
+            type: "text" as const,
+            name: "2024",
+            required: true,
+          },
+        ],
+      },
+    ];
+
+    const result = await validatePath(
+      fields,
+      "/report/2024",
+      { report: { "2024": "" } },
+      { run: "blur" },
+    );
+
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe("This field is required.");
+  });
+
   it("returns valid when path is not found", async () => {
     const fields = [
       {

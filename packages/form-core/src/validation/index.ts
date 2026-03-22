@@ -9,7 +9,12 @@ import type {
 } from "../types";
 import { resolveDynamicValue } from "../dynamic";
 import { evaluateVisibility } from "../conditions";
-import { escapePointer, getByPath } from "../utils/path";
+import {
+  escapePointer,
+  getByPath,
+  splitPointer,
+} from "../utils/path";
+import { walkFields } from "../utils/walk";
 
 // ============================================================================
 // 1. VALIDATOR REGISTRY
@@ -295,67 +300,47 @@ function joinPointer(base: string, name: string): string {
   return base ? `${base}/${segment}` : `/${segment}`;
 }
 
-function parsePointer(pointer: string): string[] {
-  if (pointer === "") return [];
-  if (!pointer.startsWith("/")) return [];
-  return pointer
-    .split("/")
-    .slice(1)
-    .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"));
+function isRuntimeArrayIndex(segment: string): boolean {
+  if (segment.trim() === "") return false;
+  const index = Number(segment);
+  return Number.isInteger(index) && index >= 0;
 }
 
-function isIndexSegment(segment: string): boolean {
-  if (segment.trim() === "") return false;
-  const n = Number(segment);
-  return Number.isInteger(n) && n >= 0;
+function matchesSchemaPath(schemaPath: string, runtimePath: string): boolean {
+  const schemaSegments = splitPointer(schemaPath);
+  const runtimeSegments = splitPointer(runtimePath);
+
+  if (schemaSegments.length !== runtimeSegments.length) return false;
+
+  return schemaSegments.every((segment, index) => {
+    if (segment === "*") {
+      return isRuntimeArrayIndex(runtimeSegments[index] ?? "");
+    }
+    return segment === runtimeSegments[index];
+  });
 }
 
 function findFieldByPath(
   fields: readonly Field[],
-  segments: string[],
+  path: string,
   ctx: ValidationContext,
 ): Field | undefined {
-  if (segments.length === 0) return undefined;
+  let match: Field | undefined;
 
-  for (const field of fields) {
-    if (!evaluateVisibility(field.condition, ctx)) continue;
+  walkFields(fields, (field, walkCtx) => {
+    if (match || !hasFieldName(field)) return;
 
-    if (!hasFieldName(field)) {
-      if (field.type === "row" || field.type === "collapsible") {
-        const found = findFieldByPath(field.fields, segments, ctx);
-        if (found) return found;
-      }
+    const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
+      evaluateVisibility(candidate.condition, ctx),
+    );
+    if (!allConditionsPass) return;
 
-      if (field.type === "tabs") {
-        for (const tab of field.tabs) {
-          const found = findFieldByPath(tab.fields, segments, ctx);
-          if (found) return found;
-        }
-      }
-
-      continue;
+    if (matchesSchemaPath(joinPointer(walkCtx.path, field.name), path)) {
+      match = field;
     }
+  });
 
-    if (field.name !== segments[0]) continue;
-
-    if (segments.length === 1) return field;
-
-    if (field.type === "group") {
-      return findFieldByPath(field.fields, segments.slice(1), ctx);
-    }
-
-    if (field.type === "array") {
-      const next = segments[1];
-      if (next === undefined) return field;
-      if (!isIndexSegment(next)) return undefined;
-      if (segments.length === 2) return field;
-      return findFieldByPath(field.fields, segments.slice(2), ctx);
-    }
-
-    return field;
-  }
-
-  return undefined;
+  return match;
 }
 
 /**
@@ -371,10 +356,9 @@ export async function validatePath(
     formData,
     contextData: options?.contextData,
   };
-  const segments = parsePointer(path);
-  if (segments.length === 0) return { valid: true };
+  if (path === "" || !path.startsWith("/")) return { valid: true };
 
-  const field = findFieldByPath(fields, segments, ctx);
+  const field = findFieldByPath(fields, path, ctx);
   if (!field) return { valid: true };
 
   return validateField(field, path, formData, options);

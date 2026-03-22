@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getByPath, setByPath, escapePointer } from "./path";
+import {
+  getByPath,
+  setByPath,
+  escapePointer,
+  normalizeArrayIndicesToWildcard,
+  splitPointer,
+} from "./path";
 
 describe("getByPath", () => {
   it("returns root object for empty pointer", () => {
@@ -39,5 +45,23 @@ describe("getByPath", () => {
   it("escapes JSON Pointer segments", () => {
     expect(escapePointer("a/b")).toBe("a~1b");
     expect(escapePointer("c~d")).toBe("c~0d");
+  });
+
+  it("normalizes array indices to wildcard segments", () => {
+    expect(normalizeArrayIndicesToWildcard("/items/0/label")).toBe(
+      "/items/*/label",
+    );
+    expect(normalizeArrayIndicesToWildcard("/profile/tags/12/value")).toBe(
+      "/profile/tags/*/value",
+    );
+  });
+
+  it("splits JSON Pointer paths into unescaped segments", () => {
+    expect(splitPointer("/items/0/a~1b/c~0d")).toEqual([
+      "items",
+      "0",
+      "a/b",
+      "c~d",
+    ]);
   });
 });

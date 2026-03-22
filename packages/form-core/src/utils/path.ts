@@ -94,7 +94,19 @@ export function escapePointer(segment: string): string {
   return segment.replace(/~/g, "~0").replace(/\//g, "~1");
 }
 
-function splitPointer(pointer: string): string[] {
+export function normalizeArrayIndicesToWildcard(pointer: string): string {
+  if (pointer === "") return pointer;
+  if (!pointer.startsWith("/")) return pointer;
+
+  return `/${splitPointer(pointer)
+    .map((part) => {
+      const index = Number(part);
+      return Number.isInteger(index) && index >= 0 ? "*" : escapePointer(part);
+    })
+    .join("/")}`;
+}
+
+export function splitPointer(pointer: string): string[] {
   return pointer
     .split("/")
     .slice(1)
