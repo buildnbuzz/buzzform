@@ -16,3 +16,20 @@ const schema: FormSchema = {
   fields: [{ type: "text", name: "email" }],
 };
 ```
+
+## Output transforms
+
+`form-core` can flatten nested submission data into path-keyed output when an integration needs it.
+
+```ts
+import { transformFormOutput } from "@buildnbuzz/form-core";
+
+const payload = transformFormOutput(
+  {
+    profile: { name: "Ada" },
+  },
+  { type: "path" },
+);
+
+// { "profile.name": "Ada" }
+```

@@ -6,4 +6,5 @@ export * from "./utils/walk";
 export * from "./utils/visibility";
 export * from "./utils/defaults";
 export * from "./utils/dependencies";
+export * from "./utils/output";
 export * from "./validation";

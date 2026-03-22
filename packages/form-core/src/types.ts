@@ -398,7 +398,22 @@ export interface FormSchema {
 }
 
 // ============================================================================
-// 8. INFERENCE (SIMPLE, REQUIREDNESS-IGNORING)
+// 8. OUTPUT TRANSFORMATION
+// ============================================================================
+
+/** Output format for transformed submission data. */
+export type OutputType = "path";
+
+/** Configuration for form output transformation helpers. */
+export interface OutputConfig {
+  /** Transform nested objects into path-keyed output. */
+  type: OutputType;
+  /** Delimiter used when flattening nested keys. Defaults to `"."`. */
+  delimiter?: string;
+}
+
+// ============================================================================
+// 9. INFERENCE (SIMPLE, REQUIREDNESS-IGNORING)
 // ============================================================================
 
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
