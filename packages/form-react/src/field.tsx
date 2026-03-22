@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   collectFieldValidationChecks,
   evaluateVisibility,
@@ -15,6 +16,7 @@ import type {
   FieldProps,
   UnknownData,
 } from "./types";
+import { FieldContext } from "./contexts";
 
 const buildValidator = <TFormData extends UnknownData>(
   checks: ValidationCheck[],
@@ -115,6 +117,10 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       field.condition === undefined || evaluateVisibility(field.condition, ctx);
     const isHidden =
       field.hidden !== undefined && evaluateVisibility(field.hidden, ctx);
+    const isDisabled =
+      field.disabled !== undefined && evaluateVisibility(field.disabled, ctx);
+    const isReadOnly =
+      field.readOnly !== undefined && evaluateVisibility(field.readOnly, ctx);
 
     if (!isConditionMet) {
       return (
@@ -141,7 +147,23 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         name={field.name as never}
         validators={mergedValidators}
       >
-        {() => children}
+        {(tanstackField: AnyFieldApi) => (
+          <FieldContext.Provider
+            value={{
+              form,
+              fieldApi: tanstackField,
+              field,
+              formData,
+              contextData,
+              isHidden,
+              isConditionMet,
+              isDisabled,
+              isReadOnly,
+            }}
+          >
+            {children}
+          </FieldContext.Provider>
+        )}
       </form.Field>
     );
   };

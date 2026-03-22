@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { defineValidators, type DataField } from "@buildnbuzz/form-core";
 import { Field } from "./field";
 import type { AnyFieldValidators, FieldFormApi, UnknownData } from "./types";
+import { useFieldContext, type FieldContextValue } from "./contexts";
 
 function createFormHarness(values: UnknownData) {
   const fieldSpy = vi.fn();
@@ -50,16 +51,30 @@ function createFormHarness(values: UnknownData) {
   };
 }
 
+function ContextReader({
+  spy,
+}: {
+  spy: (ctx: FieldContextValue) => void;
+}) {
+  const ctx = useFieldContext();
+  spy(ctx);
+  return <div data-testid="ctx-reader" />;
+}
+
 function renderField({
   field,
   values = {},
   validators,
+  contextData,
   derivedValidationMode,
+  child,
 }: {
   field: DataField;
   values?: UnknownData;
   validators?: AnyFieldValidators;
+  contextData?: UnknownData;
   derivedValidationMode?: "change" | "blur" | "submit";
+  child?: ReactNode;
 }) {
   const harness = createFormHarness(values);
   render(
@@ -67,9 +82,10 @@ function renderField({
       field={field}
       form={harness.form}
       validators={validators}
+      contextData={contextData}
       derivedValidationMode={derivedValidationMode}
     >
-      <div data-testid="field-child">child</div>
+      {child ?? <div data-testid="field-child">child</div>}
     </Field>,
   );
   return harness;
@@ -224,5 +240,35 @@ describe("Field", () => {
     };
     await expect(call.validators.onChangeAsync!("wrong")).resolves.toBe("No match");
     await expect(call.validators.onChangeAsync!("ok")).resolves.toBeUndefined();
+  });
+
+  it("provides field context with runtime flags and data", () => {
+    const ctxSpy = vi.fn();
+    const field: DataField = {
+      type: "text",
+      name: "email",
+      disabled: { $data: "/disableEmail" },
+      readOnly: { $context: "/readOnlyEmail" },
+    };
+
+    renderField({
+      field,
+      values: { email: "ada@example.com", disableEmail: true },
+      contextData: { readOnlyEmail: true },
+      child: <ContextReader spy={ctxSpy} />,
+    });
+
+    const ctx = ctxSpy.mock.calls[0]?.[0] as FieldContextValue;
+    expect(ctx.field.name).toBe("email");
+    expect(ctx.formData).toEqual({
+      email: "ada@example.com",
+      disableEmail: true,
+    });
+    expect(ctx.contextData).toEqual({ readOnlyEmail: true });
+    expect(ctx.isConditionMet).toBe(true);
+    expect(ctx.isHidden).toBe(false);
+    expect(ctx.isDisabled).toBe(true);
+    expect(ctx.isReadOnly).toBe(true);
+    expect(ctx.fieldApi).toEqual({ name: "email" });
   });
 });
