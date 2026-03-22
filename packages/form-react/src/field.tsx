@@ -1,13 +1,16 @@
 import { useEffect, useMemo } from "react";
 import type { AnyFieldApi } from "@tanstack/form-core";
 import {
+  type DataField,
   collectFieldValidationChecks,
   evaluateVisibility,
   escapePointer,
   extractDependencies,
+  fromDotNotation,
   getByPath,
   getValidationGroup,
   runChecks,
+  splitPointer,
   toDotNotation,
   type ValidationCheck,
   type ValidationRegistry,
@@ -65,13 +68,21 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   derivedValidationMode,
   children,
 }: FieldProps<TFormData>) {
-  const deps = useMemo(() => Array.from(extractDependencies(field)), [field]);
-  const fieldName = useMemo(() => {
-    const pointer = field.name.startsWith("/")
-      ? field.name
-      : `/${escapePointer(field.name)}`;
-    return toDotNotation(pointer);
+  const pointer = useMemo(() => {
+    if (field.name.startsWith("/")) return field.name;
+    if (field.name.includes(".")) return fromDotNotation(field.name);
+    return `/${escapePointer(field.name)}`;
   }, [field.name]);
+  const basePointer = useMemo(() => getParentPointer(pointer), [pointer]);
+  const resolvedField = useMemo(
+    () => resolveRelativeDataPaths(field, basePointer),
+    [field, basePointer],
+  );
+  const deps = useMemo(
+    () => Array.from(extractDependencies(resolvedField)),
+    [resolvedField],
+  );
+  const fieldName = useMemo(() => toDotNotation(pointer), [pointer]);
 
   const validationListenTo = useMemo(() => {
     if (deps.length === 0) return undefined;
@@ -88,15 +99,15 @@ export function Field<TFormData extends UnknownData = UnknownData>({
 
   const generatedValidators = useMemo(() => {
     const derivedRun = derivedValidationMode ?? "blur";
-    const changeGroup = getValidationGroup(field.validate, "change");
-    const blurGroup = getValidationGroup(field.validate, "blur");
-    const changeChecks = collectFieldValidationChecks(field, "change", {
+    const changeGroup = getValidationGroup(resolvedField.validate, "change");
+    const blurGroup = getValidationGroup(resolvedField.validate, "blur");
+    const changeChecks = collectFieldValidationChecks(resolvedField, "change", {
       includeDerived: derivedRun === "change",
     });
-    const blurChecks = collectFieldValidationChecks(field, "blur", {
+    const blurChecks = collectFieldValidationChecks(resolvedField, "blur", {
       includeDerived: derivedRun === "blur",
     });
-    const submitChecks = collectFieldValidationChecks(field, "submit", {
+    const submitChecks = collectFieldValidationChecks(resolvedField, "submit", {
       includeDerived: derivedRun === "submit",
     });
 
@@ -135,7 +146,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     }
     return next;
   }, [
-    field,
+    resolvedField,
     form,
     contextData,
     customValidators,
@@ -167,13 +178,17 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     const formData = form.store.state.values as UnknownData;
     const ctx = { formData, contextData };
     const isConditionMet =
-      field.condition === undefined || evaluateVisibility(field.condition, ctx);
+      resolvedField.condition === undefined ||
+      evaluateVisibility(resolvedField.condition, ctx);
     const isHidden =
-      field.hidden !== undefined && evaluateVisibility(field.hidden, ctx);
+      resolvedField.hidden !== undefined &&
+      evaluateVisibility(resolvedField.hidden, ctx);
     const isDisabled =
-      field.disabled !== undefined && evaluateVisibility(field.disabled, ctx);
+      resolvedField.disabled !== undefined &&
+      evaluateVisibility(resolvedField.disabled, ctx);
     const isReadOnly =
-      field.readOnly !== undefined && evaluateVisibility(field.readOnly, ctx);
+      resolvedField.readOnly !== undefined &&
+      evaluateVisibility(resolvedField.readOnly, ctx);
 
     if (!isConditionMet) {
       return (
@@ -205,7 +220,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
             value={{
               form,
               fieldApi: tanstackField,
-              field,
+              field: resolvedField,
               formData,
               contextData,
               isHidden,
@@ -256,6 +271,69 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       {renderField}
     </form.Subscribe>
   );
+}
+
+function resolveRelativeDataPaths<TField extends DataField>(
+  field: TField,
+  basePointer: string,
+): TField {
+  const resolved = resolveDynamicPaths(field, basePointer);
+  return resolved === field ? field : (resolved as TField);
+}
+
+function resolveDynamicPaths(value: unknown, basePointer: string): unknown {
+  if (!value || typeof value !== "object") return value;
+
+  if (Array.isArray(value)) {
+    let changed = false;
+    const next = value.map((item) => {
+      const resolved = resolveDynamicPaths(item, basePointer);
+      if (resolved !== item) changed = true;
+      return resolved;
+    });
+    return changed ? next : value;
+  }
+
+  const record = value as Record<string, unknown>;
+  let changed = false;
+  const next: Record<string, unknown> = {};
+
+  for (const [key, entry] of Object.entries(record)) {
+    if (key === "$data" && typeof entry === "string") {
+      const resolvedPath = resolveRelativePath(entry, basePointer);
+      next[key] = resolvedPath;
+      if (resolvedPath !== entry) changed = true;
+      continue;
+    }
+
+    const resolved = resolveDynamicPaths(entry, basePointer);
+    next[key] = resolved;
+    if (resolved !== entry) changed = true;
+  }
+
+  return changed ? next : value;
+}
+
+function resolveRelativePath(path: string, basePointer: string): string {
+  if (path.startsWith("/")) return path;
+  const segments = path.split("/").filter(Boolean);
+  const escaped = segments.map((segment) => escapePointer(segment)).join("/");
+  if (!basePointer) return `/${escaped}`;
+  if (basePointer === "/") return `/${escaped}`;
+  return basePointer.endsWith("/")
+    ? `${basePointer}${escaped}`
+    : `${basePointer}/${escaped}`;
+}
+
+function getParentPointer(pointer: string): string {
+  if (!pointer || pointer === "/") return "";
+  if (!pointer.startsWith("/")) return "";
+  const parts = splitPointer(pointer);
+  if (parts.length <= 1) return "";
+  return `/${parts
+    .slice(0, -1)
+    .map((segment) => escapePointer(segment))
+    .join("/")}`;
 }
 
 function ConditionalFieldRemover<TFormData extends UnknownData>({

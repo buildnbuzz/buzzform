@@ -260,6 +260,21 @@ describe("Field", () => {
     expect(subscribeSpy).toHaveBeenCalledWith([true]);
   });
 
+  it("resolves relative $data paths against the field parent", () => {
+    const field: DataField = {
+      type: "text",
+      name: "profile.email",
+      condition: { $data: "showEmail" },
+    };
+
+    const { subscribeSpy } = renderField({
+      field,
+      values: { profile: { showEmail: true } },
+    });
+
+    expect(subscribeSpy).toHaveBeenCalledWith([true]);
+  });
+
   it("renders without subscribe when there are no dependencies", () => {
     const field: DataField = {
       type: "text",
