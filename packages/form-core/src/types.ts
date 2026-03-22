@@ -383,6 +383,12 @@ export type Field = DataField | LayoutField;
 
 /** Root schema container. */
 export interface FormSchema {
+  /** Optional stable schema identifier. */
+  id?: string;
+  /** Human-readable schema title. */
+  title?: string;
+  /** Human-readable schema description. */
+  description?: string;
   /** Field list. */
   fields: Field[];
   /** Form-level validation rules. */

@@ -466,6 +466,28 @@ describe("validatePath", () => {
   });
 });
 
+describe("validateSchema", () => {
+  it("accepts schema metadata without affecting validation behavior", async () => {
+    const schema = {
+      id: "signup-form",
+      title: "Sign up",
+      description: "Collect signup details.",
+      fields: [
+        {
+          type: "text" as const,
+          name: "email",
+          required: true,
+        },
+      ],
+    };
+
+    const result = await validateSchema(schema, { email: "" }, { run: "blur" });
+
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/email"]).toBe("This field is required.");
+  });
+});
+
 // ============================================================================
 // Schema-level validation
 // ============================================================================

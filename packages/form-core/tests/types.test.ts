@@ -1,4 +1,4 @@
-import { describe, it, expectTypeOf } from "vitest";
+import { describe, it, expect, expectTypeOf } from "vitest";
 import type { Field, InferDataShape, FormSchema } from "../src";
 
 describe("form-core types", () => {
@@ -42,6 +42,8 @@ describe("form-core types", () => {
       },
     ] as const satisfies Field[];
 
+    expect(fields).toHaveLength(7);
+
     type Shape = InferDataShape<typeof fields>;
 
     expectTypeOf<Shape>().toEqualTypeOf<{
@@ -66,5 +68,18 @@ describe("form-core types", () => {
     expectTypeOf(schema.fields[0].type).toEqualTypeOf<
       "text" | "textarea" | "number" | "select" | "checkbox" | "switch" | "radio" | "group" | "array" | "row" | "tabs" | "collapsible"
     >();
+  });
+
+  it("accepts schema metadata fields", () => {
+    const schema: FormSchema = {
+      id: "contact-form",
+      title: "Contact form",
+      description: "Collect contact details and a message.",
+      fields: [{ type: "text", name: "email" }],
+    };
+
+    expectTypeOf(schema.id).toEqualTypeOf<string | undefined>();
+    expectTypeOf(schema.title).toEqualTypeOf<string | undefined>();
+    expectTypeOf(schema.description).toEqualTypeOf<string | undefined>();
   });
 });
