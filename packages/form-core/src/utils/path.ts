@@ -8,7 +8,7 @@
  * - unescaping "~1" and "~0"
  */
 export function getByPath(obj: unknown, pointer: string): unknown {
-  if (pointer === "") return obj;
+  if (pointer === "" || pointer === "/") return obj;
   if (!pointer.startsWith("/")) return undefined;
 
   const parts = splitPointer(pointer);
@@ -41,52 +41,70 @@ export function setByPath(
   pointer: string,
   value: unknown,
 ): void {
-  if (pointer === "") return;
+  if (pointer === "" || pointer === "/") return;
   if (!pointer.startsWith("/")) return;
 
   const parts = splitPointer(pointer);
   if (parts.length === 0) return;
 
-  let current: unknown = target;
+  let current: Record<string, unknown> | unknown[] = target;
 
-  for (let i = 0; i < parts.length; i += 1) {
+  for (let i = 0; i < parts.length - 1; i += 1) {
     const key = parts[i]!;
-    const isLast = i === parts.length - 1;
+    const nextKey = parts[i + 1]!;
+    const nextIsIndex = isArraySegment(nextKey);
 
     if (Array.isArray(current)) {
-      const index = Number(key);
-      if (!Number.isInteger(index) || index < 0) return;
-
-      if (isLast) {
-        current[index] = value as never;
-        return;
-      }
-
-      if (current[index] === undefined || current[index] === null) {
-        const nextKey = parts[i + 1]!;
-        const nextIsIndex = Number.isInteger(Number(nextKey));
+      if (key === "-") {
+        const index = current.length;
         current[index] = nextIsIndex ? [] : {};
+        current = current[index] as Record<string, unknown> | unknown[];
+        continue;
       }
 
-      current = current[index] as unknown;
+      if (isArraySegment(key)) {
+        const index = Number(key);
+        const existing = current[index];
+        if (existing === null || typeof existing !== "object") {
+          current[index] = nextIsIndex ? [] : {};
+        }
+        current = current[index] as Record<string, unknown> | unknown[];
+        continue;
+      }
+
+      const arrayRecord = current as unknown as Record<string, unknown>;
+      const existing = arrayRecord[key];
+      if (existing === null || typeof existing !== "object") {
+        arrayRecord[key] = nextIsIndex ? [] : {};
+      }
+      current = arrayRecord[key] as Record<string, unknown> | unknown[];
       continue;
     }
 
-    const container = current as Record<string, unknown>;
+    const existing = current[key];
+    if (existing === null || typeof existing !== "object") {
+      current[key] = nextIsIndex ? [] : {};
+    }
+    current = current[key] as Record<string, unknown> | unknown[];
+  }
 
-    if (isLast) {
-      container[key] = value;
+  const lastKey = parts[parts.length - 1]!;
+  if (Array.isArray(current)) {
+    if (lastKey === "-") {
+      current.push(value);
       return;
     }
 
-    if (container[key] === undefined || container[key] === null) {
-      const nextKey = parts[i + 1]!;
-      const nextIsIndex = Number.isInteger(Number(nextKey));
-      container[key] = nextIsIndex ? [] : {};
+    if (isArraySegment(lastKey)) {
+      current[Number(lastKey)] = value;
+      return;
     }
 
-    current = container[key] as unknown;
+    (current as unknown as Record<string, unknown>)[lastKey] = value;
+    return;
   }
+
+  current[lastKey] = value;
 }
 
 /** Escape a JSON Pointer segment. */
@@ -125,4 +143,9 @@ export function splitPointer(pointer: string): string[] {
     .split("/")
     .slice(1)
     .map((part) => part.replace(/~1/g, "/").replace(/~0/g, "~"));
+}
+
+function isArraySegment(segment: string): boolean {
+  const index = Number(segment);
+  return Number.isInteger(index) && index >= 0;
 }

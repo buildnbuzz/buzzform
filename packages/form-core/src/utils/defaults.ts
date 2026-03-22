@@ -32,6 +32,7 @@ export function extractDefaults(fields: readonly Field[]): Record<string, unknow
     fields,
     (field, ctx) => {
       if (!("name" in field) || typeof field.name !== "string") return;
+      if (ctx.parents.some((parent) => parent.type === "array")) return;
 
       const fullPath = ctx.path
         ? `${ctx.path}/${escapePointer(field.name)}`

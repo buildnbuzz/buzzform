@@ -13,6 +13,7 @@ describe("getByPath", () => {
   it("returns root object for empty pointer", () => {
     const obj = { a: 1 };
     expect(getByPath(obj, "")).toBe(obj);
+    expect(getByPath(obj, "/")).toBe(obj);
   });
 
   it("resolves nested object paths", () => {
@@ -42,6 +43,69 @@ describe("getByPath", () => {
     setByPath(obj, "/user/age", 42);
 
     expect(obj).toEqual({ user: { name: "Ada", age: 42 } });
+  });
+
+  it("overwrites primitive intermediates to continue nested writes", () => {
+    const obj: Record<string, unknown> = {
+      user: "Ada",
+    };
+
+    setByPath(obj, "/user/name", "Grace");
+
+    expect(obj).toEqual({
+      user: { name: "Grace" },
+    });
+  });
+
+  it("creates nested arrays and objects for mixed paths", () => {
+    const obj: Record<string, unknown> = {};
+
+    setByPath(obj, "/groups/0/users/1/name", "Ada");
+
+    expect(obj).toEqual({
+      groups: [
+        {
+          users: [undefined, { name: "Ada" }],
+        },
+      ],
+    });
+  });
+
+  it("supports appending to arrays with '-'", () => {
+    const obj: Record<string, unknown> = {
+      tags: ["one"],
+    };
+
+    setByPath(obj, "/tags/-", "two");
+
+    expect(obj).toEqual({
+      tags: ["one", "two"],
+    });
+  });
+
+  it("allows object-like writes on arrays for non-numeric segments", () => {
+    const obj: Record<string, unknown> = {
+      items: [],
+    };
+
+    setByPath(obj, "/items/meta/label", "Collection");
+
+    expect((obj.items as Record<string, unknown>[] & Record<string, unknown>).meta)
+      .toEqual({
+        label: "Collection",
+      });
+  });
+
+  it("handles escaped pointer segments during writes", () => {
+    const obj: Record<string, unknown> = {};
+
+    setByPath(obj, "/a~1b/c~0d", 5);
+
+    expect(obj).toEqual({
+      "a/b": {
+        "c~d": 5,
+      },
+    });
   });
 
   it("escapes JSON Pointer segments", () => {
