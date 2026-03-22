@@ -3,6 +3,8 @@ import {
   getByPath,
   setByPath,
   escapePointer,
+  toDotNotation,
+  fromDotNotation,
   normalizeArrayIndicesToWildcard,
   splitPointer,
 } from "./path";
@@ -45,6 +47,19 @@ describe("getByPath", () => {
   it("escapes JSON Pointer segments", () => {
     expect(escapePointer("a/b")).toBe("a~1b");
     expect(escapePointer("c~d")).toBe("c~0d");
+  });
+
+  it("converts JSON Pointer paths to dot notation", () => {
+    expect(toDotNotation("/profile/name")).toBe("profile.name");
+    expect(toDotNotation("/items/0/label")).toBe("items.0.label");
+    expect(toDotNotation("")).toBe("");
+  });
+
+  it("converts dot notation to JSON Pointer paths", () => {
+    expect(fromDotNotation("profile.name")).toBe("/profile/name");
+    expect(fromDotNotation("items.0.label")).toBe("/items/0/label");
+    expect(fromDotNotation("")).toBe("/");
+    expect(fromDotNotation("/already/pointer")).toBe("/already/pointer");
   });
 
   it("normalizes array indices to wildcard segments", () => {

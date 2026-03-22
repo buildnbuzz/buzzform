@@ -94,6 +94,20 @@ export function escapePointer(segment: string): string {
   return segment.replace(/~/g, "~0").replace(/\//g, "~1");
 }
 
+/** Convert a JSON Pointer path into dot notation. */
+export function toDotNotation(pointer: string): string {
+  if (pointer === "" || pointer === "/") return "";
+  if (!pointer.startsWith("/")) return pointer;
+  return splitPointer(pointer).join(".");
+}
+
+/** Convert a dot-notation path into a JSON Pointer path. */
+export function fromDotNotation(path: string): string {
+  if (path === "") return "/";
+  if (path.startsWith("/")) return path;
+  return `/${path.split(".").join("/")}`;
+}
+
 export function normalizeArrayIndicesToWildcard(pointer: string): string {
   if (pointer === "") return pointer;
   if (!pointer.startsWith("/")) return pointer;
