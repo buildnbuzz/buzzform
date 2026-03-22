@@ -223,11 +223,35 @@ export function Field<TFormData extends UnknownData = UnknownData>({
 
   if (deps.length === 0) return renderField();
 
+  const depsSelector = useMemo(() => {
+    let prev: unknown[] | undefined;
+
+    return (state: { values: UnknownData }) => {
+      if (!prev || prev.length !== deps.length) {
+        const next = deps.map((path) => getByPath(state.values, path));
+        prev = next;
+        return next;
+      }
+
+      let next: unknown[] | undefined;
+      for (let i = 0; i < deps.length; i += 1) {
+        const value = getByPath(state.values, deps[i]!);
+        if (!next) {
+          if (Object.is(value, prev[i])) continue;
+          next = prev.slice();
+        }
+        next[i] = value;
+      }
+
+      if (!next) return prev;
+      prev = next;
+      return next;
+    };
+  }, [deps]);
+
   return (
     <form.Subscribe
-      selector={(state: { values: UnknownData }) =>
-        deps.map((path) => getByPath(state.values, path))
-      }
+      selector={depsSelector}
     >
       {renderField}
     </form.Subscribe>
