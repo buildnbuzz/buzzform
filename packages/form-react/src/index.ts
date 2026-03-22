@@ -1,5 +1,6 @@
 export { useForm } from "./use-form";
 export { Field } from "./field";
+export { Form } from "./form";
 export { FieldRenderer, RenderFields } from "./renderer";
 export {
   FieldContext,
@@ -16,6 +17,7 @@ export type {
   FieldRendererProps,
   RenderFieldsProps,
 } from "./renderer";
+export type { FormProps } from "./form";
 export type {
   AnyReactFormExtendedApi,
   AnyFieldValidators,
