@@ -13,6 +13,8 @@ export interface FieldContextValue<TFormData extends UnknownData = UnknownData> 
   fieldApi: AnyFieldApi;
   /** Current core field schema node. */
   field: DataField;
+  /** JSON Pointer path for the field in form data. */
+  fieldPath: string;
   /** Latest form values snapshot. */
   formData: TFormData;
   /** External context data used by dynamic evaluation and validators. */

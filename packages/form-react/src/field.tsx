@@ -221,6 +221,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
               form,
               fieldApi: tanstackField,
               field: resolvedField,
+              fieldPath: pointer,
               formData,
               contextData,
               isHidden,

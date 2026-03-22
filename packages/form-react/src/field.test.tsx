@@ -356,6 +356,7 @@ describe("Field", () => {
       email: "ada@example.com",
       disableEmail: true,
     });
+    expect(ctx.fieldPath).toBe("/email");
     expect(ctx.contextData).toEqual({ readOnlyEmail: true });
     expect(ctx.isConditionMet).toBe(true);
     expect(ctx.isHidden).toBe(false);
