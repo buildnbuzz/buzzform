@@ -38,6 +38,9 @@ export type DynamicNumber = DynamicValue<number>;
 /** A dynamic boolean value. */
 export type DynamicBoolean = DynamicValue<boolean>;
 
+/** Generic unknown object shape for extension data. */
+export type UnknownData = Record<string, unknown>;
+
 // ============================================================================
 // 2. VISIBILITY CONDITIONS (AST)
 // ============================================================================
@@ -129,7 +132,7 @@ export type CustomValidationCheck = {
   /** Error message shown when the check fails. */
   message: string;
   /** Extra arguments passed to the validator. */
-  args?: Record<string, unknown>;
+  args?: UnknownData;
 };
 
 /** A validation check (built-in or custom). */
@@ -214,7 +217,9 @@ export interface BaseField<TValue = unknown> {
 
   // --- Extension ---
   /** Custom metadata for extension purposes. */
-  meta?: Record<string, unknown>;
+  meta?: UnknownData;
+  /** UI-specific configuration for adapters (opaque to form-core). */
+  ui?: UnknownData;
 }
 
 // ============================================================================
@@ -283,7 +288,7 @@ export interface RadioField extends BaseField<string> {
 /**
  * Group field - wraps fields in a named object.
  */
-export interface GroupField extends BaseField<Record<string, unknown>> {
+export interface GroupField extends BaseField<UnknownData> {
   type: "group";
   /** Nested fields. */
   fields: Field[];
@@ -339,7 +344,9 @@ export interface BaseLayoutField {
   /** Unmount the container entirely; child fields are removed from active runtime behavior. */
   condition?: VisibilityCondition;
   /** Custom metadata for extension purposes. */
-  meta?: Record<string, unknown>;
+  meta?: UnknownData;
+  /** UI-specific configuration for adapters (opaque to form-core). */
+  ui?: UnknownData;
 }
 
 /** Row layout - horizontal container. */
@@ -402,7 +409,7 @@ export interface FormSchema {
   /** Form-level validation rules. */
   validate?: ValidationConfig;
   /** Optional schema metadata. */
-  meta?: Record<string, unknown>;
+  meta?: UnknownData;
 }
 
 // ============================================================================

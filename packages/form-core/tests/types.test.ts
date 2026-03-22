@@ -1,5 +1,5 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
-import type { Field, InferDataShape, FormSchema } from "../src";
+import type { Field, FormSchema, InferDataShape, UnknownData } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
@@ -78,5 +78,25 @@ describe("form-core types", () => {
     expectTypeOf(schema.id).toEqualTypeOf<string | undefined>();
     expectTypeOf(schema.title).toEqualTypeOf<string | undefined>();
     expectTypeOf(schema.description).toEqualTypeOf<string | undefined>();
+  });
+
+  it("accepts ui extension data on fields and layouts", () => {
+    const schema: FormSchema = {
+      fields: [
+        {
+          type: "text",
+          name: "email",
+          ui: { placeholder: "you@domain.com", size: "lg" },
+        },
+        {
+          type: "row",
+          ui: { gap: "md" },
+          fields: [{ type: "text", name: "name" }],
+        },
+      ],
+    };
+
+    expectTypeOf(schema.fields[0]!.ui).toEqualTypeOf<UnknownData | undefined>();
+    expectTypeOf(schema.fields[1]!.ui).toEqualTypeOf<UnknownData | undefined>();
   });
 });
