@@ -6,6 +6,7 @@ import type {
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
+import { escapePointer, fromDotNotation, toDotNotation } from "@buildnbuzz/form-core";
 import { Field } from "./field";
 import { RegistryContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
@@ -30,6 +31,8 @@ export interface FieldRendererProps<
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
   renderFallback?: FallbackRenderer;
+  /** Optional parent data path used to resolve nested field names. */
+  basePath?: string;
 }
 
 /** Renders a single schema field by looking up a renderer from the registry. */
@@ -41,28 +44,52 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   derivedValidationMode,
   registry,
   renderFallback,
+  basePath,
 }: FieldRendererProps<TFormData>) {
   const contextRegistry = useContext(RegistryContext);
   const resolvedRegistry = registry ?? contextRegistry;
   const Component = resolvedRegistry?.[field.type];
+  const basePointer = toPointer(basePath);
+  const resolvedField = isDataField(field)
+    ? resolveDataFieldName(field, basePointer)
+    : field;
+  const nestedContent = renderNestedFields({
+    field,
+    form,
+    contextData,
+    customValidators,
+    derivedValidationMode,
+    registry,
+    renderFallback,
+    basePointer,
+  });
+  const componentNode = Component ? <Component>{nestedContent}</Component> : null;
 
   if (!Component) {
-    return renderFallback ? renderFallback(field) : null;
+    if (renderFallback) {
+      return (
+        <>
+          {renderFallback(field)}
+          {nestedContent}
+        </>
+      );
+    }
+    return nestedContent;
   }
 
-  if (!isDataField(field)) {
-    return <Component />;
+  if (!isDataField(resolvedField)) {
+    return componentNode;
   }
 
   return (
     <Field
-      field={field}
+      field={resolvedField}
       form={form}
       contextData={contextData}
       customValidators={customValidators}
       derivedValidationMode={derivedValidationMode}
     >
-      <Component />
+      <Component>{nestedContent}</Component>
     </Field>
   );
 }
@@ -85,6 +112,8 @@ export interface RenderFieldsProps<
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
   renderFallback?: FallbackRenderer;
+  /** Optional parent data path used to resolve nested field names. */
+  basePath?: string;
 }
 
 /** Renders a list of schema fields using `FieldRenderer`. */
@@ -96,6 +125,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   derivedValidationMode,
   registry,
   renderFallback,
+  basePath,
 }: RenderFieldsProps<TFormData>) {
   return (
     <>
@@ -114,6 +144,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
             derivedValidationMode={derivedValidationMode}
             registry={registry}
             renderFallback={renderFallback}
+            basePath={basePath}
           />
         );
       })}
@@ -123,4 +154,109 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
 
 function isDataField(field: CoreField): field is DataField {
   return "name" in field && typeof field.name === "string";
+}
+
+function renderNestedFields<TFormData extends UnknownData>({
+  field,
+  form,
+  contextData,
+  customValidators,
+  derivedValidationMode,
+  registry,
+  renderFallback,
+  basePointer,
+}: {
+  field: CoreField;
+  form: FieldFormApi<TFormData>;
+  contextData?: UnknownData;
+  customValidators?: ValidationRegistry;
+  derivedValidationMode?: ValidationRun;
+  registry?: FieldRegistry;
+  renderFallback?: FallbackRenderer;
+  basePointer: string;
+}): ReactNode {
+  if (field.type === "tabs") {
+    return field.tabs.map((tab, index) => (
+      <RenderFields
+        key={`${tab.name ?? "tab"}-${index}`}
+        fields={tab.fields}
+        form={form}
+        contextData={contextData}
+        customValidators={customValidators}
+        derivedValidationMode={derivedValidationMode}
+        registry={registry}
+        renderFallback={renderFallback}
+        basePath={toDotNotation(basePointer)}
+      />
+    ));
+  }
+
+  if (field.type === "row" || field.type === "collapsible") {
+    return (
+      <RenderFields
+        fields={field.fields}
+        form={form}
+        contextData={contextData}
+        customValidators={customValidators}
+        derivedValidationMode={derivedValidationMode}
+        registry={registry}
+        renderFallback={renderFallback}
+        basePath={toDotNotation(basePointer)}
+      />
+    );
+  }
+
+  if (field.type === "group") {
+    const nextPointer = joinPointer(basePointer, field.name);
+    return (
+      <RenderFields
+        fields={field.fields}
+        form={form}
+        contextData={contextData}
+        customValidators={customValidators}
+        derivedValidationMode={derivedValidationMode}
+        registry={registry}
+        renderFallback={renderFallback}
+        basePath={toDotNotation(nextPointer)}
+      />
+    );
+  }
+
+  if (field.type === "array") {
+    const nextPointer = `${joinPointer(basePointer, field.name)}/*`;
+    return (
+      <RenderFields
+        fields={field.fields}
+        form={form}
+        contextData={contextData}
+        customValidators={customValidators}
+        derivedValidationMode={derivedValidationMode}
+        registry={registry}
+        renderFallback={renderFallback}
+        basePath={toDotNotation(nextPointer)}
+      />
+    );
+  }
+
+  return null;
+}
+
+function toPointer(path?: string): string {
+  if (!path) return "";
+  return fromDotNotation(path);
+}
+
+function joinPointer(basePointer: string, segment: string): string {
+  const escaped = escapePointer(segment);
+  if (basePointer === "") return `/${escaped}`;
+  return `${basePointer}/${escaped}`;
+}
+
+function resolveDataFieldName(field: DataField, basePointer: string): DataField {
+  const nextName = toDotNotation(joinPointer(basePointer, field.name));
+  if (nextName === field.name) return field;
+  return {
+    ...field,
+    name: nextName,
+  };
 }

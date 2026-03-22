@@ -40,8 +40,24 @@ function TextRenderer() {
   );
 }
 
-function RowRenderer() {
-  return <div data-testid="row-field" />;
+function RowRenderer({ children }: { children?: ReactNode }) {
+  return (
+    <div data-testid="row-field">
+      {children}
+    </div>
+  );
+}
+
+function GroupRenderer({ children }: { children?: ReactNode }) {
+  const { field } = useFieldContext();
+  return (
+    <div
+      data-testid="group-field"
+      data-name={field.name}
+    >
+      {children}
+    </div>
+  );
 }
 
 describe("FieldRenderer", () => {
@@ -130,5 +146,105 @@ describe("RenderFields", () => {
     );
 
     expect(screen.getByTestId("text-field")).not.toBeNull();
+  });
+
+  it("resolves nested group child field names", () => {
+    const { form } = createFormHarness({ profile: { email: "ada@example.com" } });
+    const fields: CoreField[] = [
+      {
+        type: "group",
+        name: "profile",
+        fields: [{ type: "text", name: "email" }],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{
+          group: GroupRenderer,
+          text: TextRenderer,
+        }}
+      />,
+    );
+
+    const group = screen.getByTestId("group-field");
+    expect(group.getAttribute("data-name")).toBe("profile");
+
+    const text = screen.getByTestId("text-field");
+    expect(text.getAttribute("data-name")).toBe("profile.email");
+    expect(text.getAttribute("data-api-name")).toBe("profile.email");
+  });
+
+  it("traverses tabs and rows with inherited base path", () => {
+    const { form } = createFormHarness({
+      profile: { details: { email: "ada@example.com" } },
+    });
+    const fields: CoreField[] = [
+      {
+        type: "group",
+        name: "profile",
+        fields: [
+          {
+            type: "tabs",
+            tabs: [
+              {
+                label: "Details",
+                fields: [
+                  {
+                    type: "row",
+                    fields: [{ type: "text", name: "details.email" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{
+          text: TextRenderer,
+          row: RowRenderer,
+        }}
+      />,
+    );
+
+    const text = screen.getByTestId("text-field");
+    expect(text.getAttribute("data-name")).toBe("profile.details.email");
+    expect(text.getAttribute("data-api-name")).toBe("profile.details.email");
+    const row = screen.getByTestId("row-field");
+    expect(row).not.toBeNull();
+    expect(row.contains(text)).toBe(true);
+  });
+
+  it("uses wildcard base path when traversing array item fields", () => {
+    const { form } = createFormHarness({
+      addresses: [{ city: "Toronto" }],
+    });
+    const fields: CoreField[] = [
+      {
+        type: "array",
+        name: "addresses",
+        fields: [{ type: "text", name: "city" }],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{ text: TextRenderer }}
+      />,
+    );
+
+    const text = screen.getByTestId("text-field");
+    expect(text.getAttribute("data-name")).toBe("addresses.*.city");
+    expect(text.getAttribute("data-api-name")).toBe("addresses.*.city");
   });
 });

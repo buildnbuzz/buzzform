@@ -54,7 +54,7 @@ export function useFormContext<
 
 /** Registry mapping field type strings to renderer components. */
 export type FieldRegistry = {
-  [K in CoreField["type"]]?: ComponentType;
+  [K in CoreField["type"]]?: ComponentType<{ children?: ReactNode }>;
 };
 
 /** React context for globally configured renderer registry. */
