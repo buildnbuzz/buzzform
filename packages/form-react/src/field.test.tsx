@@ -341,11 +341,16 @@ describe("Field", () => {
       name: "email",
       disabled: { $data: "/disableEmail" },
       readOnly: { $context: "/readOnlyEmail" },
+      required: { $data: "/requireEmail", eq: true },
     };
 
     renderField({
       field,
-      values: { email: "ada@example.com", disableEmail: true },
+      values: {
+        email: "ada@example.com",
+        disableEmail: true,
+        requireEmail: true,
+      },
       contextData: { readOnlyEmail: true },
       child: <ContextReader spy={ctxSpy} />,
     });
@@ -355,6 +360,7 @@ describe("Field", () => {
     expect(ctx.formData).toEqual({
       email: "ada@example.com",
       disableEmail: true,
+      requireEmail: true,
     });
     expect(ctx.fieldPath).toBe("/email");
     expect(ctx.contextData).toEqual({ readOnlyEmail: true });
@@ -362,6 +368,7 @@ describe("Field", () => {
     expect(ctx.isHidden).toBe(false);
     expect(ctx.isDisabled).toBe(true);
     expect(ctx.isReadOnly).toBe(true);
+    expect(ctx.isRequired).toBe(true);
     expect(ctx.fieldApi).toEqual({ name: "email" });
   });
 

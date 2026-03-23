@@ -27,6 +27,8 @@ export interface FieldContextValue<TFormData extends UnknownData = UnknownData> 
   isDisabled: boolean;
   /** Whether the field is read-only by runtime visibility rules. */
   isReadOnly: boolean;
+  /** Whether the field is currently required by runtime visibility rules. */
+  isRequired: boolean;
 }
 
 /** React context for the active field rendering scope. */

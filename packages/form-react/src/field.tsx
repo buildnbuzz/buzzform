@@ -189,6 +189,9 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
       evaluateVisibility(resolvedField.readOnly, ctx);
+    const isRequired =
+      resolvedField.required !== undefined &&
+      evaluateVisibility(resolvedField.required, ctx);
 
     if (!isConditionMet) {
       return (
@@ -228,6 +231,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
               isConditionMet,
               isDisabled,
               isReadOnly,
+              isRequired,
             }}
           >
             {children}
