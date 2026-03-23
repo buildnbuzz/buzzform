@@ -3,6 +3,7 @@ import {
   collectFieldValidationChecks,
   collectValidationChecks,
   escapePointer,
+  evaluateVisibility,
   fromDotNotation,
   getByPath,
   runValidationCheck,
@@ -11,6 +12,7 @@ import {
   walkFields,
   type DataField,
   type FormSchema,
+  type ValidationCheck,
   type ValidationRegistry,
   type ValidationRun,
 } from "@buildnbuzz/form-core";
@@ -38,7 +40,8 @@ export function buildStandardSchemaValidator<TFormData>(
   const derivedValidationMode = options.derivedValidationMode ?? "submit";
   const fieldEntries: Array<{
     pointer: string;
-    checks: ReturnType<typeof collectFieldValidationChecks>;
+    field: DataField;
+    checks: ValidationCheck[];
   }> = [];
 
   walkFields(schema.fields, (field, ctx) => {
@@ -47,7 +50,11 @@ export function buildStandardSchemaValidator<TFormData>(
       includeDerived: derivedValidationMode === "submit",
     });
     if (checks.length === 0) return;
-    fieldEntries.push({ pointer: joinPointer(ctx.path, field.name), checks });
+    fieldEntries.push({
+      pointer: joinPointer(ctx.path, field.name),
+      field,
+      checks,
+    });
   });
 
   return {
@@ -62,6 +69,21 @@ export function buildStandardSchemaValidator<TFormData>(
         for (const entry of fieldEntries) {
           const pointers = expandWildcardPointers(data, entry.pointer);
           for (const pointer of pointers) {
+            const basePointer = getParentPointer(pointer);
+            const resolvedField = resolveRelativeDataPaths(
+              entry.field,
+              basePointer,
+            );
+            const ctx = { formData: data, contextData };
+
+            if (!evaluateVisibility(resolvedField.condition, ctx)) continue;
+            if (
+              resolvedField.disabled !== undefined &&
+              evaluateVisibility(resolvedField.disabled, ctx)
+            ) {
+              continue;
+            }
+
             const value = getByPath(data, pointer);
             for (const check of entry.checks) {
               if (shouldSkipCheck(check, value)) continue;
@@ -180,4 +202,64 @@ function joinPointer(basePath: string, segment: string): string {
   return basePath.endsWith("/")
     ? `${basePath}${escaped}`
     : `${basePath}/${escaped}`;
+}
+
+function getParentPointer(pointer: string): string {
+  if (!pointer || pointer === "/") return "";
+  if (!pointer.startsWith("/")) return "";
+  const parts = splitPointer(pointer);
+  if (parts.length <= 1) return "";
+  return `/${parts
+    .slice(0, -1)
+    .map((segment) => escapePointer(segment))
+    .join("/")}`;
+}
+
+function resolveRelativeDataPaths<T>(value: T, basePointer: string): T {
+  const resolved = resolveDynamicPaths(value, basePointer);
+  return resolved === value ? value : (resolved as T);
+}
+
+function resolveDynamicPaths(value: unknown, basePointer: string): unknown {
+  if (!value || typeof value !== "object") return value;
+
+  if (Array.isArray(value)) {
+    let changed = false;
+    const next = value.map((item) => {
+      const resolved = resolveDynamicPaths(item, basePointer);
+      if (resolved !== item) changed = true;
+      return resolved;
+    });
+    return changed ? next : value;
+  }
+
+  const record = value as Record<string, unknown>;
+  let changed = false;
+  const next: Record<string, unknown> = {};
+
+  for (const [key, entry] of Object.entries(record)) {
+    if (key === "$data" && typeof entry === "string") {
+      const resolvedPath = resolveRelativePath(entry, basePointer);
+      next[key] = resolvedPath;
+      if (resolvedPath !== entry) changed = true;
+      continue;
+    }
+
+    const resolved = resolveDynamicPaths(entry, basePointer);
+    next[key] = resolved;
+    if (resolved !== entry) changed = true;
+  }
+
+  return changed ? next : value;
+}
+
+function resolveRelativePath(path: string, basePointer: string): string {
+  if (path.startsWith("/")) return path;
+  const segments = path.split("/").filter(Boolean);
+  const escaped = segments.map((segment) => escapePointer(segment)).join("/");
+  if (!basePointer) return `/${escaped}`;
+  if (basePointer === "/") return `/${escaped}`;
+  return basePointer.endsWith("/")
+    ? `${basePointer}${escaped}`
+    : `${basePointer}/${escaped}`;
 }

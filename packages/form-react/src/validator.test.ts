@@ -161,4 +161,143 @@ describe("buildStandardSchemaValidator", () => {
       expect(result.issues[0]?.path).toEqual(["min"]);
     }
   });
+
+  describe("visibility", () => {
+    it("skips validation when field condition is not met", async () => {
+      const schema: FormSchema = {
+        fields: [
+          {
+            type: "text",
+            name: "firstName",
+            required: true,
+          },
+          {
+            type: "text",
+            name: "lastName",
+            required: true,
+            condition: { $data: "/firstName", neq: "" },
+          },
+        ],
+      };
+
+      const validator = buildStandardSchemaValidator(schema);
+
+      // firstName is empty, so lastName condition is false.
+      // lastName should be skipped even though it is required.
+      const result = await validator["~standard"].validate({
+        firstName: "",
+        lastName: "",
+      });
+
+      expect("issues" in result).toBe(true);
+      if ("issues" in result && result.issues) {
+        // Should only have error for firstName
+        expect(result.issues).toHaveLength(1);
+        expect(result.issues[0]?.path).toEqual(["firstName"]);
+      }
+    });
+
+    it("skips validation when field is disabled", async () => {
+      const schema: FormSchema = {
+        fields: [
+          {
+            type: "text",
+            name: "lockedField",
+            required: true,
+            disabled: true,
+          },
+        ],
+      };
+
+      const validator = buildStandardSchemaValidator(schema);
+      const result = await validator["~standard"].validate({
+        lockedField: "",
+      });
+
+      // Disabled fields should skip validation
+      expect("issues" in result).toBe(false);
+    });
+
+    it("still validates hidden fields", async () => {
+      const schema: FormSchema = {
+        fields: [
+          {
+            type: "text",
+            name: "secretField",
+            required: true,
+            hidden: true,
+          },
+        ],
+      };
+
+      const validator = buildStandardSchemaValidator(schema);
+      const result = await validator["~standard"].validate({
+        secretField: "",
+      });
+
+      // Hidden fields should still be validated
+      expect("issues" in result).toBe(true);
+      if ("issues" in result && result.issues) {
+        expect(result.issues[0]?.path).toEqual(["secretField"]);
+      }
+    });
+
+    it("still validates readOnly fields", async () => {
+      const schema: FormSchema = {
+        fields: [
+          {
+            type: "text",
+            name: "readOnlyField",
+            required: true,
+            readOnly: true,
+          },
+        ],
+      };
+
+      const validator = buildStandardSchemaValidator(schema);
+      const result = await validator["~standard"].validate({
+        readOnlyField: "",
+      });
+
+      // ReadOnly fields should still be validated
+      expect("issues" in result).toBe(true);
+      if ("issues" in result && result.issues) {
+        expect(result.issues[0]?.path).toEqual(["readOnlyField"]);
+      }
+    });
+
+    it("resolves relative paths in conditions during validation", async () => {
+      const schema: FormSchema = {
+        fields: [
+          {
+            type: "group",
+            name: "user",
+            fields: [
+              { type: "text", name: "type", defaultValue: "admin" },
+              {
+                type: "text",
+                name: "adminCode",
+                required: true,
+                condition: { $data: "type", eq: "admin" },
+              },
+            ],
+          },
+        ],
+      };
+
+      const validator = buildStandardSchemaValidator(schema);
+
+      // adminCode condition is true, so it should be validated.
+      const resultAdmin = await validator["~standard"].validate({
+        user: { type: "admin", adminCode: "" },
+      });
+      expect("issues" in resultAdmin).toBe(true);
+
+      // adminCode condition is false, so it should be skipped.
+      const resultUser = await validator["~standard"].validate({
+        user: { type: "guest", adminCode: "" },
+      });
+      expect("issues" in resultUser).toBe(false);
+    });
+  });
 });
