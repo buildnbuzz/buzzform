@@ -7,7 +7,7 @@ import type {
   ValidationRun,
 } from "@buildnbuzz/form-core";
 import { escapePointer, fromDotNotation, toDotNotation } from "@buildnbuzz/form-core";
-import { Field } from "./field";
+import { Field, LayoutField } from "./field";
 import { RegistryContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
 
@@ -78,7 +78,16 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   }
 
   if (!isDataField(resolvedField)) {
-    return componentNode;
+    return (
+      <LayoutField
+        field={resolvedField}
+        form={form}
+        contextData={contextData}
+        basePath={basePath}
+      >
+        {componentNode}
+      </LayoutField>
+    );
   }
 
   return (

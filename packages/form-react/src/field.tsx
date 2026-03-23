@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   type DataField,
+  type Field as CoreField,
   collectFieldValidationChecks,
   evaluateVisibility,
   escapePointer,
@@ -174,6 +175,33 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     return next;
   }, [generatedValidators, validators]);
 
+  const depsSelector = useMemo(() => {
+    let prev: unknown[] | undefined;
+
+    return (state: { values: UnknownData }) => {
+      if (deps.length === 0) return [];
+      if (!prev || prev.length !== deps.length) {
+        const next = deps.map((path) => getByPath(state.values, path));
+        prev = next;
+        return next;
+      }
+
+      let next: unknown[] | undefined;
+      for (let i = 0; i < deps.length; i += 1) {
+        const value = getByPath(state.values, deps[i]!);
+        if (!next) {
+          if (Object.is(value, prev[i])) continue;
+          next = prev.slice();
+        }
+        next[i] = value;
+      }
+
+      if (!next) return prev;
+      prev = next;
+      return next;
+    };
+  }, [deps]);
+
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
     const ctx = { formData, contextData };
@@ -241,12 +269,56 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     );
   };
 
-  if (deps.length === 0) return renderField();
+  if (deps.length === 0) {
+    return renderField();
+  }
+
+  return (
+    <form.Subscribe
+      selector={depsSelector}
+    >
+      {renderField}
+    </form.Subscribe>
+  );
+}
+
+/**
+ * Headless wrapper for layout fields (Row, Tabs, etc.) that provides
+ * visibility logic and context without TanStack form registration.
+ */
+export function LayoutField<TFormData extends UnknownData = UnknownData>({
+  field,
+  form,
+  contextData,
+  basePath,
+  children,
+}: {
+  field: CoreField;
+  form: FieldFormApi<TFormData>;
+  contextData?: UnknownData;
+  basePath?: string;
+  children: React.ReactNode;
+}) {
+  const pointer = useMemo(() => {
+    if (!basePath) return "";
+    return basePath.startsWith("/") ? basePath : fromDotNotation(basePath);
+  }, [basePath]);
+
+  const resolvedField = useMemo(
+    () => resolveDynamicPaths(field, pointer) as CoreField,
+    [field, pointer],
+  );
+
+  const deps = useMemo(
+    () => Array.from(extractDependencies(resolvedField)),
+    [resolvedField],
+  );
 
   const depsSelector = useMemo(() => {
     let prev: unknown[] | undefined;
 
     return (state: { values: UnknownData }) => {
+      if (deps.length === 0) return [];
       if (!prev || prev.length !== deps.length) {
         const next = deps.map((path) => getByPath(state.values, path));
         prev = next;
@@ -268,6 +340,39 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       return next;
     };
   }, [deps]);
+
+  const renderField = () => {
+    const formData = form.store.state.values as UnknownData;
+    const ctx = { formData, contextData };
+    const isConditionMet =
+      resolvedField.condition === undefined ||
+      evaluateVisibility(resolvedField.condition, ctx);
+    const isHidden =
+      resolvedField.hidden !== undefined &&
+      evaluateVisibility(resolvedField.hidden, ctx);
+
+    if (!isConditionMet) return null;
+    if (isHidden) return null;
+
+    return (
+      <FieldContext.Provider
+        value={{
+          form,
+          field: resolvedField,
+          fieldPath: pointer,
+          formData,
+          contextData,
+          isHidden,
+          isConditionMet,
+          isDisabled: false,
+          isReadOnly: false,
+          isRequired: false,
+        }}
+      >
+        {children}
+      </FieldContext.Provider>
+    );
+  };
 
   return (
     <form.Subscribe

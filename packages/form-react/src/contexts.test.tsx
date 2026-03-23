@@ -51,7 +51,7 @@ function OutsideConsumer() {
 describe("field context hooks", () => {
   it("throws when useFieldContext is used outside Field", () => {
     expect(() => render(<OutsideConsumer />)).toThrow(
-      "useFieldContext must be used within a <Field> component",
+      "useFieldContext must be used within a BuzzForm <Field> or <LayoutField> component",
     );
   });
 

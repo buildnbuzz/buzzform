@@ -6,13 +6,16 @@ import type { FieldFormApi, UnknownData } from "./types";
 import { resolveDynamicValue } from "@buildnbuzz/form-core";
 
 /** Value exposed by `FieldContext` for field renderer components. */
-export interface FieldContextValue<TFormData extends UnknownData = UnknownData> {
+export interface FieldContextValue<
+  TField extends CoreField = CoreField,
+  TFormData extends UnknownData = UnknownData,
+> {
   /** TanStack form instance used by this field. */
   form: FieldFormApi<TFormData>;
-  /** TanStack field api for the current field instance. */
-  fieldApi: AnyFieldApi;
+  /** TanStack field api for the current field instance (undefined for layout fields). */
+  fieldApi?: AnyFieldApi;
   /** Current core field schema node. */
-  field: DataField;
+  field: TField;
   /** JSON Pointer path for the field in form data. */
   fieldPath: string;
   /** Latest form values snapshot. */
@@ -36,17 +39,20 @@ export const FieldContext = createContext<unknown>(null);
 
 /** Reads field rendering context from the nearest `Field` wrapper. */
 export function useFieldContext<
+  TField extends CoreField = CoreField,
   TFormData extends UnknownData = UnknownData,
->(): FieldContextValue<TFormData> {
+>(): FieldContextValue<TField, TFormData> {
   const ctx = useContext(FieldContext);
   if (!ctx) {
-    throw new Error("useFieldContext must be used within a <Field> component");
+    throw new Error(
+      "useFieldContext must be used within a BuzzForm <Field> or <LayoutField> component",
+    );
   }
-  return ctx as FieldContextValue<TFormData>;
+  return ctx as unknown as FieldContextValue<TField, TFormData>;
 }
 
 /** Convenience alias for `useFieldContext().fieldApi`. */
-export function useFieldApi(): AnyFieldApi {
+export function useFieldApi(): AnyFieldApi | undefined {
   return useFieldContext().fieldApi;
 }
 
@@ -54,7 +60,7 @@ export function useFieldApi(): AnyFieldApi {
 export function useFormContext<
   TFormData extends UnknownData = UnknownData,
 >(): FieldFormApi<TFormData> {
-  return useFieldContext<TFormData>().form;
+  return useFieldContext<CoreField, TFormData>().form;
 }
 
 /** Options for resolving dynamic field text. */
@@ -71,10 +77,13 @@ export interface ResolvedFieldTextOptions {
  * Resolves dynamic label/placeholder/description values for the active field.
  */
 export function useResolvedFieldText<
-  TFormData extends UnknownData = UnknownData,
   TField extends CoreField = CoreField,
+  TFormData extends UnknownData = UnknownData,
 >(options: ResolvedFieldTextOptions = {}) {
-  const { field, formData, contextData } = useFieldContext<TFormData>() as unknown as {
+  const { field, formData, contextData } = useFieldContext<
+    CoreField,
+    TFormData
+  >() as unknown as {
     field: TField;
     formData: UnknownData;
     contextData?: UnknownData;

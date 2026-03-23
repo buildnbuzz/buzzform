@@ -247,4 +247,103 @@ describe("RenderFields", () => {
     expect(text.getAttribute("data-name")).toBe("addresses.*.city");
     expect(text.getAttribute("data-api-name")).toBe("addresses.*.city");
   });
+
+  it("hides layout fields when hidden evaluates true using relative data paths", () => {
+    const { form } = createFormHarness({
+      profile: { hideRow: true, email: "ada@example.com" },
+    });
+    const fields: CoreField[] = [
+      {
+        type: "group",
+        name: "profile",
+        fields: [
+          {
+            type: "row",
+            hidden: { $data: "hideRow", eq: true },
+            fields: [{ type: "text", name: "email" }],
+          },
+        ],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{
+          row: RowRenderer,
+          text: TextRenderer,
+        }}
+      />,
+    );
+
+    expect(screen.queryByTestId("row-field")).toBeNull();
+    expect(screen.queryByTestId("text-field")).toBeNull();
+  });
+
+  it("removes layout fields when condition evaluates false", () => {
+    const { form } = createFormHarness({
+      profile: { showRow: false, email: "ada@example.com" },
+    });
+    const fields: CoreField[] = [
+      {
+        type: "group",
+        name: "profile",
+        fields: [
+          {
+            type: "row",
+            condition: { $data: "showRow", eq: true },
+            fields: [{ type: "text", name: "email" }],
+          },
+        ],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{
+          row: RowRenderer,
+          text: TextRenderer,
+        }}
+      />,
+    );
+
+    expect(screen.queryByTestId("row-field")).toBeNull();
+    expect(screen.queryByTestId("text-field")).toBeNull();
+  });
+
+  it("renders layout fields when condition evaluates true with relative data path", () => {
+    const { form } = createFormHarness({
+      profile: { showRow: true, email: "ada@example.com" },
+    });
+    const fields: CoreField[] = [
+      {
+        type: "group",
+        name: "profile",
+        fields: [
+          {
+            type: "row",
+            condition: { $data: "showRow", eq: true },
+            fields: [{ type: "text", name: "email" }],
+          },
+        ],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={{
+          row: RowRenderer,
+          text: TextRenderer,
+        }}
+      />,
+    );
+
+    expect(screen.getByTestId("row-field")).not.toBeNull();
+    expect(screen.getByTestId("text-field")).not.toBeNull();
+  });
 });
