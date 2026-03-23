@@ -1,12 +1,27 @@
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { DataField } from "@buildnbuzz/form-core";
 import type { ReactNode } from "react";
 import { Field } from "./field";
-import { useFieldApi, useFieldContext, useFormContext } from "./contexts";
+import {
+  useFieldA11yIds,
+  useFieldApi,
+  useFieldContext,
+  useFieldErrorState,
+  useFormContext,
+} from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
 
-function createFormHarness(values: UnknownData) {
+function createFormHarness(
+  values: UnknownData,
+  metaOverrides: {
+    isTouched?: boolean;
+    isDirty?: boolean;
+    isValid?: boolean;
+    errors?: unknown[];
+  } = {},
+  submissionAttempts = 0,
+) {
   const form = {
     store: { state: { values } },
     deleteField: () => undefined,
@@ -25,6 +40,35 @@ function createFormHarness(values: UnknownData) {
       children: (value: unknown) => ReactNode;
     }) => children(selector({ values })),
   } as unknown as FieldFormApi;
+
+  const fieldApi = {
+    name: "email",
+    state: {
+      meta: {
+        isTouched: false,
+        isDirty: false,
+        isValid: true,
+        errors: [],
+        ...metaOverrides,
+      },
+    },
+    form: {
+      state: {
+        submissionAttempts,
+      },
+    },
+  };
+
+  (form as FieldFormApi).Field = ({
+    name,
+    children,
+  }: {
+    name: string;
+    children: (field: unknown) => ReactNode;
+  }) => {
+    fieldApi.name = name;
+    return children(fieldApi);
+  };
 
   return { form };
 }
@@ -45,6 +89,32 @@ function HookConsumer() {
 
 function OutsideConsumer() {
   useFieldContext();
+  return null;
+}
+
+function ErrorStateConsumer({
+  spy,
+}: {
+  spy: (value: ReturnType<typeof useFieldErrorState>) => void;
+}) {
+  const value = useFieldErrorState();
+  spy(value);
+  return null;
+}
+
+function A11yIdsConsumer({
+  fieldId,
+  description,
+  isInvalid,
+  spy,
+}: {
+  fieldId: string;
+  description?: string;
+  isInvalid?: boolean;
+  spy: (value: ReturnType<typeof useFieldA11yIds>) => void;
+}) {
+  const value = useFieldA11yIds({ fieldId, description, isInvalid });
+  spy(value);
   return null;
 }
 
@@ -72,5 +142,53 @@ describe("field context hooks", () => {
     expect(node.getAttribute("data-name")).toBe("email");
     expect(node.getAttribute("data-api-name")).toBe("email");
     expect(node.getAttribute("data-has-form")).toBe("true");
+  });
+
+  it("normalizes errors and computes invalid state", () => {
+    const field: DataField = { type: "text", name: "email" };
+    const { form } = createFormHarness(
+      { email: "" },
+      {
+        isTouched: true,
+        isValid: false,
+        errors: ["Required", { message: "Too short" }, undefined],
+      },
+    );
+    const spy = vi.fn();
+
+    render(
+      <Field
+        field={field}
+        form={form}
+      >
+        <ErrorStateConsumer spy={spy} />
+      </Field>,
+    );
+
+    const value = spy.mock.calls[0]?.[0];
+    expect(value.shouldShowErrors).toBe(true);
+    expect(value.isInvalid).toBe(true);
+    expect(value.errors).toEqual([
+      { message: "Required" },
+      { message: "Too short" },
+    ]);
+  });
+
+  it("builds aria-describedby ids from helper", () => {
+    const spy = vi.fn();
+    render(
+      <A11yIdsConsumer
+        fieldId="email"
+        description="Helpful"
+        isInvalid
+        spy={spy}
+      />,
+    );
+
+    expect(spy).toHaveBeenCalledWith({
+      descriptionId: "email-description",
+      errorId: "email-error",
+      ariaDescribedBy: "email-description email-error",
+    });
   });
 });

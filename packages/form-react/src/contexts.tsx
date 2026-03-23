@@ -115,6 +115,116 @@ export function useResolvedFieldText<
   };
 }
 
+/** Normalized error entry for UI renderers. */
+export interface FieldErrorItem {
+  /** Human-readable error message. */
+  message?: string;
+}
+
+/** Result payload returned by `useFieldErrorState`. */
+export interface FieldErrorState {
+  /** Normalized error list for rendering. */
+  errors: FieldErrorItem[];
+  /** Whether the field is currently invalid and errors should be shown. */
+  isInvalid: boolean;
+  /** Whether errors should be displayed based on interaction state. */
+  shouldShowErrors: boolean;
+}
+
+/** Options for `useFieldErrorState`. */
+export interface FieldErrorStateOptions {
+  /** Overrides the default error visibility calculation. */
+  shouldShowErrors?: boolean;
+}
+
+/**
+ * Computes normalized errors and invalid state for data fields.
+ */
+export function useFieldErrorState(
+  options: FieldErrorStateOptions = {},
+): FieldErrorState {
+  const { fieldApi } = useFieldContext();
+  if (!fieldApi) {
+    throw new Error(
+      "useFieldErrorState must be used within a BuzzForm data field context",
+    );
+  }
+
+  const meta = fieldApi.state.meta as {
+    isTouched?: boolean;
+    isDirty?: boolean;
+    isValid?: boolean;
+    errors?: unknown[];
+  };
+  const shouldShowErrors =
+    options.shouldShowErrors ??
+    Boolean(
+      meta.isTouched ||
+        meta.isDirty ||
+        (fieldApi.form?.state?.submissionAttempts ?? 0) > 0,
+    );
+  const errors = normalizeFieldErrors(meta.errors);
+  const isInvalid = shouldShowErrors && !meta.isValid && errors.length > 0;
+
+  return {
+    errors,
+    isInvalid,
+    shouldShowErrors,
+  };
+}
+
+/** Options for `useFieldA11yIds`. */
+export interface FieldA11yIdsOptions {
+  /** Field id used as the base for generated ids. */
+  fieldId: string;
+  /** Optional field description content. */
+  description?: string | null;
+  /** Whether to include an error id in the described-by chain. */
+  isInvalid?: boolean;
+}
+
+/** Result payload returned by `useFieldA11yIds`. */
+export interface FieldA11yIds {
+  /** ID for the description element (if any). */
+  descriptionId?: string;
+  /** ID for the error element (if any). */
+  errorId?: string;
+  /** Combined value for `aria-describedby` (if any). */
+  ariaDescribedBy?: string;
+}
+
+/**
+ * Builds stable description/error ids and `aria-describedby` values.
+ */
+export function useFieldA11yIds({
+  fieldId,
+  description,
+  isInvalid,
+}: FieldA11yIdsOptions): FieldA11yIds {
+  const descriptionId = description ? `${fieldId}-description` : undefined;
+  const errorId = isInvalid ? `${fieldId}-error` : undefined;
+  const ariaDescribedBy =
+    [descriptionId, errorId].filter(Boolean).join(" ") || undefined;
+
+  return {
+    descriptionId,
+    errorId,
+    ariaDescribedBy,
+  };
+}
+
+function normalizeFieldErrors(errors: unknown[] | undefined): FieldErrorItem[] {
+  if (!errors?.length) return [];
+  return errors
+    .map((error) => {
+      if (!error) return undefined;
+      if (typeof error === "string") return { message: error };
+      if (typeof error === "object") return error as FieldErrorItem;
+      return undefined;
+    })
+    .filter(Boolean) as FieldErrorItem[];
+}
+
 /** Registry mapping field type strings to renderer components. */
 export type FieldRegistry = {
   [K in CoreField["type"]]?: ComponentType<{ children?: ReactNode }>;

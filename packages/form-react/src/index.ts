@@ -6,8 +6,10 @@ export {
   FieldContext,
   FormProvider,
   RegistryContext,
+  useFieldA11yIds,
   useFieldApi,
   useFieldContext,
+  useFieldErrorState,
   useFormContext,
   useRegistry,
   useResolvedFieldText,
@@ -29,7 +31,12 @@ export type {
   UseFormOptionsWithSchema,
 } from "./types";
 export type {
+  FieldA11yIds,
+  FieldA11yIdsOptions,
   FieldContextValue,
+  FieldErrorItem,
+  FieldErrorState,
+  FieldErrorStateOptions,
   FieldRegistry,
   FormProviderProps,
   ResolvedFieldTextOptions,
