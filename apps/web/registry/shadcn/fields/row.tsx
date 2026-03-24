@@ -97,9 +97,7 @@ export function RowField({ children }: { children?: ReactNode }) {
         wrap && "flex-wrap",
         // Each direct DOM child (FieldGroup div) becomes a flex item
         "*:min-w-0",
-        responsive
-          ? "*:w-full md:*:flex-1 md:*:w-auto"
-          : "*:flex-1",
+        responsive ? "*:w-full md:*:flex-1" : "*:flex-1",
       )}
       style={gapStyle}
     >
