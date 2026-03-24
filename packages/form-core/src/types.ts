@@ -25,9 +25,10 @@ export type ContextPath = string;
 /**
  * A literal value or a dynamic reference to form data or external context.
  */
-export type DynamicValue<
-  T = unknown,
-> = T | { $data: DataPath } | { $context: ContextPath };
+export type DynamicValue<T = unknown> =
+  | T
+  | { $data: DataPath }
+  | { $context: ContextPath };
 
 /** A dynamic string value. */
 export type DynamicString = DynamicValue<string>;
@@ -164,14 +165,6 @@ export interface ValidationConfig {
 // 4. FIELD BASICS
 // ============================================================================
 
-/** Styling options for a field. */
-export interface FieldStyle {
-  /** Additional CSS class for the field wrapper. */
-  className?: string;
-  /** Field width (e.g., "50%", "200px", 200). */
-  width?: string | number;
-}
-
 /**
  * Base field interface. All data fields extend this.
  */
@@ -209,9 +202,7 @@ export interface BaseField<TValue = unknown> {
   /** Declarative validation rules. */
   validate?: ValidationConfig;
 
-  // --- Styling ---
-  /** Styling options. */
-  style?: FieldStyle;
+  // --- HTML ---
   /** HTML autocomplete attribute. */
   autoComplete?: string;
 
@@ -378,8 +369,8 @@ export interface TabsField extends BaseLayoutField {
 /** Collapsible layout - expandable container. */
 export interface CollapsibleField extends BaseLayoutField {
   type: "collapsible";
-  /** Collapsible title. */
-  title: DynamicString;
+  /** Collapsible label. */
+  label: DynamicString;
   /** Nested fields. */
   fields: Field[];
   /** Start collapsed. */
