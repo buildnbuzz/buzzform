@@ -235,8 +235,10 @@ export function extractDependencies(field: Field): Set<string> {
 
   if ("options" in field && Array.isArray(field.options)) {
     for (const option of field.options) {
-      extractFromDynamicValue(option.label, deps);
-      extractFromDynamicValue(option.disabled as DynamicValue<unknown>, deps);
+      if (typeof option === "object") {
+        extractFromDynamicValue(option.label, deps);
+        extractFromDynamicValue(option.disabled as DynamicValue<unknown>, deps);
+      }
     }
   }
 

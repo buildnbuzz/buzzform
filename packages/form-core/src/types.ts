@@ -255,13 +255,27 @@ export interface NumberField extends BaseField<number> {
 /** Select input field. */
 export interface SelectField extends BaseField<string> {
   type: "select";
-  /** Available options. */
-  options: FieldOption<string>[];
+  /** Available options. Strings are normalized to `{ label, value }` at render time. */
+  options: FieldOption<string>[] | string[];
 }
 
-/** Checkbox input field. */
+/** Checkbox input field (single boolean). */
 export interface CheckboxField extends BaseField<boolean> {
   type: "checkbox";
+  hasMany?: false;
+}
+
+/** Checkbox group field - multiple selections from a list of options. */
+export interface CheckboxGroupField extends BaseField<string[]> {
+  type: "checkbox";
+  /** Enable multi-select mode; renders a group of checkboxes from options. */
+  hasMany: true;
+  /** Available options. Strings are normalized to `{ label, value }` at render time. */
+  options: FieldOption<string>[] | string[];
+  /** Minimum number of selections. */
+  minSelected?: number;
+  /** Maximum number of selections. */
+  maxSelected?: number;
 }
 
 /** Switch input field. */
@@ -272,8 +286,8 @@ export interface SwitchField extends BaseField<boolean> {
 /** Radio input field. */
 export interface RadioField extends BaseField<string> {
   type: "radio";
-  /** Available options. */
-  options: FieldOption<string>[];
+  /** Available options. Strings are normalized to `{ label, value }` at render time. */
+  options: FieldOption<string>[] | string[];
 }
 
 /**
@@ -310,6 +324,8 @@ export interface FieldOption<TValue = string> {
   value: TValue;
   /** Option disabled state. */
   disabled?: DynamicBoolean;
+  /** UI-specific configuration for this option (e.g., description, icon). */
+  ui?: UnknownData;
 }
 
 /** Union of all data-bearing fields. */
@@ -319,6 +335,7 @@ export type DataField =
   | NumberField
   | SelectField
   | CheckboxField
+  | CheckboxGroupField
   | SwitchField
   | RadioField
   | GroupField
@@ -432,17 +449,19 @@ type FieldValue<TField extends Field> = TField extends TextField
       ? number
       : TField extends SelectField
         ? string
-        : TField extends CheckboxField
-          ? boolean
-          : TField extends SwitchField
+        : TField extends CheckboxGroupField
+          ? string[]
+          : TField extends CheckboxField
             ? boolean
-            : TField extends RadioField
-              ? string
-              : TField extends GroupField
-                ? InferDataShape<TField["fields"]>
-                : TField extends ArrayField
-                  ? InferDataShape<TField["fields"]>[]
-                  : never;
+            : TField extends SwitchField
+              ? boolean
+              : TField extends RadioField
+                ? string
+                : TField extends GroupField
+                  ? InferDataShape<TField["fields"]>
+                  : TField extends ArrayField
+                    ? InferDataShape<TField["fields"]>[]
+                    : never;
 
 type FieldDataShape<TField extends Field> = TField extends DataField
   ? { [K in TField["name"]]: FieldValue<TField> }
