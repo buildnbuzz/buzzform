@@ -6,19 +6,19 @@ export {
   FieldContext,
   FormProvider,
   RegistryContext,
+  useDataFieldContext,
   useFieldA11yIds,
   useFieldApi,
   useFieldContext,
   useFieldErrorState,
   useFormContext,
+  useDataField,
+  useLayoutField,
   useRegistry,
   useResolvedFieldText,
 } from "./contexts";
 
-export type {
-  FieldRendererProps,
-  RenderFieldsProps,
-} from "./renderer";
+export type { FieldRendererProps, RenderFieldsProps } from "./renderer";
 export type { FormProps } from "./form";
 export type {
   AnyReactFormExtendedApi,
@@ -31,6 +31,9 @@ export type {
   UseFormOptionsWithSchema,
 } from "./types";
 export type {
+  DataFieldContextValue,
+  DataFieldState,
+  DataFieldOptions,
   FieldA11yIds,
   FieldA11yIdsOptions,
   FieldContextValue,
@@ -39,5 +42,7 @@ export type {
   FieldErrorStateOptions,
   FieldRegistry,
   FormProviderProps,
+  LayoutFieldState,
+  LayoutFieldOptions,
   ResolvedFieldTextOptions,
 } from "./contexts";
