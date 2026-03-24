@@ -1,8 +1,9 @@
 "use client";
 
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import { useRef, useEffect } from "react";
+import type { TextareaField as TextareaFieldDef } from "@buildnbuzz/form-core";
 import { useDataField } from "@buildnbuzz/form-react";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Field,
   FieldContent,
@@ -12,7 +13,11 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 
-export function TextField() {
+interface TextareaUi {
+  autoResize?: boolean;
+}
+
+export function TextareaField() {
   const {
     fieldApi,
     field,
@@ -27,7 +32,20 @@ export function TextField() {
     descriptionId,
     errorId,
     ariaDescribedBy,
-  } = useDataField<TextFieldDef>();
+  } = useDataField<TextareaFieldDef>();
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const value = (fieldApi.state.value as string) ?? "";
+  const ui = field.ui as TextareaUi | undefined;
+
+  // Auto-resize logic
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea && ui?.autoResize) {
+      textarea.style.height = "auto";
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  }, [value, ui?.autoResize]);
 
   return (
     <FieldGroup data-field={fieldApi.name}>
@@ -40,12 +58,12 @@ export function TextField() {
         )}
 
         <FieldContent>
-          <Input
+          <Textarea
+            ref={textareaRef}
             id={fieldApi.name}
             name={fieldApi.name}
-            type="text"
             autoComplete={field.autoComplete}
-            value={(fieldApi.state.value as string) ?? ""}
+            value={value}
             onChange={(e) => fieldApi.handleChange(e.target.value)}
             onBlur={fieldApi.handleBlur}
             placeholder={placeholder}
@@ -56,6 +74,11 @@ export function TextField() {
             minLength={field.minLength}
             maxLength={field.maxLength}
             required={isRequired}
+            style={
+              ui?.autoResize
+                ? { resize: "none", overflow: "hidden" }
+                : undefined
+            }
           />
         </FieldContent>
 

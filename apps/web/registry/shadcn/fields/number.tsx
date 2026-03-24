@@ -1,6 +1,6 @@
 "use client";
 
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { NumberField as NumberFieldDef } from "@buildnbuzz/form-core";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 
-export function TextField() {
+export function NumberField() {
   const {
     fieldApi,
     field,
@@ -27,7 +27,9 @@ export function TextField() {
     descriptionId,
     errorId,
     ariaDescribedBy,
-  } = useDataField<TextFieldDef>();
+  } = useDataField<NumberFieldDef>();
+
+  const value = fieldApi.state.value as number | undefined;
 
   return (
     <FieldGroup data-field={fieldApi.name}>
@@ -43,18 +45,23 @@ export function TextField() {
           <Input
             id={fieldApi.name}
             name={fieldApi.name}
-            type="text"
+            type="number"
             autoComplete={field.autoComplete}
-            value={(fieldApi.state.value as string) ?? ""}
-            onChange={(e) => fieldApi.handleChange(e.target.value)}
+            value={value ?? ""}
+            onChange={(e) =>
+              fieldApi.handleChange(
+                e.target.value === "" ? undefined : Number(e.target.value),
+              )
+            }
             onBlur={fieldApi.handleBlur}
             placeholder={placeholder}
             disabled={isDisabled}
             readOnly={isReadOnly}
+            min={field.min}
+            max={field.max}
+            step={field.step ?? 1}
             aria-invalid={isInvalid}
             aria-describedby={ariaDescribedBy}
-            minLength={field.minLength}
-            maxLength={field.maxLength}
             required={isRequired}
           />
         </FieldContent>

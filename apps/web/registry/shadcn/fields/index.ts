@@ -1,12 +1,30 @@
 "use client";
 
 import { TextField } from "./text";
-import type { FieldRegistry } from "@buildnbuzz/form-react";
+import { RowField } from "./row";
+import { TextareaField } from "./textarea";
+import { NumberField } from "./number";
+import { SelectField } from "./select";
+import { CheckboxField } from "./checkbox";
+import { SwitchField } from "./switch";
+import { RadioField } from "./radio";
+import { GroupField } from "./group";
+import { ArrayField } from "./array";
+import { TabsField } from "./tabs";
+import { CollapsibleField } from "./collapsible";
 
 // Default shadcn registry — maps field types to shadcn-styled components.
-export const shadcnRegistry: FieldRegistry = {
+export const shadcnRegistry = {
   text: TextField,
-  // number: NumberField,
-  // select: SelectField,
-  // group: GroupField,
-};
+  row: RowField,
+  textarea: TextareaField,
+  number: NumberField,
+  select: SelectField,
+  checkbox: CheckboxField,
+  switch: SwitchField,
+  radio: RadioField,
+  group: GroupField,
+  array: ArrayField,
+  tabs: TabsField,
+  collapsible: CollapsibleField,
+} as const;
