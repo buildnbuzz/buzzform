@@ -1,7 +1,7 @@
 "use client";
 
 import type { CheckboxField as CheckboxFieldDef } from "@buildnbuzz/form-core";
-import { useDataField } from "@buildnbuzz/form-react";
+import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
@@ -12,9 +12,16 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 
+interface CheckboxUi {
+  autoFocus?: boolean;
+  className?: string;
+  width?: string | number;
+}
+
 export function CheckboxField() {
   const {
     fieldApi,
+    field,
     isDisabled,
     isReadOnly,
     isRequired,
@@ -25,12 +32,25 @@ export function CheckboxField() {
     descriptionId,
     errorId,
     ariaDescribedBy,
+    handleChange,
+    handleBlur,
   } = useDataField<CheckboxFieldDef>();
 
+  // Delegate to group renderer if hasMany
+  if ("hasMany" in field && field.hasMany) {
+    return <CheckboxGroupField />;
+  }
+
   const value = (fieldApi.state.value as boolean) ?? false;
+  const ui = field.ui as CheckboxUi | undefined;
+
+  const width = ui?.width;
+  const widthStyle = width
+    ? { width: typeof width === "number" ? `${width}px` : width, flex: "0 1 auto" }
+    : undefined;
 
   return (
-    <FieldGroup data-field={fieldApi.name}>
+    <FieldGroup data-field={fieldApi.name} className={ui?.className} style={widthStyle}>
       <Field
         orientation="horizontal"
         data-invalid={isInvalid}
@@ -41,12 +61,14 @@ export function CheckboxField() {
           checked={value}
           onCheckedChange={(checked) => {
             if (isReadOnly) return;
-            fieldApi.handleChange(!!checked);
+            handleChange(!!checked);
+            handleBlur();
           }}
           disabled={isDisabled}
           aria-invalid={isInvalid}
           aria-describedby={ariaDescribedBy}
           aria-readonly={isReadOnly}
+          autoFocus={ui?.autoFocus}
         />
 
         <FieldContent>
@@ -70,3 +92,5 @@ export function CheckboxField() {
     </FieldGroup>
   );
 }
+
+import { CheckboxGroupField } from "./checkbox-group";
