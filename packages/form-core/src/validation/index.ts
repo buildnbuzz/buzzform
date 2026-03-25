@@ -210,6 +210,15 @@ export const builtInValidators = {
   matches: (value: unknown, args?: ValidatorArgsMap["matches"]) => {
     return value === args?.other;
   },
+
+  passwordCriteria: (value: unknown, args?: ValidatorArgsMap["passwordCriteria"]) => {
+    if (typeof value !== "string") return false;
+    if (args?.requireUppercase && !/[A-Z]/.test(value)) return false;
+    if (args?.requireLowercase && !/[a-z]/.test(value)) return false;
+    if (args?.requireNumber && !/[0-9]/.test(value)) return false;
+    if (args?.requireSpecial && !/[^A-Za-z0-9]/.test(value)) return false;
+    return true;
+  },
 };
 
 // ============================================================================
@@ -624,20 +633,6 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
   }
 
   if (field.type === "text" || field.type === "textarea") {
-    if (typeof field.minLength === "number") {
-      checks.push({
-        type: "minLength",
-        message: `Must be at least ${field.minLength} characters.`,
-        args: { min: field.minLength },
-      });
-    }
-    if (typeof field.maxLength === "number") {
-      checks.push({
-        type: "maxLength",
-        message: `Must be at most ${field.maxLength} characters.`,
-        args: { max: field.maxLength },
-      });
-    }
     if (field.pattern !== undefined) {
       checks.push({
         type: "pattern",
@@ -645,6 +640,36 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         args: { pattern: field.pattern },
       });
     }
+  }
+
+  if (field.type === "email") {
+    checks.push({
+      type: "email",
+      message: "Must be a valid email address.",
+    });
+  }
+
+  if (field.type === "password" && field.criteria) {
+    checks.push({
+      type: "passwordCriteria",
+      message: "Password does not meet the requirements.",
+      args: field.criteria,
+    });
+  }
+
+  if ("minLength" in field && typeof field.minLength === "number") {
+    checks.push({
+      type: "minLength",
+      message: `Must be at least ${field.minLength} characters.`,
+      args: { min: field.minLength },
+    });
+  }
+  if ("maxLength" in field && typeof field.maxLength === "number") {
+    checks.push({
+      type: "maxLength",
+      message: `Must be at most ${field.maxLength} characters.`,
+      args: { max: field.maxLength },
+    });
   }
 
   if (field.type === "number") {

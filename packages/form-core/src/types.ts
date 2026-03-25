@@ -109,6 +109,12 @@ export interface ValidatorArgsMap {
   minSelected: { min?: number | DynamicNumber };
   maxSelected: { max?: number | DynamicNumber };
   matches: { other?: DynamicValue<unknown> };
+  passwordCriteria: {
+    requireUppercase?: boolean;
+    requireLowercase?: boolean;
+    requireNumber?: boolean;
+    requireSpecial?: boolean;
+  };
 }
 
 /** Names of built-in validators. */
@@ -220,6 +226,8 @@ export interface BaseField<TValue = unknown> {
 /** Text input field. */
 export interface TextField extends BaseField<string> {
   type: "text";
+  /** Trim whitespace from the value on blur. */
+  trim?: boolean;
   /** Minimum character length. */
   minLength?: number;
   /** Maximum character length. */
@@ -228,9 +236,43 @@ export interface TextField extends BaseField<string> {
   pattern?: string;
 }
 
+/** Email input field. Automatically applies email format validation. */
+export interface EmailField extends BaseField<string> {
+  type: "email";
+  /** Minimum character length. */
+  minLength?: number;
+  /** Maximum character length. */
+  maxLength?: number;
+}
+
+/** Password strength criteria. */
+export interface PasswordCriteria {
+  /** Require at least one uppercase letter. */
+  requireUppercase?: boolean;
+  /** Require at least one lowercase letter. */
+  requireLowercase?: boolean;
+  /** Require at least one numeric digit. */
+  requireNumber?: boolean;
+  /** Require at least one special character. */
+  requireSpecial?: boolean;
+}
+
+/** Password input field. */
+export interface PasswordField extends BaseField<string> {
+  type: "password";
+  /** Minimum character length. Defaults to 8. */
+  minLength?: number;
+  /** Maximum character length. */
+  maxLength?: number;
+  /** Password strength criteria for validation. */
+  criteria?: PasswordCriteria;
+}
+
 /** Multi-line text input field. */
 export interface TextareaField extends BaseField<string> {
   type: "textarea";
+  /** Trim whitespace from the value on blur. */
+  trim?: boolean;
   /** Minimum character length. */
   minLength?: number;
   /** Maximum character length. */
@@ -331,6 +373,8 @@ export interface FieldOption<TValue = string> {
 /** Union of all data-bearing fields. */
 export type DataField =
   | TextField
+  | EmailField
+  | PasswordField
   | TextareaField
   | NumberField
   | SelectField
@@ -443,25 +487,29 @@ type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
 type FieldValue<TField extends Field> = TField extends TextField
   ? string
-  : TField extends TextareaField
+  : TField extends EmailField
     ? string
-    : TField extends NumberField
-      ? number
-      : TField extends SelectField
+    : TField extends PasswordField
+      ? string
+      : TField extends TextareaField
         ? string
-        : TField extends CheckboxGroupField
-          ? string[]
-          : TField extends CheckboxField
-            ? boolean
-            : TField extends SwitchField
-              ? boolean
-              : TField extends RadioField
-                ? string
-                : TField extends GroupField
-                  ? InferDataShape<TField["fields"]>
-                  : TField extends ArrayField
-                    ? InferDataShape<TField["fields"]>[]
-                    : never;
+        : TField extends NumberField
+          ? number
+          : TField extends SelectField
+            ? string
+            : TField extends CheckboxGroupField
+              ? string[]
+              : TField extends CheckboxField
+                ? boolean
+                : TField extends SwitchField
+                  ? boolean
+                  : TField extends RadioField
+                    ? string
+                    : TField extends GroupField
+                      ? InferDataShape<TField["fields"]>
+                      : TField extends ArrayField
+                        ? InferDataShape<TField["fields"]>[]
+                        : never;
 
 type FieldDataShape<TField extends Field> = TField extends DataField
   ? { [K in TField["name"]]: FieldValue<TField> }

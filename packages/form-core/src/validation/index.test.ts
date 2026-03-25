@@ -58,6 +58,21 @@ describe("builtInValidators", () => {
     expect(builtInValidators.matches("abc", { other: "abc" })).toBe(true);
     expect(builtInValidators.matches("abc", { other: "xyz" })).toBe(false);
   });
+
+  it("validates passwordCriteria", () => {
+    const criteria = {
+      requireUppercase: true,
+      requireLowercase: true,
+      requireNumber: true,
+      requireSpecial: true,
+    };
+    expect(builtInValidators.passwordCriteria("Abcdef1!", criteria)).toBe(true);
+    expect(builtInValidators.passwordCriteria("abcdef1!", criteria)).toBe(false); // no uppercase
+    expect(builtInValidators.passwordCriteria("ABCDEF1!", criteria)).toBe(false); // no lowercase
+    expect(builtInValidators.passwordCriteria("Abcdefg!", criteria)).toBe(false); // no number
+    expect(builtInValidators.passwordCriteria("Abcdef12", criteria)).toBe(false); // no special
+    expect(builtInValidators.passwordCriteria("Abcdef1!", {})).toBe(true);        // no criteria = pass
+  });
 });
 
 // ============================================================================
@@ -78,9 +93,9 @@ describe("deriveFieldChecks", () => {
     const types = checks.map((check) => check.type);
     expect(types).toEqual([
       "required",
+      "pattern",
       "minLength",
       "maxLength",
-      "pattern",
     ]);
   });
 
@@ -93,6 +108,29 @@ describe("deriveFieldChecks", () => {
     });
 
     expect(checks.map((check) => check.type)).toEqual(["precision", "step"]);
+  });
+
+  it("derives email format check for email fields", () => {
+    const checks = deriveFieldChecks({ type: "email", name: "email", minLength: 5 });
+    const types = checks.map((c) => c.type);
+    expect(types).toContain("email");
+    expect(types).toContain("minLength");
+  });
+
+  it("derives passwordCriteria check when criteria is set", () => {
+    const checks = deriveFieldChecks({
+      type: "password",
+      name: "password",
+      criteria: { requireUppercase: true, requireNumber: true },
+    });
+    const criteriaCheck = checks.find((c) => c.type === "passwordCriteria");
+    expect(criteriaCheck).toBeDefined();
+    expect(criteriaCheck?.args).toEqual({ requireUppercase: true, requireNumber: true });
+  });
+
+  it("does not derive passwordCriteria when criteria is absent", () => {
+    const checks = deriveFieldChecks({ type: "password", name: "password" });
+    expect(checks.find((c) => c.type === "passwordCriteria")).toBeUndefined();
   });
 });
 
