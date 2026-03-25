@@ -13,6 +13,7 @@ export {
   useFieldErrorState,
   useFormContext,
   useDataField,
+  useFieldOptions,
   useLayoutField,
   useRegistry,
   useResolvedFieldText,
@@ -44,5 +45,6 @@ export type {
   FormProviderProps,
   LayoutFieldState,
   LayoutFieldOptions,
+  FieldOptionsState,
   ResolvedFieldTextOptions,
 } from "./contexts";

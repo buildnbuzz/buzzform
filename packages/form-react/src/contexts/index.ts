@@ -39,6 +39,9 @@ export type {
   FieldA11yIdsOptions,
 } from "./hooks/use-field-a11y-ids";
 
+export { useFieldOptions } from "./hooks/use-field-options";
+export type { FieldOptionsState } from "./hooks/use-field-options";
+
 // Primary field hooks
 export { useDataField, useFieldUiState } from "./hooks/use-data-field";
 export type {
