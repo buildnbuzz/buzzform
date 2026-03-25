@@ -1,6 +1,8 @@
 "use client";
 
 import { TextField } from "./text";
+import { EmailField } from "./email";
+import { PasswordField } from "./password";
 import { RowField } from "./row";
 import { TextareaField } from "./textarea";
 import { NumberField } from "./number";
@@ -16,6 +18,8 @@ import { CollapsibleField } from "./collapsible";
 // Default shadcn registry — maps field types to shadcn-styled components.
 export const shadcnRegistry = {
   text: TextField,
+  email: EmailField,
+  password: PasswordField,
   row: RowField,
   textarea: TextareaField,
   number: NumberField,
