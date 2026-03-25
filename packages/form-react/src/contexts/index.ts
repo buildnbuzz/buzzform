@@ -43,12 +43,10 @@ export { useFieldOptions } from "./hooks/use-field-options";
 export type { FieldOptionsState } from "./hooks/use-field-options";
 
 // Primary field hooks
-export { useDataField, useFieldUiState } from "./hooks/use-data-field";
+export { useDataField } from "./hooks/use-data-field";
 export type {
   DataFieldState,
   DataFieldOptions,
-  FieldUiState,
-  FieldUiStateOptions,
 } from "./hooks/use-data-field";
 
 export { useLayoutField } from "./hooks/use-layout-field";

@@ -16,7 +16,7 @@ export interface DataFieldState<
   TField extends DataField = DataField,
   TFormData extends UnknownData = UnknownData,
 > extends DataFieldContextValue<TField, TFormData>,
-    FieldErrorState {
+  FieldErrorState {
   /** Resolved field label. */
   label: string;
   /** Resolved field placeholder. */
@@ -29,12 +29,22 @@ export interface DataFieldState<
   errorId?: string;
   /** Combined value for `aria-describedby` (if any). */
   ariaDescribedBy?: string;
+  /**
+   * Preferred change handler. Use instead of `fieldApi.handleChange`.
+   * Future transforms and debouncing will be absorbed here.
+   */
+  handleChange: (value: unknown) => void;
+  /**
+   * Preferred blur handler. Applies `field.trim` if set, then calls `fieldApi.handleBlur`.
+   * Use instead of `fieldApi.handleBlur`.
+   */
+  handleBlur: () => void;
 }
 
 /** Options for `useDataField`. */
 export interface DataFieldOptions
   extends ResolvedFieldTextOptions,
-    FieldErrorStateOptions {}
+  FieldErrorStateOptions { }
 
 /**
  * Aggregates common UI state for BuzzForm data fields.
@@ -60,23 +70,21 @@ export function useDataField<
     ...text,
     ...errorState,
     ...a11y,
+    handleChange: (value: unknown) => ctx.fieldApi.handleChange(value),
+    handleBlur: () => {
+      if (
+        "trim" in ctx.field &&
+        ctx.field.trim === true &&
+        (ctx.field.type === "text" || ctx.field.type === "textarea") &&
+        typeof ctx.fieldApi.state.value === "string"
+      ) {
+        const trimmed = ctx.fieldApi.state.value.trim();
+        if (trimmed !== ctx.fieldApi.state.value) {
+          ctx.fieldApi.handleChange(trimmed);
+        }
+      }
+      ctx.fieldApi.handleBlur();
+    },
   };
 }
 
-/**
- * @deprecated Use `useDataField` instead. Will be removed in v1.0.
- */
-export const useFieldUiState = useDataField;
-
-/**
- * @deprecated Use `DataFieldState` instead. Will be removed in v1.0.
- */
-export type FieldUiState<
-  TField extends DataField = DataField,
-  TFormData extends UnknownData = UnknownData,
-> = DataFieldState<TField, TFormData>;
-
-/**
- * @deprecated Use `DataFieldOptions` instead. Will be removed in v1.0.
- */
-export type FieldUiStateOptions = DataFieldOptions;
