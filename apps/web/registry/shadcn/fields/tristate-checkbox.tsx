@@ -1,8 +1,8 @@
 "use client";
 
-import type { CheckboxField as CheckboxFieldDef } from "@buildnbuzz/form-core";
+import type { TristateCheckboxField as TristateCheckboxFieldDef } from "@buildnbuzz/form-core";
 import { useDataField } from "@buildnbuzz/form-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "../components/checkbox";
 import {
   Field,
   FieldContent,
@@ -12,13 +12,26 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 
-interface CheckboxUi {
+interface TristateCheckboxUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
 }
 
-export function CheckboxField() {
+/** Cycles null → true → false → null on each click. */
+function nextTristateValue(current: boolean | null): boolean | null {
+  if (current === null) return true;
+  if (current === true) return false;
+  return null;
+}
+
+/**
+ * A tristate checkbox field component.
+ *
+ * Uses a registry Checkbox wrapper to support indeterminate state
+ * with icon placeholders.
+ */
+export function TristateCheckboxField() {
   const {
     fieldApi,
     field,
@@ -34,20 +47,10 @@ export function CheckboxField() {
     ariaDescribedBy,
     handleChange,
     handleBlur,
-  } = useDataField<CheckboxFieldDef>();
+  } = useDataField<TristateCheckboxFieldDef>();
 
-  // Delegate to group renderer if hasMany
-  if ("hasMany" in field && field.hasMany) {
-    return <CheckboxGroupField />;
-  }
-
-  // Delegate to tristate renderer if tristate
-  if ("tristate" in field && field.tristate) {
-    return <TristateCheckboxField />;
-  }
-
-  const value = (fieldApi.state.value as boolean) ?? false;
-  const ui = field.ui as CheckboxUi | undefined;
+  const value = (fieldApi.state.value as boolean | null) ?? null;
+  const ui = field.ui as TristateCheckboxUi | undefined;
 
   const width = ui?.width;
   const widthStyle = width
@@ -56,6 +59,10 @@ export function CheckboxField() {
         flex: "0 1 auto",
       }
     : undefined;
+
+  // Base UI uses `checked` (boolean) + `indeterminate` (boolean) separately
+  const checked = value === true;
+  const indeterminate = value === null;
 
   return (
     <FieldGroup
@@ -70,10 +77,11 @@ export function CheckboxField() {
       >
         <Checkbox
           id={fieldApi.name}
-          checked={value}
-          onCheckedChange={(checked) => {
+          checked={checked}
+          indeterminate={indeterminate}
+          onCheckedChange={() => {
             if (isReadOnly) return;
-            handleChange(!!checked);
+            handleChange(nextTristateValue(value));
             handleBlur();
           }}
           disabled={isDisabled}
@@ -81,6 +89,7 @@ export function CheckboxField() {
           aria-describedby={ariaDescribedBy}
           aria-readonly={isReadOnly}
           autoFocus={ui?.autoFocus}
+          data-slot="checkbox"
         />
 
         <FieldContent>
@@ -106,6 +115,3 @@ export function CheckboxField() {
     </FieldGroup>
   );
 }
-
-import { CheckboxGroupField } from "./checkbox-group";
-import { TristateCheckboxField } from "./tristate-checkbox";
