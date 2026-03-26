@@ -98,7 +98,7 @@ const numberRange = (
 };
 
 const requiredValidator: ValidationFunction = (value: unknown) => {
-  if (value === null || value === undefined) return false;
+  if (value === null || value === undefined || value === false) return false;
   if (typeof value === "string") return value.length > 0;
   if (Array.isArray(value)) return value.length > 0;
   return true;

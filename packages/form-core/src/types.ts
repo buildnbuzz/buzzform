@@ -305,6 +305,19 @@ export interface SelectField extends BaseField<string> {
 export interface CheckboxField extends BaseField<boolean> {
   type: "checkbox";
   hasMany?: false;
+  tristate?: false;
+}
+
+/**
+ * Tri-state checkbox field — value is `true` (yes), `false` (no), or `null` (not sure/unknown).
+ * Useful when the distinction between "explicitly no" and "not yet answered" matters.
+ * Value cycles on click: null → true → false → null.
+ */
+export interface TristateCheckboxField extends BaseField<boolean | null> {
+  type: "checkbox";
+  hasMany?: false;
+  /** Enable tri-state mode. Value cycles: null (not sure) → true (yes) → false (no) → null. */
+  tristate: true;
 }
 
 /** Checkbox group field - multiple selections from a list of options. */
@@ -379,6 +392,7 @@ export type DataField =
   | NumberField
   | SelectField
   | CheckboxField
+  | TristateCheckboxField
   | CheckboxGroupField
   | SwitchField
   | RadioField
@@ -499,8 +513,10 @@ type FieldValue<TField extends Field> = TField extends TextField
             ? string
             : TField extends CheckboxGroupField
               ? string[]
-              : TField extends CheckboxField
-                ? boolean
+              : TField extends TristateCheckboxField
+                ? boolean | null
+                : TField extends CheckboxField
+                  ? boolean
                 : TField extends SwitchField
                   ? boolean
                   : TField extends RadioField

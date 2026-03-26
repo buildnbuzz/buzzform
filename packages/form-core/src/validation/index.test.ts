@@ -20,6 +20,12 @@ describe("builtInValidators", () => {
   it("validates required", () => {
     expect(builtInValidators.required("")).toBe(false);
     expect(builtInValidators.required("ok")).toBe(true);
+    // Booleans: false should fail required (unchecked checkbox)
+    expect(builtInValidators.required(false)).toBe(false);
+    expect(builtInValidators.required(true)).toBe(true);
+    // Null (tristate indeterminate) should fail required
+    expect(builtInValidators.required(null)).toBe(false);
+    expect(builtInValidators.required(undefined)).toBe(false);
   });
 
   it("validates email", () => {

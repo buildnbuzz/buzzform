@@ -59,6 +59,8 @@ export function extractDefaults(fields: readonly Field[]): Record<string, unknow
       let val: unknown = ZERO_VALUES[f.type] ?? "";
       if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
         val = f.defaultValue;
+      } else if (f.type === "checkbox" && "tristate" in f && f.tristate === true) {
+        val = null;
       }
 
       setByPath(result, fullPath, val);
