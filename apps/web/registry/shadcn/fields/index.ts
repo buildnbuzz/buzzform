@@ -14,6 +14,7 @@ import { GroupField } from "./group";
 import { ArrayField } from "./array";
 import { TabsField } from "./tabs";
 import { CollapsibleField } from "./collapsible";
+import { DateField } from "./date";
 
 // Default shadcn registry — maps field types to shadcn-styled components.
 export const shadcnRegistry = {
@@ -31,4 +32,5 @@ export const shadcnRegistry = {
   array: ArrayField,
   tabs: TabsField,
   collapsible: CollapsibleField,
+  date: DateField,
 } as const;
