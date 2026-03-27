@@ -54,3 +54,5 @@ export type {
   LayoutFieldState,
   LayoutFieldOptions,
 } from "./hooks/use-layout-field";
+
+export { useNestedErrorCount, collectDataFieldNames } from "./hooks/use-nested-error-count";

@@ -15,6 +15,7 @@ export {
   useDataField,
   useFieldOptions,
   useLayoutField,
+  useNestedErrorCount,
   useRegistry,
   useResolvedFieldText,
 } from "./contexts";
