@@ -295,10 +295,16 @@ export interface NumberField extends BaseField<number> {
 }
 
 /** Select input field. */
-export interface SelectField extends BaseField<string> {
+export interface SelectField extends BaseField<string | string[]> {
   type: "select";
   /** Available options. Strings are normalized to `{ label, value }` at render time. */
   options: FieldOption<string>[] | string[];
+  /** Enable multi-select mode. */
+  hasMany?: boolean;
+  /** Minimum number of selections (only applies when hasMany is true). */
+  minSelected?: number;
+  /** Maximum number of selections (only applies when hasMany is true). */
+  maxSelected?: number;
 }
 
 /** Checkbox input field (single boolean). */
@@ -510,7 +516,9 @@ type FieldValue<TField extends Field> = TField extends TextField
         : TField extends NumberField
           ? number
           : TField extends SelectField
-            ? string
+            ? TField["hasMany"] extends true
+              ? string[]
+              : string
             : TField extends CheckboxGroupField
               ? string[]
               : TField extends TristateCheckboxField
