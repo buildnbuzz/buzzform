@@ -108,6 +108,8 @@ export interface ValidatorArgsMap {
   maxItems: { max?: number | DynamicNumber };
   minSelected: { min?: number | DynamicNumber };
   maxSelected: { max?: number | DynamicNumber };
+  minDate: { min?: string };
+  maxDate: { max?: string };
   matches: { other?: DynamicValue<unknown> };
   passwordCriteria: {
     requireUppercase?: boolean;
@@ -307,6 +309,21 @@ export interface SelectField extends BaseField<string | string[]> {
   maxSelected?: number;
 }
 
+/** Date input field. Supports optional time picker via `withTime`. */
+export interface DateField extends BaseField<string> {
+  type: "date";
+  /**
+   * Include a time picker alongside the date picker.
+   * When true, the stored value is a full ISO datetime string.
+   * When false or absent, the stored value is an ISO date string (YYYY-MM-DD).
+   */
+  withTime?: boolean;
+  /** ISO date string minimum constraint (YYYY-MM-DD or full ISO datetime). */
+  minDate?: string;
+  /** ISO date string maximum constraint (YYYY-MM-DD or full ISO datetime). */
+  maxDate?: string;
+}
+
 /** Checkbox input field (single boolean). */
 export interface CheckboxField extends BaseField<boolean> {
   type: "checkbox";
@@ -397,6 +414,7 @@ export type DataField =
   | TextareaField
   | NumberField
   | SelectField
+  | DateField
   | CheckboxField
   | TristateCheckboxField
   | CheckboxGroupField
@@ -519,7 +537,9 @@ type FieldValue<TField extends Field> = TField extends TextField
             ? TField["hasMany"] extends true
               ? string[]
               : string
-            : TField extends CheckboxGroupField
+            : TField extends DateField
+              ? string
+              : TField extends CheckboxGroupField
               ? string[]
               : TField extends TristateCheckboxField
                 ? boolean | null

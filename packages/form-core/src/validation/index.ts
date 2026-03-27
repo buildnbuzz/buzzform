@@ -211,6 +211,20 @@ export const builtInValidators = {
     return value === args?.other;
   },
 
+  minDate: (value: unknown, args?: ValidatorArgsMap["minDate"]) => {
+    if (typeof value !== "string" || !value) return true;
+    const min = args?.min;
+    if (!min) return true;
+    return new Date(value) >= new Date(min);
+  },
+
+  maxDate: (value: unknown, args?: ValidatorArgsMap["maxDate"]) => {
+    if (typeof value !== "string" || !value) return true;
+    const max = args?.max;
+    if (!max) return true;
+    return new Date(value) <= new Date(max);
+  },
+
   passwordCriteria: (value: unknown, args?: ValidatorArgsMap["passwordCriteria"]) => {
     if (typeof value !== "string") return false;
     if (args?.requireUppercase && !/[A-Z]/.test(value)) return false;
@@ -702,6 +716,23 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         type: "step",
         message: `Must be a multiple of ${field.step}.`,
         args: { step: field.step },
+      });
+    }
+  }
+
+  if (field.type === "date") {
+    if (field.minDate) {
+      checks.push({
+        type: "minDate",
+        message: `Date must be on or after ${field.minDate}.`,
+        args: { min: field.minDate },
+      });
+    }
+    if (field.maxDate) {
+      checks.push({
+        type: "maxDate",
+        message: `Date must be on or before ${field.maxDate}.`,
+        args: { max: field.maxDate },
       });
     }
   }
