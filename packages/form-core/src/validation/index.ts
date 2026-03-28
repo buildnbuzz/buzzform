@@ -766,14 +766,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
     if (typeof field.minItems === "number") {
       checks.push({
         type: "minItems",
-        message: `Select at least ${field.minItems}.`,
+        message: `Add at least ${field.minItems} ${field.minItems === 1 ? "item" : "items"}.`,
         args: { min: field.minItems },
       });
     }
     if (typeof field.maxItems === "number") {
       checks.push({
         type: "maxItems",
-        message: `Select at most ${field.maxItems}.`,
+        message: `Cannot exceed ${field.maxItems} ${field.maxItems === 1 ? "item" : "items"}.`,
         args: { max: field.maxItems },
       });
     }

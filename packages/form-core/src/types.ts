@@ -399,13 +399,13 @@ export interface ArrayField extends BaseField<unknown[]> {
   type: "array";
   /** Fields for each array item. */
   fields: Field[];
-  /** Minimum items. */
-  minRows?: number;
-  /** Maximum items. */
-  maxRows?: number;
-  /** Minimum item count (validation). */
+  /**
+   * Minimum number of items. Disables remove at minimum and blocks submit via validation.
+   */
   minItems?: number;
-  /** Maximum item count (validation). */
+  /**
+   * Maximum number of items. Disables add at maximum and blocks submit via validation.
+   */
   maxItems?: number;
 }
 
