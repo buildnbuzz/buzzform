@@ -225,6 +225,14 @@ export const builtInValidators = {
     return new Date(value) <= new Date(max);
   },
 
+  minTags: (value: unknown, args?: ValidatorArgsMap["minTags"]) => {
+    return minLengthLike(value, args as Record<string, unknown> | undefined, ["min", "minTags"]);
+  },
+
+  maxTags: (value: unknown, args?: ValidatorArgsMap["maxTags"]) => {
+    return maxLengthLike(value, args as Record<string, unknown> | undefined, ["max", "maxTags"]);
+  },
+  
   passwordCriteria: (value: unknown, args?: ValidatorArgsMap["passwordCriteria"]) => {
     if (typeof value !== "string") return false;
     if (args?.requireUppercase && !/[A-Z]/.test(value)) return false;
@@ -716,6 +724,23 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         type: "step",
         message: `Must be a multiple of ${field.step}.`,
         args: { step: field.step },
+      });
+    }
+  }
+
+  if (field.type === "tags") {
+    if (typeof field.minTags === "number") {
+      checks.push({
+        type: "minTags",
+        message: `Add at least ${field.minTags} tag${field.minTags === 1 ? "" : "s"}.`,
+        args: { min: field.minTags },
+      });
+    }
+    if (typeof field.maxTags === "number") {
+      checks.push({
+        type: "maxTags",
+        message: `Add at most ${field.maxTags} tag${field.maxTags === 1 ? "" : "s"}.`,
+        args: { max: field.maxTags },
       });
     }
   }

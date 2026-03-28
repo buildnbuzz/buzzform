@@ -110,6 +110,8 @@ export interface ValidatorArgsMap {
   maxSelected: { max?: number | DynamicNumber };
   minDate: { min?: string };
   maxDate: { max?: string };
+  minTags: { min?: number | DynamicNumber };
+  maxTags: { max?: number | DynamicNumber };
   matches: { other?: DynamicValue<unknown> };
   passwordCriteria: {
     requireUppercase?: boolean;
@@ -324,6 +326,19 @@ export interface DateField extends BaseField<string> {
   maxDate?: string;
 }
 
+/** Tags input field — chip-based multi-value string input. */
+export interface TagsField extends BaseField<string[]> {
+  type: "tags";
+  /** Minimum number of tags. */
+  minTags?: number;
+  /** Maximum number of tags. */
+  maxTags?: number;
+  /** Maximum character length per tag. */
+  maxTagLength?: number;
+  /** Allow duplicate tag values. Defaults to `false`. */
+  allowDuplicates?: boolean;
+}
+
 /** Checkbox input field (single boolean). */
 export interface CheckboxField extends BaseField<boolean> {
   type: "checkbox";
@@ -415,6 +430,7 @@ export type DataField =
   | NumberField
   | SelectField
   | DateField
+  | TagsField
   | CheckboxField
   | TristateCheckboxField
   | CheckboxGroupField
@@ -539,7 +555,9 @@ type FieldValue<TField extends Field> = TField extends TextField
               : string
             : TField extends DateField
               ? string
-              : TField extends CheckboxGroupField
+              : TField extends TagsField
+                ? string[]
+                : TField extends CheckboxGroupField
               ? string[]
               : TField extends TristateCheckboxField
                 ? boolean | null
