@@ -185,19 +185,10 @@ function renderNestedFields<TFormData extends UnknownData>({
   basePointer: string;
 }): ReactNode {
   if (field.type === "tabs") {
-    return field.tabs.map((tab, index) => (
-      <RenderFields
-        key={`${tab.name ?? "tab"}-${index}`}
-        fields={tab.fields}
-        form={form}
-        contextData={contextData}
-        customValidators={customValidators}
-        derivedValidationMode={derivedValidationMode}
-        registry={registry}
-        renderFallback={renderFallback}
-        basePath={toDotNotation(basePointer)}
-      />
-    ));
+    // Tabs component handles its own nested rendering per-tab via RenderFields.
+    // Returning null here prevents double-rendering — the component receives
+    // children={null} and calls RenderFields itself for each TabsContent.
+    return null;
   }
 
   if (field.type === "row" || field.type === "collapsible") {
@@ -232,19 +223,9 @@ function renderNestedFields<TFormData extends UnknownData>({
   }
 
   if (field.type === "array") {
-    const nextPointer = `${joinPointer(basePointer, field.name)}/*`;
-    return (
-      <RenderFields
-        fields={field.fields}
-        form={form}
-        contextData={contextData}
-        customValidators={customValidators}
-        derivedValidationMode={derivedValidationMode}
-        registry={registry}
-        renderFallback={renderFallback}
-        basePath={toDotNotation(nextPointer)}
-      />
-    );
+    // Array component handles its own per-row rendering via RenderFields with concrete indices.
+    // Returning null here prevents double-rendering — the component calls RenderFields itself.
+    return null;
   }
 
   return null;
