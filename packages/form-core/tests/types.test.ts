@@ -1,10 +1,11 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
-import type { Field, FormSchema, InferDataShape, UnknownData } from "../src";
+import { defineSchema } from "../src";
+import type { Field, FormSchema, InferType, UnknownData } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
     const fields = [
-      { type: "text", name: "title" },
+      { type: "text", name: "title", required: true },
       { type: "number", name: "age" },
       {
         type: "group",
@@ -37,24 +38,28 @@ describe("form-core types", () => {
       },
       {
         type: "collapsible",
-        title: "Advanced",
+        label: "Advanced",
         fields: [{ type: "radio", name: "level", options: [] }],
       },
     ] as const satisfies Field[];
 
     expect(fields).toHaveLength(7);
 
-    type Shape = InferDataShape<typeof fields>;
+    type Shape = InferType<typeof fields>;
 
+    // required field → value is not optional
     expectTypeOf<Shape["title"]>().toEqualTypeOf<string>();
-    expectTypeOf<Shape["age"]>().toEqualTypeOf<number>();
-    expectTypeOf<Shape["address"]["city"]>().toEqualTypeOf<string>();
-    expectTypeOf<Shape["address"]["country"]>().toEqualTypeOf<string>();
-    expectTypeOf<Shape["items"][number]["label"]>().toEqualTypeOf<string>();
-    expectTypeOf<Shape["items"][number]["active"]>().toEqualTypeOf<boolean>();
-    expectTypeOf<Shape["acceptTerms"]>().toEqualTypeOf<boolean>();
-    expectTypeOf<Shape["notes"]>().toEqualTypeOf<string>();
-    expectTypeOf<Shape["level"]>().toEqualTypeOf<string>();
+    // optional fields → value includes undefined
+    expectTypeOf<Shape["age"]>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<Shape["address"]>().toEqualTypeOf<
+      { city?: string; country?: string } | undefined
+    >();
+    expectTypeOf<Shape["items"]>().toEqualTypeOf<
+      { label?: string; active?: boolean }[] | undefined
+    >();
+    expectTypeOf<Shape["acceptTerms"]>().toEqualTypeOf<boolean | undefined>();
+    expectTypeOf<Shape["notes"]>().toEqualTypeOf<string | undefined>();
+    expectTypeOf<Shape["level"]>().toEqualTypeOf<string | undefined>();
   });
 
   it("accepts a minimal form schema", () => {
@@ -63,7 +68,7 @@ describe("form-core types", () => {
     };
 
     expectTypeOf(schema.fields[0]!.type).toEqualTypeOf<
-      "text" | "textarea" | "number" | "select" | "checkbox" | "switch" | "radio" | "group" | "array" | "row" | "tabs" | "collapsible"
+      "text" | "email" | "password" | "textarea" | "number" | "select" | "date" | "tags" | "checkbox" | "switch" | "radio" | "group" | "array" | "row" | "tabs" | "collapsible"
     >();
   });
 
@@ -98,5 +103,23 @@ describe("form-core types", () => {
 
     expectTypeOf(schema.fields[0]!.ui).toEqualTypeOf<UnknownData | undefined>();
     expectTypeOf(schema.fields[1]!.ui).toEqualTypeOf<UnknownData | undefined>();
+  });
+
+  it("defineSchema narrows types like as const satisfies", () => {
+    const schema = defineSchema({
+      fields: [
+        { type: "text", name: "email", required: true },
+        { type: "number", name: "age" },
+        { type: "switch", name: "active" },
+      ],
+    });
+
+    expect(schema.fields).toHaveLength(3);
+
+    type Shape = InferType<typeof schema.fields>;
+
+    expectTypeOf<Shape["email"]>().toEqualTypeOf<string>();
+    expectTypeOf<Shape["age"]>().toEqualTypeOf<number | undefined>();
+    expectTypeOf<Shape["active"]>().toEqualTypeOf<boolean | undefined>();
   });
 });

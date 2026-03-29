@@ -539,60 +539,94 @@ export interface OutputConfig {
 
 type Simplify<T> = { [K in keyof T]: T[K] } & {};
 
-type FieldValue<TField extends Field> = TField extends TextField
-  ? string
-  : TField extends EmailField
-    ? string
-    : TField extends PasswordField
-      ? string
-      : TField extends TextareaField
-        ? string
-        : TField extends NumberField
-          ? number
-          : TField extends SelectField
-            ? TField["hasMany"] extends true
-              ? string[]
-              : string
-            : TField extends DateField
-              ? string
-              : TField extends TagsField
-                ? string[]
-                : TField extends CheckboxGroupField
-              ? string[]
-              : TField extends TristateCheckboxField
-                ? boolean | null
-                : TField extends CheckboxField
-                  ? boolean
-                : TField extends SwitchField
-                  ? boolean
-                  : TField extends RadioField
-                    ? string
-                    : TField extends GroupField
-                      ? InferDataShape<TField["fields"]>
-                      : TField extends ArrayField
-                        ? InferDataShape<TField["fields"]>[]
-                        : never;
+/** Collapse a union into an intersection (`A | B` → `A & B`). */
+type UnionToIntersection<T> = (
+  T extends unknown ? (arg: T) => void : never
+) extends (arg: infer I) => void
+  ? I
+  : never;
 
+/**
+ * Maps each data field to its inferred value type.
+ *
+ * @remarks [type]
+ * Single source of truth for field → value resolution.
+ * Extend this when adding new field types.
+ */
+interface FieldValueMap<TField extends DataField> {
+  text: string;
+  email: string;
+  password: string;
+  textarea: string;
+  number: number;
+  select: TField extends SelectField
+    ? TField["hasMany"] extends true
+      ? string[]
+      : string
+    : never;
+  date: string;
+  tags: string[];
+  checkbox: TField extends CheckboxGroupField
+    ? string[]
+    : TField extends TristateCheckboxField
+      ? boolean | null
+      : boolean;
+  switch: boolean;
+  radio: string;
+  group: TField extends GroupField ? InferType<TField["fields"]> : never;
+  array: TField extends ArrayField ? InferType<TField["fields"]>[] : never;
+}
+
+/** Resolve the inferred value type for a data field. */
+type FieldValue<TField extends DataField> =
+  TField["type"] extends keyof FieldValueMap<TField>
+    ? FieldValueMap<TField>[TField["type"]]
+    : never;
+
+/** Resolve the data shape contribution of a single field (data or layout). */
 type FieldDataShape<TField extends Field> = TField extends DataField
-  ? { [K in TField["name"]]: FieldValue<TField> }
+  ? TField["required"] extends true
+    ? { [K in TField["name"]]: FieldValue<TField> }
+    : { [K in TField["name"]]?: FieldValue<TField> }
   : TField extends RowField
-    ? InferDataShape<TField["fields"]>
+    ? InferType<TField["fields"]>
     : TField extends TabsField
-      ? InferDataShape<TField["tabs"][number]["fields"]>
+      ? Simplify<UnionToIntersection<InferType<TField["tabs"][number]["fields"]>>>
       : TField extends CollapsibleField
-        ? InferDataShape<TField["fields"]>
-        : Record<string, never>;
+        ? InferType<TField["fields"]>
+        // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
+        : {};
 
 /**
  * Infer the data shape for a list of fields.
  *
  * @remarks [type]
- * Requiredness is intentionally ignored in v0.1 for compiler performance.
+ * Fields with `required: true` (literal) produce required keys; all others are optional.
+ * Dynamic conditions cannot be resolved at compile time and default to optional.
  */
-export type InferDataShape<TFields extends readonly Field[]> =
+export type InferType<TFields extends readonly Field[]> =
   TFields extends readonly [infer Head, ...infer Tail]
     ? Simplify<
         FieldDataShape<Extract<Head, Field>> &
-          InferDataShape<Tail extends readonly Field[] ? Tail : []>
+          InferType<Tail extends readonly Field[] ? Tail : []>
       >
-    : Record<string, never>;
+    : [TFields[number]] extends [never]
+      // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
+      ? {}
+      : UnknownData;
+
+/**
+ * Identity function that narrows a schema to its literal type.
+ * Use this instead of `as const satisfies FormSchema` for cleaner DX.
+ *
+ * @example
+ * ```ts
+ * const schema = defineSchema({ fields: [{ type: "text", name: "email", required: true }] });
+ * type FormData = InferType<typeof schema.fields>;
+ * // { email: string }
+ * ```
+ */
+export function defineSchema<const T extends FormSchema>(schema: T): T {
+  return schema;
+}
+
