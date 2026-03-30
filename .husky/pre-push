@@ -1,0 +1,2 @@
+pnpm check-types
+pnpm test

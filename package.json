@@ -9,15 +9,18 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
+    "prepare": "husky",
     "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "pnpm --filter @buildnbuzz/buzzform publish --access public --no-git-checks"
+    "ci:version": "changeset version && pnpm install --no-frozen-lockfile",
+    "ci:publish": "pnpm run build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.6.0",
     "@changesets/cli": "^2.29.8",
-    "@tanstack/intent": "0.0.23",
     "@types/node": "^22.15.3",
     "eslint": "^9.39.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.7.4",
     "tsup": "^8.3.5",
     "turbo": "^2.7.2",
@@ -31,5 +34,12 @@
   "dependencies": {
     "chokidar": "^5.0.0",
     "concurrently": "^9.2.1"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json}": "prettier --write"
   }
 }
