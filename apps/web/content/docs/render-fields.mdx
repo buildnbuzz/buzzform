@@ -1,0 +1,182 @@
+---
+title: RenderFields
+description: Render fields from schema — auto-rendering and custom layouts.
+---
+
+# RenderFields
+
+`RenderFields` and `FieldRenderer` are the low-level primitives for rendering fields from your schema.
+
+## API Reference
+
+### RenderFieldsProps
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `fields` | `Field[]` | Fields to render |
+| `form` | `FieldFormApi` | TanStack form instance |
+| `registry` | `FieldRegistry` | Optional registry override |
+| `renderFallback` | `(field) => ReactNode` | Fallback for unregistered types |
+| `basePath` | `string` | Parent path for nested fields |
+| `contextData` | `object` | External data for dynamic values |
+| `customValidators` | `ValidationRegistry` | Custom validator registry |
+| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
+
+### FieldRendererProps
+
+Same as `RenderFieldsProps` but renders a single field.
+
+## Basic Usage
+
+`RenderFields` renders all fields from your schema:
+
+```tsx
+import { RenderFields } from "@buildnbuzz/form-react";
+
+const form = useForm({ schema });
+
+<RenderFields
+  fields={schema.fields}
+  form={form}
+/>
+```
+
+## FieldRenderer
+
+Render a single field from schema:
+
+```tsx
+import { FieldRenderer } from "@buildnbuzz/form-react";
+
+const field = schema.fields[0];
+
+<FieldRenderer
+  field={field}
+  form={form}
+/>
+```
+
+## Custom Layouts
+
+Use `RenderFields` inside custom layouts:
+
+```tsx
+function CustomFormLayout({ form, schema }) {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4">
+        <RenderFields
+          fields={schema.fields.slice(0, 2)}
+          form={form}
+        />
+      </div>
+      <RenderFields
+        fields={schema.fields.slice(2)}
+        form={form}
+      />
+    </div>
+  );
+}
+```
+
+## Nested Field Rendering
+
+`RenderFields` handles nested structures automatically:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    {
+      type: "group",
+      name: "address",
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+// Renders nested fields with correct paths
+<RenderFields fields={schema.fields} form={form} />
+```
+
+## Registry Override
+
+Pass a custom registry for this render:
+
+```tsx
+import { customRegistry } from "@/components/my-form/registry";
+
+<RenderFields
+  fields={schema.fields}
+  form={form}
+  registry={customRegistry}
+/>
+```
+
+## Fallback Renderer
+
+Render a placeholder for unregistered field types:
+
+```tsx
+<RenderFields
+  fields={schema.fields}
+  form={form}
+  renderFallback={(field) => (
+    <div className="p-4 bg-muted">
+      Unknown field: {field.type}
+    </div>
+  )}
+/>
+```
+
+## Base Path
+
+Render a subsection of nested fields:
+
+```tsx
+const groupField = schema.fields.find(f => f.type === "group");
+
+<RenderFields
+  fields={groupField?.fields || []}
+  form={form}
+  basePath="/address" // Resolves paths correctly
+/>
+```
+
+## How It Works
+
+1. `RenderFields` iterates over `fields` array
+2. For each field, renders `FieldRenderer`
+3. `FieldRenderer` looks up component in `registry`
+4. Data fields wrap with `<Field>` for TanStack registration
+5. Layout fields wrap with `<LayoutField>` for context
+6. Nested fields (group, array, row, collapsible, tabs) render children via `RenderFields`
+
+## Special Cases
+
+### Tabs
+
+Tabs handle their own nested rendering internally:
+
+```tsx
+// TabsField component calls RenderFields per tab
+// Children passed to tabs renderer are null
+```
+
+### Arrays
+
+Arrays handle their own per-row rendering:
+
+```tsx
+// ArrayField component calls RenderFields for each row
+// Children passed to array renderer are null
+```
+
+## Related
+
+- [`<Form>` Component](/docs/form-component)
+- [`<FormProvider>`](/docs/form-provider)
+- [Custom Fields](/docs/custom-fields)

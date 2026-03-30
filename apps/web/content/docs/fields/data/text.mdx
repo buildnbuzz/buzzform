@@ -5,55 +5,38 @@ description: Single-line text input with optional validation and copy functional
 
 # Text Field
 
-The `text` field renders a single-line text input. It's the most common field type and serves as the base for `email` fields.
+The `text` field renders a single-line text input.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/text.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/text.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "text",
-    name: "username",
-    label: "Username",
-    required: true,
-    minLength: 3,
-    maxLength: 20,
-    placeholder: "Enter username",
-  },
-]);
-
-export function TextFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop        | Type               | Default | Description              |
-| ----------- | ------------------ | ------- | ------------------------ |
-| `minLength` | `number`           | -       | Minimum character length |
-| `maxLength` | `number`           | -       | Maximum character length |
-| `pattern`   | `string \| RegExp` | -       | Validation pattern       |
-| `trim`      | `boolean`          | `false` | Trim whitespace on blur  |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="TextField" />
 
 ## UI Options
 
-| Option        | Type      | Default | Description      |
-| ------------- | --------- | ------- | ---------------- |
-| `ui.copyable` | `boolean` | `false` | Show copy button |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `copyable` | `boolean` | `false` | Show copy button |
+| `autoFocus` | `boolean` | `false` | Auto-focus the input on mount |
+| `className` | `string` | - | CSS class applied to the field container |
+| `width` | `string \| number` | - | Inline width applied to the field |
+
+## Basic Usage
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      required: true,
+      minLength: 3,
+      maxLength: 20,
+      placeholder: "Enter username",
+    },
+  ],
+});
+```
 
 ## Examples
 
@@ -85,6 +68,17 @@ export function TextFieldDemo() {
 }
 ```
 
+### Auto-Focus
+
+```tsx
+{
+  type: "text",
+  name: "search",
+  label: "Search",
+  ui: { autoFocus: true },
+}
+```
+
 ### With Description
 
 ```tsx
@@ -97,33 +91,17 @@ export function TextFieldDemo() {
 }
 ```
 
----
+## Auto-Derived Validators
 
-## Email
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `minLength` | `minLength` |
+| `maxLength` | `maxLength` |
+| `pattern` | `pattern` |
 
-The `email` field is a text field with automatic email format validation.
+## Related
 
-### Usage
-
-```tsx
-{
-  type: "email",
-  name: "email",
-  label: "Email Address",
-  required: true,
-  placeholder: "you@example.com",
-}
-```
-
-Email validation is applied automatically - no need to specify a pattern.
-
-### With Copy Button
-
-```tsx
-{
-  type: "email",
-  name: "email",
-  label: "Email",
-  ui: { copyable: true },
-}
-```
+- [Email Field](/docs/fields/data/email)
+- [Password Field](/docs/fields/data/password)
+- [Textarea Field](/docs/fields/data/textarea)

@@ -1,0 +1,72 @@
+---
+title: Email Field
+description: Text input with automatic email format validation.
+---
+
+# Email Field
+
+The `email` field renders a text input with automatic email format validation.
+
+## Schema Properties
+
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="EmailField" />
+
+## UI Options
+
+Same as [Text Field](/docs/fields/data/text#ui-options).
+
+## Basic Usage
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "email",
+      name: "email",
+      label: "Email Address",
+      required: true,
+      placeholder: "you@example.com",
+    },
+  ],
+});
+```
+
+## Examples
+
+### With Copy Button
+
+```tsx
+{
+  type: "email",
+  name: "contactEmail",
+  label: "Contact Email",
+  ui: { copyable: true },
+}
+```
+
+### With Length Validation
+
+```tsx
+{
+  type: "email",
+  name: "email",
+  label: "Email",
+  required: true,
+  minLength: 5,
+  maxLength: 100,
+}
+```
+
+## Auto-Derived Validators
+
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `type: "email"` | `email` (automatic) |
+| `minLength` | `minLength` |
+| `maxLength` | `maxLength` |
+
+## Related
+
+- [Text Field](/docs/fields/data/text)
+- [Password Field](/docs/fields/data/password)

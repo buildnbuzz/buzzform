@@ -1,0 +1,418 @@
+---
+title: Migration Guide
+description: Upgrading from @buildnbuzz/buzzform to @buildnbuzz/form-core + @buildnbuzz/form-react.
+---
+
+# Migration Guide
+
+<Callout type="warning">
+  `@buildnbuzz/buzzform` is deprecated. All new development should use `@buildnbuzz/form-core` and `@buildnbuzz/form-react`.
+</Callout>
+
+This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package to the new two-package architecture.
+
+## Overview of Changes
+
+| Old (`buzzform`) | New (`form-core` + `form-react`) |
+|------------------|----------------------------------|
+| Single package | Two packages: core + React adapter |
+| `createSchema()` | Plain `FormSchema` object or `defineSchema()` |
+| `InferType<typeof schema>` | `InferType<typeof schema.fields>` |
+| `useRhf()` / `zodResolver` | `useForm()` with built-in validation |
+| `BuzzFormProvider` | `<FormProvider registry={...}>` |
+| `validate: (value) => string` | `validate: { onBlur: { checks: [...] } }` |
+| `disabled: (data) => boolean` | `disabled: { $data: "/field", eq: value }` |
+| `minRows` / `maxRows` | `minItems` / `maxItems` |
+| `dependencies` array | Automatic via `$data` references |
+
+## Step 1: Update Dependencies
+
+Uninstall the old package and install the new ones:
+
+```bash
+# Remove old package
+pnpm remove @buildnbuzz/buzzform
+
+# Install new packages
+pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+
+# Peer dependencies (if not already installed)
+pnpm add @tanstack/react-form @tanstack/form-core
+```
+
+## Step 2: Replace Schema Creation
+
+**Before:**
+```tsx
+import { createSchema } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email", required: true },
+]);
+```
+
+**After:**
+```tsx
+import { defineSchema } from "@buildnbuzz/form-core";
+
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+  ],
+});
+```
+
+## Step 3: Update Type Inference
+
+**Before:**
+```tsx
+import { InferType } from "@buildnbuzz/buzzform";
+
+type FormData = InferType<typeof schema>;
+```
+
+**After:**
+```tsx
+import { InferType } from "@buildnbuzz/form-core";
+
+type FormData = InferType<typeof schema.fields>;
+// Note: .fields is now required
+```
+
+## Step 4: Replace useRhf with useForm
+
+**Before:**
+```tsx
+import { useRhf, zodResolver } from "@buildnbuzz/buzzform";
+import { z } from "zod";
+
+const formSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+});
+
+const form = useRhf({
+  schema: formSchema,
+  resolver: zodResolver(formSchema),
+});
+```
+
+**After:**
+```tsx
+import { useForm } from "@buildnbuzz/form-react";
+import { defineSchema } from "@buildnbuzz/form-core";
+
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+  ],
+});
+
+const form = useForm({
+  schema,
+  // Validation is built-in, no resolver needed
+});
+```
+
+## Step 5: Update Provider Setup
+
+**Before:**
+```tsx
+import { BuzzFormProvider } from "@buildnbuzz/buzzform";
+
+<BuzzFormProvider>
+  <App />
+</BuzzFormProvider>
+```
+
+**After:**
+```tsx
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
+
+<FormProvider registry={registry}>
+  <App />
+</FormProvider>
+```
+
+The new provider requires an explicit `FieldRegistry`. If you installed with `@buzzform/all`, use the pre-built `registry`.
+
+## Step 6: Migrate Validation
+
+**Before:**
+```tsx
+{
+  type: "text",
+  name: "username",
+  label: "Username",
+  validate: (value, context) => {
+    if (value.length < 3) {
+      return "Username must be at least 3 characters";
+    }
+    return true;
+  },
+}
+```
+
+**After:**
+```tsx
+{
+  type: "text",
+  name: "username",
+  label: "Username",
+  validate: {
+    onBlur: {
+      checks: [
+        {
+          type: "minLength",
+          message: "Username must be at least 3 characters",
+          args: { min: 3 },
+        },
+      ],
+    },
+  },
+}
+```
+
+### Custom Validators
+
+**Before:**
+```tsx
+validate: async (value) => {
+  const available = await checkUsername(value);
+  return available ? true : "Username is taken";
+}
+```
+
+**After:**
+```tsx
+// Register custom validator
+const customValidators = {
+  usernameAvailable: async (value: string) => {
+    const available = await checkUsername(value);
+    return available ? true : "Username is taken";
+  },
+};
+
+const form = useForm({
+  schema,
+  customValidators,
+});
+
+// In schema
+{
+  type: "text",
+  name: "username",
+  validate: {
+    onBlur: {
+      checks: [
+        {
+          type: "usernameAvailable",
+          message: "Username is already taken",
+        },
+      ],
+    },
+  },
+}
+```
+
+## Step 7: Migrate Conditional Logic
+
+**Before:**
+```tsx
+// Function-based conditions
+{
+  type: "text",
+  name: "teamName",
+  label: "Team Name",
+  condition: (data) => data.role === "Manager",
+  disabled: (data) => !data.country,
+}
+```
+
+**After:**
+```tsx
+// Declarative AST conditions
+{
+  type: "text",
+  name: "teamName",
+  label: "Team Name",
+  condition: { $data: "/role", eq: "Manager" },
+  disabled: { $data: "/country", eq: "" },
+}
+```
+
+### Complex Conditions
+
+**Before:**
+```tsx
+condition: (data) => data.role === "Manager" && data.department === "Engineering"
+```
+
+**After:**
+```tsx
+condition: [
+  { $data: "/role", eq: "Manager" },
+  { $data: "/department", eq: "Engineering" },
+]
+// Array = implicit AND
+```
+
+**Or:**
+```tsx
+condition: {
+  $and: [
+    { $data: "/role", eq: "Manager" },
+    { $data: "/department", eq: "Engineering" },
+  ],
+}
+```
+
+## Step 8: Update Field Properties
+
+### Array Fields
+
+**Before:**
+```tsx
+{
+  type: "array",
+  name: "items",
+  minRows: 1,
+  maxRows: 10,
+}
+```
+
+**After:**
+```tsx
+{
+  type: "array",
+  name: "items",
+  minItems: 1,
+  maxItems: 10,
+}
+```
+
+### Remove Dependencies
+
+**Before:**
+```tsx
+{
+  type: "select",
+  name: "state",
+  options: states,
+  dependencies: ["country"],
+  disabled: (data) => !data.country,
+}
+```
+
+**After:**
+```tsx
+{
+  type: "select",
+  name: "state",
+  options: states,
+  // dependencies removed - automatic via $data
+  disabled: { $data: "/country", eq: "" },
+}
+```
+
+## Complete Example
+
+### Before (Old API)
+
+```tsx
+"use client";
+
+import { createSchema, InferType, useRhf } from "@buildnbuzz/buzzform";
+import { BuzzFormProvider } from "@buildnbuzz/buzzform";
+
+const schema = createSchema([
+  { type: "text", name: "name", label: "Name", required: true },
+  { type: "email", name: "email", label: "Email", required: true },
+  {
+    type: "text",
+    name: "teamName",
+    label: "Team Name",
+    condition: (data) => data.role === "Manager",
+  },
+]);
+
+type FormData = InferType<typeof schema>;
+
+export function ContactForm() {
+  const form = useRhf({
+    schema,
+    onSubmit: (data) => {
+      console.log(data);
+    },
+  });
+
+  return (
+    <form onSubmit={form.handleSubmit}>
+      {/* fields */}
+    </form>
+  );
+}
+```
+
+### After (New API)
+
+```tsx
+"use client";
+
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    {
+      type: "text",
+      name: "teamName",
+      label: "Team Name",
+      condition: { $data: "/role", eq: "Manager" },
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+
+export function ContactForm() {
+  return (
+    <Form
+      schema={schema}
+      onSubmit={({ value }) => {
+        console.log(value);
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Submit</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+## Breaking Changes Summary
+
+1. **Package split** — `buzzform` → `form-core` + `form-react`
+2. **Schema creation** — `createSchema()` removed, use `defineSchema()` or plain object
+3. **Type inference** — `InferType<typeof schema>` → `InferType<typeof schema.fields>`
+4. **Form hook** — `useRhf()` → `useForm()` with built-in validation
+5. **Provider** — `BuzzFormProvider` → `<FormProvider registry={...}>`
+6. **Validation** — Function-based → `ValidationConfig` with `checks` arrays
+7. **Conditions** — Function-based → `VisibilityCondition` AST
+8. **Array props** — `minRows`/`maxRows` → `minItems`/`maxItems`
+9. **Dependencies** — `dependencies` array removed, automatic via `$data`
+
+## Related
+
+- [Installation](/docs/installation)
+- [Quick Start](/docs/quick-start)
+- [Validation](/docs/validation)
+- [Conditional Logic](/docs/conditional-logic)

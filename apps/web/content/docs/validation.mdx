@@ -1,158 +1,205 @@
 ---
 title: Validation
-description: Learn about auto-generated validation, custom validators, and async validation in BuzzForm.
+description: Learn about auto-derived validation, custom validators, and async validation in BuzzForm.
 ---
 
 # Validation
 
-BuzzForm automatically generates Zod validation schemas from your field definitions. You can also add custom validation logic.
+BuzzForm has two layers of validation:
 
-## Auto-Generated Validation
+1. **Auto-derived validators** — generated from field properties like `required`, `minLength`, `min`, etc.
+2. **Custom validators** — defined in the `validate` config for additional rules
 
-Validation is generated from field properties:
+## Auto-Derived Validation
+
+Validation is automatically generated from field properties:
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "text",
-    name: "username",
-    required: true,      // → z.string().min(1)
-    minLength: 3,        // → .min(3)
-    maxLength: 20,       // → .max(20)
-    pattern: /^[a-z]+$/, // → .regex()
-  },
-  {
-    type: "number",
-    name: "age",
-    required: true,
-    min: 18,             // → z.number().min(18)
-    max: 120,            // → .max(120)
-  },
-  {
-    type: "email",
-    name: "email",
-    required: true,      // Automatic email format validation
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      required: true,      // → adds "required" validator
+      minLength: 3,        // → adds "minLength" validator
+      maxLength: 20,       // → adds "maxLength" validator
+      pattern: "^[a-z]+$", // → adds "pattern" validator
+    },
+    {
+      type: "number",
+      name: "age",
+      required: true,
+      min: 18,             // → adds "min" validator
+      max: 120,            // → adds "max" validator
+    },
+    {
+      type: "email",
+      name: "email",
+      required: true,      // → adds "email" validator
+    },
+  ],
+});
 ```
+
+You don't need to manually specify these in `validate` — they're derived automatically.
 
 ### Validation by Field Type
 
-| Field Type | Auto Validations |
-|------------|------------------|
-| `text`, `textarea` | `required`, `minLength`, `maxLength`, `pattern` |
-| `email` | `required` + email format |
-| `password` | `required`, `minLength`, `maxLength`, `criteria` |
-| `number` | `required`, `min`, `max`, `precision` |
-| `date`, `datetime` | `required`, `minDate`, `maxDate` |
-| `select`, `radio` | `required`, validates against options |
+| Field Type | Auto-Derived Validators |
+|------------|-------------------------|
+| All fields | `required` (if `required: true`) |
+| `text`, `textarea`, `password` | `minLength`, `maxLength`, `pattern` |
+| `email` | `email` |
+| `password` | `passwordCriteria` (if `criteria` set) |
+| `number` | `min`, `max`, `precision`, `step` |
+| `date` | `minDate`, `maxDate` |
 | `tags` | `minTags`, `maxTags`, `maxTagLength` |
-| `upload` | `required`, `minFiles`, `maxFiles`, `maxSize` |
-| `array` | `minRows`, `maxRows` |
+| `array` | `minItems`, `maxItems` |
+| `select` (hasMany) | `minSelected`, `maxSelected` |
 
 ## Custom Validation
 
-Add the `validate` prop for custom logic:
+Use the `validate` property for explicit validation rules. Checks are grouped by trigger:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      required: true,
+      validate: {
+        onBlur: {
+          checks: [
+            { type: "minLength", message: "At least 3 characters", args: { min: 3 } },
+            { type: "pattern", message: "Letters and numbers only", args: { pattern: "^[a-zA-Z0-9]+$" } },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+### Validation Triggers
+
+- `onChange` — runs when the field value changes
+- `onBlur` — runs when the field loses focus
+- `onSubmit` — runs when the form is submitted
+
+## Async Validation
+
+Use `onBlur` or `onChange` with async validators:
 
 ```tsx
 {
   type: "text",
   name: "username",
   label: "Username",
-  validate: (value, context) => {
-    if (value.includes(" ")) {
-      return "Username cannot contain spaces";
-    }
-    return true; // Valid
+  validate: {
+    onBlur: {
+      debounceMs: 500, // Wait 500ms after user stops typing
+      checks: [
+        {
+          type: "usernameAvailable",
+          message: "This username is already taken",
+        },
+      ],
+    },
   },
-}
-```
-
-### Validation Context
-
-The validation function receives a context object:
-
-```tsx
-validate: (value, context) => {
-  // context.data - Complete form data
-  // context.siblingData - Data at the same nesting level
-  // context.path - Path segments to this field
-
-  if (context.data.country === "US" && !value.match(/^\d{5}$/)) {
-    return "US ZIP codes must be 5 digits";
-  }
-  return true;
 }
 ```
 
 ## Cross-Field Validation
 
-Access other fields via `context.data`:
+Use `{ $data: "/path" }` to reference other fields:
 
 ```tsx
-const schema = createSchema([
-  { type: "password", name: "password", label: "Password" },
-  {
-    type: "password",
-    name: "confirmPassword",
-    label: "Confirm Password",
-    validate: (value, { data }) => {
-      if (value !== data.password) {
-        return "Passwords do not match";
-      }
-      return true;
+const schema = defineSchema({
+  fields: [
+    { type: "password", name: "password", label: "Password", required: true },
+    {
+      type: "password",
+      name: "confirmPassword",
+      label: "Confirm Password",
+      required: true,
+      validate: {
+        onSubmit: {
+          checks: [
+            {
+              type: "matches",
+              message: "Passwords do not match",
+              args: { other: { $data: "/password" } },
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+**Important:** Use JSON Pointer format (paths start with `/`). See [Dynamic Values](/docs/dynamic-values) for details.
+
+## Built-in Validators
+
+BuzzForm provides these built-in validators:
+
+<auto-type-table path="../../../../packages/form-core/src/types.ts" name="ValidatorArgsMap" />
+
+## Custom Validator Registry
+
+Register custom validators globally:
+
+```tsx
+// Define your custom validator
+const customValidators = {
+  usernameAvailable: async (value: string) => {
+    const available = await checkUsernameAvailable(value);
+    return available ? true : "Username is already taken";
+  },
+};
+
+// Pass to useForm
+const form = useForm({
+  schema,
+  customValidators,
+});
+```
+
+## Form-Level Validation
+
+Add validation at the form level:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    { type: "email", name: "email", label: "Email" },
+  ],
+  validate: {
+    onSubmit: {
+      checks: [
+        {
+          type: "namesUnique",
+          message: "All names must be unique",
+        },
+      ],
     },
   },
-]);
+});
 ```
 
-## Async Validation
+## Derived Validation Mode
 
-Return a Promise for async validation (e.g., checking username availability):
+Control when auto-derived validators run:
 
 ```tsx
-{
-  type: "text",
-  name: "username",
-  label: "Username",
-  validate: async (value) => {
-    const available = await checkUsernameAvailable(value);
-    if (!available) {
-      return "Username is already taken";
-    }
-    return true;
-  },
-}
+const form = useForm({
+  schema,
+  derivedValidationMode: "blur", // or "change" or "submit"
+});
 ```
 
-## Validation Modes
-
-Configure when validation runs via the provider or form:
-
-```tsx
-<BuzzFormProvider mode="onBlur">
-  {/* Validates when fields lose focus */}
-</BuzzFormProvider>
-```
-
-| Mode | Description |
-|------|-------------|
-| `onSubmit` | Validate only on form submission |
-| `onBlur` | Validate when field loses focus (default) |
-| `onChange` | Validate on every keystroke |
-| `all` | Validate on all events |
-
-## Server-Side Errors
-
-Set errors programmatically after server validation:
-
-```tsx
-const handleSubmit = async (data) => {
-  const result = await submitToServer(data);
-  
-  if (result.errors) {
-    // Set field-level errors from server
-    form.setError("email", { message: "Email already registered" });
-  }
-};
-```
+By default, derived validators run on blur. Set this to run them on change or submit.

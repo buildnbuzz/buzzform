@@ -1,110 +1,202 @@
 ---
 title: Quick Start
-description: Get a form running in under 2 minutes.
+description: Build a complete working form with validation and conditional logic in under five minutes.
 ---
 
 # Quick Start
 
-Get BuzzForm running in your project in **3 simple steps**.
+This guide walks you through building a real form from scratch. By the end you'll have a working sign-up form with validation, a conditional field, and typed submission data.
 
 <Callout type="info">
-  This guide assumes you have a React project with
-  [shadcn/ui](https://ui.shadcn.com/docs/installation) already set up.
+  Make sure you've completed [Installation](/docs/installation) before continuing.
 </Callout>
 
-## Step 1: Install BuzzForm
+## Step 1: Define Your Schema
 
-Run the starter command to install all BuzzForm components and dependencies:
+A `FormSchema` is a plain object with a `fields` array. Each field has a `type`, a `name`, and optional configuration:
 
-```bash tab="pnpm" selected
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
+```tsx
+import { defineSchema } from "@buildnbuzz/form-core";
+
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      minLength: 8,
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: ["Developer", "Designer", "Product Manager"],
+      required: true,
+    },
+  ],
+});
 ```
 
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
+## Step 2: Create the Form
 
-```bash tab="yarn"
-yarn dlx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
+Render the form with the shadcn registry components. The schema drives rendering and validation:
 
-```bash tab="bun"
-bunx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
+```tsx
+"use client";
 
-<Callout type="warning">
-  **Radix UI Users:** If your project uses traditional Radix UI primitives
-  (standard in shadcn/ui), you may need to manually update the `Select`
-  component to use `asChild` instead of `render`. [See the fix
-  here](/docs/fields/data/select#radix-ui-setup).
-</Callout>
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
 
-## Step 2: Add the Provider
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "password", name: "password", label: "Password", minLength: 8 },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: ["Developer", "Designer", "Product Manager"],
+      required: true,
+    },
+  ],
+});
 
-Wrap your app with `BuzzFormProvider` in your root layout:
+type FormData = InferType<typeof schema.fields>;
 
-```tsx title="app/layout.tsx" {1} {8}
-import { BuzzFormProvider } from "@/components/buzzform/provider";
-
-export default function RootLayout({ children }) {
+export function SignUpForm() {
   return (
-    <html>
-      <body>
-        <BuzzFormProvider>{children}</BuzzFormProvider>
-      </body>
-    </html>
+    <Form
+      schema={schema}
+      onSubmit={({ value }) => {
+        console.log(value);
+        // value is typed as { name: string; email: string; password: string; role: string }
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Create Account</FormSubmit>
+      </FormContent>
+    </Form>
   );
 }
 ```
 
-## Step 3: Try a Form
+`<FormFields />` renders all fields using the `FieldRegistry` from `<FormProvider>`. Use `<FormSubmit />` for a submit button that auto-disables while submitting.
 
-Install a ready-made signup form to see BuzzForm in action:
+## Step 3: Add Conditional Logic
 
-```bash tab="pnpm" selected
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
+Show a field only when another field has a specific value. The `condition` property uses a declarative AST — no callbacks:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: ["Developer", "Designer", "Manager"],
+      required: true,
+    },
+    {
+      type: "text",
+      name: "teamName",
+      label: "Team Name",
+      // Only shown when role is "Manager"
+      condition: { $data: "/role", eq: "Manager" },
+      required: true,
+    },
+  ],
+});
 ```
 
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
-```
+When `role` is not `"Manager"`, the `teamName` field is unmounted and removed from form state entirely.
 
-```bash tab="yarn"
-yarn dlx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
-```
+## Step 4: Add Validation
 
-```bash tab="bun"
-bunx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
-```
+Use the `validate` property for explicit validation rules. Checks are grouped by trigger:
 
-Use it in any page:
-
-```tsx title="app/page.tsx" {1} {4}
-import { SignUpForm } from "@/components/buzzform/signup";
-
-export default function Page() {
-  return <SignUpForm />;
+```tsx
+{
+  type: "text",
+  name: "username",
+  label: "Username",
+  required: true,
+  validate: {
+    onBlur: {
+      checks: [
+        { type: "minLength", message: "At least 3 characters", args: { min: 3 } },
+        { type: "pattern", message: "Letters and numbers only", args: { pattern: "^[a-zA-Z0-9]+$" } },
+      ],
+    },
+  },
 }
 ```
 
----
+## Complete Example
 
-**That's it!** You now have a working form with validation, password generation, and more.
+```tsx
+"use client";
 
-<Cards>
-  <Card
-    title="Your First Form"
-    href="/docs/your-first-form"
-    description="Learn to build forms from scratch"
-  />
-  <Card
-    title="Schema Reference"
-    href="/docs/schema"
-    description="Explore all field types and options"
-  />
-  <Card
-    title="Examples Gallery"
-    href="/examples"
-    description="Browse 20+ ready-to-use form examples"
-  />
-</Cards>
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      minLength: 8,
+      validate: {
+        onBlur: {
+          checks: [
+            { type: "minLength", message: "At least 8 characters", args: { min: 8 } },
+          ],
+        },
+      },
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: ["Developer", "Designer", "Manager"],
+      required: true,
+    },
+    {
+      type: "text",
+      name: "teamName",
+      label: "Team Name",
+      condition: { $data: "/role", eq: "Manager" },
+      required: true,
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+
+export function SignUpForm() {
+  return (
+    <Form
+      schema={schema}
+      onSubmit={async ({ value }: { value: FormData }) => {
+        await fetch("/api/signup", {
+          method: "POST",
+          body: JSON.stringify(value),
+        });
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Create Account</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```

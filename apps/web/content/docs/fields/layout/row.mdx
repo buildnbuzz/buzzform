@@ -1,155 +1,83 @@
 ---
 title: Row Field
-description: Arrange fields horizontally in a flexible row layout.
+description: Horizontal container for inline fields.
 ---
 
 # Row Field
 
-The `row` field arranges child fields horizontally. It's a layout-only field that doesn't store data.
+The `row` field renders fields horizontally in a row layout.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/row.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/row.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "row",
-    fields: [
-      { type: "text", name: "firstName", label: "First Name" },
-      { type: "text", name: "lastName", label: "Last Name" },
-    ],
-  },
-]);
-
-export function RowFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop     | Type      | Description                    |
-| -------- | --------- | ------------------------------ |
-| `fields` | `Field[]` | Fields to arrange horizontally |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="RowField" />
 
 ## UI Options
 
-| Option          | Type                                        | Default     | Description             |
-| --------------- | ------------------------------------------- | ----------- | ----------------------- |
-| `ui.gap`        | `number \| string`                          | `4`         | Space between fields    |
-| `ui.align`      | `'start' \| 'center' \| 'end' \| 'stretch'` | `'stretch'` | Vertical alignment      |
-| `ui.justify`    | `'start' \| 'center' \| 'end' \| 'between'` | `'start'`   | Horizontal distribution |
-| `ui.wrap`       | `boolean`                                   | `false`     | Allow wrapping          |
-| `ui.responsive` | `boolean \| 'stack'`                        | `false`     | Stack on mobile         |
+Same as [Text Field](/docs/fields/data/text#ui-options).
 
-## Features
-
-### Field Widths
-
-Control individual field widths with `style.width`:
+## Basic Usage
 
 ```tsx
-{
-  type: "row",
+const schema = defineSchema({
   fields: [
-    { type: "text", name: "city", label: "City", style: { width: "60%" } },
-    { type: "text", name: "state", label: "State", style: { width: "20%" } },
-    { type: "text", name: "zip", label: "ZIP", style: { width: "20%" } },
+    { type: "text", name: "firstName", label: "First Name", required: true },
+    { type: "text", name: "lastName", label: "Last Name", required: true },
+    {
+      type: "row",
+      fields: [
+        { type: "text", name: "firstName", label: "First Name" },
+        { type: "text", name: "lastName", label: "Last Name" },
+      ],
+    },
   ],
-}
-```
-
-### Responsive Stacking
-
-Stack fields vertically on mobile:
-
-```tsx
-{
-  type: "row",
-  fields: [...],
-  ui: { responsive: "stack" },
-}
-```
-
-### Custom Gap
-
-```tsx
-{
-  type: "row",
-  fields: [...],
-  ui: { gap: 8 }, // 8px gap (uses spacing scale)
-}
-
-{
-  type: "row",
-  fields: [...],
-  ui: { gap: "2rem" }, // Custom CSS value
-}
+});
 ```
 
 ## Examples
 
-### Name Fields
+### Inline Name Fields
 
 ```tsx
 {
   type: "row",
   fields: [
-    { type: "text", name: "firstName", label: "First Name", required: true },
-    { type: "text", name: "lastName", label: "Last Name", required: true },
+    { type: "text", name: "firstName", label: "First Name" },
+    { type: "text", name: "lastName", label: "Last Name" },
   ],
-  ui: { responsive: "stack" },
 }
 ```
 
-### Address Line
+### City and State
 
 ```tsx
 {
   type: "row",
   fields: [
-    { type: "text", name: "city", label: "City", style: { width: "50%" } },
-    { type: "text", name: "state", label: "State", style: { width: "25%" } },
-    { type: "text", name: "zip", label: "ZIP Code", style: { width: "25%" } },
+    { type: "text", name: "city", label: "City" },
+    { type: "text", name: "state", label: "State" },
+    { type: "text", name: "zip", label: "ZIP" },
   ],
-  ui: { gap: 4, responsive: "stack" },
 }
 ```
 
-### Mixed Field Types
+### With Conditional Visibility
 
 ```tsx
 {
   type: "row",
+  condition: { $data: "/showAddress", eq: true },
   fields: [
-    { type: "date", name: "startDate", label: "Start Date" },
-    { type: "date", name: "endDate", label: "End Date" },
-    { type: "number", name: "budget", label: "Budget", ui: { prefix: "$" } },
-  ],
-  ui: { align: "end" }, // Align bottoms
-}
-```
-
-### Unequal Widths
-
-```tsx
-{
-  type: "row",
-  fields: [
-    { type: "text", name: "email", label: "Email", style: { width: "70%" } },
-    { type: "select", name: "type", label: "Type", options: ["Work", "Personal"], style: { width: "30%" } },
+    { type: "text", name: "city", label: "City" },
+    { type: "text", name: "state", label: "State" },
   ],
 }
 ```
+
+## Data Shape
+
+Row fields **do not** contribute to form data. They are layout-only containers.
+
+## Related
+
+- [Group Field](/docs/fields/layout/group)
+- [Collapsible Field](/docs/fields/layout/collapsible)

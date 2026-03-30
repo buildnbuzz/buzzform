@@ -1,0 +1,213 @@
+---
+title: FormProvider
+description: Set up the global field registry for your app.
+---
+
+# FormProvider
+
+`<FormProvider>` makes your field renderer registry available throughout your app.
+
+## API Reference
+
+### FormProviderProps
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `registry` | `FieldRegistry` | Field type to component mapping |
+| `children` | `ReactNode` | Child components |
+
+### FieldRegistry
+
+Plain object mapping field type strings to React components:
+
+```ts
+{
+  text: TextFieldComponent,
+  email: EmailFieldComponent,
+  select: SelectFieldComponent,
+  // ... more field types
+}
+```
+
+## Basic Setup
+
+Wrap your app root with the provider:
+
+```tsx title="app/layout.tsx"
+import { FormProvider } from "@buildnbuzz/form-react"; // [!code highlight]
+import { registry } from "@/components/buzzform/registry"; // [!code highlight]
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={registry}>{children}</FormProvider> {/* [!code highlight] */}
+      </body>
+    </html>
+  );
+}
+```
+
+## FieldRegistry
+
+The registry maps field type strings to React components:
+
+<auto-type-table path="../../../../packages/form-react/src/contexts/registry-context.tsx" name="FieldRegistry" />
+
+### Building a Registry
+
+If you installed with `@buzzform/all`, the registry is pre-built at `components/buzzform/registry.ts`:
+
+```tsx title="components/buzzform/registry.ts"
+"use client";
+
+import type { FieldRegistry } from "@buildnbuzz/form-react";
+
+import { TextField } from "./fields/text";
+import { EmailField } from "./fields/email";
+import { SelectField } from "./fields/select";
+// ... all field imports
+
+export const registry: FieldRegistry = {
+  text: TextField,
+  email: EmailField,
+  select: SelectField,
+  // ... all field mappings
+};
+```
+
+### Minimal Registry
+
+Only include field types you use:
+
+```tsx
+const minimalRegistry = {
+  text: TextField,
+  email: EmailField,
+  checkbox: CheckboxField,
+};
+
+<FormProvider registry={minimalRegistry}>
+  {/* Only text, email, and checkbox fields will render */}
+</FormProvider>
+```
+
+## useRegistry Hook
+
+Access the registry in your components:
+
+```tsx
+import { useRegistry } from "@buildnbuzz/form-react";
+
+function CustomFormRenderer() {
+  const registry = useRegistry();
+  
+  // Use registry to look up field components
+  const TextComponent = registry.text;
+  
+  return <TextComponent />;
+}
+```
+
+## Registry Override
+
+Override the global registry for a specific form:
+
+```tsx
+import { customRegistry } from "@/my-custom-registry";
+
+// Global provider
+<FormProvider registry={registry}>
+  <App />
+</FormProvider>
+
+// Override for specific form
+<Form
+  schema={schema}
+  registry={customRegistry} // Uses custom registry instead
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+## FieldRenderer
+
+The registry is used by `FieldRenderer` to look up components:
+
+```tsx
+// Inside RenderFields
+registry[field.type] // Looks up component by type string
+```
+
+If a field type isn't in the registry, it won't render (unless you provide a `renderFallback`).
+
+## Example: Complete Setup
+
+```tsx title="app/layout.tsx"
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={registry}>
+          {children}
+        </FormProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+```tsx title="components/buzzform/registry.ts"
+"use client";
+
+import type { FieldRegistry } from "@buildnbuzz/form-react";
+
+import { TextField } from "./fields/text";
+import { EmailField } from "./fields/email";
+import { PasswordField } from "./fields/password";
+import { TextareaField } from "./fields/textarea";
+import { NumberField } from "./fields/number";
+import { SelectField } from "./fields/select";
+import { CheckboxField } from "./fields/checkbox";
+import { SwitchField } from "./fields/switch";
+import { RadioField } from "./fields/radio";
+import { DateField } from "./fields/date";
+import { TagsField } from "./fields/tags";
+import { GroupField } from "./fields/group";
+import { ArrayField } from "./fields/array";
+import { RowField } from "./fields/row";
+import { TabsField } from "./fields/tabs";
+import { CollapsibleField } from "./fields/collapsible";
+
+export const registry: FieldRegistry = {
+  text: TextField,
+  email: EmailField,
+  password: PasswordField,
+  textarea: TextareaField,
+  number: NumberField,
+  select: SelectField,
+  checkbox: CheckboxField,
+  switch: SwitchField,
+  radio: RadioField,
+  date: DateField,
+  tags: TagsField,
+  group: GroupField,
+  array: ArrayField,
+  row: RowField,
+  tabs: TabsField,
+  collapsible: CollapsibleField,
+};
+```
+
+## Related
+
+- [`RenderFields`](/docs/render-fields)
+- [Custom Fields](/docs/custom-fields)
+- [Installation](/docs/installation)

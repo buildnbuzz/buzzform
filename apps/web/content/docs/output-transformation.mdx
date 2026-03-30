@@ -1,0 +1,168 @@
+---
+title: Output Transformation
+description: Transform nested form data to flat path-keyed objects for API submission.
+---
+
+# Output Transformation
+
+BuzzForm can transform nested form data into flat, path-keyed objects for APIs that expect this format.
+
+## OutputConfig
+
+Configure output transformation in `useForm`:
+
+<auto-type-table path="../../../../packages/form-core/src/types.ts" name="OutputConfig" />
+
+## Basic Usage
+
+Transform nested data to flat keys:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+const form = useForm({
+  schema,
+  output: { type: "path" }, // Flatten to dot-notation keys
+  onSubmit: ({ value }) => {
+    // Without output: { name: "John", address: { city: "NYC", zip: "10001" } }
+    // With output:    { name: "John", "address.city": "NYC", "address.zip": "10001" }
+    submitToApi(value);
+  },
+});
+```
+
+## Custom Delimiter
+
+Change the delimiter from `.` to another character:
+
+```tsx
+const form = useForm({
+  schema,
+  output: {
+    type: "path",
+    delimiter: "/", // Use slash instead of dot
+  },
+  onSubmit: ({ value }) => {
+    // { name: "John", "address/city": "NYC", "address/zip": "10001" }
+    submitToApi(value);
+  },
+});
+```
+
+## Utility Functions
+
+BuzzForm exports helpers for manual transformation:
+
+### flattenToPathKeys
+
+Convert nested object to flat path keys:
+
+```tsx
+import { flattenToPathKeys } from "@buildnbuzz/form-core";
+
+const nested = {
+  name: "John",
+  address: {
+    city: "NYC",
+    zip: "10001",
+  },
+};
+
+const flat = flattenToPathKeys(nested);
+// { name: "John", "address.city": "NYC", "address.zip": "10001" }
+
+// Custom delimiter
+const flatSlash = flattenToPathKeys(nested, "/");
+// { name: "John", "address/city": "NYC", "address/zip": "10001" }
+```
+
+### expandPathKeys
+
+Convert flat path keys back to nested object:
+
+```tsx
+import { expandPathKeys } from "@buildnbuzz/form-core";
+
+const flat = {
+  name: "John",
+  "address.city": "NYC",
+  "address.zip": "10001",
+};
+
+const nested = expandPathKeys(flat);
+// { name: "John", address: { city: "NYC", zip: "10001" } }
+
+// Custom delimiter
+const nestedSlash = expandPathKeys(flat, "/");
+```
+
+### transformFormOutput
+
+Full transformation with config:
+
+```tsx
+import { transformFormOutput } from "@buildnbuzz/form-core";
+
+const data = {
+  user: {
+    name: "John",
+    address: {
+      city: "NYC",
+    },
+  },
+};
+
+// Transform to path-keyed format
+const transformed = transformFormOutput(data, { type: "path" });
+// { "user.name": "John", "user.address.city": "NYC" }
+
+// With custom delimiter
+const transformedSlash = transformFormOutput(data, {
+  type: "path",
+  delimiter: "/",
+});
+// { "user/name": "John", "user/address/city": "NYC" }
+```
+
+## When to Use
+
+**Use output transformation when:**
+- Your API expects flat keys like `"user.address.city"`
+- You're migrating from a form library that uses path-based data
+- You need to match a specific backend format
+
+**Don't use when:**
+- Your API accepts standard nested JSON (most do)
+- You're using server actions with typed parameters
+- The added complexity isn't worth it
+
+## Example: API Integration
+
+```tsx
+const form = useForm({
+  schema: userSchema,
+  output: { type: "path" },
+  onSubmit: async ({ value }) => {
+    // value is now flat: { "user.name": "John", "user.email": "john@example.com" }
+    
+    await fetch("/api/users", {
+      method: "POST",
+      body: JSON.stringify(value),
+      headers: { "Content-Type": "application/json" },
+    });
+  },
+});
+```

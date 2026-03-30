@@ -1,227 +1,108 @@
 ---
 title: Date Field
-description: Date picker with calendar popup, presets, and manual input.
+description: Date picker with optional time selection.
 ---
 
 # Date Field
 
-The `date` and `datetime` fields provide calendar-based date selection with optional time picker and quick presets.
+The `date` field renders a date picker with optional time selection.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/date.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/date.json
-```
-
-<Callout>
-  Requires `date-fns` for formatting. Install with: `npm install date-fns`
-</Callout>
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "date",
-    name: "birthdate",
-    label: "Birth Date",
-    required: true,
-  },
-]);
-
-export function DateFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop      | Type             | Default | Description           |
-| --------- | ---------------- | ------- | --------------------- |
-| `minDate` | `Date \| string` | -       | Earliest allowed date |
-| `maxDate` | `Date \| string` | -       | Latest allowed date   |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="DateField" />
 
 ## UI Options
 
-| Option           | Type               | Default | Description               |
-| ---------------- | ------------------ | ------- | ------------------------- |
-| `ui.format`      | `string`           | `"PPP"` | Display format (date-fns) |
-| `ui.inputFormat` | `string`           | -       | Manual input format       |
-| `ui.presets`     | `boolean \| Array` | -       | Quick date presets        |
+Same as [Text Field](/docs/fields/data/text#ui-options).
 
-## Features
-
-### Date Constraints
-
-Limit selectable dates:
+## Basic Usage
 
 ```tsx
-{
-  type: "date",
-  name: "startDate",
-  label: "Start Date",
-  minDate: new Date(), // Today onwards
-  maxDate: "2025-12-31", // String format works too
-}
+const schema = defineSchema({
+  fields: [
+    {
+      type: "date",
+      name: "birthDate",
+      label: "Birth Date",
+      required: true,
+    },
+  ],
+});
 ```
 
-### Custom Format
-
-Use date-fns format strings:
+## With Time Picker
 
 ```tsx
 {
   type: "date",
-  name: "date",
-  label: "Date",
-  ui: { format: "MM/dd/yyyy" },
-}
-```
-
-Common formats:
-
-- `"PPP"` → January 1, 2025
-- `"PP"` → Jan 1, 2025
-- `"P"` → 01/01/2025
-- `"yyyy-MM-dd"` → 2025-01-01
-
-### Date Presets
-
-Quick selection buttons:
-
-```tsx
-// Default presets
-{
-  type: "date",
-  name: "date",
-  ui: { presets: true },
-}
-
-// Custom presets
-{
-  type: "date",
-  name: "date",
-  ui: {
-    presets: [
-      { label: "Today", value: () => new Date() },
-      { label: "Tomorrow", value: () => addDays(new Date(), 1) },
-      { label: "Next Week", value: () => addWeeks(new Date(), 1) },
-    ],
-  },
-}
-```
-
-## Examples
-
-### Birth Date
-
-```tsx
-{
-  type: "date",
-  name: "birthdate",
-  label: "Date of Birth",
+  name: "meetingTime",
+  label: "Meeting Time",
+  withTime: true,
   required: true,
-  maxDate: new Date(), // Can't be in the future
-  ui: { format: "MMMM d, yyyy" },
 }
 ```
 
-### Event Date with Presets
+## Date Constraints
 
 ```tsx
 {
   type: "date",
   name: "eventDate",
   label: "Event Date",
-  minDate: new Date(),
-  ui: {
-    presets: true,
-    format: "EEEE, MMMM d, yyyy", // Monday, January 1, 2025
-  },
+  minDate: new Date().toISOString().split("T")[0], // Today
+  maxDate: "2025-12-31",
 }
 ```
 
----
+## Examples
 
-## Datetime
-
-The `datetime` field adds time selection to the date picker.
-
-### Usage
+### Date Range
 
 ```tsx
-{
-  type: "datetime",
-  name: "appointment",
-  label: "Appointment",
-  required: true,
-}
-```
-
-### UI Options
-
-| Option                         | Type      | Default | Description          |
-| ------------------------------ | --------- | ------- | -------------------- |
-| `ui.timePicker.interval`       | `number`  | `15`    | Time step in minutes |
-| `ui.timePicker.use24hr`        | `boolean` | `false` | Use 24-hour format   |
-| `ui.timePicker.includeSeconds` | `boolean` | `false` | Show seconds         |
-
-### Examples
-
-#### Appointment Scheduler
-
-```tsx
-{
-  type: "datetime",
-  name: "appointment",
-  label: "Appointment Time",
-  minDate: new Date(),
-  ui: {
-    format: "PPP 'at' p", // January 1, 2025 at 2:30 PM
-    timePicker: {
-      interval: 30, // 30-minute slots
+const schema = defineSchema({
+  fields: [
+    {
+      type: "date",
+      name: "startDate",
+      label: "Start Date",
+      required: true,
     },
-  },
-}
+    {
+      type: "date",
+      name: "endDate",
+      label: "End Date",
+      required: true,
+      minDate: "{ $data: '/startDate' }", // After start date
+    },
+  ],
+});
 ```
 
-#### 24-Hour Format
+### Birthday Picker
 
 ```tsx
 {
-  type: "datetime",
-  name: "timestamp",
-  label: "Timestamp",
-  ui: {
-    format: "yyyy-MM-dd HH:mm",
-    timePicker: {
-      use24hr: true,
-      interval: 15,
-    },
-  },
+  type: "date",
+  name: "birthDate",
+  label: "Date of Birth",
+  minDate: "1900-01-01",
+  maxDate: new Date().toISOString().split("T")[0],
 }
 ```
 
-#### With Seconds
+## Auto-Derived Validators
 
-```tsx
-{
-  type: "datetime",
-  name: "logTime",
-  label: "Log Time",
-  ui: {
-    format: "PPP HH:mm:ss",
-    timePicker: {
-      use24hr: true,
-      includeSeconds: true,
-    },
-  },
-}
-```
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `minDate` | `minDate` |
+| `maxDate` | `maxDate` |
+
+## Value Format
+
+- **Without time**: `YYYY-MM-DD` (e.g., `"2024-01-15"`)
+- **With time**: Full ISO datetime (e.g., `"2024-01-15T10:30:00.000Z"`)
+
+## Related
+
+- [Text Field](/docs/fields/data/text)

@@ -1,0 +1,285 @@
+---
+title: Dynamic Values
+description: Reference other field values or external context in labels, defaults, and validator args.
+---
+
+# Dynamic Values
+
+BuzzForm supports dynamic references in field properties using `{ $data: path }` and `{ $context: path }` syntax.
+
+## DynamicValue Types
+
+A `DynamicValue` can be a literal value or a reference:
+
+```ts
+type DynamicValue<T> = T | { $data: string } | { $context: string };
+```
+
+This works for:
+- `DynamicString` — labels, descriptions, placeholders
+- `DynamicNumber` — validator args, min/max values
+- `DynamicBoolean` — disabled, required, collapsed states
+
+## Using $data
+
+Reference other field values in your form:
+
+### In Labels and Descriptions
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "eventName",
+      label: "Event Name",
+      required: true,
+    },
+    {
+      type: "text",
+      name: "confirmationMessage",
+      // Label shows the event name dynamically
+      label: { $data: "/eventName" },
+      description: "Confirm your registration for: { $data: /eventName }",
+      placeholder: `Enter confirmation for { $data: "/eventName" }`,
+    },
+  ],
+});
+```
+
+### In Default Values
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "firstName", label: "First Name" },
+    { type: "text", name: "lastName", label: "Last Name" },
+    {
+      type: "text",
+      name: "fullName",
+      label: "Full Name",
+      // Mirror firstName as default (note: this doesn't concatenate)
+      defaultValue: { $data: "/firstName" },
+    },
+  ],
+});
+```
+
+### In Validator Args
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "minChars",
+      label: "Minimum Characters",
+      defaultValue: 5,
+    },
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      validate: {
+        onBlur: {
+          checks: [
+            {
+              type: "minLength",
+              message: "Username too short",
+              // Use value from another field
+              args: { min: { $data: "/minChars" } },
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+## Using $context
+
+Reference external data passed via `contextData`:
+
+```tsx
+const form = useForm({
+  schema,
+  contextData: {
+    userRole: "admin",
+    maxUploadSize: 10,
+    allowedDomains: ["company.com", "partner.com"],
+  },
+});
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "email",
+      name: "workEmail",
+      label: "Work Email",
+      validate: {
+        onBlur: {
+          checks: [
+            {
+              type: "validateEmailDomain",
+              message: "Please use a company email",
+              args: {
+                allowedDomains: { $context: "/allowedDomains" },
+                maxSize: { $context: "/maxUploadSize" },
+              },
+            },
+          ],
+        },
+      },
+    },
+    {
+      type: "text",
+      name: "adminNotes",
+      label: "Admin Notes",
+      // Only shown for admin users
+      condition: { $context: "/userRole", eq: "admin" },
+    },
+  ],
+});
+```
+
+## Path Format
+
+BuzzForm uses **JSON Pointer format** (RFC 6901):
+
+| Path Type | Example | Description |
+|-----------|---------|-------------|
+| Root field | `/username` | Field at root level |
+| Nested field | `/address/city` | Field in a group |
+| Array item | `/items/0/name` | Specific array item |
+| Context data | `/user/role` | Context data path |
+
+**Important:**
+- Paths **must** start with `/`
+- Use `/` as separator (not `.`)
+- Array indices are numeric (`/items/0`)
+
+## resolveDynamicValue Helper
+
+Resolve dynamic values manually:
+
+```tsx
+import { resolveDynamicValue } from "@buildnbuzz/form-core";
+
+const formData = { name: "John", age: 30 };
+const contextData = { maxAge: 100 };
+
+// Resolve a $data reference
+resolveDynamicValue({ $data: "/name" }, formData, contextData);
+// "John"
+
+// Resolve a $context reference
+resolveDynamicValue({ $context: "/maxAge" }, formData, contextData);
+// 100
+
+// Literal values pass through unchanged
+resolveDynamicValue("hello", formData, contextData);
+// "hello"
+```
+
+## Examples
+
+### Dynamic Field Options
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "country",
+      label: "Country",
+      options: ["US", "UK", "Canada"],
+    },
+    {
+      type: "select",
+      name: "state",
+      label: "State",
+      options: [
+        { label: "California", value: "CA" },
+        { label: "New York", value: "NY" },
+        // Disable options dynamically
+        { label: "Texas", value: "TX", disabled: { $data: "/country", neq: "US" } },
+      ],
+    },
+  ],
+});
+```
+
+### Dynamic Validation Thresholds
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "number",
+      name: "riskLevel",
+      label: "Risk Level (1-10)",
+      min: 1,
+      max: 10,
+    },
+    {
+      type: "text",
+      name: "justification",
+      label: "Justification",
+      // Required only for high risk
+      required: { $data: "/riskLevel", gte: 7 },
+      validate: {
+        onSubmit: {
+          checks: [
+            {
+              type: "minLength",
+              message: "High risk requires detailed justification",
+              // Longer min length for higher risk
+              args: {
+                min: { $data: "/riskLevel" }, // min = riskLevel value
+              },
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+### Dynamic Collapsible State
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "checkbox",
+      name: "showAdvanced",
+      label: "Show Advanced Options",
+    },
+    {
+      type: "collapsible",
+      label: "Advanced Settings",
+      // Collapse/expand based on checkbox
+      collapsed: { $data: "/showAdvanced", eq: false },
+      fields: [
+        // ... advanced fields
+      ],
+    },
+  ],
+});
+```
+
+## Limitations
+
+**Not supported:**
+- ❌ Dynamic values in `message` strings (messages are static)
+- ❌ Relative paths like `../sibling` (use absolute `/sibling`)
+- ❌ Dot notation like `user.name` (use `/user/name`)
+
+**Supported:**
+- ✅ In `args` object of validation checks
+- ✅ In labels, descriptions, placeholders
+- ✅ In defaultValue
+- ✅ In boolean props (disabled, required, collapsed)
+- ✅ In validator args

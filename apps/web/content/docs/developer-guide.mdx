@@ -1,0 +1,3692 @@
+---
+title: "Developer Guide"
+description: "A practical, end-to-end guide to building with BuzzForm, from installation to production patterns."
+---
+
+## 1. Installation & Setup
+
+### What You'll Do
+
+Install the core packages and set up your field registry.
+
+### Commands
+
+```bash
+# Install core packages
+pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+
+# Install all BuzzForm field components via shadcn registry
+npx shadcn@latest add @buzzform/all
+```
+
+<Callout type="info">
+  Add `"@buzzform": "https://form.buildnbuzz.com/r/{name}.json"` to the `registries` field in your `components.json` first. See [Installation](/docs/installation) for details.
+</Callout>
+
+**What `@buzzform/all` installs:**
+
+- Complete field registry (text, email, select, checkbox, etc.)
+- Form components (`Form`, `FormContent`, `FormFields`, etc.)
+- All required UI components
+
+### Setup Options
+
+#### Option A: App-Level Provider (Recommended)
+
+Set up once at your app root, then use forms anywhere without passing `registry`.
+
+Import the `FormProvider` and your installed `registry`, then wrap your root layout:
+
+```tsx title="app/layout.tsx"
+import { FormProvider } from "@buildnbuzz/form-react"; // [!code highlight]
+import { registry } from "@/components/buzzform/registry"; // [!code highlight]
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={registry}>{children}</FormProvider> {/* [!code highlight] */}
+      </body>
+    </html>
+  );
+}
+```
+
+**Why Recommended:**
+
+- DRY — no need to pass `registry` to every form
+- Centralized configuration
+- Easy to swap registries globally
+
+#### Option B: Per-Form Registry
+
+Pass `registry` explicitly to each form (useful for isolated components or testing).
+
+```tsx
+import { registry } from "@/components/buzzform/registry";
+
+<Form schema={schema} registry={registry} onSubmit={handleSubmit}>
+  <FormContent>
+    <FormFields />
+  </FormContent>
+</Form>;
+```
+
+---
+
+## 2. Creating Your First Form
+
+### What You'll Do
+
+Define a schema, infer the type, and render a working form in under 5 minutes.
+
+### Quick Start
+
+```tsx
+"use client";
+
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
+import { toast } from "sonner";
+
+// 1. Define schema
+const schema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "textarea", name: "message", label: "Message" },
+  ],
+});
+
+// 2. Infer type
+type FormData = InferType<typeof schema.fields>;
+// { name: string; email: string; message?: string }
+
+// 3. Render form
+export function ContactForm() {
+  return (
+    <Form
+      schema={schema}
+      onSubmit={({ value }) => {
+        const data = value as FormData;
+        toast("Message sent!", { description: `From: ${data.email}` });
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+---
+
+## 3. Defining Schemas with Type Safety
+
+### What You'll Do
+
+Create strongly-typed form schemas that auto-generate TypeScript types.
+
+### Using `defineSchema` (Recommended)
+
+```ts
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+const schema = defineSchema({
+  title: "User Profile",
+  description: "Update your profile information",
+  fields: [
+    { type: "text", name: "firstName", label: "First Name", required: true },
+    { type: "text", name: "lastName", label: "Last Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "number", name: "age", label: "Age", min: 18, max: 120 },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// { firstName: string; lastName: string; email: string; age?: number }
+```
+
+### Using `as const satisfies FormSchema` (Alternative)
+
+```ts
+import type { FormSchema, InferType } from "@buildnbuzz/form-core";
+
+const schema = {
+  fields: [{ type: "text", name: "name", label: "Name", required: true }],
+} as const satisfies FormSchema;
+
+type FormData = InferType<typeof schema.fields>;
+```
+
+**Why `defineSchema` is Recommended:**
+
+- Cleaner syntax (no `as const satisfies`)
+- Better IDE autocomplete
+- Explicit type narrowing
+
+### Type Inference Rules
+
+| Field Config                          | Inferred Type           |
+| ------------------------------------- | ----------------------- |
+| `required: true`                      | Required key            |
+| No `required`                         | Optional key (`?`)      |
+| `type: "group"`                       | Nested object           |
+| `type: "array"`                       | Array of nested objects |
+| `type: "select"` + `hasMany: true`    | `string[]`              |
+| `type: "checkbox"` + `tristate: true` | `boolean \| null`       |
+
+---
+
+## 4. Rendering Forms
+
+### What You'll Do
+
+Use modular, context-backed form components to build forms that fit any container — dialogs, sheets, cards, or standalone pages. The shadcn `Form` is designed with composition in mind: each piece (`FormContent`, `FormFields`, `FormActions`, `FormSubmit`, `FormReset`, `FormMessage`) is a standalone component that taps into React context.
+
+### Key Design Principle: Modular + Context-Backed
+
+All form components (`FormContent`, `FormFields`, `FormActions`, `FormSubmit`, `FormReset`, `FormMessage`) use React context internally via `useFormContext()`. This means:
+
+- **You can place them anywhere** inside the `<Form>` tree
+- **You control the layout** — wrap in dialogs, sheets, cards, grids, etc.
+- **No prop drilling** — form state, schema, and registry are all in context
+
+---
+
+### Option A: Minimal Setup (Zero Boilerplate)
+
+The fastest way to get a working form with default buttons.
+
+```tsx
+import { Form } from "@/components/buzzform/form";
+
+// That's it — fields and buttons render automatically
+<Form
+  schema={schema}
+  onSubmit={({ value }) => {
+    console.log(value);
+  }}
+/>;
+```
+
+**What renders automatically:**
+
+- All fields from `schema.fields`
+- A "Submit" button
+- A "Reset" button (if `showReset: true` in `actions`)
+
+**Customize default actions:**
+
+```tsx
+<Form
+  schema={schema}
+  actions={{
+    submitLabel: "Save Changes",
+    showReset: true,
+    resetLabel: "Clear",
+    align: "end", // "start" | "center" | "end" | "between"
+  }}
+  onSubmit={handleSubmit}
+/>
+```
+
+---
+
+### Option B: Composed Layout (Recommended for Production)
+
+Use modular components to build forms that fit your UI containers.
+
+#### Example: Form in a Sheet
+
+```tsx
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormMessage,
+  FormActions,
+  FormReset,
+  FormSubmit,
+} from "@/components/buzzform/form";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+} from "@/components/ui/sheet";
+
+export function EditProfileSheet() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button>Edit Profile</Button>
+      </SheetTrigger>
+      <SheetContent className="flex flex-col">
+        <SheetHeader>
+          <SheetTitle>Edit Profile</SheetTitle>
+          <SheetDescription>
+            Update your public profile information.
+          </SheetDescription>
+        </SheetHeader>
+
+        {/* Form fills the sheet with scrollable content */}
+        <Form schema={schema} onSubmit={handleSubmit}>
+          <FormContent className="flex-1 overflow-y-auto px-1">
+            <FormFields />
+            <FormMessage />
+          </FormContent>
+
+          <SheetFooter>
+            <FormActions className="w-full">
+              <FormReset />
+              <FormSubmit>Save Changes</FormSubmit>
+            </FormActions>
+          </SheetFooter>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
+```
+
+#### Example: Form in a Dialog
+
+```tsx
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+export function CreateProjectDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>New Project</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <Form schema={schema} onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Create Project</DialogTitle>
+            <DialogDescription>Enter your project details.</DialogDescription>
+          </DialogHeader>
+          <FormContent>
+            <FormFields />
+          </FormContent>
+          <DialogFooter>
+            <FormSubmit>Create</FormSubmit>
+          </DialogFooter>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+#### Example: Form with Custom Actions Layout
+
+```tsx
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormActions,
+  FormReset,
+  FormSubmit,
+} from "@/components/buzzform/form";
+
+export function PreferencesForm() {
+  return (
+    <Form schema={schema} onSubmit={handleSubmit}>
+      <FormContent>
+        <FormFields />
+
+        {/* Actions with space-between layout */}
+        <FormActions align="between">
+          <p className="text-xs text-muted-foreground self-center">
+            Reset is only enabled when you have unsaved changes.
+          </p>
+          <div className="flex gap-2">
+            <FormReset />
+            <FormSubmit>Save</FormSubmit>
+          </div>
+        </FormActions>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+---
+
+### Option C: Manual Control with `useForm` Hook
+
+For advanced cases where you need full control over the form instance (e.g., controlled dialogs, external reset logic).
+
+#### Example: Controlled Dialog with External Reset
+
+```tsx
+import { useState } from "react";
+import { useForm } from "@buildnbuzz/form-react";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
+
+export function ControlledFormDialog() {
+  const [open, setOpen] = useState(false);
+
+  // Create form instance externally
+  const form = useForm({
+    schema,
+    onSubmit: ({ value }) => {
+      toast("Created", { description: value.name });
+      form.reset();
+      setOpen(false);
+    },
+  });
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>New Project</Button>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) form.reset(); // Reset form when dialog closes
+          setOpen(o);
+        }}
+      >
+        <DialogContent>
+          {/* Pass existing form instance */}
+          <Form form={form} schema={schema}>
+            <DialogHeader>
+              <DialogTitle>Create Project</DialogTitle>
+            </DialogHeader>
+            <FormContent>
+              <FormFields />
+            </FormContent>
+            <DialogFooter>
+              <FormSubmit>Create</FormSubmit>
+            </DialogFooter>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+```
+
+**When to use this pattern:**
+
+- Dialog forms that need reset on close
+- Forms with external state management
+- Multi-step wizards sharing a single form instance
+- Testing scenarios requiring form instance access
+
+---
+
+### Component Reference
+
+| Component       | Description                                                                   |
+| --------------- | ----------------------------------------------------------------------------- |
+| `<Form>`        | Context provider + form wrapper. Accepts `schema` or existing `form` instance |
+| `<FormContent>` | Renders the `<form>` element. Supports `autoRender` prop                      |
+| `<FormFields>`  | Renders all fields from schema                                                |
+| `<FormActions>` | Flex container for buttons with `align` prop                                  |
+| `<FormSubmit>`  | Submit button with auto disable during submission                             |
+| `<FormReset>`   | Reset button (only enabled when form is dirty)                                |
+| `<FormMessage>` | Displays form-level errors                                                    |
+
+---
+
+### Layout Patterns
+
+#### Card-Based Form
+
+```tsx
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+
+<Card>
+  <CardHeader>
+    <CardTitle>Account Settings</CardTitle>
+  </CardHeader>
+  <Form schema={schema} onSubmit={handleSubmit}>
+    <CardContent>
+      <FormContent>
+        <FormFields />
+      </FormContent>
+    </CardContent>
+    <CardFooter>
+      <FormActions>
+        <FormReset />
+        <FormSubmit>Save</FormSubmit>
+      </FormActions>
+    </CardFooter>
+  </Form>
+</Card>;
+```
+
+#### Grid Layout for Fields
+
+```tsx
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent>
+    <div className="grid grid-cols-2 gap-4">
+      <FormFields />
+    </div>
+    <FormActions>
+      <FormSubmit>Submit</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>
+```
+
+#### Scrollable Content Area
+
+```tsx
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent className="max-h-[60vh] overflow-y-auto">
+    <FormFields />
+  </FormContent>
+  <FormActions>
+    <FormSubmit>Submit</FormSubmit>
+  </FormActions>
+</Form>
+```
+
+---
+
+### Why This Pattern Works
+
+1. **Composability**: Each component is independent — use only what you need
+2. **Context-Backed**: No prop drilling — `form`, `schema`, `registry` all in context
+3. **Container Agnostic**: Works in dialogs, sheets, cards, modals, pages
+4. **Progressive Disclosure**: Start minimal, add complexity as needed
+5. **Type Safety**: All components inherit schema types automatically
+
+---
+
+## 5. Working with Field Types
+
+### What You'll Do
+
+Use the right field type for your data and UX needs.
+
+### Basic Fields
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // Text input
+    { type: "text", name: "username", label: "Username" },
+
+    // Email with auto-validation
+    { type: "email", name: "email", label: "Email" },
+
+    // Password with strength criteria
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      minLength: 8,
+      criteria: {
+        requireUppercase: true,
+        requireNumber: true,
+      },
+    },
+
+    // Multi-line text
+    { type: "textarea", name: "bio", label: "Bio", maxLength: 500 },
+
+    // Number input
+    { type: "number", name: "age", label: "Age", min: 18, max: 120 },
+  ],
+});
+```
+
+### Selection Fields
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // Single select dropdown
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: [
+        { label: "Admin", value: "admin" },
+        { label: "User", value: "user" },
+      ],
+    },
+
+    // Multi-select
+    {
+      type: "select",
+      name: "interests",
+      label: "Interests",
+      hasMany: true,
+      options: ["Design", "Development", "Marketing"],
+    },
+
+    // Radio group
+    {
+      type: "radio",
+      name: "theme",
+      label: "Theme",
+      options: [
+        { label: "Light", value: "light" },
+        { label: "Dark", value: "dark" },
+      ],
+    },
+
+    // Single checkbox
+    { type: "checkbox", name: "agree", label: "I agree", required: true },
+
+    // Tri-state checkbox (yes/no/not sure)
+    {
+      type: "checkbox",
+      name: "confirmation",
+      label: "Confirm?",
+      tristate: true, // value: true | false | null
+    },
+
+    // Checkbox group
+    {
+      type: "checkbox",
+      name: "permissions",
+      label: "Permissions",
+      hasMany: true,
+      options: ["Read", "Write", "Delete"],
+    },
+
+    // Switch toggle
+    { type: "switch", name: "notifications", label: "Enable Notifications" },
+  ],
+});
+```
+
+### Complex Fields
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // Date picker
+    { type: "date", name: "birthDate", label: "Birth Date" },
+
+    // Date + time
+    { type: "date", name: "meetingTime", label: "Meeting", withTime: true },
+
+    // Tags input (chip-based)
+    {
+      type: "tags",
+      name: "skills",
+      label: "Skills",
+      minTags: 3,
+      maxTagLength: 20,
+    },
+  ],
+});
+```
+
+---
+
+## 6. Validation
+
+### What You'll Do
+
+Add validation rules that run on change, blur, or submit. BuzzForm has two layers of validation:
+
+1. **Auto-derived validators** from top-level field properties (`required`, `min`, `max`, `pattern`, etc.)
+2. **Custom validators** defined in the `validate` config for additional rules or custom logic
+
+### Auto-Derived Validators (Built-in)
+
+BuzzForm automatically generates validation checks from field properties. You don't need to manually specify these in `validate`:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // required: true → auto-adds "required" validator
+    { type: "text", name: "username", label: "Username", required: true },
+
+    // email type → auto-adds "email" validator
+    { type: "email", name: "email", label: "Email", required: true },
+
+    // minLength/maxLength → auto-adds "minLength"/"maxLength" validators
+    { type: "text", name: "bio", label: "Bio", minLength: 10, maxLength: 500 },
+
+    // min/max → auto-adds "min"/"max" validators
+    { type: "number", name: "age", label: "Age", min: 18, max: 120 },
+
+    // pattern → auto-adds "pattern" validator
+    {
+      type: "text",
+      name: "code",
+      label: "Code",
+      pattern: "^[A-Z]{3}[0-9]{3}$",
+    },
+
+    // password criteria → auto-adds "passwordCriteria" validator
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      minLength: 8,
+      criteria: {
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumber: true,
+      },
+    },
+
+    // minItems/maxItems for arrays → auto-adds validators
+    {
+      type: "array",
+      name: "tags",
+      label: "Tags",
+      minItems: 1,
+      maxItems: 5,
+      fields: [{ type: "text", name: "tag" }],
+    },
+
+    // minTags/maxTags for tags field → auto-adds validators
+    {
+      type: "tags",
+      name: "skills",
+      label: "Skills",
+      minTags: 3,
+      maxTags: 10,
+    },
+
+    // minDate/maxDate for date field → auto-adds validators
+    {
+      type: "date",
+      name: "birthDate",
+      label: "Birth Date",
+      minDate: "1900-01-01",
+      maxDate: new Date().toISOString().split("T")[0],
+    },
+  ],
+});
+```
+
+**Auto-derived validators by field type:**
+
+| Field Type                     | Auto-Validators                        |
+| ------------------------------ | -------------------------------------- |
+| All fields                     | `required` (if `required: true`)       |
+| `text`, `textarea`             | `pattern` (if `pattern` set)           |
+| `email`                        | `email`                                |
+| `password`                     | `passwordCriteria` (if `criteria` set) |
+| `text`, `textarea`, `password` | `minLength`, `maxLength`               |
+| `number`                       | `min`, `max`, `precision`, `step`      |
+| `date`                         | `minDate`, `maxDate`                   |
+| `tags`                         | `minTags`, `maxTags`                   |
+| `array`                        | `minItems`, `maxItems`                 |
+| `select` (hasMany)             | `minSelected`, `maxSelected`           |
+
+---
+
+### Custom Validators in `validate` Config
+
+Use `validate` when you need:
+
+- Additional rules beyond auto-derived validators
+- Custom error messages
+- Different triggers (onChange, onBlur, onSubmit)
+- Sync or async custom validation logic
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      required: true,
+      minLength: 3,
+      // Additional custom validation rules
+      validate: {
+        onBlur: {
+          checks: [
+            // Custom validator with custom message
+            {
+              type: "usernameAvailable",
+              message: "This username is already taken.",
+            },
+          ],
+        },
+      },
+    },
+    {
+      type: "password",
+      name: "confirmPassword",
+      label: "Confirm Password",
+      required: true,
+      validate: {
+        onSubmit: {
+          checks: [
+            // Compare with another field
+            {
+              type: "matches",
+              args: { other: { $data: "password" } },
+              message: "Passwords do not match.",
+            },
+          ],
+        },
+      },
+    },
+    {
+      type: "text",
+      name: "promoCode",
+      label: "Promo Code",
+      validate: {
+        onBlur: {
+          // Debounce async validation by 500ms
+          debounceMs: 500,
+          checks: [
+            {
+              type: "validatePromoCode",
+              message: "Invalid or expired promo code.",
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+---
+
+### Dynamic Values in Validation Args (`$data`, `$context`)
+
+You can use `$data` and `$context` references inside `args` to access sibling fields or external context data. These are resolved at runtime before being passed to your validator.
+
+**Important: Path Format**
+
+BuzzForm uses **JSON Pointer format** (RFC 6901) for `$data` and `$context` paths:
+
+- Paths start with `/` (e.g., `/user/name`)
+- Nested paths use `/` as separator (e.g., `/address/city`)
+- Array indices are numeric (e.g., `/items/0/name`)
+- **No dot notation** — use `/user/name` not `user.name`
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // Reference sibling field with $data
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      required: true,
+    },
+    {
+      type: "password",
+      name: "confirmPassword",
+      label: "Confirm Password",
+      required: true,
+      validate: {
+        onSubmit: {
+          checks: [
+            {
+              type: "matches",
+              args: { other: { $data: "/password" } }, // JSON Pointer format
+              message: "Passwords do not match.",
+            },
+          ],
+        },
+      },
+    },
+
+    // Reference nested field in a group
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        {
+          type: "text",
+          name: "zipCode",
+          label: "ZIP Code",
+          validate: {
+            onBlur: {
+              checks: [
+                {
+                  type: "validateZipForState",
+                  args: {
+                    state: { $data: "/address/state" }, // Full JSON Pointer path
+                  },
+                  message: "Invalid ZIP for this state.",
+                },
+              ],
+            },
+          },
+        },
+        {
+          type: "text",
+          name: "state",
+          label: "State",
+        },
+      ],
+    },
+
+    // Reference context data with $context
+    {
+      type: "email",
+      name: "workEmail",
+      label: "Work Email",
+      required: true,
+      validate: {
+        onBlur: {
+          checks: [
+            {
+              type: "validateEmailDomain",
+              args: {
+                allowedDomains: { $context: "/company/allowedDomains" },
+                minDomainAge: { $context: "/company/minDomainAge" },
+              },
+              message: "Please use a valid work email domain.",
+            },
+          ],
+        },
+      },
+    },
+
+    // Reference array parent
+    {
+      type: "array",
+      name: "teamMembers",
+      label: "Team Members",
+      fields: [
+        {
+          type: "text",
+          name: "email",
+          label: "Email",
+          validate: {
+            onBlur: {
+              checks: [
+                {
+                  type: "uniqueEmail",
+                  args: {
+                    allEmails: { $data: "/teamMembers" }, // Reference parent array
+                  },
+                  message: "Duplicate email in team.",
+                },
+              ],
+            },
+          },
+        },
+        {
+          type: "text",
+          name: "role",
+          label: "Role",
+        },
+      ],
+    },
+  ],
+});
+```
+
+**Path Format Reference:**
+
+| Path Type        | Example         | Description                              |
+| ---------------- | --------------- | ---------------------------------------- |
+| Root-level field | `/username`     | References field at root level           |
+| Nested field     | `/address/city` | References nested field in group         |
+| Array item       | `/items/0/name` | References specific array item           |
+| Context data     | `/user/role`    | References context data (via `$context`) |
+
+**How it works:**
+
+- `$data: "/fieldName"` → Resolves to `formData["fieldName"]`
+- `$data: "/group/fieldName"` → Resolves to nested form data
+- `$context: "/key"` → Resolves to `contextData["key"]`
+- `$context: "/nested/key"` → Resolves to nested context data
+
+**Supported in:**
+
+- ✅ `args` object of any validation check
+- ✅ Both sync and async validators
+- ✅ Built-in validators (e.g., `matches`) and custom validators
+
+**Not supported:**
+
+- ❌ `$data` or `$context` in `message` strings (messages are static)
+- ❌ Dot notation like `user.name` — use `/user/name` instead
+- ❌ Relative paths like `../sibling` — use absolute paths starting with `/`
+
+**Example validator that uses dynamic args:**
+
+```ts
+import {
+  defineValidators,
+  type ValidationContext,
+} from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  // Validator that receives resolved $data/$context values
+  validateEmailDomain: (
+    value: unknown,
+    args?: { allowedDomains?: string[]; minDomainAge?: number },
+    ctx?: ValidationContext,
+  ) => {
+    if (typeof value !== "string" || !value.includes("@")) return false;
+
+    const domain = value.split("@")[1];
+
+    // args.allowedDomains was resolved from $context
+    if (args?.allowedDomains) {
+      return args.allowedDomains.includes(domain);
+    }
+
+    return true;
+  },
+
+  matches: (value: unknown, args?: { other?: unknown }) => {
+    // args.other was resolved from $data
+    return value === args?.other;
+  },
+});
+```
+
+---
+
+### Sync Custom Validators
+
+Define sync validators and pass them via `customValidators`:
+
+```ts
+// Define custom validators
+import { defineValidators } from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  // Username availability check (sync example)
+  usernameAvailable: (value: unknown) => {
+    if (typeof value !== "string") return false;
+    const takenUsernames = ["admin", "user", "test"];
+    return !takenUsernames.includes(value.toLowerCase());
+  },
+
+  // Custom alphanumeric check
+  alphanumeric: (value: unknown) => {
+    if (typeof value !== "string") return false;
+    return /^[a-zA-Z0-9]+$/.test(value);
+  },
+
+  // No profanity check
+  noProfanity: (value: unknown) => {
+    if (typeof value !== "string") return false;
+    const profanityList = ["bad1", "bad2"];
+    return !profanityList.some((word) =>
+      value.toLowerCase().includes(word)
+    );
+  },
+});
+
+// Use in form
+<Form
+  schema={schema}
+  customValidators={customValidators}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+---
+
+### Async Custom Validators with Debounce
+
+For server-side validation (e.g., checking username availability, promo codes), use async validators with debounce:
+
+```ts
+// Define async validators
+import { defineValidators } from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  // Async username availability check
+  usernameAvailable: async (value: unknown) => {
+    if (typeof value !== "string" || value.length < 3) return false;
+
+    // Simulate API call
+    const response = await fetch(`/api/check-username?username=${value}`);
+    const data = await response.json();
+    return data.available;
+  },
+
+  // Async promo code validation with debounce
+  validatePromoCode: async (value: unknown) => {
+    if (typeof value !== "string" || !value) return true; // Skip empty
+
+    const response = await fetch("/api/validate-promo", {
+      method: "POST",
+      body: JSON.stringify({ code: value }),
+    });
+    return response.ok;
+  },
+
+  // Async email domain check
+  validateEmailDomain: async (value: unknown) => {
+    if (typeof value !== "string" || !value.includes("@")) return false;
+
+    const domain = value.split("@")[1];
+    const response = await fetch(`/api/check-domain?domain=${domain}`);
+    const data = await response.json();
+    return data.valid;
+  },
+});
+```
+
+```ts
+// Schema with async validation and debounce
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      required: true,
+      minLength: 3,
+      validate: {
+        onBlur: {
+          // Wait 500ms after user stops typing before validating
+          debounceMs: 500,
+          checks: [
+            {
+              type: "usernameAvailable",
+              message: "This username is already taken.",
+            },
+          ],
+        },
+      },
+    },
+    {
+      type: "text",
+      name: "promoCode",
+      label: "Promo Code",
+      validate: {
+        onBlur: {
+          // Wait 300ms before checking promo code
+          debounceMs: 300,
+          checks: [
+            {
+              type: "validatePromoCode",
+              message: "Invalid or expired promo code.",
+            },
+          ],
+        },
+      },
+    },
+    {
+      type: "email",
+      name: "workEmail",
+      label: "Work Email",
+      required: true,
+      validate: {
+        onBlur: {
+          debounceMs: 400,
+          checks: [
+            {
+              type: "validateEmailDomain",
+              message: "Please use a valid work email domain.",
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+```tsx
+// Use in form
+import { defineValidators } from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  usernameAvailable: async (value: unknown) => {
+    // ... async validation
+  },
+});
+
+<Form
+  schema={schema}
+  customValidators={customValidators}
+  derivedValidationMode="blur" // Run derived validators on blur
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>;
+```
+
+---
+
+### Validation Triggers
+
+| Trigger    | When It Runs           | Use Case                                            |
+| ---------- | ---------------------- | --------------------------------------------------- |
+| `onChange` | On every value change  | Real-time feedback                                  |
+| `onBlur`   | When field loses focus | After user finishes editing (recommended for async) |
+| `onSubmit` | On form submit         | Final validation before submit                      |
+
+### Setting Validation Mode
+
+```tsx
+<Form
+  schema={schema}
+  derivedValidationMode="blur" // Run derived validators on blur
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+---
+
+### Form-Level Validation
+
+Add validation that spans multiple fields:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    { type: "password", name: "password", label: "Password", required: true },
+    {
+      type: "password",
+      name: "confirmPassword",
+      label: "Confirm Password",
+      required: true,
+    },
+  ],
+  // Form-level validation
+  validate: {
+    onSubmit: {
+      checks: [
+        {
+          type: "passwordsMatch",
+          message: "Passwords do not match.",
+          args: {
+            field1: "password",
+            field2: "confirmPassword",
+          },
+        },
+      ],
+    },
+  },
+});
+
+const customValidators = defineValidators({
+  passwordsMatch: (
+    value: unknown,
+    args?: { field1?: string; field2?: string },
+    ctx?: ValidationContext,
+  ) => {
+    if (!ctx) return true;
+    const v1 = ctx.formData[args?.field1 ?? ""];
+    const v2 = ctx.formData[args?.field2 ?? ""];
+    return v1 === v2;
+  },
+});
+```
+
+---
+
+### Debounce Property
+
+Use `debounceMs` to delay validation for async checks:
+
+```ts
+validate: {
+  onBlur: {
+    debounceMs: 500, // Wait 500ms after last change before validating
+    checks: [
+      {
+        type: "usernameAvailable",
+        message: "Username is taken.",
+      },
+    ],
+  },
+}
+```
+
+**Why debounce:**
+
+- Reduces API calls for async validation
+- Improves UX by not validating while user is still typing
+- Recommended for any validator that makes network requests
+
+---
+
+### Derived Validation Mode
+
+**Important:** BuzzForm has **two sources** of validation checks:
+
+1. **User-defined checks** — Explicitly defined in `validate` config
+2. **Derived checks** — Auto-generated from field properties
+
+**Derived checks** are automatically generated from these field properties:
+
+| Property                        | Derived Validator       |
+| ------------------------------- | ----------------------- |
+| `required: true`                | `required`              |
+| `minLength`                     | `minLength`             |
+| `maxLength`                     | `maxLength`             |
+| `pattern`                       | `pattern`               |
+| `min` / `max` (number)          | `min` / `max`           |
+| `precision` / `step` (number)   | `precision` / `step`    |
+| `type: "email"`                 | `email`                 |
+| `criteria` (password)           | `passwordCriteria`      |
+| `minDate` / `maxDate` (date)    | `minDate` / `maxDate`   |
+| `minItems` / `maxItems` (array) | `minItems` / `maxItems` |
+| `minTags` / `maxTags` (tags)    | `minTags` / `maxTags`   |
+
+#### Why `derivedValidationMode` Exists
+
+You control **when** derived checks run independently from user-defined checks.
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      required: true, // → generates "required" validator (derived)
+      minLength: 3, // → generates "minLength" validator (derived)
+      validate: {
+        onBlur: {
+          checks: [
+            {
+              type: "pattern",
+              args: { pattern: "^[a-z]+$" },
+              message: "Lowercase only",
+            },
+          ], // ← user-defined, runs on blur
+        },
+      },
+    },
+  ],
+});
+```
+
+#### Default Behavior
+
+**Default `derivedValidationMode` is `"blur"`**
+
+```tsx
+<Form
+  schema={schema}
+  // derivedValidationMode="blur" ← default, can omit
+  onSubmit={handleSubmit}
+>
+```
+
+This means:
+
+- Derived checks (`required`, `minLength`) run on **blur**
+- User-defined checks run on their configured trigger (`onBlur` in this case)
+
+#### Available Options
+
+| Mode               | When Derived Checks Run | Use Case                                             |
+| ------------------ | ----------------------- | ---------------------------------------------------- |
+| `"blur"` (default) | On blur                 | Good balance — validates after user finishes editing |
+| `"change"`         | On every change         | Real-time validation feedback                        |
+| `"submit"`         | Only on submit          | Minimal validation noise, only show errors on submit |
+
+#### Example: Real-Time Validation
+
+```tsx
+<Form
+  schema={schema}
+  derivedValidationMode="change" // Derived checks run on every change
+  onSubmit={handleSubmit}
+>
+  {/* 
+    - required, minLength run on change (real-time)
+    - User-defined onBlur checks still run on blur
+    - User-defined onChange checks run on change
+  */}
+</Form>
+```
+
+#### Example: Submit-Only Validation
+
+```tsx
+<Form
+  schema={schema}
+  derivedValidationMode="submit" // Derived checks only run on submit
+  onSubmit={handleSubmit}
+>
+  {/* 
+    - required, minLength ONLY run on submit
+    - User-defined onBlur checks run on blur
+    - User-defined onChange checks run on change
+    - No validation feedback until submit (except user-defined)
+  */}
+</Form>
+```
+
+#### How It Works Internally
+
+```ts
+// In form-core validation logic
+const derivedRun = options?.derivedRun ?? "blur"; // Default is "blur"
+const includeDerived = options?.includeDerived ?? derivedRun === run;
+
+// Derived checks are included when current run matches derivedRun
+if (includeDerived) {
+  checks.push(...deriveFieldChecks(field));
+}
+```
+
+#### When to Use Each Mode
+
+**Use `"blur"` (default) when:**
+
+- You want standard validation behavior
+- Users see errors after they finish editing a field
+- Good balance between feedback and noise
+
+**Use `"change"` when:**
+
+- You want real-time feedback (e.g., password strength, character count)
+- Form has simple, fast validators
+- UX requires immediate validation feedback
+
+**Use `"submit"` when:**
+
+- You want minimal validation noise
+- Users should complete the form before seeing errors
+- Form has expensive validation checks
+- You prefer to show all errors at once on submit
+
+---
+
+## 7. Dynamic Behavior
+
+### What You'll Do
+
+Make fields conditionally visible, disabled, or required based on other form values or external context.
+
+### Path Format for `$data` and `$context`
+
+**Important:** BuzzForm uses **JSON Pointer format** for dynamic paths:
+
+- Paths start with `/` (e.g., `/username`, `/address/city`)
+- No dot notation — use `/user/name` not `user.name`
+- Array indices are numeric (e.g., `/items/0/name`)
+
+### Dynamic Values with `$data` and `$context`
+
+```ts
+const schema = defineSchema({
+  fields: [
+    // Dynamic label from form data
+    {
+      type: "text",
+      name: "displayName",
+      label: { $data: "/customLabel" }, // JSON Pointer format
+    },
+
+    // Dynamic placeholder from context
+    {
+      type: "text",
+      name: "email",
+      placeholder: { $context: "/emailPlaceholder" },
+    },
+
+    // Conditionally disabled
+    {
+      type: "text",
+      name: "lockedField",
+      label: "Locked",
+      disabled: { $context: "/isLocked" },
+    },
+
+    // Conditionally required
+    {
+      type: "text",
+      name: "company",
+      label: "Company",
+      required: { $data: "/isEmployed" },
+    },
+  ],
+});
+```
+
+### Conditional Visibility
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "radio",
+      name: "employmentStatus",
+      label: "Employment Status",
+      options: [
+        { label: "Employed", value: "employed" },
+        { label: "Unemployed", value: "unemployed" },
+      ],
+    },
+
+    // Show only if employed
+    {
+      type: "text",
+      name: "company",
+      label: "Company",
+      condition: { $data: "/employmentStatus", eq: "employed" },
+    },
+
+    // Show only if NOT unemployed
+    {
+      type: "text",
+      name: "jobTitle",
+      label: "Job Title",
+      condition: { $data: "/employmentStatus", neq: "unemployed" },
+    },
+
+    // Complex conditions
+    {
+      type: "textarea",
+      name: "reason",
+      label: "Reason",
+      condition: {
+        $and: [
+          { $data: "/employmentStatus", eq: "unemployed" },
+          { $data: "/showReason", eq: true },
+        ],
+      },
+    },
+
+    // OR condition
+    {
+      type: "text",
+      name: "alternative",
+      label: "Alternative",
+      condition: {
+        $or: [
+          { $data: "/optionA", eq: true },
+          { $data: "/optionB", eq: true },
+        ],
+      },
+    },
+  ],
+});
+```
+
+### Using Context Data
+
+```tsx
+<Form
+  schema={schema}
+  contextData={{
+    isLocked: true,
+    emailPlaceholder: "Enter your work email",
+    supportEmail: "support@example.com",
+  }}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+### Comparison Operators
+
+| Operator     | Description        | Example                                         |
+| ------------ | ------------------ | ----------------------------------------------- |
+| `eq`         | Equals             | `{ $data: "/status", eq: "active" }`            |
+| `neq`        | Not equals         | `{ $data: "/status", neq: "inactive" }`         |
+| `gt`         | Greater than       | `{ $data: "/age", gt: 18 }`                     |
+| `gte`        | Greater or equal   | `{ $data: "/score", gte: 50 }`                  |
+| `lt`         | Less than          | `{ $data: "/price", lt: 100 }`                  |
+| `lte`        | Less or equal      | `{ $data: "/quantity", lte: 10 }`               |
+| `contains`   | String contains    | `{ $data: "/name", contains: "test" }`          |
+| `startsWith` | String starts with | `{ $data: "/code", startsWith: "US" }`          |
+| `endsWith`   | String ends with   | `{ $data: "/email", endsWith: "@company.com" }` |
+| `not`        | Negate condition   | `{ $data: "/active", not: true }`               |
+
+---
+
+## 8. Nested Structures
+
+### What You'll Do
+
+Build forms with groups, arrays, tabs, and collapsible sections.
+
+### Group Fields (Nested Objects)
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        { type: "text", name: "street", label: "Street" },
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "country", label: "Country" },
+      ],
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// { address?: { street?: string; city?: string; country?: string } }
+```
+
+### Array Fields (Repeatable Sections)
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "array",
+      name: "socials",
+      label: "Social Links",
+      minItems: 1, // Minimum items required
+      maxItems: 5, // Maximum items allowed
+      fields: [
+        {
+          type: "row",
+          ui: { gap: 2 },
+          fields: [
+            {
+              type: "select",
+              name: "platform",
+              label: "Platform",
+              options: ["GitHub", "Twitter", "LinkedIn"],
+            },
+            {
+              type: "text",
+              name: "url",
+              label: "URL",
+              placeholder: "https://...",
+            },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// { socials?: Array<{ platform?: string; url?: string }> }
+```
+
+### Tabs Layout
+
+**Important:** `tabs` is a **layout-only field** — it doesn't have a `name` property and doesn't create nested data. Fields inside tabs are flattened into the parent data structure.
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "tabs",
+      tabs: [
+        {
+          label: "Profile",
+          fields: [
+            { type: "text", name: "name", label: "Name" },
+            { type: "email", name: "email", label: "Email" },
+          ],
+        },
+        {
+          label: "Settings",
+          fields: [
+            { type: "switch", name: "notifications", label: "Notifications" },
+            { type: "switch", name: "marketing", label: "Marketing" },
+          ],
+        },
+        {
+          label: "Security",
+          disabled: { $context: "isGuest" }, // Disable tab conditionally
+          fields: [
+            {
+              type: "password",
+              name: "currentPassword",
+              label: "Current Password",
+            },
+            { type: "password", name: "newPassword", label: "New Password" },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// {
+//   name?: string;
+//   email?: string;
+//   notifications?: boolean;
+//   marketing?: boolean;
+//   currentPassword?: string;
+//   newPassword?: string;
+// }
+// Note: All fields are flattened — no nested structure from tabs
+```
+
+**Want nested data per tab?** Wrap tab contents in a `group` field:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "tabs",
+      tabs: [
+        {
+          label: "Profile",
+          fields: [
+            // Wrap with group to create nested data
+            {
+              type: "group",
+              name: "profile",
+              label: "Profile",
+              ui: { variant: "ghost" }, // Optional: style the group container
+              fields: [
+                { type: "text", name: "name", label: "Name" },
+                { type: "email", name: "email", label: "Email" },
+              ],
+            },
+          ],
+        },
+        {
+          label: "Settings",
+          fields: [
+            {
+              type: "group",
+              name: "settings",
+              label: "Settings",
+              ui: { variant: "ghost" },
+              fields: [
+                {
+                  type: "switch",
+                  name: "notifications",
+                  label: "Notifications",
+                },
+                { type: "switch", name: "marketing", label: "Marketing" },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// {
+//   profile?: {
+//     name?: string;
+//     email?: string;
+//   };
+//   settings?: {
+//     notifications?: boolean;
+//     marketing?: boolean;
+//   };
+// }
+// Now data is nested by tab!
+```
+
+**Why use `ui.variant: "ghost"`?**
+
+- Renders the group without a visible container border
+- Maintains clean tab UI while enabling nested data structure
+- Use any variant your UI registry supports (`"ghost"`, `"card"`, `"outlined"`, etc.)
+
+### Collapsible Sections
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "collapsible",
+      label: "Advanced Settings",
+      collapsed: true, // Start collapsed
+      fields: [
+        { type: "text", name: "apiKey", label: "API Key" },
+        { type: "text", name: "webhook", label: "Webhook URL" },
+      ],
+    },
+  ],
+});
+```
+
+### Row Layout (Inline Fields)
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "row",
+      ui: { gap: 4 }, // Tailwind gap class
+      fields: [
+        {
+          type: "text",
+          name: "firstName",
+          label: "First Name",
+          required: true,
+        },
+        { type: "text", name: "lastName", label: "Last Name", required: true },
+      ],
+    },
+  ],
+});
+```
+
+---
+
+## 9. Default Values (Two Levels)
+
+### What You'll Do
+
+Set default values for your forms at the schema level or override them at runtime for editing existing data.
+
+---
+
+### Level 1: Field-level `defaultValue` (Schema)
+
+Set defaults directly in your schema — automatically extracted by BuzzForm:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "displayName",
+      label: "Display Name",
+      defaultValue: "Jane Doe", // Field-level default
+    },
+    {
+      type: "select",
+      name: "language",
+      label: "Language",
+      defaultValue: "en", // Field-level default
+      options: [
+        { label: "English", value: "en" },
+        { label: "French", value: "fr" },
+      ],
+    },
+    {
+      type: "checkbox",
+      name: "tristate",
+      label: "Confirm",
+      tristate: true,
+      defaultValue: null, // Tri-state checkbox defaults to null
+    },
+    {
+      type: "array",
+      name: "tags",
+      label: "Tags",
+      defaultValue: ["react", "typescript"], // Default array values
+      fields: [{ type: "text", name: "tag" }],
+    },
+  ],
+});
+```
+
+**How it works:**
+
+- `extractDefaults()` walks the schema tree and extracts all `defaultValue` fields
+- These are automatically used as TanStack Form's `defaultValues`
+- No need to specify at form level for static defaults
+- Works with nested `group` and `array` fields
+
+**Type-specific defaults:**
+
+| Field Type                              | Default if not specified |
+| --------------------------------------- | ------------------------ |
+| `text`, `textarea`, `email`, `password` | `""` (empty string)      |
+| `number`                                | `0`                      |
+| `select`, `radio`                       | `""` (empty string)      |
+| `checkbox`                              | `false`                  |
+| `tristate` checkbox                     | `null`                   |
+| `switch`                                | `false`                  |
+| `array`                                 | `[]` (empty array)       |
+| `group`                                 | `{}` (empty object)      |
+
+---
+
+### Level 2: Form-level `defaultValues` (Override)
+
+Override schema defaults or set values dynamically at runtime:
+
+```tsx
+// Editing existing user data
+const user = await api.getUser(userId);
+
+<Form
+  schema={schema}
+  defaultValues={{
+    displayName: user.name, // Overrides schema default
+    email: user.email,
+  }}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormActions>
+      <FormReset /> {/* Resets to merged defaults */}
+      <FormSubmit>Save Changes</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>;
+```
+
+**Merge behavior:**
+
+```ts
+// Internal merge (from use-form.ts)
+const mergedDefaultValues = {
+  ...extractDefaults(schema.fields), // Schema defaults first
+  ...defaultValues, // Form-level overrides
+};
+```
+
+**Key points:**
+
+- Schema `defaultValue` is the base
+- Form-level `defaultValues` **override** schema defaults
+- Form-level values take precedence for matching keys
+- Useful for editing existing data (user profiles, settings, etc.)
+
+---
+
+### Common Patterns
+
+#### Pattern 1: Static Defaults in Schema
+
+Use schema `defaultValue` for fixed, unchanging defaults:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "currency",
+      label: "Currency",
+      defaultValue: "USD", // Always USD by default
+      options: ["USD", "EUR", "GBP"],
+    },
+    {
+      type: "switch",
+      name: "notifications",
+      label: "Enable Notifications",
+      defaultValue: true, // Always enabled by default
+    },
+  ],
+});
+```
+
+#### Pattern 2: Dynamic Defaults at Form Level
+
+Use form-level `defaultValues` for data loaded at runtime:
+
+```tsx
+function EditUserForm({ userId }: { userId: string }) {
+  const { data: user } = useQuery({
+    queryKey: ["user", userId],
+    queryFn: () => api.getUser(userId),
+  });
+
+  return (
+    <Form
+      schema={userSchema}
+      defaultValues={user} // Load existing data
+      onSubmit={({ value }) => {
+        api.updateUser(userId, value);
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Update User</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+#### Pattern 3: Partial Overrides
+
+Override only specific fields while keeping schema defaults for others:
+
+```tsx
+<Form
+  schema={schema}
+  defaultValues={{
+    // Override only these fields
+    email: "new@example.com",
+    // All other fields use schema defaults
+  }}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+#### Pattern 4: Reset to Merged Defaults
+
+The `FormReset` button resets to the **merged** default values:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", defaultValue: "Default Name" },
+    { type: "email", name: "email", defaultValue: "default@example.com" },
+  ],
+});
+
+// In form
+<Form
+  schema={schema}
+  defaultValues={{
+    name: "Overridden Name", // This will be the reset value for name
+  }}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormActions>
+      {/* 
+        Reset behavior:
+        - name: "Overridden Name" (form-level override)
+        - email: "default@example.com" (schema default)
+      */}
+      <FormReset>Reset to Defaults</FormReset>
+      <FormSubmit>Save</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>;
+```
+
+---
+
+### Nested Default Values
+
+For `group` and `array` fields, use nested objects:
+
+```ts
+const schema = defineSchema({
+  fields: [
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+// Schema-level default
+const schemaWithDefaults = defineSchema({
+  fields: [
+    {
+      type: "group",
+      name: "address",
+      defaultValue: {
+        city: "New York",
+        zip: "10001",
+      },
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+// Form-level override
+<Form
+  schema={schema}
+  defaultValues={{
+    address: {
+      city: "Los Angeles",
+      zip: "90001",
+    },
+  }}
+  onSubmit={handleSubmit}
+/>
+```
+
+---
+
+## 10. Form Submission & Data Handling
+
+### What You'll Do
+
+Handle form submissions, access form state, and manage data flow. BuzzForm uses TanStack Form under the hood, giving you reactive form state without manual `useState` management.
+
+---
+
+### Key Principle: No `useState` for Form State
+
+BuzzForm provides reactive form state via `form.Subscribe` selector API. You **don't need** to track `isSubmitting`, `isDirty`, etc. manually.
+
+```tsx
+// ❌ Don't do this
+const [isSubmitting, setIsSubmitting] = useState(false);
+
+// ✅ Use built-in form state
+<FormSubmit submittingText="Submitting...">Submit</FormSubmit>;
+```
+
+The `FormSubmit` component automatically:
+
+- Disables during submission (`isSubmitting`)
+- Disables when form is invalid (`canSubmit`)
+- Shows loading text when submitting
+
+---
+
+### Basic Submit Handler
+
+```tsx
+<Form
+  schema={schema}
+  onSubmit={({ value, formApi }) => {
+    // value: TFormData - typed from schema
+    // formApi: TanStack form API for additional control
+    api.createUser(value as FormData);
+    toast("User created!");
+  }}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Create User</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+**Submit handler receives:**
+
+- `value` - Typed form data (inferred from schema)
+- `formApi` - Full TanStack Form API for advanced control
+
+---
+
+### Async Submit with Form API
+
+```tsx
+<Form
+  schema={schema}
+  onSubmit={async ({ value, formApi }) => {
+    try {
+      await api.createUser(value as FormData);
+      toast("Success!");
+      formApi.reset(); // Reset form after success
+    } catch (error) {
+      // Set form-level error
+      formApi.setErrorMap({
+        onSubmit: "Failed to create user. Please try again.",
+      });
+    }
+  }}
+>
+  <FormContent>
+    <FormFields />
+    <FormMessage /> {/* Displays form-level errors */}
+    <FormSubmit>Create User</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+**Form API methods:**
+
+- `formApi.reset()` - Reset form to default values
+- `formApi.setErrorMap({ onSubmit: "Error message" })` - Set form-level error
+- `formApi.validate()` - Trigger validation
+- `formApi.getFieldValue("/fieldName")` - Get specific field value
+
+---
+
+### Accessing Form State (Without `useState`)
+
+Use `form.Subscribe` or `useFormContext()` to access reactive form state:
+
+#### Example: Custom Submit Button with State
+
+```tsx
+import { useFormContext } from "@buildnbuzz/form-react";
+
+function CustomSubmit() {
+  const { form } = useFormContext();
+
+  return (
+    <form.Subscribe
+      selector={(s) => ({
+        canSubmit: s.canSubmit,
+        isSubmitting: s.isSubmitting,
+        isDirty: s.isDirty,
+      })}
+    >
+      {({ canSubmit, isSubmitting, isDirty }) => (
+        <Button type="submit" disabled={!canSubmit || isSubmitting}>
+          {isSubmitting ? "Saving..." : "Save"}
+          {isDirty && <span className="ml-2 text-xs">(Unsaved changes)</span>}
+        </Button>
+      )}
+    </form.Subscribe>
+  );
+}
+```
+
+#### Example: Displaying Unsaved Changes Warning
+
+```tsx
+import { useFormContext } from "@buildnbuzz/form-react";
+
+function UnsavedWarning() {
+  const { form } = useFormContext();
+
+  return (
+    <form.Subscribe selector={(s) => ({ isDirty: s.isDirty })}>
+      {({ isDirty }) =>
+        isDirty && (
+          <div className="text-sm text-amber-600">You have unsaved changes</div>
+        )
+      }
+    </form.Subscribe>
+  );
+}
+
+// Use in form
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent>
+    <UnsavedWarning />
+    <FormFields />
+    <FormSubmit>Save</FormSubmit>
+  </FormContent>
+</Form>;
+```
+
+**Available form state via selector:**
+| State | Description |
+|-------|-------------|
+| `isSubmitting` | Form is currently submitting |
+| `isDirty` | Form has unsaved changes |
+| `canSubmit` | Form can be submitted (valid + dirty) |
+| `errors` | Form-level errors array |
+| `values` | Current form values |
+| `state` | Full form state object |
+
+---
+
+### Built-in State-Aware Components
+
+The shadcn `Form` components use `form.Subscribe` internally:
+
+#### FormSubmit
+
+- Auto-disables during submission
+- Auto-disables when form is invalid
+- Shows `submittingText` while submitting
+
+```tsx
+<FormSubmit submittingText="Saving...">Save Changes</FormSubmit>
+```
+
+#### FormReset
+
+- Auto-disables when form is not dirty
+- Auto-disables during submission
+- Resets to merged default values
+
+```tsx
+<FormReset>Reset</FormReset>
+```
+
+#### FormMessage
+
+- Displays form-level errors
+- Auto-hides when no errors
+
+```tsx
+<FormMessage />
+```
+
+---
+
+### With Output Transformation
+
+Transform nested data to flat path-based keys for API submission:
+
+```ts
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "group",
+      name: "address",
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+type FormData = InferType<typeof schema.fields>;
+// { address?: { city?: string; zip?: string } }
+```
+
+```tsx
+<Form
+  schema={schema}
+  output={{ type: "path", delimiter: "." }}
+  onSubmit={({ value }) => {
+    // Transformed output:
+    // { "address.city": "NYC", "address.zip": "10001" }
+    api.submit(value);
+  }}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+**Output config options:**
+
+- `type: "path"` - Transform nested objects to path-keyed output
+- `delimiter: "."` - Delimiter for flattening (default: `"."`)
+
+---
+
+### Controlled Dialog Pattern (External Form Instance)
+
+For dialogs that need external reset logic or form instance control:
+
+```tsx
+import { useState } from "react";
+import { useForm } from "@buildnbuzz/form-react";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
+
+export function ControlledFormDialog() {
+  const [open, setOpen] = useState(false);
+
+  // Create form instance externally
+  const form = useForm({
+    schema,
+    onSubmit: ({ value }) => {
+      toast("Created", { description: value.name });
+      form.reset();
+      setOpen(false);
+    },
+  });
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>New Project</Button>
+      <Dialog
+        open={open}
+        onOpenChange={(o) => {
+          if (!o) form.reset(); // Reset form when dialog closes
+          setOpen(o);
+        }}
+      >
+        <DialogContent>
+          {/* Pass existing form instance */}
+          <Form form={form} schema={schema}>
+            <DialogHeader>
+              <DialogTitle>Create Project</DialogTitle>
+            </DialogHeader>
+            <FormContent>
+              <FormFields />
+            </FormContent>
+            <DialogFooter>
+              <FormSubmit>Create</FormSubmit>
+            </DialogFooter>
+          </Form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+```
+
+**When to use this pattern:**
+
+- Dialog forms that need reset on close
+- Multi-step wizards sharing a single form instance
+- Forms with external state management
+- Testing scenarios requiring form instance access
+
+---
+
+### Displaying Form Errors
+
+```tsx
+<Form schema={schema} onSubmit={handleSubmit}>
+  <FormContent>
+    <FormFields />
+    <FormMessage /> {/* Shows form-level errors */}
+    <FormActions>
+      <FormSubmit>Submit</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>
+```
+
+**Error types:**
+
+- **Form-level errors** - Set via `formApi.setErrorMap({ onSubmit: "Error" })`
+- **Field-level errors** - From validation, displayed by individual field components
+
+---
+
+## 11. Custom Field Renderers
+
+### What You'll Do
+
+Create custom UI components for field types not in the default registry, or override existing field rendering with custom styling and behavior. BuzzForm's renderer system is completely headless — you bring any UI library and wire it up to the schema.
+
+---
+
+### Key Design Principle: Opaque `ui` Property
+
+The `ui` property in field schemas is intentionally **opaque** (`ui?: UnknownData`) in `form-core`. This means:
+
+- **Core doesn't care** what UI properties you pass
+- **Full flexibility** — pass any UI config you want
+- **Type-safe at renderer level** — each renderer defines its own UI types
+- **UI-agnostic schemas** — same schema works with any UI library
+
+```ts
+// Schema - UI-agnostic (core doesn't validate ui properties)
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: "Username",
+      ui: {
+        // Pass ANY properties - core doesn't validate these!
+        variant: "ghost",
+        className: "custom-class",
+        width: "200px",
+        copyable: true,
+        // ... anything you want!
+      },
+    },
+  ],
+});
+
+// Renderer - defines its own UI types
+interface TextUi {
+  variant?: "default" | "ghost" | "card";
+  className?: string;
+  width?: string | number;
+  copyable?: boolean;
+}
+
+export function TextField() {
+  const { field } = useDataField<TextFieldDef>();
+  const ui = field.ui as TextUi | undefined; // Type-safe here!
+  // Use ui.variant, ui.className, etc.
+}
+```
+
+---
+
+### Core Hooks for Custom Renderers
+
+#### For Data Fields: `useDataField<T>()`
+
+Use for fields that hold data: `text`, `email`, `select`, `array`, `group`, etc.
+
+```tsx
+import { useDataField } from "@buildnbuzz/form-react";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+
+export function CustomTextField() {
+  const {
+    // TanStack field API
+    fieldApi, // handleChange, state, name, getValue, etc.
+    form, // Form API instance
+
+    // Schema field definition
+    field, // Full field object with label, ui, etc.
+
+    // Computed states (respect disabled/readOnly/required)
+    isDisabled, // Combines field.disabled + form state
+    isReadOnly, // Combines field.readOnly + form state
+    isRequired, // Combines field.required + form state
+
+    // Resolved dynamic values (from $data/$context)
+    label, // Resolved label string
+    placeholder, // Resolved placeholder
+    description, // Resolved description
+
+    // Error state
+    errors, // Array of error strings
+    isInvalid, // Boolean: errors.length > 0
+    descriptionId, // ID for description element
+    errorId, // ID for error element
+    ariaDescribedBy, // Combined aria-describedby value
+
+    // Event handlers (properly typed)
+    handleChange, // (value: T) => void
+    handleBlur, // () => void
+
+    // Context
+    contextData, // External context data
+  } = useDataField<TextFieldDef>();
+
+  const value = (fieldApi.state.value as string) ?? "";
+  const ui = field.ui as CustomTextUi | undefined;
+
+  return (
+    <div>
+      {label && <label>{label}</label>}
+      <input
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+        disabled={isDisabled}
+        readOnly={isReadOnly}
+      />
+      {description && <p>{description}</p>}
+      {isInvalid && <p className="text-red-500">{errors.join(", ")}</p>}
+    </div>
+  );
+}
+```
+
+#### For Layout Fields: `useLayoutField<T>()`
+
+Use for layout containers: `row`, `tabs`, `collapsible`.
+
+```tsx
+import { useLayoutField, RenderFields } from "@buildnbuzz/form-react";
+import type { TabsField as TabsFieldDef } from "@buildnbuzz/form-core";
+
+export function CustomTabsField() {
+  const {
+    field, // Layout field definition
+    form, // Form API instance
+    fieldPath, // Current path in form data (JSON Pointer)
+    formData, // Current form values
+    contextData, // External context data
+  } = useLayoutField<TabsFieldDef>();
+
+  const tabs = field.tabs ?? [];
+  const ui = field.ui as TabsUi | undefined;
+
+  return (
+    <div>
+      {tabs.map((tab, i) => (
+        <div key={i}>
+          <button>{tab.label}</button>
+          <RenderFields
+            fields={tab.fields}
+            form={form}
+            basePath={toDotNotation(fieldPath)}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+---
+
+### Additional Useful Hooks
+
+#### `useFieldOptions(options)` - Normalize Select/Radio Options
+
+```tsx
+import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+
+export function SelectField() {
+  const { field } = useDataField<SelectFieldDef>();
+
+  // Normalizes ["opt1", "opt2"] → [{label: "opt1", value: "opt1"}, ...]
+  // Also handles {label, value, disabled, ui} objects
+  const { options } = useFieldOptions(field.options);
+
+  return (
+    <select>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+```
+
+#### `useNestedErrorCount(fields, basePath)` - Count Errors in Nested Fields
+
+```tsx
+import { useDataField, useNestedErrorCount } from "@buildnbuzz/form-react";
+import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-core";
+
+export function GroupField({ children }: { children: React.ReactNode }) {
+  const { field, fieldApi } = useDataField<GroupFieldDef>();
+
+  // Count all errors in nested fields within this group
+  const errorCount = useNestedErrorCount(field.fields, fieldApi.name);
+
+  return (
+    <fieldset>
+      <legend>
+        {field.label}
+        {errorCount > 0 && <Badge variant="destructive">{errorCount}</Badge>}
+      </legend>
+      {children}
+    </fieldset>
+  );
+}
+```
+
+---
+
+### Complete Examples
+
+#### Example 1: Custom Text Field with UI Options
+
+```tsx
+"use client";
+
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import { useDataField } from "@buildnbuzz/form-react";
+import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { cn } from "@/lib/utils";
+
+// Define your UI types (opaque to form-core)
+interface CustomTextUi {
+  className?: string;
+  width?: string | number;
+  leftIcon?: string;
+  rightElement?: "copy" | "clear";
+}
+
+export function CustomTextField() {
+  const {
+    fieldApi,
+    field,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    label,
+    placeholder,
+    description,
+    errors,
+    isInvalid,
+    descriptionId,
+    errorId,
+    ariaDescribedBy,
+    handleChange,
+    handleBlur,
+  } = useDataField<TextFieldDef>();
+
+  const ui = field.ui as CustomTextUi | undefined;
+  const value = (fieldApi.state.value as string) ?? "";
+
+  // Apply width if specified
+  const widthStyle = ui?.width
+    ? { width: typeof ui.width === "number" ? `${ui.width}px` : ui.width }
+    : undefined;
+
+  return (
+    <FieldGroup
+      data-field={fieldApi.name}
+      className={ui?.className}
+      style={widthStyle}
+    >
+      <Field data-invalid={isInvalid} data-disabled={isDisabled}>
+        {label && (
+          <FieldLabel htmlFor={fieldApi.name}>
+            {label}
+            {isRequired && <span className="text-destructive">*</span>}
+          </FieldLabel>
+        )}
+
+        <FieldContent>
+          <div className="relative flex items-center">
+            {ui?.leftIcon && (
+              <span className="absolute left-3 text-muted-foreground">
+                <Icon name={ui.leftIcon} />
+              </span>
+            )}
+            <Input
+              id={fieldApi.name}
+              value={value}
+              onChange={(e) => handleChange(e.target.value)}
+              onBlur={handleBlur}
+              placeholder={placeholder}
+              disabled={isDisabled}
+              readOnly={isReadOnly}
+              aria-invalid={isInvalid}
+              aria-describedby={ariaDescribedBy}
+              className={cn(ui?.leftIcon && "pl-10")}
+            />
+            {ui?.rightElement === "copy" && (
+              <CopyButton value={value} disabled={isDisabled} />
+            )}
+          </div>
+        </FieldContent>
+
+        {description && !isInvalid && (
+          <FieldDescription id={descriptionId}>{description}</FieldDescription>
+        )}
+        {isInvalid && <FieldError id={errorId} errors={errors} />}
+      </Field>
+    </FieldGroup>
+  );
+}
+```
+
+#### Example 2: Custom Group Field with Variants
+
+```tsx
+"use client";
+
+import * as React from "react";
+import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-core";
+import { useDataField, useNestedErrorCount } from "@buildnbuzz/form-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { cn } from "@/lib/utils";
+
+// Define variant options (opaque to form-core)
+interface GroupUi {
+  variant?: "card" | "bordered" | "ghost" | "flat";
+  spacing?: "sm" | "md" | "lg";
+  collapsed?: boolean;
+  showErrorBadge?: boolean;
+  description?: string;
+}
+
+export function CustomGroupField({ children }: { children: React.ReactNode }) {
+  const {
+    fieldApi,
+    field,
+    isDisabled,
+    isRequired,
+    label,
+    description: resolvedDescription,
+    errors,
+    isInvalid,
+    descriptionId,
+    errorId,
+  } = useDataField<GroupFieldDef>();
+
+  const ui = field.ui as GroupUi | undefined;
+  const variant = ui?.variant ?? "card";
+  const spacing = ui?.spacing ?? "md";
+  const showErrorBadge = ui?.showErrorBadge !== false;
+  const description = ui?.description ?? resolvedDescription;
+
+  // Count errors in nested fields
+  const errorCount = useNestedErrorCount(field.fields, fieldApi.name);
+
+  const spacingClass = {
+    sm: "space-y-3",
+    md: "space-y-4",
+    lg: "space-y-6",
+  }[spacing];
+
+  // Flat variant - minimal styling
+  if (variant === "flat") {
+    return (
+      <FieldGroup data-field={fieldApi.name}>
+        <Field data-invalid={isInvalid} data-disabled={isDisabled}>
+          <FieldSet disabled={isDisabled} className={spacingClass}>
+            {label && (
+              <FieldLegend>
+                {label}
+                {isRequired && <span className="text-destructive">*</span>}
+                {showErrorBadge && errorCount > 0 && (
+                  <Badge variant="destructive" className="ml-2">
+                    {errorCount}
+                  </Badge>
+                )}
+              </FieldLegend>
+            )}
+            {description && <FieldDescription>{description}</FieldDescription>}
+            {isInvalid && <FieldError errors={errors} />}
+            {children}
+          </FieldSet>
+        </Field>
+      </FieldGroup>
+    );
+  }
+
+  // Card variant (default)
+  return (
+    <FieldGroup data-field={fieldApi.name}>
+      <Field data-invalid={isInvalid} data-disabled={isDisabled}>
+        <Card>
+          {label && (
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold">{label}</span>
+                {isRequired && <span className="text-destructive">*</span>}
+                {showErrorBadge && errorCount > 0 && (
+                  <Badge variant="destructive">{errorCount}</Badge>
+                )}
+              </div>
+              {description && (
+                <FieldDescription>{description}</FieldDescription>
+              )}
+            </CardHeader>
+          )}
+          <CardContent className={spacingClass}>
+            {isInvalid && <FieldError errors={errors} />}
+            {children}
+          </CardContent>
+        </Card>
+      </Field>
+    </FieldGroup>
+  );
+}
+```
+
+#### Example 3: Custom Layout Field (Row)
+
+```tsx
+"use client";
+
+import type { RowField as RowFieldDef } from "@buildnbuzz/form-core";
+import { useLayoutField } from "@buildnbuzz/form-react";
+import { cn } from "@/lib/utils";
+
+// Define layout options (opaque to form-core)
+interface RowUi {
+  gap?: number | string;
+  align?: "start" | "center" | "end" | "stretch";
+  justify?: "start" | "center" | "end" | "between";
+  responsive?: boolean;
+  wrap?: boolean;
+}
+
+export function CustomRowField({ children }: { children: React.ReactNode }) {
+  const { field } = useLayoutField<RowFieldDef>();
+
+  const ui = field.ui as RowUi | undefined;
+  const responsive = ui?.responsive ?? true;
+  const wrap = ui?.wrap ?? false;
+
+  return (
+    <div
+      className={cn(
+        "flex w-full",
+        responsive ? "flex-col md:flex-row" : "flex-row",
+        ui?.gap ? `gap-${ui.gap}` : "gap-4",
+        ui?.align === "center" && "items-center",
+        ui?.align === "end" && "items-end",
+        ui?.justify === "center" && "justify-center",
+        ui?.justify === "between" && "justify-between",
+        wrap && "flex-wrap",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+```
+
+---
+
+### Building Your Registry
+
+```ts
+// registry/custom/fields.ts
+import { CustomTextField } from "./custom-text";
+import { CustomSelectField } from "./custom-select";
+import { CustomGroupField } from "./custom-group";
+import { CustomRowField } from "./custom-row";
+import { CustomTabsField } from "./custom-tabs";
+
+// Start with default registry or build from scratch
+export const customRegistry = {
+  text: CustomTextField,
+  email: CustomTextField, // Reuse text for email
+  select: CustomSelectField,
+  group: CustomGroupField,
+  row: CustomRowField,
+  tabs: CustomTabsField,
+  // ... add more as needed
+};
+```
+
+---
+
+### Using Your Custom Registry
+
+#### Option 1: Per-Form Registry
+
+```tsx
+import { customRegistry } from "@/components/my-form/registry";
+
+<Form schema={schema} registry={customRegistry} onSubmit={handleSubmit}>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>;
+```
+
+#### Option 2: App-Level Provider (Recommended)
+
+```tsx title="app/layout.tsx"
+import { FormProvider } from "@buildnbuzz/form-react";
+import { customRegistry } from "@/components/my-form/registry";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={customRegistry}>{children}</FormProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+---
+
+### Using Different UI Libraries
+
+The opaque `ui` property enables using different UI libraries with the same schema:
+
+```tsx
+// Same schema works with any registry!
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "email",
+      label: "Email",
+      ui: {
+        // Shadcn-specific
+        variant: "ghost",
+        className: "w-full",
+      },
+    },
+  ],
+});
+
+// Use with your registry
+<Form schema={schema} registry={registry} />
+
+// Use with MUI (ui properties ignored or mapped differently)
+<Form schema={schema} registry={muiRegistry} />
+
+// Use with Chakra (ui properties ignored or mapped differently)
+<Form schema={schema} registry={chakraRegistry} />
+```
+
+#### Example: MUI Registry
+
+```tsx
+// registry/mui/fields/text.tsx
+import { useDataField } from "@buildnbuzz/form-react";
+import TextField from "@mui/material/TextField";
+
+interface MuiTextUi {
+  color?: "primary" | "secondary";
+  size?: "small" | "medium";
+  variant?: "outlined" | "filled" | "standard";
+}
+
+export function MuiTextField() {
+  const {
+    fieldApi,
+    field,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    label,
+    placeholder,
+    description,
+    errors,
+    isInvalid,
+    handleChange,
+    handleBlur,
+  } = useDataField();
+
+  const ui = field.ui as MuiTextUi | undefined;
+
+  return (
+    <TextField
+      label={label}
+      value={fieldApi.state.value ?? ""}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={handleBlur}
+      disabled={isDisabled}
+      readOnly={isReadOnly}
+      required={isRequired}
+      placeholder={placeholder}
+      helperText={isInvalid ? errors.join(", ") : description}
+      error={isInvalid}
+      color={ui?.color}
+      size={ui?.size}
+      variant={ui?.variant}
+    />
+  );
+}
+```
+
+---
+
+### Key Takeaways
+
+1. **`useDataField<T>()`** for data fields — returns complete field API and state
+2. **`useLayoutField<T>()`** for layout fields — returns layout context without form registration
+3. **`ui` property is opaque** — define your own types in renderers, core doesn't validate
+4. **Same schema, any UI** — swap registries without changing schemas
+5. **Type-safe at renderer level** — cast `field.ui as YourUiType` in your components
+6. **Composable helpers** — `useFieldOptions`, `useNestedErrorCount`, `RenderFields`
+
+---
+
+## 12. Production Patterns
+
+### What You'll Do
+
+Structure your forms for maintainability, reusability, and scale.
+
+### Pattern 1: Schema Files
+
+Keep schemas separate from UI components.
+
+```ts
+// schemas/user-profile.schema.ts
+import { defineSchema } from "@buildnbuzz/form-core";
+
+export const userProfileSchema = defineSchema({
+  title: "User Profile",
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+  ],
+});
+
+export type UserProfileData = InferType<typeof userProfileSchema.fields>;
+```
+
+```tsx
+// components/user-profile-form.tsx
+import {
+  userProfileSchema,
+  type UserProfileData,
+} from "@/schemas/user-profile.schema";
+
+export function UserProfileForm() {
+  return (
+    <Form
+      schema={userProfileSchema}
+      onSubmit={({ value }) => {
+        const data = value as UserProfileData;
+        // ...
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Save Profile</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+### Pattern 2: Reusable Form Components
+
+Create form components that accept schema as a prop.
+
+```tsx
+// components/dynamic-form.tsx
+import type { FormSchema } from "@buildnbuzz/form-core";
+
+interface DynamicFormProps<T extends FormSchema> {
+  schema: T;
+  defaultValues?: InferType<T["fields"]>;
+  onSubmit: (data: InferType<T["fields"]>) => void;
+  submitLabel?: string;
+}
+
+export function DynamicForm<T extends FormSchema>({
+  schema,
+  defaultValues,
+  onSubmit,
+  submitLabel = "Submit",
+}: DynamicFormProps<T>) {
+  return (
+    <Form schema={schema} defaultValues={defaultValues} onSubmit={onSubmit}>
+      <FormContent>
+        <FormFields />
+        <FormActions>
+          <FormSubmit>{submitLabel}</FormSubmit>
+        </FormActions>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+### Pattern 3: Form Dialogs/Sheets
+
+Embed forms in dialogs or sheets for modal interactions.
+
+```tsx
+// components/edit-profile-sheet.tsx
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+
+export function EditProfileSheet() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button>Edit Profile</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <Form schema={profileSchema} onSubmit={handleSubmit}>
+          <SheetHeader>
+            <SheetTitle>Edit Profile</SheetTitle>
+            <SheetDescription>
+              Update your profile information.
+            </SheetDescription>
+          </SheetHeader>
+          <FormContent>
+            <FormFields />
+            <FormSubmit>Save Changes</FormSubmit>
+          </FormContent>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
+```
+
+### Pattern 4: Multi-Step Forms (Wizard)
+
+**Important:** The `tabs` field type is for **visual organization only** — it doesn't provide step navigation (next/prev buttons) or step validation. For true multi-step wizards, use external state management with conditional rendering.
+
+#### Approach: External Form Instance with Step State
+
+```tsx
+"use client";
+
+import { useState } from "react";
+import { useForm } from "@buildnbuzz/form-react";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+  useFormContext,
+} from "@/components/buzzform/form";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+
+const schema = defineSchema({
+  fields: [
+    // Step 1: Account
+    {
+      type: "group",
+      name: "account",
+      label: "Account",
+      ui: { variant: "ghost" },
+      fields: [
+        { type: "text", name: "username", label: "Username", required: true },
+        {
+          type: "password",
+          name: "password",
+          label: "Password",
+          required: true,
+        },
+      ],
+    },
+    // Step 2: Profile
+    {
+      type: "group",
+      name: "profile",
+      label: "Profile",
+      ui: { variant: "ghost" },
+      fields: [
+        {
+          type: "text",
+          name: "firstName",
+          label: "First Name",
+          required: true,
+        },
+        { type: "text", name: "lastName", label: "Last Name", required: true },
+        { type: "email", name: "email", label: "Email", required: true },
+      ],
+    },
+    // Step 3: Preferences
+    {
+      type: "group",
+      name: "preferences",
+      label: "Preferences",
+      ui: { variant: "ghost" },
+      fields: [
+        {
+          type: "switch",
+          name: "newsletter",
+          label: "Subscribe to newsletter",
+        },
+        {
+          type: "select",
+          name: "frequency",
+          label: "Email Frequency",
+          options: ["Daily", "Weekly", "Monthly"],
+        },
+      ],
+    },
+  ],
+});
+
+// Step configuration
+const steps = [
+  {
+    id: "account",
+    label: "Account",
+    fields: ["/account/username", "/account/password"],
+  },
+  {
+    id: "profile",
+    label: "Profile",
+    fields: ["/profile/firstName", "/profile/lastName", "/profile/email"],
+  },
+  {
+    id: "preferences",
+    label: "Preferences",
+    fields: ["/preferences/newsletter", "/preferences/frequency"],
+  },
+];
+
+function StepIndicator({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {steps.map((step, index) => (
+        <div
+          key={step.id}
+          className={`flex items-center gap-2 ${
+            index <= currentStep ? "text-primary" : "text-muted-foreground"
+          }`}
+        >
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+              index < currentStep
+                ? "bg-primary text-primary-foreground"
+                : index === currentStep
+                  ? "border-primary"
+                  : "border-muted"
+            }`}
+          >
+            {index < currentStep ? "✓" : index + 1}
+          </div>
+          <span className="text-sm font-medium">{step.label}</span>
+          {index < steps.length - 1 && <div className="w-8 h-px bg-muted" />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StepNavigation({
+  currentStep,
+  totalSteps,
+  onPrevious,
+  onNext,
+  isLastStepValid,
+}: {
+  currentStep: number;
+  totalSteps: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  isLastStepValid: boolean;
+}) {
+  const { form } = useFormContext();
+  const isSubmitting = form.store.state.isSubmitting;
+
+  return (
+    <div className="flex justify-between mt-6">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onPrevious}
+        disabled={currentStep === 0 || isSubmitting}
+      >
+        Previous
+      </Button>
+
+      {currentStep === totalSteps - 1 ? (
+        <FormSubmit disabled={!isLastStepValid || isSubmitting}>
+          Complete
+        </FormSubmit>
+      ) : (
+        <Button type="button" onClick={onNext} disabled={isSubmitting}>
+          Next
+        </Button>
+      )}
+    </div>
+  );
+}
+
+export function MultiStepWizard() {
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const form = useForm({
+    schema,
+    onSubmit: async ({ value, formApi }) => {
+      try {
+        await api.createUser(value);
+        toast("Account created successfully!");
+        formApi.reset();
+        setCurrentStep(0);
+      } catch (error) {
+        formApi.setErrorMap({ onSubmit: "Failed to create account" });
+      }
+    },
+  });
+
+  const totalSteps = steps.length;
+  const currentStepId = steps[currentStep]?.id;
+
+  // Validate current step before proceeding
+  const validateCurrentStep = async () => {
+    const stepFields = steps[currentStep]?.fields ?? [];
+    const result = await form.validateFields(stepFields);
+    return result.valid;
+  };
+
+  const handleNext = async () => {
+    const isValid = await validateCurrentStep();
+    if (isValid && currentStep < totalSteps - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  return (
+    <Form form={form} schema={schema}>
+      <StepIndicator currentStep={currentStep} />
+
+      <FormContent>
+        {/* Render only current step's fields */}
+        <div className="space-y-4">
+          {currentStepId === "account" && (
+            <RenderFields
+              fields={schema.fields.filter((f) => f.name === "account")}
+              form={form}
+            />
+          )}
+          {currentStepId === "profile" && (
+            <RenderFields
+              fields={schema.fields.filter((f) => f.name === "profile")}
+              form={form}
+            />
+          )}
+          {currentStepId === "preferences" && (
+            <RenderFields
+              fields={schema.fields.filter((f) => f.name === "preferences")}
+              form={form}
+            />
+          )}
+        </div>
+
+        <StepNavigation
+          currentStep={currentStep}
+          totalSteps={totalSteps}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          isLastStepValid={form.store.state.canSubmit}
+        />
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+#### Approach 2: Simpler Version with Conditional Field Rendering
+
+For simpler wizards, render specific field groups conditionally:
+
+```tsx
+export function SimpleWizard() {
+  const [step, setStep] = useState(1);
+
+  return (
+    <Form schema={schema} onSubmit={handleSubmit}>
+      <FormContent>
+        {/* Step 1 */}
+        {step === 1 && (
+          <>
+            <h2>Account Setup</h2>
+            <RenderFields fields={accountFields} form={form} />
+            <Button type="button" onClick={() => setStep(2)}>
+              Next
+            </Button>
+          </>
+        )}
+
+        {/* Step 2 */}
+        {step === 2 && (
+          <>
+            <h2>Profile Details</h2>
+            <RenderFields fields={profileFields} form={form} />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(1)}
+              >
+                Back
+              </Button>
+              <Button type="button" onClick={() => setStep(3)}>
+                Next
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* Step 3 (Final) */}
+        {step === 3 && (
+          <>
+            <h2>Review & Submit</h2>
+            <RenderFields fields={preferencesFields} form={form} />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep(2)}
+              >
+                Back
+              </Button>
+              <FormSubmit>Create Account</FormSubmit>
+            </div>
+          </>
+        )}
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+**Key Considerations for Multi-Step Forms:**
+
+1. **Use external form instance** — `useForm()` hook gives you full control
+2. **Track step state** — Use `useState` for current step
+3. **Validate per step** — Call `form.validateFields()` before proceeding
+4. **Conditional rendering** — Show only current step's fields
+5. **Navigation buttons** — Previous/Next outside the auto-rendered fields
+6. **Progress indicator** — Optional step indicator component
+7. **Preserve data** — All steps share the same form state
+
+---
+
+### Pattern 5: Form with External Context
+
+Pass external data for dynamic behavior.
+
+```tsx
+<Form
+  schema={schema}
+  contextData={{
+    userRole: "admin",
+    isLocked: true,
+    maxItems: 10,
+    supportEmail: "support@example.com",
+  }}
+  onSubmit={handleSubmit}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+---
+
+## 13. Troubleshooting
+
+### Common Issues
+
+#### "No field registry found"
+
+**Problem:** Form can't find the registry.
+
+**Solution:** Either wrap with `FormProvider` or pass `registry` explicitly.
+
+```tsx
+// Option A: Wrap with provider (recommended)
+<FormProvider registry={registry}>
+  <App />
+</FormProvider>
+
+// Option B: Pass registry to each form
+<Form schema={schema} registry={registry} onSubmit={handleSubmit} />
+```
+
+#### Type errors with `InferType`
+
+**Problem:** TypeScript shows `UnknownData` instead of expected types.
+
+**Solution:** Ensure you're using `defineSchema` or `as const satisfies FormSchema`.
+
+```ts
+// Correct
+const schema = defineSchema({ fields: [...] });
+type FormData = InferType<typeof schema.fields>;
+
+// Also correct
+const schema = { fields: [...] } as const satisfies FormSchema;
+type FormData = InferType<typeof schema.fields>;
+```
+
+#### Fields not showing up
+
+**Problem:** Fields are defined but not rendering.
+
+**Solution:** Check the `condition` property — if it evaluates to `false`, the field is unmounted.
+
+```ts
+{
+  type: "text",
+  name: "company",
+  condition: { $data: "isEmployed", eq: true }, // Only shows if isEmployed === true
+}
+```
+
+#### Validation not running
+
+**Problem:** Validation rules aren't triggering.
+
+**Solution:** Ensure you've set the correct `derivedValidationMode`.
+
+```tsx
+<Form
+  schema={schema}
+  derivedValidationMode="blur" // or "change" or "submit"
+  onSubmit={handleSubmit}
+>
+```
+
+#### Dynamic values not updating
+
+**Problem:** `$data` or `$context` values aren't reflecting changes.
+
+**Solution:** Ensure the referenced path exists in form data or context.
+
+```ts
+{
+  type: "text",
+  name: "company",
+  disabled: { $data: "isLocked" }, // isLocked must exist in form data
+}
+```
+
+```tsx
+<Form
+  schema={schema}
+  contextData={{ isLocked: true }} // Or in context
+  onSubmit={handleSubmit}
+/>
+```
+
+---
+
+## Quick Reference
+
+### Imports
+
+```ts
+// Core types and utilities
+import {
+  defineSchema,
+  type InferType,
+  type FormSchema,
+} from "@buildnbuzz/form-core";
+
+// React hooks and components
+import {
+  useForm,
+  Form,
+  Field,
+  FormProvider,
+  useFieldApi,
+} from "@buildnbuzz/form-react";
+
+// Shadcn UI form components
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+  FormReset,
+  FormActions,
+  FormMessage,
+} from "@/components/buzzform/form";
+```
+
+### Schema Template
+
+```ts
+const schema = defineSchema({
+  title: "Form Title",
+  description: "Form description",
+  fields: [{ type: "text", name: "fieldName", label: "Label", required: true }],
+});
+
+type FormData = InferType<typeof schema.fields>;
+```
+
+### Form Template
+
+```tsx
+<Form
+  schema={schema}
+  defaultValues={{}}
+  contextData={{}}
+  derivedValidationMode="blur"
+  onSubmit={({ value }) => {
+    const data = value as FormData;
+    // Handle submit
+  }}
+>
+  <FormContent>
+    <FormFields />
+    <FormActions>
+      <FormReset />
+      <FormSubmit>Submit</FormSubmit>
+    </FormActions>
+  </FormContent>
+</Form>
+```
+
+---
+
+This guide covers the real tasks developers face when building forms with BuzzForm. For more details, see the [API documentation](./apps/web/content/docs).

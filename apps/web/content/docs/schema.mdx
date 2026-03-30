@@ -9,37 +9,36 @@ A BuzzForm schema is the single source of truth for your form. It defines the fi
 
 ## Creating a Schema
 
-Use `createSchema()` to define your form:
+Use `defineSchema()` to define your form:
 
 ```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
+import { defineSchema } from "@buildnbuzz/form-core";
 
-const schema = createSchema([
-  { type: "text", name: "name", label: "Name", required: true },
-  { type: "email", name: "email", label: "Email", required: true },
-  { type: "number", name: "age", label: "Age", min: 18 },
-]);
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "number", name: "age", label: "Age", min: 18 },
+  ],
+});
 ```
-
-The schema contains:
-
-- **`fields`** - Your field definitions array
-- **`zodSchema`** - Auto-generated Zod validation schema
 
 ## Type Inference
 
-Use `InferType` to get full TypeScript types from your schema:
+Use `InferType` to get TypeScript types from your schema's fields:
 
 ```tsx
-import { createSchema, InferType } from "@buildnbuzz/buzzform";
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-const schema = createSchema([
-  { type: "text", name: "name", label: "Name", required: true },
-  { type: "email", name: "email", label: "Email" },
-  { type: "checkbox", name: "newsletter", label: "Subscribe" },
-]);
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name", required: true },
+    { type: "email", name: "email", label: "Email" },
+    { type: "checkbox", name: "newsletter", label: "Subscribe" },
+  ],
+});
 
-type FormData = InferType<typeof schema>;
+type FormData = InferType<typeof schema.fields>;
 // Result: { name: string, email?: string, newsletter: boolean }
 ```
 
@@ -48,10 +47,16 @@ This is especially useful for server actions:
 ```tsx title="actions.ts"
 "use server";
 
-import { InferType } from "@buildnbuzz/buzzform";
-import { contactSchema } from "./schema";
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-type ContactData = InferType<typeof contactSchema>;
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    { type: "email", name: "email", label: "Email" },
+  ],
+});
+
+type ContactData = InferType<typeof schema.fields>;
 
 export async function submitContact(data: ContactData) {
   // data is fully typed!
@@ -59,43 +64,31 @@ export async function submitContact(data: ContactData) {
 }
 ```
 
-## Field Structure
+## Base Field Properties
 
 Every field has these common properties:
 
-| Property       | Type                           | Description                            |
-| -------------- | ------------------------------ | -------------------------------------- |
-| `type`         | `string`                       | Field type (text, email, select, etc.) |
-| `name`         | `string`                       | Key in form data                       |
-| `label`        | `string \| ReactNode \| false` | Display label                          |
-| `description`  | `string \| ReactNode`          | Help text below field                  |
-| `placeholder`  | `string`                       | Placeholder text                       |
-| `required`     | `boolean`                      | Whether field is required              |
-| `disabled`     | `boolean \| function`          | Disable input                          |
-| `hidden`       | `boolean \| function`          | Hide field                             |
-| `readOnly`     | `boolean \| function`          | Read-only mode                         |
-| `defaultValue` | `any`                          | Initial value                          |
-| `validate`     | `function`                     | Custom validation                      |
-| `condition`    | `function`                     | Conditional visibility                 |
-| `style`        | `object`                       | Styling options                        |
+<auto-type-table path="../../../../packages/form-core/src/types.ts" name="BaseField" />
 
 ## Nested Data Structures
 
 Use `group` fields to create nested objects:
 
 ```tsx
-const schema = createSchema([
-  { type: "text", name: "name", label: "Name" },
-  {
-    type: "group",
-    name: "address",
-    label: "Address",
-    fields: [
-      { type: "text", name: "street", label: "Street" },
-      { type: "text", name: "city", label: "City" },
-    ],
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        { type: "text", name: "street", label: "Street" },
+        { type: "text", name: "city", label: "City" },
+      ],
+    },
+  ],
+});
 
 // Result: { name: string, address: { street: string, city: string } }
 ```
@@ -105,19 +98,21 @@ const schema = createSchema([
 Use `array` fields for repeatable items:
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "array",
-    name: "contacts",
-    label: "Contacts",
-    minRows: 1,
-    maxRows: 5,
-    fields: [
-      { type: "text", name: "name", label: "Name" },
-      { type: "email", name: "email", label: "Email" },
-    ],
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    {
+      type: "array",
+      name: "contacts",
+      label: "Contacts",
+      minItems: 1,
+      maxItems: 5,
+      fields: [
+        { type: "text", name: "name", label: "Name" },
+        { type: "email", name: "email", label: "Email" },
+      ],
+    },
+  ],
+});
 
 // Result: { contacts: Array<{ name: string, email: string }> }
 ```

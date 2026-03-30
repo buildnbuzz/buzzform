@@ -1,128 +1,73 @@
 ---
 title: Textarea Field
-description: Multi-line text input with optional auto-resize.
+description: Multi-line text input with auto-resize support.
 ---
 
 # Textarea Field
 
-The `textarea` field renders a multi-line text input with optional auto-resize functionality.
+The `textarea` field renders a multi-line text input.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/textarea.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/textarea.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "textarea",
-    name: "bio",
-    label: "Bio",
-    placeholder: "Tell us about yourself...",
-    rows: 4,
-  },
-]);
-
-export function TextareaFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop         | Type      | Default | Description              |
-| ------------ | --------- | ------- | ------------------------ |
-| `rows`       | `number`  | `3`     | Number of visible rows   |
-| `autoResize` | `boolean` | `false` | Auto-grow with content   |
-| `minLength`  | `number`  | -       | Minimum character length |
-| `maxLength`  | `number`  | -       | Maximum character length |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="TextareaField" />
 
 ## UI Options
 
-| Option        | Type      | Default | Description      |
-| ------------- | --------- | ------- | ---------------- |
-| `ui.copyable` | `boolean` | `false` | Show copy button |
+Same as [Text Field](/docs/fields/data/text#ui-options).
 
-## Features
-
-### Auto-Resize
-
-The textarea automatically grows as the user types:
+## Basic Usage
 
 ```tsx
-{
-  type: "textarea",
-  name: "content",
-  label: "Content",
-  autoResize: true,
-  rows: 3, // Minimum rows
-}
-```
-
-### Character Limit
-
-Show remaining characters with `maxLength`:
-
-```tsx
-{
-  type: "textarea",
-  name: "description",
-  label: "Description",
-  maxLength: 500,
-  placeholder: "Max 500 characters",
-}
+const schema = defineSchema({
+  fields: [
+    {
+      type: "textarea",
+      name: "bio",
+      label: "Bio",
+      placeholder: "Tell us about yourself...",
+      maxLength: 500,
+    },
+  ],
+});
 ```
 
 ## Examples
 
-### Blog Post Content
+### With Character Count
 
 ```tsx
 {
   type: "textarea",
-  name: "content",
-  label: "Content",
+  name: "message",
+  label: "Message",
   required: true,
-  rows: 10,
-  autoResize: true,
-  minLength: 100,
-  placeholder: "Write your post content here...",
+  minLength: 10,
+  maxLength: 1000,
+  description: "10-1000 characters",
 }
 ```
 
-### Short Bio with Limit
+### With Pattern Validation
 
 ```tsx
 {
   type: "textarea",
-  name: "bio",
-  label: "Short Bio",
-  maxLength: 160,
-  rows: 3,
-  description: "Brief description for your profile",
+  name: "markdown",
+  label: "Content",
+  pattern: /^[^<>]+$/,
+  description: "HTML tags are not allowed",
 }
 ```
 
-### Copyable Code Block
+## Auto-Derived Validators
 
-```tsx
-{
-  type: "textarea",
-  name: "embedCode",
-  label: "Embed Code",
-  readOnly: true,
-  rows: 5,
-  ui: { copyable: true },
-  defaultValue: '<iframe src="..."></iframe>',
-}
-```
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `minLength` | `minLength` |
+| `maxLength` | `maxLength` |
+| `pattern` | `pattern` |
+
+## Related
+
+- [Text Field](/docs/fields/data/text)

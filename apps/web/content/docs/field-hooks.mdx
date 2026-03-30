@@ -1,0 +1,224 @@
+---
+title: Field Hooks
+description: Complete reference for field hooks — useDataField, useLayoutField, and utilities.
+---
+
+# Field Hooks
+
+BuzzForm provides hooks for building custom field components with access to field state, errors, options, and a11y.
+
+## Data Field Hook
+
+### useDataField
+
+Aggregates common state for data field components.
+
+**Returns:**
+- `fieldApi` - TanStack field API
+- `field` - Field schema
+- `formData` - Current form values
+- `handleChange` / `handleBlur` - Change handlers
+- `label`, `description`, `placeholder` - Resolved text values
+- `isDisabled`, `isReadOnly`, `isRequired`, `isHidden` - State flags
+- `isInvalid`, `errors`, `shouldShowErrors` - Error state
+- `ariaDescribedBy`, `descriptionId`, `errorId` - Accessibility IDs
+
+## Layout Field Hook
+
+### useLayoutField
+
+Aggregates state for layout field components.
+
+**Returns:**
+- `field` - Field schema
+- `form` - TanStack form instance
+- `label`, `description` - Resolved text values
+- `isHidden`, `isDisabled`, `isConditionMet` - State flags
+- All `FieldContextValue` properties
+
+## Options Hook
+
+### useFieldOptions
+
+Resolve and normalize options for select, radio, checkbox group.
+
+**Returns:**
+- `options` - Normalized options array (`{ label, value, disabled, ui }[]`)
+- `isLoading` - Always `false` (reserved for future async sources)
+
+## Error State Hook
+
+### useFieldErrorState
+
+Access field errors and validation state.
+
+**Returns:**
+- `errors` - Array of error messages
+- `isInvalid` - Whether field has errors
+- `shouldShowErrors` - Whether errors should be displayed
+
+## A11y IDs Hook
+
+### useFieldA11yIds
+
+Generate accessible IDs for form fields.
+
+**Returns:**
+- `descriptionId` - ID for description element
+- `errorId` - ID for error element
+- `ariaDescribedBy` - Combined value for `aria-describedby`
+
+## Context Hooks
+
+### useFieldContext
+
+Read the field context directly:
+
+```tsx
+import { useFieldContext } from "@buildnbuzz/form-react";
+
+function CustomComponent() {
+  const { field, form, fieldPath, formData, isHidden } = useFieldContext();
+
+  // Access raw context values
+}
+```
+
+### useDataFieldContext
+
+Read data field context with guaranteed fieldApi:
+
+```tsx
+import { useDataFieldContext } from "@buildnbuzz/form-react";
+
+function CustomDataField() {
+  const { fieldApi, field, fieldPath } = useDataFieldContext();
+
+  // fieldApi is guaranteed to exist
+}
+```
+
+### useFormContext
+
+Access the form instance from anywhere in the tree:
+
+```tsx
+import { useFormContext } from "@buildnbuzz/form-react";
+
+function SubmitButton() {
+  const form = useFormContext();
+
+  return (
+    <button
+      type="submit"
+      disabled={!form.state.canSubmit}
+    >
+      Submit
+    </button>
+  );
+}
+```
+
+### useFieldApi
+
+Convenience hook for just the field API:
+
+```tsx
+import { useFieldApi } from "@buildnbuzz/form-react";
+
+function CustomInput() {
+  const fieldApi = useFieldApi();
+
+  return <input ref={fieldApi?.ref} />;
+}
+```
+
+## Utility Hooks
+
+### useNestedErrorCount
+
+Count errors in nested fields (for groups, arrays, tabs):
+
+```tsx
+import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
+
+function CustomGroupField() {
+  const { field } = useLayoutField();
+  const errorCount = useNestedErrorCount(field.fields);
+
+  return (
+    <div className="border p-4">
+      <div className="flex items-center gap-2">
+        <h3>{field.label}</h3>
+        {errorCount > 0 && (
+          <span className="bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-full">
+            {errorCount} errors
+          </span>
+        )}
+      </div>
+      {/* nested fields */}
+    </div>
+  );
+}
+```
+
+### useResolvedFieldText
+
+Resolve dynamic strings for label, description, placeholder:
+
+```tsx
+import { useDataField, useResolvedFieldText } from "@buildnbuzz/form-react";
+
+function CustomField() {
+  const { field } = useDataField();
+  const { label, description, placeholder } = useResolvedFieldText({
+    label: field.label,
+    description: field.description,
+    placeholder: field.placeholder,
+  });
+
+  return (
+    <>
+      <label>{label}</label>
+      <input placeholder={placeholder} />
+      {description && <p>{description}</p>}
+    </>
+  );
+}
+```
+
+## Hook Usage Summary
+
+| Hook | Use Case |
+|------|----------|
+| `useDataField` | Custom data field components |
+| `useLayoutField` | Custom layout container components |
+| `useFieldOptions` | Select, radio, checkbox group with options |
+| `useFieldErrorState` | Access errors and validation state |
+| `useFieldA11yIds` | Generate accessible IDs |
+| `useFieldContext` | Raw field context access |
+| `useDataFieldContext` | Data field context with guaranteed fieldApi |
+| `useFormContext` | Access form instance |
+| `useFieldApi` | Just the field API |
+| `useNestedErrorCount` | Count errors in nested fields |
+| `useResolvedFieldText` | Resolve dynamic strings |
+
+## Out-of-Context Errors
+
+Using hooks outside their required context throws:
+
+```
+useFieldContext must be used within a BuzzForm <Field> or <LayoutField> component
+```
+
+```
+useDataFieldContext must be used within a BuzzForm data field
+```
+
+Wrap your component with `<Field>` or `<LayoutField>` first.
+
+## Related
+
+- [Custom Fields](/docs/custom-fields)
+- [Field Wrappers](/docs/field-wrappers)
+- [`<FormProvider>`](/docs/form-provider)

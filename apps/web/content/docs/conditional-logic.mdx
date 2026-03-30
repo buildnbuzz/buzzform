@@ -1,177 +1,260 @@
 ---
 title: Conditional Logic
-description: Control field visibility, disabled state, and read-only mode dynamically based on form data.
+description: Control field visibility, disabled state, and read-only mode using declarative conditions.
 ---
 
 # Conditional Logic
 
-BuzzForm supports dynamic field states based on form data. This lets you build complex forms that adapt to user input.
+BuzzForm uses a declarative AST for conditional logic — no function callbacks. Conditions work for `condition`, `hidden`, `disabled`, `readOnly`, and `required`.
 
-## Disabled Fields
+## Condition Types
 
-Disable a field based on a condition:
+### Boolean Literal
+
+Simplest form — always true or false:
 
 ```tsx
-// Static
 { type: "text", name: "city", disabled: true }
+```
 
-// Dynamic - function receives form data
+### Atomic Condition
+
+Check a field value against a condition:
+
+```tsx
 {
-  type: "select",
+  type: "text",
   name: "city",
   label: "City",
-  options: [...],
-  disabled: (data) => !data.country, // Disable until country is selected
+  // Only enabled when country is selected
+  disabled: { $data: "/country", eq: "" },
 }
 ```
 
-## Hidden Fields
+### Array of Conditions (Implicit AND)
 
-Hide fields completely from the UI:
-
-```tsx
-// Static
-{ type: "text", name: "internal", hidden: true }
-
-// Dynamic
-{
-  type: "text",
-  name: "otherReason",
-  label: "Please specify",
-  hidden: (data) => data.reason !== "other",
-}
-```
-
-<Callout type="info">
-Hidden fields retain their values by default. Use `condition` instead if you want to completely unregister the field when hidden.
-</Callout>
-
-## Read-Only Fields
-
-Make fields read-only (visible but not editable):
-
-```tsx
-// Static
-{ type: "text", name: "createdAt", readOnly: true }
-
-// Dynamic
-{
-  type: "text",
-  name: "title",
-  label: "Title",
-  readOnly: (data) => data.status === "published",
-}
-```
-
-## Condition Prop
-
-The `condition` prop provides more control than `hidden`. When the condition returns `false`, the field is:
-- Hidden from the UI
-- Unregistered from the form (no validation, value removed)
+Multiple conditions that must all be true:
 
 ```tsx
 {
   type: "text",
-  name: "companyName",
-  label: "Company Name",
-  condition: (data, siblingData, context) => {
-    // Only show for business accounts
-    return data.accountType === "business";
+  name: "company",
+  // Only shown when accountType is "business" AND hasLicense is true
+  condition: [
+    { $data: "/accountType", eq: "business" },
+    { $data: "/hasLicense", eq: true },
+  ],
+}
+```
+
+### Explicit AND / OR
+
+Group conditions logically:
+
+```tsx
+{
+  type: "text",
+  name: "details",
+  // Show when role is "developer" OR "designer"
+  condition: {
+    $or: [
+      { $data: "/role", eq: "developer" },
+      { $data: "/role", eq: "designer" },
+    ],
   },
 }
 ```
 
-### Condition Context
+### Negation
+
+Invert a condition with `not: true`:
 
 ```tsx
-condition: (data, siblingData, context) => {
-  // data - Complete form data
-  // siblingData - Data at the same nesting level
-  // context.operation - "create" | "update" | "read"
-  // context.path - Path segments to this field
-
-  return true; // Show field
+{
+  type: "text",
+  name: "otherReason",
+  label: "Please specify",
+  // Show when reason is NOT "other"
+  condition: { $data: "/reason", eq: "other", not: true },
 }
 ```
 
-## Function Signature
+## Comparison Operators
 
-All dynamic props (`disabled`, `hidden`, `readOnly`) receive:
+Atomic conditions support these operators:
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `eq` | Equals | `{ $data: "/status", eq: "active" }` |
+| `neq` | Not equals | `{ $data: "/status", neq: "draft" }` |
+| `gt` | Greater than | `{ $data: "/age", gt: 18 }` |
+| `gte` | Greater than or equal | `{ $data: "/age", gte: 18 }` |
+| `lt` | Less than | `{ $data: "/age", lt: 65 }` |
+| `lte` | Less than or equal | `{ $data: "/age", lte: 65 }` |
+| `contains` | String contains | `{ $data: "/name", contains: "test" }` |
+| `startsWith` | String starts with | `{ $data: "/code", startsWith: "ABC" }` |
+| `endsWith` | String ends with | `{ $data: "/email", endsWith: "@company.com" }` |
+
+## Using $data and $context
+
+### Referencing Form Data
+
+Use JSON Pointer format (paths start with `/`):
 
 ```tsx
-(data: FormData, siblingData: Record<string, unknown>) => boolean
+{
+  type: "text",
+  name: "teamName",
+  label: "Team Name",
+  // Only shown when role is "Manager"
+  condition: { $data: "/role", eq: "Manager" },
+}
 ```
 
-| Parameter | Description |
-|-----------|-------------|
-| `data` | Complete form data object |
-| `siblingData` | Data at the same nesting level (useful in arrays/groups) |
+**Path examples:**
+- `/username` — root-level field
+- `/address/city` — nested field in a group
+- `/items/0/name` — specific array item
+
+### Referencing External Context
+
+Use `$context` to access data passed via `contextData`:
+
+```tsx
+const form = useForm({
+  schema,
+  contextData: {
+    userRole: "admin",
+    permissions: ["edit", "delete"],
+  },
+});
+
+// In your schema:
+{
+  type: "text",
+  name: "adminNotes",
+  label: "Admin Notes",
+  // Only shown for admin users
+  condition: { $context: "/userRole", eq: "admin" },
+}
+```
+
+## Condition vs Hidden
+
+Both control visibility but behave differently:
+
+| Prop | When False | Validation | State |
+|------|------------|------------|-------|
+| `condition` | Field unmounted | Skipped | Removed |
+| `hidden` | Field hidden | Still runs | Retained |
+
+Use `condition` when you want to completely remove the field. Use `hidden` when you want to keep the value but hide it visually.
 
 ## Examples
 
 ### Dependent Dropdowns
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "select",
-    name: "country",
-    label: "Country",
-    options: countries,
-  },
-  {
-    type: "select",
-    name: "state",
-    label: "State",
-    options: async ({ data }) => fetchStates(data.country),
-    dependencies: ["country"],
-    disabled: (data) => !data.country,
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "country",
+      label: "Country",
+      options: ["US", "UK", "Canada"],
+    },
+    {
+      type: "select",
+      name: "state",
+      label: "State / Province",
+      options: states,
+      // Disabled until country is selected
+      disabled: { $data: "/country", eq: "" },
+    },
+  ],
+});
 ```
 
 ### Show/Hide Based on Selection
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "radio",
-    name: "contactMethod",
-    label: "Preferred Contact",
-    options: ["email", "phone", "mail"],
-  },
-  {
-    type: "email",
-    name: "email",
-    label: "Email",
-    hidden: (data) => data.contactMethod !== "email",
-  },
-  {
-    type: "text",
-    name: "phone",
-    label: "Phone",
-    hidden: (data) => data.contactMethod !== "phone",
-  },
-  {
-    type: "group",
-    name: "address",
-    label: "Mailing Address",
-    hidden: (data) => data.contactMethod !== "mail",
-    fields: [
-      { type: "text", name: "street", label: "Street" },
-      { type: "text", name: "city", label: "City" },
-    ],
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    {
+      type: "radio",
+      name: "contactMethod",
+      label: "Preferred Contact",
+      options: ["email", "phone", "mail"],
+    },
+    {
+      type: "email",
+      name: "email",
+      label: "Email",
+      condition: { $data: "/contactMethod", eq: "email" },
+    },
+    {
+      type: "text",
+      name: "phone",
+      label: "Phone",
+      condition: { $data: "/contactMethod", eq: "phone" },
+    },
+  ],
+});
 ```
 
-### Lock After Save
+### Complex Conditions
 
 ```tsx
-{
-  type: "text",
-  name: "slug",
-  label: "URL Slug",
-  readOnly: (data) => data.id !== undefined, // Lock after initial save
-}
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "discountCode",
+      label: "Discount Code",
+      // Show when cart total >= 100 AND customer is not VIP
+      condition: {
+        $and: [
+          { $data: "/cartTotal", gte: 100 },
+          { $data: "/isVip", eq: false },
+        ],
+      },
+    },
+  ],
+});
+```
+
+### Required Conditionally
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "contactMethod",
+      label: "Contact Method",
+      options: ["email", "phone"],
+    },
+    {
+      type: "email",
+      name: "email",
+      label: "Email Address",
+      // Required only when email is selected
+      required: { $data: "/contactMethod", eq: "email" },
+    },
+  ],
+});
+```
+
+## evaluateVisibility Helper
+
+Test conditions outside of forms:
+
+```tsx
+import { evaluateVisibility } from "@buildnbuzz/form-core";
+
+const condition = { $data: "/role", eq: "admin" };
+const formData = { role: "admin" };
+
+const isVisible = evaluateVisibility(condition, { formData });
+// true
 ```

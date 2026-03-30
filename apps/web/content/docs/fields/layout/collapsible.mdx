@@ -1,176 +1,98 @@
 ---
 title: Collapsible Field
-description: Expandable section for organizing optional or advanced fields.
+description: Expandable container that can be collapsed.
 ---
 
 # Collapsible Field
 
-The `collapsible` field provides an expandable/collapsible section for organizing fields. Unlike `group`, it doesn't create nested data—fields remain at the current level.
+The `collapsible` field renders an expandable/collapsible container for nested fields.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/collapsible.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/collapsible.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  { type: "text", name: "title", label: "Title", required: true },
-  {
-    type: "collapsible",
-    label: "Advanced Options",
-    collapsed: true,
-    fields: [
-      { type: "text", name: "slug", label: "URL Slug" },
-      { type: "switch", name: "featured", label: "Featured" },
-    ],
-  },
-]);
-
-// Result: { title, slug, featured } — flat, not nested
-
-export function CollapsibleFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop        | Type      | Default | Description           |
-| ----------- | --------- | ------- | --------------------- |
-| `label`     | `string`  | -       | Section title         |
-| `fields`    | `Field[]` | -       | Fields inside section |
-| `collapsed` | `boolean` | `false` | Start collapsed       |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="CollapsibleField" />
 
 ## UI Options
 
-| Option              | Type                                        | Default      | Description            |
-| ------------------- | ------------------------------------------- | ------------ | ---------------------- |
-| `ui.variant`        | `'card' \| 'flat' \| 'ghost' \| 'bordered'` | `'bordered'` | Visual style           |
-| `ui.spacing`        | `'sm' \| 'md' \| 'lg'`                      | `'md'`       | Space between fields   |
-| `ui.showErrorBadge` | `boolean`                                   | `true`       | Show error count badge |
-| `ui.description`    | `string`                                    | -            | Section description    |
-| `ui.icon`           | `ReactNode`                                 | -            | Section icon           |
+Same as [Text Field](/docs/fields/data/text#ui-options).
 
-## Group vs Collapsible
-
-| Feature             | Group          | Collapsible         |
-| ------------------- | -------------- | ------------------- |
-| Creates nested data | ✅ Yes         | ❌ No               |
-| Has `name` prop     | ✅ Required    | ❌ None             |
-| Collapsible         | ✅ Optional    | ✅ Always           |
-| Use case            | Data structure | Visual organization |
-
-## Variants
-
-### Bordered (Default)
+## Basic Usage
 
 ```tsx
-{
-  type: "collapsible",
-  label: "More Options",
-  fields: [...],
-  ui: { variant: "bordered" },
-}
-```
-
-### Card
-
-```tsx
-{
-  type: "collapsible",
-  label: "Settings",
-  fields: [...],
-  ui: { variant: "card" },
-}
-```
-
-### Ghost
-
-```tsx
-{
-  type: "collapsible",
-  label: "Advanced",
-  fields: [...],
-  ui: { variant: "ghost" },
-}
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    {
+      type: "collapsible",
+      label: "Advanced Options",
+      collapsed: true,
+      fields: [
+        { type: "text", name: "apiKey", label: "API Key" },
+        { type: "text", name: "secret", label: "Secret" },
+      ],
+    },
+  ],
+});
 ```
 
 ## Examples
 
-### Advanced Settings
+### Dynamic Collapse State
+
+```tsx
+{
+  type: "collapsible",
+  label: "Additional Details",
+  collapsed: { $data: "/showAdvanced", eq: false },
+  fields: [
+    { type: "text", name: "notes", label: "Notes" },
+  ],
+}
+```
+
+### Conditional Collapsible
+
+```tsx
+{
+  type: "collapsible",
+  label: "Shipping Address",
+  condition: { $data: "/differentShipping", eq: true },
+  fields: [
+    { type: "text", name: "street", label: "Street" },
+    { type: "text", name: "city", label: "City" },
+  ],
+}
+```
+
+### Nested Collapsibles
 
 ```tsx
 {
   type: "collapsible",
   label: "Advanced Settings",
-  collapsed: true,
   fields: [
-    { type: "text", name: "apiKey", label: "API Key" },
-    { type: "switch", name: "debug", label: "Debug Mode" },
-    { type: "number", name: "timeout", label: "Timeout (ms)", defaultValue: 5000 },
+    {
+      type: "collapsible",
+      label: "Security",
+      fields: [
+        { type: "text", name: "apiKey", label: "API Key" },
+      ],
+    },
+    {
+      type: "collapsible",
+      label: "Notifications",
+      fields: [
+        { type: "switch", name: "email", label: "Email Notifications" },
+      ],
+    },
   ],
-  ui: {
-    variant: "bordered",
-    description: "Configure advanced options",
-  },
 }
 ```
 
-### SEO Options
+## Data Shape
 
-```tsx
-{
-  type: "collapsible",
-  label: "SEO",
-  collapsed: true,
-  fields: [
-    { type: "text", name: "metaTitle", label: "Meta Title", maxLength: 60 },
-    { type: "textarea", name: "metaDescription", label: "Meta Description", maxLength: 160 },
-    { type: "tags", name: "keywords", label: "Keywords", maxTags: 10 },
-  ],
-  ui: { variant: "card" },
-}
-```
+Collapsible fields **do not** contribute to form data. They are layout-only containers.
 
-### Optional Details
+## Related
 
-```tsx
-const schema = createSchema([
-  { type: "text", name: "name", label: "Product Name", required: true },
-  { type: "number", name: "price", label: "Price", required: true },
-  {
-    type: "collapsible",
-    label: "Optional Details",
-    collapsed: true,
-    fields: [
-      { type: "textarea", name: "description", label: "Description" },
-      { type: "text", name: "sku", label: "SKU" },
-      { type: "number", name: "weight", label: "Weight (kg)" },
-    ],
-  },
-]);
-```
-
-### With Icon
-
-```tsx
-{
-  type: "collapsible",
-  label: "Shipping Options",
-  fields: [...],
-  ui: {
-    icon: <TruckIcon className="h-4 w-4" />,
-    description: "Configure shipping preferences",
-  },
-}
-```
+- [Group Field](/docs/fields/layout/group)
+- [Tabs Field](/docs/fields/layout/tabs)
