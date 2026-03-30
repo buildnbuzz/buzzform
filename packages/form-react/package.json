@@ -6,7 +6,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/buildnbuzz/buzzform.git"
+    "url": "https://github.com/buildnbuzz/buzzform.git",
+    "directory": "packages/form-react"
+  },
+  "bugs": {
+    "url": "https://github.com/buildnbuzz/buzzform/issues"
   },
   "homepage": "https://form.buildnbuzz.com",
   "keywords": [
@@ -14,7 +18,7 @@
     "schema",
     "validation",
     "headless",
-    "tanstack-intent"
+    "tanstack-form"
   ],
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -29,6 +33,7 @@
   "files": [
     "dist",
     "README.md",
+    "LICENSE",
     "skills",
     "!skills/_artifacts"
   ],
@@ -38,9 +43,8 @@
     "dev": "tsup --watch",
     "test": "vitest run",
     "test:types": "tsc --noEmit --project tsconfig.tests.json",
-    "type-check": "tsc --noEmit",
-    "lint": "eslint .",
-    "intent:validate": "intent validate"
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@buildnbuzz/form-core": "workspace:^"
@@ -63,11 +67,15 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
+    "@buildnbuzz/form-core": "workspace:^",
     "@tanstack/form-core": "^1.28.5",
     "@tanstack/react-form": "^1.28.5",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
+    "@buildnbuzz/form-core": {
+      "optional": false
+    },
     "@tanstack/form-core": {
       "optional": false
     },
@@ -79,6 +87,7 @@
     }
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "provenance": true
   }
 }
