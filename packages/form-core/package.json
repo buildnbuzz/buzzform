@@ -1,0 +1,56 @@
+{
+  "name": "@buildnbuzz/form-core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic core primitives for BuzzForm.",
+  "author": "Parth Lad <parth@buildnbuzz.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildnbuzz/buzzform.git",
+    "directory": "packages/form-core"
+  },
+  "bugs": {
+    "url": "https://github.com/buildnbuzz/buzzform/issues"
+  },
+  "homepage": "https://form.buildnbuzz.com",
+  "keywords": [
+    "forms",
+    "schema",
+    "validation",
+    "headless",
+    "tanstack-form"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "skills",
+    "!skills/_artifacts"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:types": "tsc --noEmit --project tsconfig.tests.json",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:^",
+    "@repo/typescript-config": "workspace:^"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
