@@ -29,99 +29,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
-          cache: "pnpm"
+          node-version: 20
+          cache: pnpm
           registry-url: "https://registry.npmjs.org"
-
-      - name: Upgrade npm for Trusted Publishers
-        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build packages
-        run: pnpm build
-
-      - name: Check for changesets
-        id: check_changesets
-        run: |
-          # Count changeset files (excluding README.md and config.json)
-          CHANGESET_COUNT=$(find .changeset -name "*.md" ! -name "README.md" | wc -l)
-          echo "Found $CHANGESET_COUNT changeset file(s)"
-
-          # Check if any of the last 5 commits is a version bump (to handle failed releases)
-          IS_VERSION_COMMIT=false
-          if git log -10 --pretty=%B | grep -q "^chore: version packages"; then
-            IS_VERSION_COMMIT=true
-            echo "Found a recent version bump commit in history"
-          fi
-
-          # Run changesets action if: pending changesets OR version bump commit
-          if [ "$CHANGESET_COUNT" -gt 0 ] || [ "$IS_VERSION_COMMIT" = true ]; then
-            echo "should_release=true" >> $GITHUB_OUTPUT
-            echo "Will run release steps"
-          else
-            echo "should_release=false" >> $GITHUB_OUTPUT
-            echo "No changesets and no recent version commit, skipping release steps"
-          fi
-
       - name: Create Release Pull Request or Publish
-        if: steps.check_changesets.outputs.should_release == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
-          publish: pnpm release
+          version: pnpm ci:version
+          publish: pnpm ci:publish
           title: "chore: version packages"
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create GitHub Release
-        if: steps.check_changesets.outputs.should_release == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PKG_NAME=$(node -p "require('./packages/buzzform/package.json').name")
-          PKG_VERSION=$(node -p "require('./packages/buzzform/package.json').version")
-          TAG_NAME="${PKG_NAME}@${PKG_VERSION}"
-
-          echo "Package: $PKG_NAME@$PKG_VERSION"
-
-          # Check if this version exists on npm (with retries for registry propagation delay)
-          echo "Checking npm registry for $PKG_NAME@$PKG_VERSION..."
-          MAX_RETRIES=5
-          RETRY_DELAY=10
-          NPM_CHECK_SUCCESS=false
-
-          for i in $(seq 1 $MAX_RETRIES); do
-            if npm view "$PKG_NAME@$PKG_VERSION" version >/dev/null 2>&1; then
-              NPM_CHECK_SUCCESS=true
-              break
-            fi
-            echo "Attempt $i/$MAX_RETRIES: Package not yet visible on npm, waiting ${RETRY_DELAY}s..."
-            sleep $RETRY_DELAY
-          done
-
-          if [ "$NPM_CHECK_SUCCESS" = false ]; then
-            echo "❌ $PKG_NAME@$PKG_VERSION is NOT on npm after $MAX_RETRIES attempts, skipping release creation."
-            exit 0
-          fi
-
-          echo "✅ $PKG_NAME@$PKG_VERSION found on npm"
-
-          # Check if release already exists
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Release $TAG_NAME already exists, skipping."
-            exit 0
-          fi
-
-          # Create the release
-          echo "Creating GitHub release for $TAG_NAME..."
-          gh release create "$TAG_NAME" \
-            --title "$PKG_NAME v$PKG_VERSION" \
-            --notes "## ${PKG_NAME}@${PKG_VERSION}
-
-          See the [CHANGELOG](https://github.com/${{ github.repository }}/blob/main/packages/buzzform/CHANGELOG.md) for details."
-
-          echo "✅ Successfully created release for $TAG_NAME"
