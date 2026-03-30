@@ -1,22 +1,27 @@
+// @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import type { Field as CoreField } from "@buildnbuzz/form-core";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import type { DataField, Field as CoreField } from "@buildnbuzz/form-core";
+import { toDotNotation } from "@buildnbuzz/form-core";
 import { FormProvider, useFieldContext } from "./contexts";
 import { FieldRenderer, RenderFields } from "./renderer";
 import type { FieldFormApi, UnknownData } from "./types";
+import type { FieldRegistry } from "./contexts";
+
+afterEach(() => cleanup());
 
 function createFormHarness(values: UnknownData) {
   const form = {
     store: { state: { values } },
     deleteField: () => undefined,
-    Field: ({
+    Field: (({
       name,
       children,
     }: {
       name: string;
       children: (field: unknown) => ReactNode;
-    }) => children({ name }),
+    }) => children({ name })) as unknown as FieldFormApi["Field"],
     Subscribe: ({
       selector,
       children,
@@ -31,10 +36,11 @@ function createFormHarness(values: UnknownData) {
 
 function TextRenderer() {
   const { field, fieldApi } = useFieldContext();
+  const dataField = field as DataField;
   return (
     <div
       data-testid="text-field"
-      data-name={field.name}
+      data-name={dataField.name}
       data-api-name={(fieldApi as { name?: string }).name ?? ""}
     />
   );
@@ -50,14 +56,68 @@ function RowRenderer({ children }: { children?: ReactNode }) {
 
 function GroupRenderer({ children }: { children?: ReactNode }) {
   const { field } = useFieldContext();
+  const dataField = field as DataField;
   return (
     <div
       data-testid="group-field"
-      data-name={field.name}
+      data-name={dataField.name}
     >
       {children}
     </div>
   );
+}
+
+function createTestRegistry(): FieldRegistry {
+  let registry: FieldRegistry = {};
+
+  function TabsRenderer() {
+    const { field, fieldPath, form, contextData } = useFieldContext();
+    if (field.type !== "tabs") return null;
+    const basePath = toDotNotation(fieldPath);
+    return (
+      <div data-testid="tabs-field">
+        {field.tabs.map((tab, index) => (
+          <RenderFields
+            key={`${tab.label}-${index}`}
+            fields={tab.fields}
+            form={form}
+            contextData={contextData}
+            registry={registry}
+            basePath={basePath}
+          />
+        ))}
+      </div>
+    );
+  }
+
+  function ArrayRenderer() {
+    const { field, fieldPath, form, contextData } = useFieldContext();
+    if (field.type !== "array") return null;
+    const arrayPointer = fieldPath || "";
+    const itemPointer = arrayPointer ? `${arrayPointer}/*` : "/*";
+    const basePath = toDotNotation(itemPointer);
+    return (
+      <div data-testid="array-field">
+        <RenderFields
+          fields={field.fields}
+          form={form}
+          contextData={contextData}
+          registry={registry}
+          basePath={basePath}
+        />
+      </div>
+    );
+  }
+
+  registry = {
+    text: TextRenderer,
+    row: RowRenderer,
+    group: GroupRenderer,
+    tabs: TabsRenderer,
+    array: ArrayRenderer,
+  };
+
+  return registry;
 }
 
 describe("FieldRenderer", () => {
@@ -181,6 +241,7 @@ describe("RenderFields", () => {
     const { form } = createFormHarness({
       profile: { details: { email: "ada@example.com" } },
     });
+    const registry = createTestRegistry();
     const fields: CoreField[] = [
       {
         type: "group",
@@ -208,10 +269,7 @@ describe("RenderFields", () => {
       <RenderFields
         fields={fields}
         form={form}
-        registry={{
-          text: TextRenderer,
-          row: RowRenderer,
-        }}
+        registry={registry}
       />,
     );
 
@@ -227,6 +285,7 @@ describe("RenderFields", () => {
     const { form } = createFormHarness({
       addresses: [{ city: "Toronto" }],
     });
+    const registry = createTestRegistry();
     const fields: CoreField[] = [
       {
         type: "array",
@@ -239,7 +298,7 @@ describe("RenderFields", () => {
       <RenderFields
         fields={fields}
         form={form}
-        registry={{ text: TextRenderer }}
+        registry={registry}
       />,
     );
 

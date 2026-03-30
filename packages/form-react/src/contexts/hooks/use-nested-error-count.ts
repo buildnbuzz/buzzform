@@ -65,7 +65,6 @@ export function useNestedErrorCount(
   const fieldNames = useMemo(
     () => collectDataFieldNames(fields, basePath),
     // fields reference is stable from schema; basePath changes only on re-mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [fields, basePath],
   );
 

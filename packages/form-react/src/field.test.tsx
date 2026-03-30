@@ -1,6 +1,7 @@
+// @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineValidators, type DataField } from "@buildnbuzz/form-core";
 import { Field } from "./field";
 import type { AnyFieldValidators, FieldFormApi, UnknownData } from "./types";
@@ -9,6 +10,8 @@ import {
   useResolvedFieldText,
   type FieldContextValue,
 } from "./contexts";
+
+afterEach(() => cleanup());
 
 function createFormHarness(values: UnknownData) {
   const fieldSpy = vi.fn();
@@ -22,7 +25,7 @@ function createFormHarness(values: UnknownData) {
       },
     },
     deleteField: deleteFieldSpy,
-    Field: ({
+    Field: (({
       name,
       validators,
       children,
@@ -33,7 +36,7 @@ function createFormHarness(values: UnknownData) {
     }) => {
       fieldSpy({ name, validators });
       return children({ name });
-    },
+    }) as unknown as FieldFormApi["Field"],
     Subscribe: ({
       selector,
       children,
@@ -356,7 +359,8 @@ describe("Field", () => {
     });
 
     const ctx = ctxSpy.mock.calls[0]?.[0] as FieldContextValue;
-    expect(ctx.field.name).toBe("email");
+    const dataField = ctx.field as DataField;
+    expect(dataField.name).toBe("email");
     expect(ctx.formData).toEqual({
       email: "ada@example.com",
       disableEmail: true,

@@ -1,5 +1,6 @@
-import { render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+// @vitest-environment jsdom
+import { cleanup, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { DataField, Field as CoreField } from "@buildnbuzz/form-core";
 import type { ReactNode } from "react";
 import { Field, LayoutField } from "./field";
@@ -14,6 +15,8 @@ import {
 } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
 
+afterEach(() => cleanup());
+
 function createFormHarness(
   values: UnknownData,
   metaOverrides: {
@@ -27,13 +30,13 @@ function createFormHarness(
   const form = {
     store: { state: { values } },
     deleteField: () => undefined,
-    Field: ({
+    Field: (({
       name,
       children,
     }: {
       name: string;
       children: (field: unknown) => ReactNode;
-    }) => children({ name }),
+    }) => children({ name })) as unknown as FieldFormApi["Field"],
     Subscribe: ({
       selector,
       children,
@@ -61,7 +64,7 @@ function createFormHarness(
     },
   };
 
-  (form as FieldFormApi).Field = ({
+  (form as FieldFormApi).Field = (({
     name,
     children,
   }: {
@@ -70,7 +73,7 @@ function createFormHarness(
   }) => {
     fieldApi.name = name;
     return children(fieldApi);
-  };
+  }) as unknown as FieldFormApi["Field"];
 
   return { form };
 }
@@ -79,10 +82,11 @@ function HookConsumer() {
   const ctx = useFieldContext();
   const fieldApi = useFieldApi();
   const form = useFormContext();
+  const dataField = ctx.field as DataField;
   return (
     <div
       data-testid="ctx"
-      data-name={ctx.field.name}
+      data-name={dataField.name}
       data-api-name={(fieldApi as { name?: string }).name ?? ""}
       data-has-form={String(Boolean(form))}
     />

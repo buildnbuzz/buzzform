@@ -1,10 +1,13 @@
+// @vitest-environment jsdom
 import type { ReactNode } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
-import type { Field as CoreField } from "@buildnbuzz/form-core";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import type { DataField, Field as CoreField } from "@buildnbuzz/form-core";
 import { FormProvider, useFieldContext } from "./contexts";
 import { Form } from "./form";
 import type { FieldFormApi, UnknownData } from "./types";
+
+afterEach(() => cleanup());
 
 function createFormHarness(values: UnknownData) {
   const handleSubmit = vi.fn();
@@ -12,13 +15,13 @@ function createFormHarness(values: UnknownData) {
     handleSubmit,
     store: { state: { values } },
     deleteField: () => undefined,
-    Field: ({
+    Field: (({
       name,
       children,
     }: {
       name: string;
       children: (field: unknown) => ReactNode;
-    }) => children({ name }),
+    }) => children({ name })) as unknown as FieldFormApi["Field"],
     Subscribe: ({
       selector,
       children,
@@ -33,7 +36,8 @@ function createFormHarness(values: UnknownData) {
 
 function TextRenderer() {
   const { field } = useFieldContext();
-  return <div data-testid="text-field" data-name={field.name} />;
+  const dataField = field as DataField;
+  return <div data-testid="text-field" data-name={dataField.name} />;
 }
 
 describe("Form", () => {
