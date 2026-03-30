@@ -2,6 +2,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+> **DEPRECATED**: This package is no longer maintained. Use `@buildnbuzz/form-core` and `@buildnbuzz/form-react` instead. See the migration guide: https://form.buildnbuzz.com/docs/migration
+
 A schema-driven form library for React + shadcn/ui. Declare fields once, get validated forms with minimal boilerplate.
 
 ## Features

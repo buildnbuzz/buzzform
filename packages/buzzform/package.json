@@ -2,6 +2,7 @@
   "name": "@buildnbuzz/buzzform",
   "version": "0.1.7",
   "description": "Simple React form library for shadcn/ui. Declare fields, customize rendering, get live validation with minimal boilerplate.",
+  "deprecated": "This package is deprecated. Use @buildnbuzz/form-core and @buildnbuzz/form-react instead. See migration guide: https://form.buildnbuzz.com/docs/migration",
   "author": "Parth Lad <parth@buildnbuzz.com>",
   "license": "MIT",
   "repository": {
