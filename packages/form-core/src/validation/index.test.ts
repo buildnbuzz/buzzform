@@ -381,14 +381,14 @@ describe("validateFields", () => {
     ];
 
     const tooFew = await validateFields(fields, { tags: ["a"] }, { run: "blur" });
-    expect(tooFew.errorsByPath["/tags"]).toBe("Select at least 2.");
+    expect(tooFew.errorsByPath["/tags"]).toBe("Add at least 2 items.");
 
     const tooMany = await validateFields(
       fields,
       { tags: ["a", "b", "c", "d"] },
       { run: "blur" },
     );
-    expect(tooMany.errorsByPath["/tags"]).toBe("Select at most 3.");
+    expect(tooMany.errorsByPath["/tags"]).toBe("Cannot exceed 3 items.");
   });
 
   it("skips fields gated by condition", async () => {

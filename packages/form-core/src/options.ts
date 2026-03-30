@@ -2,13 +2,13 @@ import type { DynamicBoolean, FieldOption } from "./types";
 import { resolveDynamicValue } from "./dynamic";
 
 /**
- * Static options config — an array of FieldOption objects or plain strings.
+ * Static options config — an array of FieldOption objects and/or plain strings.
  *
  * @remarks [type]
  * Designed as a type alias so it can become a union (e.g. `StaticOptions | AsyncOptionsSource`)
  * when async/cascading options are introduced, without changing call sites.
  */
-export type OptionsConfig = FieldOption[] | string[];
+export type OptionsConfig = Array<FieldOption | string>;
 
 /**
  * A normalized, fully-resolved option ready for rendering.

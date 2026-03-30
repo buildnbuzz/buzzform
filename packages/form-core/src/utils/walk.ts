@@ -100,8 +100,10 @@ export function walkFields(
  * Collect option values from a field for easy validation use.
  */
 export function getOptionValues(
-  field: { options?: FieldOption[] } | undefined,
+  field: { options?: Array<FieldOption | string> } | undefined,
 ): unknown[] {
   if (!field?.options) return [];
-  return field.options.map((option) => option.value);
+  return field.options.map((option) =>
+    typeof option === "string" ? option : option.value,
+  );
 }

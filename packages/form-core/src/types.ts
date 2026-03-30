@@ -302,7 +302,7 @@ export interface NumberField extends BaseField<number> {
 export interface SelectField extends BaseField<string | string[]> {
   type: "select";
   /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: FieldOption<string>[] | string[];
+  options: Array<FieldOption<string> | string>;
   /** Enable multi-select mode. */
   hasMany?: boolean;
   /** Minimum number of selections (only applies when hasMany is true). */
@@ -364,7 +364,7 @@ export interface CheckboxGroupField extends BaseField<string[]> {
   /** Enable multi-select mode; renders a group of checkboxes from options. */
   hasMany: true;
   /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: FieldOption<string>[] | string[];
+  options: Array<FieldOption<string> | string>;
   /** Minimum number of selections. */
   minSelected?: number;
   /** Maximum number of selections. */
@@ -380,7 +380,7 @@ export interface SwitchField extends BaseField<boolean> {
 export interface RadioField extends BaseField<string> {
   type: "radio";
   /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: FieldOption<string>[] | string[];
+  options: Array<FieldOption<string> | string>;
 }
 
 /**
@@ -629,4 +629,3 @@ export type InferType<TFields extends readonly Field[]> =
 export function defineSchema<const T extends FormSchema>(schema: T): T {
   return schema;
 }
-
