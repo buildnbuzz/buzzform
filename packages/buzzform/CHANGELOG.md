@@ -1,5 +1,12 @@
 # @buildnbuzz/buzzform
 
+## 0.2.0
+
+### Minor Changes
+
+- 7fd87f1: deprecate the package
+  Deprecate the `@buildnbuzz/buzzform` package.
+
 ## 0.1.7
 
 ### Patch Changes
