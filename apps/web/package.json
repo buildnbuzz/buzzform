@@ -9,7 +9,7 @@
     "lint": "eslint",
     "icons:dev": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts --watch",
     "icons:build": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts",
-    "registry:build": "npx shadcn build"
+    "registry:build": "npx shadcn build ./registry-v2.json --output ./public/r2"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",

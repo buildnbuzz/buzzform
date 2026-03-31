@@ -1,0 +1,368 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "buzzform-v2",
+  "homepage": "https://form.buildnbuzz.com",
+  "items": [
+    {
+      "name": "init",
+      "type": "registry:ui",
+      "title": "BuzzForm (v2)",
+      "description": "Core BuzzForm v2 components using @buildnbuzz/form-react and the new field registry.",
+      "dependencies": [
+        "@buildnbuzz/form-core",
+        "@buildnbuzz/form-react",
+        "@tanstack/form-core",
+        "@tanstack/react-form"
+      ],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "registry/shadcn/form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/form.tsx"
+        },
+        {
+          "path": "registry/shadcn/registry.template.ts",
+          "type": "registry:component",
+          "target": "components/buzzform/registry.ts"
+        }
+      ]
+    },
+    {
+      "name": "copy",
+      "type": "registry:ui",
+      "title": "CopyButton",
+      "description": "Copy-to-clipboard button used by BuzzForm v2 fields.",
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "registry/shadcn/components/copy-button.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/components/copy-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text",
+      "type": "registry:ui",
+      "title": "TextField",
+      "description": "Text input field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "input", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/text.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "type": "registry:ui",
+      "title": "EmailField",
+      "description": "Email input field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "input", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/email.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/email.tsx"
+        }
+      ]
+    },
+    {
+      "name": "textarea",
+      "type": "registry:ui",
+      "title": "TextareaField",
+      "description": "Textarea field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "textarea", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/textarea.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/textarea.tsx"
+        }
+      ]
+    },
+    {
+      "name": "password",
+      "type": "registry:ui",
+      "title": "PasswordField",
+      "description": "Password field for BuzzForm v2 with strength UI.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "input", "button", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/password.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/password.tsx"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "type": "registry:ui",
+      "title": "NumberField",
+      "description": "Number input field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "input", "input-group", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/number.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/number.tsx"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "registry:ui",
+      "title": "SelectField",
+      "description": "Select and multi-select field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "combobox", "input-group", "field"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/select.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/select.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:ui",
+      "title": "CheckboxField",
+      "description": "Checkbox, checkbox-group, and tristate checkbox field for BuzzForm v2.",
+      "dependencies": [
+        "@buildnbuzz/form-core",
+        "@buildnbuzz/form-react",
+        "@base-ui/react"
+      ],
+      "registryDependencies": ["init", "checkbox", "field"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/checkbox.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/checkbox.tsx"
+        },
+        {
+          "path": "registry/shadcn/fields/checkbox-group.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/checkbox-group.tsx"
+        },
+        {
+          "path": "registry/shadcn/fields/tristate-checkbox.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/tristate-checkbox.tsx"
+        },
+        {
+          "path": "registry/shadcn/components/checkbox.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/components/checkbox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:ui",
+      "title": "SwitchField",
+      "description": "Switch field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "switch", "field"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/switch.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/switch.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radio",
+      "type": "registry:ui",
+      "title": "RadioField",
+      "description": "Radio group field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "radio-group", "field"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/radio.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/radio.tsx"
+        }
+      ]
+    },
+    {
+      "name": "row",
+      "type": "registry:ui",
+      "title": "RowField",
+      "description": "Row layout field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/row.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/row.tsx"
+        }
+      ]
+    },
+    {
+      "name": "group",
+      "type": "registry:ui",
+      "title": "GroupField",
+      "description": "Group field for BuzzForm v2 with card/collapsible variants.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "card", "collapsible", "badge"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/group.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "collapsible",
+      "type": "registry:ui",
+      "title": "CollapsibleField",
+      "description": "Collapsible layout field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "card", "collapsible", "badge"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/collapsible.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/collapsible.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "TabsField",
+      "description": "Tabs field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "tabs", "badge"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/tabs.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/tabs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "array",
+      "type": "registry:ui",
+      "title": "ArrayField",
+      "description": "Repeatable array field for BuzzForm v2.",
+      "dependencies": [
+        "@buildnbuzz/form-core",
+        "@buildnbuzz/form-react",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities"
+      ],
+      "registryDependencies": [
+        "init",
+        "card",
+        "collapsible",
+        "badge",
+        "button",
+        "alert-dialog"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/array.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/array.tsx"
+        }
+      ]
+    },
+    {
+      "name": "date",
+      "type": "registry:ui",
+      "title": "DateField",
+      "description": "Date and datetime field for BuzzForm v2.",
+      "dependencies": [
+        "@buildnbuzz/form-core",
+        "@buildnbuzz/form-react",
+        "date-fns"
+      ],
+      "registryDependencies": [
+        "init",
+        "popover",
+        "calendar",
+        "input",
+        "input-group",
+        "field"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/date.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/date.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tags",
+      "type": "registry:ui",
+      "title": "TagsField",
+      "description": "Tag input field for BuzzForm v2.",
+      "dependencies": ["@buildnbuzz/form-core", "@buildnbuzz/form-react"],
+      "registryDependencies": ["init", "field", "copy"],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/tags.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/tags.tsx"
+        },
+        {
+          "path": "registry/shadcn/components/tag-input.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/components/tag-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "all",
+      "type": "registry:ui",
+      "title": "BuzzForm All (v2)",
+      "description": "One-command setup for BuzzForm v2. Installs core form and all field components.",
+      "dependencies": ["@tanstack/form-core", "@tanstack/react-form"],
+      "registryDependencies": [
+        "init",
+        "copy",
+        "text",
+        "email",
+        "textarea",
+        "password",
+        "number",
+        "select",
+        "checkbox",
+        "switch",
+        "radio",
+        "row",
+        "group",
+        "collapsible",
+        "tabs",
+        "array",
+        "date",
+        "tags"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/registry.ts",
+          "type": "registry:component",
+          "target": "components/buzzform/registry.ts"
+        }
+      ]
+    }
+  ]
+}
