@@ -1,0 +1,35 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "all",
+  "title": "BuzzForm All (v2)",
+  "description": "One-command setup for BuzzForm v2. Installs core form and all field components.",
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/copy",
+    "@buzzform/text",
+    "@buzzform/email",
+    "@buzzform/textarea",
+    "@buzzform/password",
+    "@buzzform/number",
+    "@buzzform/select",
+    "@buzzform/checkbox",
+    "@buzzform/switch",
+    "@buzzform/radio",
+    "@buzzform/row",
+    "@buzzform/group",
+    "@buzzform/collapsible",
+    "@buzzform/tabs",
+    "@buzzform/array",
+    "@buzzform/date",
+    "@buzzform/tags"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/registry.ts",
+      "content": "\"use client\";\n\nimport type { FieldRegistry } from \"@buildnbuzz/form-react\";\n\nimport { TextField } from \"./fields/text\";\nimport { EmailField } from \"./fields/email\";\nimport { PasswordField } from \"./fields/password\";\nimport { RowField } from \"./fields/row\";\nimport { TextareaField } from \"./fields/textarea\";\nimport { NumberField } from \"./fields/number\";\nimport { SelectField } from \"./fields/select\";\nimport { CheckboxField } from \"./fields/checkbox\";\nimport { SwitchField } from \"./fields/switch\";\nimport { RadioField } from \"./fields/radio\";\nimport { GroupField } from \"./fields/group\";\nimport { ArrayField } from \"./fields/array\";\nimport { TabsField } from \"./fields/tabs\";\nimport { CollapsibleField } from \"./fields/collapsible\";\nimport { DateField } from \"./fields/date\";\nimport { TagsField } from \"./fields/tags\";\n\nexport const registry: FieldRegistry = {\n  text: TextField,\n  email: EmailField,\n  password: PasswordField,\n  row: RowField,\n  textarea: TextareaField,\n  number: NumberField,\n  select: SelectField,\n  checkbox: CheckboxField,\n  switch: SwitchField,\n  radio: RadioField,\n  group: GroupField,\n  array: ArrayField,\n  tabs: TabsField,\n  collapsible: CollapsibleField,\n  date: DateField,\n  tags: TagsField,\n};\n",
+      "type": "registry:component",
+      "target": "components/buzzform/registry.ts"
+    }
+  ],
+  "type": "registry:ui"
+}
