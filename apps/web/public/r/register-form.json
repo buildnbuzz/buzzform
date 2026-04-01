@@ -1,0 +1,24 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "register-form",
+  "title": "Register Form",
+  "description": "Registration form inside a modal dialog with password strength indicator.",
+  "registryDependencies": [
+    "@buzzform/text",
+    "@buzzform/email",
+    "@buzzform/password",
+    "@buzzform/checkbox",
+    "dialog",
+    "button",
+    "sonner"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/examples/register-form.tsx",
+      "content": "\"use client\";\n\nimport { useState } from \"react\";\nimport { toast } from \"sonner\";\nimport { defineSchema, type InferType } from \"@buildnbuzz/form-core\";\nimport {\n  Form,\n  FormContent,\n  FormFields,\n  FormSubmit,\n  FormActions,\n} from \"@/registry/shadcn/form\";\nimport {\n  Dialog,\n  DialogContent,\n  DialogDescription,\n  DialogHeader,\n  DialogTitle,\n  DialogTrigger,\n} from \"@/components/ui/dialog\";\nimport { Button } from \"@/components/ui/button\";\n\n// Registration form with password strength\nconst registerSchema = defineSchema({\n  fields: [\n    {\n      type: \"text\",\n      name: \"name\",\n      label: \"Full Name\",\n      placeholder: \"John Doe\",\n      required: true,\n    },\n    {\n      type: \"email\",\n      name: \"email\",\n      label: \"Email\",\n      placeholder: \"you@example.com\",\n      required: true,\n    },\n    {\n      type: \"password\",\n      name: \"password\",\n      label: \"Password\",\n      placeholder: \"Create a strong password\",\n      required: true,\n      minLength: 8,\n      criteria: {\n        requireUppercase: true,\n        requireLowercase: true,\n        requireNumber: true,\n        requireSpecial: true,\n      },\n      ui: {\n        strengthIndicator: true,\n        showRequirements: true,\n        allowGenerate: true,\n        copyable: true,\n      },\n      autoComplete: \"new-password\",\n    },\n    {\n      type: \"checkbox\",\n      name: \"terms\",\n      label: \"I agree to the Terms of Service and Privacy Policy\",\n      required: true,\n    },\n  ],\n});\n\ntype RegisterSchema = InferType<typeof registerSchema.fields>;\n\nexport default function RegisterFormDialog() {\n  const [open, setOpen] = useState(false);\n\n  const handleSubmit = async ({ value }: { value: unknown }) => {\n    const data = value as RegisterSchema;\n    await new Promise((resolve) => setTimeout(resolve, 1500));\n    toast(\"Account created!\", {\n      description: (\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\n          <code>{JSON.stringify(data, null, 2)}</code>\n        </pre>\n      ),\n    });\n    setOpen(false);\n  };\n\n  return (\n    <Dialog open={open} onOpenChange={setOpen}>\n      <DialogTrigger render={<Button />}>Create Account</DialogTrigger>\n      <DialogContent className=\"sm:max-w-md\">\n        <DialogHeader>\n          <DialogTitle>Create Account</DialogTitle>\n          <DialogDescription>\n            Password strength indicator with real-time requirements\n          </DialogDescription>\n        </DialogHeader>\n        <Form schema={registerSchema} onSubmit={handleSubmit}>\n          <FormContent>\n            <FormFields />\n            <FormActions>\n              <FormSubmit className=\"w-full\">Create Account</FormSubmit>\n            </FormActions>\n          </FormContent>\n        </Form>\n      </DialogContent>\n    </Dialog>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/register-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

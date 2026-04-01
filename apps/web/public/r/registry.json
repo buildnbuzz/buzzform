@@ -379,6 +379,382 @@
           "target": "components/buzzform/registry.ts"
         }
       ]
+    },
+    {
+      "name": "login-form",
+      "type": "registry:block",
+      "title": "Login Form",
+      "description": "A standard login card with email and password fields.",
+      "registryDependencies": [
+        "@buzzform/email",
+        "@buzzform/password",
+        "@buzzform/checkbox",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/login-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/login-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "register-form",
+      "type": "registry:block",
+      "title": "Register Form",
+      "description": "Registration form inside a modal dialog with password strength indicator.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/password",
+        "@buzzform/checkbox",
+        "dialog",
+        "button",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/register-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/register-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "contact-form",
+      "type": "registry:block",
+      "title": "Contact Form",
+      "description": "A simple contact form with text, email, and textarea fields.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/textarea",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/contact-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/contact-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "newsletter-dialog",
+      "type": "registry:block",
+      "title": "Newsletter Subscription",
+      "description": "A newsletter subscription form in a dialog.",
+      "registryDependencies": [
+        "@buzzform/email",
+        "@buzzform/checkbox",
+        "dialog",
+        "button",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/newsletter-dialog.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/newsletter-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "feedback-sheet",
+      "type": "registry:block",
+      "title": "Feedback Sheet",
+      "description": "A slide-out sheet for gathering user feedback.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/textarea",
+        "@buzzform/checkbox",
+        "sheet",
+        "button",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/feedback-sheet.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/feedback-sheet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "quick-add",
+      "type": "registry:block",
+      "title": "Quick Add Popover",
+      "description": "A small form inside a popover for quickly adding items.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/select",
+        "popover",
+        "button",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/quick-add.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/quick-add.tsx"
+        }
+      ]
+    },
+    {
+      "name": "notification-settings",
+      "type": "registry:block",
+      "title": "Notification Settings",
+      "description": "Preferences for email and push notifications using switch fields.",
+      "registryDependencies": ["@buzzform/switch", "card", "sonner"],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/notification-settings.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/notification-settings.tsx"
+        }
+      ]
+    },
+    {
+      "name": "product-form",
+      "type": "registry:block",
+      "title": "Product Form",
+      "description": "Product quantity and pricing form with number field variants.",
+      "registryDependencies": ["@buzzform/number", "card", "sonner"],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/product-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/product-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pricing-form",
+      "type": "registry:block",
+      "title": "Pricing Form",
+      "description": "Pricing plan selection with radio card variants.",
+      "registryDependencies": ["@buzzform/radio", "card", "sonner"],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/pricing-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/pricing-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "blog-post-form",
+      "type": "registry:block",
+      "title": "Blog Post Form",
+      "description": "Blog post form with tags and textarea fields.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/textarea",
+        "@buzzform/tags",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/blog-post-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/blog-post-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "booking-form",
+      "type": "registry:block",
+      "title": "Booking Form",
+      "description": "Hotel booking form with date pickers, number fields, and time selection.",
+      "registryDependencies": [
+        "@buzzform/date",
+        "@buzzform/number",
+        "@buzzform/select",
+        "@buzzform/textarea",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/booking-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/booking-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "support-ticket-form",
+      "type": "registry:block",
+      "title": "Support Ticket Form",
+      "description": "Support ticket form with select and multi-select fields.",
+      "registryDependencies": ["@buzzform/select", "card", "sonner"],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/support-ticket-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/support-ticket-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "contact-layout-form",
+      "type": "registry:block",
+      "title": "Contact Layout Form",
+      "description": "Contact form with responsive row layout for side-by-side fields.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/contact-layout-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/contact-layout-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "coupon-layout-form",
+      "type": "registry:block",
+      "title": "Coupon Layout Form",
+      "description": "Coupon creation form with row layout and checkbox fields.",
+      "registryDependencies": [
+        "@buzzform/text",
+        "@buzzform/checkbox",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/coupon-layout-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/coupon-layout-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "account-settings-form",
+      "type": "registry:block",
+      "title": "Account Settings Form",
+      "description": "Tabbed account settings with profile, account, notification, and billing tabs.",
+      "registryDependencies": [
+        "@buzzform/tabs",
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/textarea",
+        "@buzzform/password",
+        "@buzzform/select",
+        "@buzzform/switch",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/account-settings-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/account-settings-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkout-form",
+      "type": "registry:block",
+      "title": "Checkout Form",
+      "description": "Multi-step checkout process with tabbed navigation.",
+      "registryDependencies": [
+        "@buzzform/tabs",
+        "@buzzform/text",
+        "@buzzform/select",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/checkout-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/checkout-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "array-field-form",
+      "type": "registry:block",
+      "title": "Array Field Form",
+      "description": "Dynamic team members and milestones with drag-and-drop reordering.",
+      "registryDependencies": [
+        "@buzzform/array",
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/textarea",
+        "@buzzform/select",
+        "@buzzform/date",
+        "@buzzform/tags",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/array-field-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/array-field-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "group-field-form",
+      "type": "registry:block",
+      "title": "Group Field Form",
+      "description": "Grouped address fields with collapsible billing section.",
+      "registryDependencies": [
+        "@buzzform/group",
+        "@buzzform/text",
+        "@buzzform/email",
+        "@buzzform/checkbox",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/group-field-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/group-field-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "collapsible-settings-form",
+      "type": "registry:block",
+      "title": "Collapsible Settings Form",
+      "description": "Settings organized in collapsible sections.",
+      "registryDependencies": [
+        "@buzzform/collapsible",
+        "@buzzform/text",
+        "@buzzform/select",
+        "@buzzform/switch",
+        "@buzzform/checkbox",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/collapsible-settings-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/collapsible-settings-form.tsx"
+        }
+      ]
     }
   ]
 }
