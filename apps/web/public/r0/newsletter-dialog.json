@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "newsletter-dialog",
+  "title": "Newsletter Subscription",
+  "description": "A newsletter subscription form in a dialog.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/checkbox",
+    "dialog",
+    "button",
+    "input",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/newsletter-dialog.tsx",
+      "content": "\"use client\";\r\n\r\nimport { useState } from \"react\";\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport { Button } from \"@/components/ui/button\";\r\nimport {\r\n  Dialog,\r\n  DialogContent,\r\n  DialogDescription,\r\n  DialogHeader,\r\n  DialogTitle,\r\n  DialogTrigger,\r\n} from \"@/components/ui/dialog\";\r\n\r\n// Newsletter subscription with checkbox consent\r\nconst newsletterSchema = createSchema([\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email Address\",\r\n    placeholder: \"you@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"consent\",\r\n    label: \"I agree to receive marketing emails and can unsubscribe anytime.\",\r\n    required: true,\r\n  },\r\n]);\r\n\r\ntype NewsletterSchema = InferType<typeof newsletterSchema>;\r\n\r\nexport default function NewsletterDialogExample() {\r\n  const [open, setOpen] = useState(false);\r\n\r\n  const handleSubmit = async (data: NewsletterSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 800));\r\n    toast(\"Subscribed!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n    setOpen(false);\r\n  };\r\n\r\n  return (\r\n    <Dialog open={open} onOpenChange={setOpen}>\r\n      <DialogTrigger render={<Button variant=\"outline\" />}>\r\n        Subscribe to Newsletter\r\n      </DialogTrigger>\r\n      <DialogContent className=\"sm:max-w-md\">\r\n        <DialogHeader>\r\n          <DialogTitle>Stay Updated</DialogTitle>\r\n          <DialogDescription>\r\n            Get the latest BuzzForm updates, tips, and new feature\r\n            announcements.\r\n          </DialogDescription>\r\n        </DialogHeader>\r\n        <Form schema={newsletterSchema} onSubmit={handleSubmit}>\r\n          <FormContent className=\"space-y-4\">\r\n            <FormFields />\r\n            <FormSubmit className=\"w-full\">Subscribe</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </DialogContent>\r\n    </Dialog>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/newsletter-dialog.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "account-settings-form",
+  "title": "Account Settings Form",
+  "description": "Tabbed account settings.",
+  "dependencies": [
+    "sonner",
+    "@hugeicons/react",
+    "@hugeicons/core-free-icons"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/tabs",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "@buzzform/switch",
+    "@buzzform/select",
+    "@buzzform/upload",
+    "card",
+    "tabs",
+    "input",
+    "textarea",
+    "switch",
+    "select"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/account-settings-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport { toast } from \"sonner\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport { IconPlaceholder } from \"@/components/icon-placeholder\";\r\n\r\nconst accountSettingsSchema = createSchema([\r\n  {\r\n    type: \"tabs\",\r\n    ui: {\r\n      variant: \"default\",\r\n      spacing: \"md\",\r\n    },\r\n    tabs: [\r\n      {\r\n        label: \"Profile\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            hugeicons=\"User03Icon\"\r\n            lucide=\"User\"\r\n            tabler=\"IconUser\"\r\n            phosphor=\"User\"\r\n            remixicon=\"RiUserLine\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        description: \"Manage your public profile information.\",\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"displayName\",\r\n            label: \"Display Name\",\r\n            placeholder: \"John Doe\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"text\",\r\n            name: \"username\",\r\n            label: \"Username\",\r\n            placeholder: \"johndoe\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"textarea\",\r\n            name: \"bio\",\r\n            label: \"Bio\",\r\n            placeholder: \"Tell us about yourself...\",\r\n            rows: 3,\r\n          },\r\n        ],\r\n      },\r\n      {\r\n        label: \"Account\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            hugeicons=\"Settings01Icon\"\r\n            lucide=\"Settings\"\r\n            tabler=\"IconSettings\"\r\n            phosphor=\"Gear\"\r\n            remixicon=\"RiSettings3Line\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        description: \"Update your account settings and preferences.\",\r\n        fields: [\r\n          {\r\n            type: \"email\",\r\n            name: \"email\",\r\n            label: \"Email Address\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"password\",\r\n            name: \"password\",\r\n            label: \"New Password\",\r\n            placeholder: \"Leave blank to keep current\",\r\n            ui: {\r\n              showRequirements: true,\r\n            },\r\n          },\r\n        ],\r\n      },\r\n      {\r\n        label: \"Notifications\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            hugeicons=\"Notification02Icon\"\r\n            lucide=\"Bell\"\r\n            tabler=\"IconBell\"\r\n            phosphor=\"Bell\"\r\n            remixicon=\"RiNotification3Line\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        description: \"Configure how you receive notifications.\",\r\n        fields: [\r\n          {\r\n            type: \"switch\",\r\n            name: \"emailNotifications\",\r\n            label: \"Email Notifications\",\r\n            description: \"Receive updates via email\",\r\n            defaultValue: true,\r\n          },\r\n          {\r\n            type: \"switch\",\r\n            name: \"pushNotifications\",\r\n            label: \"Push Notifications\",\r\n            description: \"Receive push notifications\",\r\n            defaultValue: false,\r\n          },\r\n          {\r\n            type: \"select\",\r\n            name: \"frequency\",\r\n            label: \"Digest Frequency\",\r\n            options: [\"Instant\", \"Daily\", \"Weekly\", \"Never\"],\r\n            defaultValue: \"Daily\",\r\n          },\r\n        ],\r\n      },\r\n      {\r\n        label: \"Billing\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            hugeicons=\"CreditCardIcon\"\r\n            lucide=\"CreditCard\"\r\n            tabler=\"IconCreditCard\"\r\n            phosphor=\"CreditCard\"\r\n            remixicon=\"RiBankCardLine\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        disabled: true,\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"placeholder\",\r\n            label: \"Coming Soon\",\r\n          },\r\n        ],\r\n      },\r\n    ],\r\n  },\r\n]);\r\n\r\ntype AccountSettingsSchema = InferType<typeof accountSettingsSchema>;\r\n\r\nexport default function AccountSettingsForm() {\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Account Settings</CardTitle>\r\n        <CardDescription>\r\n          Multi-step settings with tabbed navigation\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={accountSettingsSchema}\r\n          onSubmit={async (data: AccountSettingsSchema) => {\r\n            await new Promise((r) => setTimeout(r, 1000));\r\n            toast(\"Settings saved!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields className=\"space-y-4\" />\r\n            <FormSubmit className=\"mt-6 w-full\">Save Changes</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/account-settings-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

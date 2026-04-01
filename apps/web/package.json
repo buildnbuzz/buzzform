@@ -9,11 +9,14 @@
     "lint": "eslint",
     "icons:dev": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts --watch",
     "icons:build": "pnpm dlx tsx --tsconfig ./tsconfig.scripts.json ./scripts/build-icons.ts",
-    "registry:build": "npx shadcn build"
+    "registry:build": "npx shadcn build",
+    "registry:build:v0": "npx shadcn build ./registry-v0.json --output ./public/r0"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
     "@buildnbuzz/buzzform": "workspace:*",
+    "@buildnbuzz/form-core": "workspace:*",
+    "@buildnbuzz/form-react": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",

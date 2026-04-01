@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "quick-add",
+  "title": "Quick Add Popover",
+  "description": "A small form for quickly adding items.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/select",
+    "@buzzform/number",
+    "popover",
+    "button",
+    "input",
+    "select"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/quick-add.tsx",
+      "content": "\"use client\";\r\n\r\nimport { useState } from \"react\";\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Popover,\r\n  PopoverContent,\r\n  PopoverTrigger,\r\n} from \"@/components/ui/popover\";\r\nimport { Button } from \"@/components/ui/button\";\r\n\r\n// Quick add schema for popover - lightweight, single purpose\r\nconst quickAddSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"title\",\r\n    label: \"Title\",\r\n    placeholder: \"e.g., Buy groceries\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"select\",\r\n    name: \"priority\",\r\n    label: \"Priority\",\r\n    options: [\r\n      { value: \"low\", label: \"Low\" },\r\n      { value: \"medium\", label: \"Medium\" },\r\n      { value: \"high\", label: \"High\" },\r\n    ],\r\n    defaultValue: \"medium\",\r\n  },\r\n]);\r\n\r\ntype QuickAddSchema = InferType<typeof quickAddSchema>;\r\n\r\nexport default function QuickAddPopover() {\r\n  const [open, setOpen] = useState(false);\r\n\r\n  const handleSubmit = async (data: QuickAddSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n    toast(\"Task added!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n    setOpen(false);\r\n  };\r\n\r\n  return (\r\n    <Popover open={open} onOpenChange={setOpen}>\r\n      <PopoverTrigger render={<Button variant=\"outline\" size=\"sm\" />}>\r\n        + Quick Add\r\n      </PopoverTrigger>\r\n      <PopoverContent className=\"w-72\" align=\"start\">\r\n        <div className=\"space-y-3\">\r\n          <div>\r\n            <h4 className=\"font-medium text-sm\">Add Task</h4>\r\n            <p className=\"text-xs text-muted-foreground\">\r\n              Quickly add a new task to your list\r\n            </p>\r\n          </div>\r\n          <Form schema={quickAddSchema} onSubmit={handleSubmit}>\r\n            <FormContent className=\"space-y-3\">\r\n              <FormFields />\r\n              <FormSubmit size=\"sm\" className=\"w-full\">\r\n                Add Task\r\n              </FormSubmit>\r\n            </FormContent>\r\n          </Form>\r\n        </div>\r\n      </PopoverContent>\r\n    </Popover>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/quick-add.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

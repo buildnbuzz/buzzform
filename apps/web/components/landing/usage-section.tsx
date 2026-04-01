@@ -5,66 +5,62 @@ import { ArrowRight01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 
 export function UsageSection() {
-  const code = `import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
+  const code = `import { defineSchema } from "@buildnbuzz/form-core";
+import { Form } from "@/registry/shadcn/form";
 
-const schema = createSchema([
-  {
-    type: "text",
-    name: "name",
-    label: "Name",
-    placeholder: "John Doe",
-    required: true,
-  },
-  {
-    type: "email",
-    name: "email",
-    label: "Email",
-    placeholder: "john@example.com",
-    required: true,
-    autoComplete: "email",
-  },
-  {
-    type: "password",
-    name: "password",
-    label: "Password",
-    placeholder: "••••••••",
-    required: true,
-    minLength: 8,
-    ui: { allowGenerate: true },
-  },
-  {
-    type: "select",
-    name: "role",
-    label: "Role",
-    options: [
-      { label: "Developer", value: "dev" },
-      { label: "Designer", value: "design" },
-      { label: "Product Manager", value: "pm" },
-    ],
-    defaultValue: "dev",
-    required: true,
-  },
-  {
-    type: "checkbox",
-    name: "terms",
-    label: (
-      <span>
-        I agree to the
-        <Link href="/terms">terms</Link> and
-        <Link href="/privacy">privacy policy</Link>
-      </span>
-    ),
-    required: true,
-  },
-]);
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "name",
+      label: "Name",
+      placeholder: "John Doe",
+      required: true,
+    },
+    {
+      type: "email",
+      name: "email",
+      label: "Email",
+      placeholder: "john@example.com",
+      required: true,
+      autoComplete: "email",
+    },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      placeholder: "••••••••",
+      required: true,
+      minLength: 8,
+      ui: { allowGenerate: true },
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: [
+        { label: "Developer", value: "dev" },
+        { label: "Designer", value: "design" },
+        { label: "Product Manager", value: "pm" },
+      ],
+      defaultValue: "dev",
+      required: true,
+    },
+    {
+      type: "checkbox",
+      name: "terms",
+      label: "I agree to the terms and privacy policy",
+      required: true,
+    },
+  ],
+});
 
 export default function MyForm() {
   return (
     <Form
       schema={schema}
-      onSubmit={(data) => console.log(data)}
-      submitLabel="Create Account"
+      onSubmit={({ value }) => console.log(value)}
+      actions={{ submitLabel: "Create Account" }}
     />
   );
 }`;

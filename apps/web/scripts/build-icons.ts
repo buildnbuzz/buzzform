@@ -31,12 +31,18 @@ function scanIconUsage() {
         return acc
     }, {} as IconUsage)
 
-    const dirsToScan = [path.join(process.cwd(), "registry/base")]
+    const dirsToScan = [path.join(process.cwd(), "registry")]
 
     const files: string[] = []
     for (const dir of dirsToScan) {
         files.push(...findTsxFiles(dir))
     }
+    const filteredFiles = files.filter(
+        (file) =>
+            !file.includes(
+                `${path.sep}registry${path.sep}icons${path.sep}`
+            )
+    )
 
     const libraryNames = Object.values(iconLibraries)
         .map((lib) => lib.name)
@@ -46,7 +52,7 @@ function scanIconUsage() {
         "g"
     )
 
-    for (const file of files) {
+    for (const file of filteredFiles) {
         const content = fs.readFileSync(file, "utf-8")
 
         let match
@@ -107,7 +113,7 @@ function main() {
 const isWatchMode = process.argv.includes("--watch")
 
 if (isWatchMode) {
-    const DIRS_TO_WATCH = [path.join(process.cwd(), "registry/base")]
+    const DIRS_TO_WATCH = [path.join(process.cwd(), "registry")]
 
     async function startWatcher() {
         const { default: chokidar } = await import("chokidar")

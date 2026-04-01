@@ -2,25 +2,18 @@
   "$schema": "https://ui.shadcn.com/schema/registry-item.json",
   "name": "login-form",
   "title": "Login Form",
-  "description": "A standard login card with email and password.",
-  "dependencies": [
-    "sonner"
-  ],
+  "description": "A standard login card with email and password fields.",
   "registryDependencies": [
-    "@buzzform/init",
-    "@buzzform/rhf-provider",
-    "@buzzform/text",
+    "@buzzform/email",
     "@buzzform/password",
     "@buzzform/checkbox",
     "card",
-    "button",
-    "input",
-    "checkbox"
+    "sonner"
   ],
   "files": [
     {
-      "path": "registry/base/examples/login-form.tsx",
-      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport Link from \"next/link\";\r\n\r\n// Login form with password\r\nconst loginSchema = createSchema([\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email\",\r\n    placeholder: \"you@example.com\",\r\n    required: true,\r\n    autoComplete: \"email\",\r\n  },\r\n  {\r\n    type: \"password\",\r\n    name: \"password\",\r\n    label: \"Password\",\r\n    placeholder: \"Enter your password\",\r\n    required: true,\r\n    minLength: 8,\r\n    autoComplete: \"current-password\",\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"rememberMe\",\r\n    label: \"Remember me for 30 days\",\r\n  },\r\n]);\r\n\r\ntype LoginSchema = InferType<typeof loginSchema>;\r\n\r\nexport default function LoginFormCard() {\r\n  const handleSubmit = async (data: LoginSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 1000));\r\n    toast(\"Welcome back!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-sm\">\r\n      <CardHeader>\r\n        <CardTitle>Sign In</CardTitle>\r\n        <CardDescription>\r\n          Secure login with email and password authentication\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form schema={loginSchema} onSubmit={handleSubmit}>\r\n          <FormContent>\r\n            <FormFields />\r\n            <div className=\"flex items-center justify-between\">\r\n              <Link\r\n                href=\"#\"\r\n                className=\"text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline\"\r\n              >\r\n                Forgot password?\r\n              </Link>\r\n            </div>\r\n            <FormSubmit className=\"w-full\">Sign In</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "path": "registry/shadcn/examples/login-form.tsx",
+      "content": "\"use client\";\n\nimport { toast } from \"sonner\";\nimport { defineSchema, type InferType } from \"@buildnbuzz/form-core\";\nimport {\n  Form,\n  FormContent,\n  FormFields,\n  FormSubmit,\n} from \"@/registry/shadcn/form\";\nimport {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from \"@/components/ui/card\";\nimport Link from \"next/link\";\n\n// Login form with password\nconst loginSchema = defineSchema({\n  fields: [\n    {\n      type: \"email\",\n      name: \"email\",\n      label: \"Email\",\n      placeholder: \"you@example.com\",\n      required: true,\n      autoComplete: \"email\",\n    },\n    {\n      type: \"password\",\n      name: \"password\",\n      label: \"Password\",\n      placeholder: \"Enter your password\",\n      required: true,\n      minLength: 8,\n      autoComplete: \"current-password\",\n    },\n    {\n      type: \"checkbox\",\n      name: \"rememberMe\",\n      label: \"Remember me for 30 days\",\n    },\n  ],\n});\n\ntype LoginSchema = InferType<typeof loginSchema.fields>;\n\nexport default function LoginFormCard() {\n  const handleSubmit = async ({ value }: { value: unknown }) => {\n    const data = value as LoginSchema;\n    await new Promise((resolve) => setTimeout(resolve, 1000));\n    toast(\"Welcome back!\", {\n      description: (\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\n          <code>{JSON.stringify(data, null, 2)}</code>\n        </pre>\n      ),\n    });\n  };\n\n  return (\n    <Card className=\"w-full max-w-sm\">\n      <CardHeader>\n        <CardTitle>Sign In</CardTitle>\n        <CardDescription>\n          Secure login with email and password authentication\n        </CardDescription>\n      </CardHeader>\n      <CardContent>\n        <Form schema={loginSchema} onSubmit={handleSubmit}>\n          <FormContent>\n            <FormFields />\n            <div className=\"flex items-center justify-between\">\n              <Link\n                href=\"#\"\n                className=\"text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline\"\n              >\n                Forgot password?\n              </Link>\n            </div>\n            <FormSubmit className=\"w-full\">Sign In</FormSubmit>\n          </FormContent>\n        </Form>\n      </CardContent>\n    </Card>\n  );\n}\n",
       "type": "registry:component",
       "target": "components/buzzform/examples/login-form.tsx"
     }

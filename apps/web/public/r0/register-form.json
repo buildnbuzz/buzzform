@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "register-form",
+  "title": "Register Form",
+  "description": "Registration form inside a modal dialog.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/password",
+    "@buzzform/checkbox",
+    "dialog",
+    "button",
+    "input",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/register-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { useState } from \"react\";\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n  FormActions,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Dialog,\r\n  DialogContent,\r\n  DialogDescription,\r\n  DialogHeader,\r\n  DialogTitle,\r\n  DialogTrigger,\r\n} from \"@/components/ui/dialog\";\r\nimport { Button } from \"@/components/ui/button\";\r\nimport Link from \"next/link\";\r\n\r\n// Registration form with password strength\r\nconst registerSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"name\",\r\n    label: \"Full Name\",\r\n    placeholder: \"John Doe\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email\",\r\n    placeholder: \"you@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"password\",\r\n    name: \"password\",\r\n    label: \"Password\",\r\n    placeholder: \"Create a strong password\",\r\n    required: true,\r\n    minLength: 8,\r\n    criteria: {\r\n      requireUppercase: true,\r\n      requireLowercase: true,\r\n      requireNumber: true,\r\n      requireSpecial: true,\r\n    },\r\n    ui: {\r\n      strengthIndicator: true,\r\n      showRequirements: true,\r\n      allowGenerate: true,\r\n      copyable: true,\r\n    },\r\n    autoComplete: \"new-password\",\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"terms\",\r\n    label: (\r\n      <span className=\"text-xs\">\r\n        I agree to the <Link href=\"/terms\">Terms of Service</Link> and{\" \"}\r\n        <Link href=\"/privacy\">Privacy Policy</Link>\r\n      </span>\r\n    ),\r\n    required: true,\r\n  },\r\n]);\r\n\r\ntype RegisterSchema = InferType<typeof registerSchema>;\r\n\r\nexport default function RegisterFormDialog() {\r\n  const [open, setOpen] = useState(false);\r\n\r\n  const handleSubmit = async (data: RegisterSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 1500));\r\n    toast(\"Account created!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n    setOpen(false);\r\n  };\r\n\r\n  return (\r\n    <Dialog open={open} onOpenChange={setOpen}>\r\n      <DialogTrigger render={<Button />}>Create Account</DialogTrigger>\r\n      <DialogContent className=\"sm:max-w-md\">\r\n        <DialogHeader>\r\n          <DialogTitle>Create Account</DialogTitle>\r\n          <DialogDescription>\r\n            Password strength indicator with real-time requirements\r\n          </DialogDescription>\r\n        </DialogHeader>\r\n        <Form schema={registerSchema} onSubmit={handleSubmit}>\r\n          <FormContent>\r\n            <FormFields />\r\n            <FormActions>\r\n              <FormSubmit className=\"w-full\">Create Account</FormSubmit>\r\n            </FormActions>\r\n          </FormContent>\r\n        </Form>\r\n      </DialogContent>\r\n    </Dialog>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/register-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

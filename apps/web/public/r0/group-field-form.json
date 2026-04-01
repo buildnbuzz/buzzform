@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "group-field-form",
+  "title": "Group Field Form",
+  "description": "Demonstrates nested fields using GroupField.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/group",
+    "@buzzform/text",
+    "@buzzform/checkbox",
+    "@buzzform/select",
+    "card",
+    "input",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/group-field-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n  FormReset,\r\n  FormActions,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\n// Schema with group field containing address information\r\nconst registrationSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"fullName\",\r\n    label: \"Full Name\",\r\n    placeholder: \"John Doe\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email Address\",\r\n    placeholder: \"john@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"group\",\r\n    name: \"address\",\r\n    label: \"Shipping Address\",\r\n    description: \"Enter your complete shipping address\",\r\n    ui: {\r\n      variant: \"card\",\r\n      spacing: \"md\",\r\n      showErrorBadge: true,\r\n    },\r\n    fields: [\r\n      {\r\n        type: \"text\",\r\n        name: \"street\",\r\n        label: \"Street Address\",\r\n        placeholder: \"123 Main Street\",\r\n        required: true,\r\n      },\r\n      {\r\n        type: \"row\",\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"city\",\r\n            label: \"City\",\r\n            placeholder: \"New York\",\r\n            required: true,\r\n            style: { width: \"50%\" },\r\n          },\r\n          {\r\n            type: \"text\",\r\n            name: \"state\",\r\n            label: \"State/Province\",\r\n            placeholder: \"NY\",\r\n            required: true,\r\n            style: { width: \"50%\" },\r\n          },\r\n        ],\r\n      },\r\n      {\r\n        type: \"row\",\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"zipCode\",\r\n            label: \"ZIP/Postal Code\",\r\n            placeholder: \"10001\",\r\n            required: true,\r\n            style: { width: \"50%\" },\r\n          },\r\n          {\r\n            type: \"text\",\r\n            name: \"country\",\r\n            label: \"Country\",\r\n            placeholder: \"United States\",\r\n            required: true,\r\n            style: { width: \"50%\" },\r\n          },\r\n        ],\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"group\",\r\n    name: \"billingAddress\",\r\n    label: \"Billing Address\",\r\n    description: \"Leave blank to use shipping address\",\r\n    ui: {\r\n      variant: \"bordered\",\r\n      spacing: \"md\",\r\n      collapsed: true,\r\n      showErrorBadge: true,\r\n    },\r\n    fields: [\r\n      {\r\n        type: \"checkbox\",\r\n        name: \"sameAsShipping\",\r\n        label: \"Same as shipping address\",\r\n      },\r\n      {\r\n        type: \"text\",\r\n        name: \"street\",\r\n        label: \"Street Address\",\r\n        placeholder: \"123 Main Street\",\r\n      },\r\n      {\r\n        type: \"row\",\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"city\",\r\n            label: \"City\",\r\n            placeholder: \"New York\",\r\n            style: { width: \"50%\" },\r\n          },\r\n          {\r\n            type: \"text\",\r\n            name: \"state\",\r\n            label: \"State/Province\",\r\n            placeholder: \"NY\",\r\n            style: { width: \"50%\" },\r\n          },\r\n        ],\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"agreeToTerms\",\r\n    label: \"I agree to the terms and conditions\",\r\n    required: true,\r\n  },\r\n]);\r\n\r\ntype RegistrationSchema = InferType<typeof registrationSchema>;\r\n\r\nexport default function GroupFieldExample() {\r\n  const handleSubmit = async (data: RegistrationSchema) => {\r\n    await new Promise((r) => setTimeout(r, 1000));\r\n    toast(\"Registration complete!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Shipping & Billing</CardTitle>\r\n        <CardDescription>\r\n          Grouped address fields with collapsible sections\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form schema={registrationSchema} onSubmit={handleSubmit}>\r\n          <FormContent>\r\n            <FormFields />\r\n            <FormActions>\r\n              <FormReset>Reset</FormReset>\r\n              <FormSubmit>Submit</FormSubmit>\r\n            </FormActions>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/group-field-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

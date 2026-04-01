@@ -1,0 +1,32 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "collapsible-settings-form",
+  "title": "Collapsible Settings Form",
+  "description": "Settings organized in collapsible sections.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/collapsible",
+    "@buzzform/switch",
+    "@buzzform/text",
+    "@buzzform/select",
+    "@buzzform/checkbox",
+    "card",
+    "input",
+    "switch",
+    "select",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/collapsible-settings-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport { toast } from \"sonner\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\n\r\nconst settingsSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"username\",\r\n    label: \"Username\",\r\n    placeholder: \"johndoe\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"collapsible\",\r\n    label: \"Advanced Settings\",\r\n    collapsed: true,\r\n    ui: {\r\n      variant: \"bordered\",\r\n      description: \"Additional options that are hidden by default.\",\r\n    },\r\n    fields: [\r\n      {\r\n        type: \"switch\",\r\n        name: \"publicProfile\",\r\n        label: \"Public Profile\",\r\n        defaultValue: true,\r\n      },\r\n      {\r\n        type: \"switch\",\r\n        name: \"showEmail\",\r\n        label: \"Show Email Address\",\r\n        defaultValue: false,\r\n      },\r\n      {\r\n        type: \"select\",\r\n        name: \"timezone\",\r\n        label: \"Timezone\",\r\n        options: [\"UTC\", \"EST\", \"PST\", \"GMT\"],\r\n        defaultValue: \"UTC\",\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"collapsible\",\r\n    label: \"Danger Zone\",\r\n    collapsed: true,\r\n    ui: {\r\n      variant: \"card\",\r\n      description: \"Irreversible actions for your account.\",\r\n    },\r\n    fields: [\r\n      {\r\n        type: \"checkbox\",\r\n        name: \"confirmDelete\",\r\n        label: \"I understand that deleting my account is permanent\",\r\n      },\r\n    ],\r\n  },\r\n]);\r\n\r\ntype SettingsSchema = InferType<typeof settingsSchema>;\r\n\r\nexport default function CollapsibleSettingsForm() {\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Profile Settings</CardTitle>\r\n        <CardDescription>\r\n          Expandable sections for organizing advanced options\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={settingsSchema}\r\n          onSubmit={async (data: SettingsSchema) => {\r\n            await new Promise((r) => setTimeout(r, 1000));\r\n            toast(\"Settings saved!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields className=\"space-y-4\" />\r\n            <FormSubmit className=\"mt-6 w-full\">Save Changes</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/collapsible-settings-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

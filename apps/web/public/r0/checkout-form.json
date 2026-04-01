@@ -1,0 +1,32 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "checkout-form",
+  "title": "Checkout Form",
+  "description": "A multi-step checkout process.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/tabs",
+    "@buzzform/text",
+    "@buzzform/select",
+    "@buzzform/radio",
+    "@buzzform/checkbox",
+    "@buzzform/date",
+    "card",
+    "tabs",
+    "input",
+    "select"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/checkout-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport { toast } from \"sonner\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport { IconPlaceholder } from \"@/components/icon-placeholder\";\r\n\r\nconst lineVariantSchema = createSchema([\r\n  {\r\n    type: \"tabs\",\r\n    ui: {\r\n      variant: \"line\",\r\n      defaultTab: \"shipping\",\r\n      spacing: \"lg\",\r\n    },\r\n    tabs: [\r\n      {\r\n        name: \"billing\",\r\n        label: \"Billing\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            lucide=\"CreditCard\"\r\n            hugeicons=\"CreditCardIcon\"\r\n            tabler=\"IconCreditCard\"\r\n            phosphor=\"CreditCard\"\r\n            remixicon=\"RiBankCardLine\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"cardName\",\r\n            label: \"Name on Card\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"text\",\r\n            name: \"cardNumber\",\r\n            label: \"Card Number\",\r\n            placeholder: \"1234 5678 9012 3456\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"row\",\r\n            fields: [\r\n              {\r\n                type: \"text\",\r\n                name: \"expiry\",\r\n                label: \"Expiry Date\",\r\n                placeholder: \"MM/YY\",\r\n                required: true,\r\n                style: { width: \"50%\" },\r\n              },\r\n              {\r\n                type: \"text\",\r\n                name: \"cvv\",\r\n                label: \"CVV\",\r\n                placeholder: \"123\",\r\n                required: true,\r\n                style: { width: \"50%\" },\r\n              },\r\n            ],\r\n          },\r\n        ],\r\n      },\r\n      {\r\n        name: \"shipping\",\r\n        label: \"Shipping\",\r\n        icon: (\r\n          <IconPlaceholder\r\n            lucide=\"Truck\"\r\n            hugeicons=\"TruckIcon\"\r\n            tabler=\"IconTruck\"\r\n            phosphor=\"Truck\"\r\n            remixicon=\"RiTruckLine\"\r\n            className=\"size-4\"\r\n          />\r\n        ),\r\n        fields: [\r\n          {\r\n            type: \"text\",\r\n            name: \"address\",\r\n            label: \"Street Address\",\r\n            required: true,\r\n          },\r\n          {\r\n            type: \"row\",\r\n            fields: [\r\n              {\r\n                type: \"text\",\r\n                name: \"city\",\r\n                label: \"City\",\r\n                required: true,\r\n                style: { width: \"50%\" },\r\n              },\r\n              {\r\n                type: \"text\",\r\n                name: \"zip\",\r\n                label: \"ZIP Code\",\r\n                required: true,\r\n                style: { width: \"50%\" },\r\n              },\r\n            ],\r\n          },\r\n          {\r\n            type: \"select\",\r\n            name: \"country\",\r\n            label: \"Country\",\r\n            options: [\"United States\", \"Canada\", \"United Kingdom\", \"Australia\"],\r\n            required: true,\r\n          },\r\n        ],\r\n      },\r\n    ],\r\n  },\r\n]);\r\n\r\ntype LineVariantSchema = InferType<typeof lineVariantSchema>;\r\n\r\nexport default function CheckoutForm() {\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Checkout</CardTitle>\r\n        <CardDescription>\r\n          Billing and shipping in a streamlined checkout flow\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={lineVariantSchema}\r\n          onSubmit={async (data: LineVariantSchema) => {\r\n            await new Promise((r) => setTimeout(r, 1000));\r\n            toast(\"Order placed!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields className=\"space-y-4\" />\r\n            <FormSubmit className=\"mt-6 w-full\">Complete Order</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/checkout-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

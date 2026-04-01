@@ -1,0 +1,29 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "product-form",
+  "title": "Product Form",
+  "description": "A form for creating or editing a product.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/number",
+    "@buzzform/select",
+    "@buzzform/textarea",
+    "@buzzform/switch",
+    "card",
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/product-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\n// Product quantity and pricing form\r\nconst productSchema = createSchema([\r\n  {\r\n    type: \"number\",\r\n    name: \"quantity\",\r\n    label: \"Quantity\",\r\n    required: true,\r\n    min: 1,\r\n    max: 100,\r\n    defaultValue: 1,\r\n  },\r\n  {\r\n    type: \"number\",\r\n    name: \"price\",\r\n    label: \"Price\",\r\n    required: true,\r\n    min: 0,\r\n    precision: 2,\r\n    ui: {\r\n      prefix: \"$\",\r\n      variant: \"plain\",\r\n      thousandSeparator: \",\",\r\n      hideSteppers: true,\r\n    },\r\n  },\r\n  {\r\n    type: \"number\",\r\n    name: \"discount\",\r\n    label: \"Discount\",\r\n    min: 0,\r\n    max: 100,\r\n    defaultValue: 0,\r\n    ui: {\r\n      suffix: \"%\",\r\n      variant: \"stacked\",\r\n      step: 5,\r\n    },\r\n  },\r\n]);\r\n\r\ntype ProductSchema = InferType<typeof productSchema>;\r\n\r\nexport default function ProductFormCard() {\r\n  const handleSubmit = async (data: ProductSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n    toast(\"Order calculated!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-md\">\r\n      <CardHeader>\r\n        <CardTitle>Product Order</CardTitle>\r\n        <CardDescription>\r\n          Configure quantity, price, and discount.\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={productSchema}\r\n          onSubmit={handleSubmit}\r\n          settings={{ autoFocus: false }}\r\n        >\r\n          <FormContent className=\"space-y-4\">\r\n            <FormFields />\r\n            <FormSubmit className=\"w-full\">Calculate Total</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/product-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

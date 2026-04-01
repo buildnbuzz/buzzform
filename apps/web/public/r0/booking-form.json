@@ -1,0 +1,32 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "booking-form",
+  "title": "Booking Form",
+  "description": "A multi-step booking wizard.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/date",
+    "@buzzform/select",
+    "@buzzform/textarea",
+    "@buzzform/text",
+    "@buzzform/number",
+    "card",
+    "calendar",
+    "popover",
+    "select",
+    "textarea"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/booking-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\n\r\n// Hotel booking form with date pickers and time selection\r\nconst bookingSchema = createSchema([\r\n  {\r\n    type: \"row\",\r\n    ui: { gap: 16, responsive: true },\r\n    fields: [\r\n      {\r\n        type: \"date\",\r\n        name: \"checkIn\",\r\n        label: \"Check In\",\r\n        required: true,\r\n        ui: {\r\n          presets: true,\r\n        },\r\n        style: { width: \"50%\" },\r\n      },\r\n      {\r\n        type: \"date\",\r\n        name: \"checkOut\",\r\n        label: \"Check Out\",\r\n        required: true,\r\n        style: { width: \"50%\" },\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"datetime\",\r\n    name: \"arrivalTime\",\r\n    label: \"Expected Arrival Time\",\r\n    description: \"Let us know when to expect you\",\r\n    required: true,\r\n    ui: {\r\n      timePicker: {\r\n        interval: 30,\r\n        use24hr: false,\r\n      },\r\n    },\r\n  },\r\n  {\r\n    type: \"row\",\r\n    ui: { gap: 16, responsive: true },\r\n    fields: [\r\n      {\r\n        type: \"number\",\r\n        name: \"adults\",\r\n        label: \"Adults\",\r\n        required: true,\r\n        min: 1,\r\n        max: 6,\r\n        defaultValue: 2,\r\n        style: { width: \"50%\" },\r\n      },\r\n      {\r\n        type: \"number\",\r\n        name: \"children\",\r\n        label: \"Children\",\r\n        min: 0,\r\n        max: 4,\r\n        defaultValue: 0,\r\n        style: { width: \"50%\" },\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"select\",\r\n    name: \"roomType\",\r\n    label: \"Room Type\",\r\n    required: true,\r\n    options: [\r\n      { value: \"standard\", label: \"Standard Room\" },\r\n      { value: \"deluxe\", label: \"Deluxe Room\" },\r\n      { value: \"suite\", label: \"Executive Suite\" },\r\n      { value: \"penthouse\", label: \"Penthouse\" },\r\n    ],\r\n    defaultValue: \"standard\",\r\n  },\r\n  {\r\n    type: \"textarea\",\r\n    name: \"specialRequests\",\r\n    label: \"Special Requests\",\r\n    placeholder: \"Any special requests or preferences...\",\r\n    rows: 2,\r\n  },\r\n]);\r\n\r\ntype BookingSchema = InferType<typeof bookingSchema>;\r\n\r\nexport default function BookingForm() {\r\n  return (\r\n    <Card className=\"w-full max-w-md mx-auto\">\r\n      <CardHeader>\r\n        <CardTitle>Book Your Stay</CardTitle>\r\n        <CardDescription>\r\n          Date pickers with presets and time selection\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={bookingSchema}\r\n          defaultValues={{\r\n            checkIn: new Date(),\r\n            checkOut: new Date(new Date().setDate(new Date().getDate() + 2)),\r\n            arrivalTime: new Date(),\r\n            adults: 2,\r\n            roomType: \"standard\",\r\n          }}\r\n          onSubmit={async (data: BookingSchema) => {\r\n            await new Promise((resolve) => setTimeout(resolve, 1000));\r\n            toast(\"Booking Request Sent!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields />\r\n            <div className=\"flex justify-end pt-4\">\r\n              <FormSubmit>Request Booking</FormSubmit>\r\n            </div>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/booking-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

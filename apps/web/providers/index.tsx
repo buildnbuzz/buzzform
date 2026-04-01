@@ -4,6 +4,8 @@ import * as React from "react";
 import { ThemeProvider } from "./theme";
 import { RootProvider } from "fumadocs-ui/provider/next";
 import { BuzzFormProvider } from "./buzz-form";
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/registry/shadcn/registry";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +20,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
           enabled: false,
         }}
       >
-        <BuzzFormProvider>{children}</BuzzFormProvider>
+        <BuzzFormProvider>
+          <FormProvider registry={registry}>{children}</FormProvider>
+        </BuzzFormProvider>
       </RootProvider>
     </ThemeProvider>
   );

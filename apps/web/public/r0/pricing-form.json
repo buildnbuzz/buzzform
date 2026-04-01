@@ -1,0 +1,26 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "pricing-form",
+  "title": "Pricing Form",
+  "description": "A form for selecting pricing plans.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/radio",
+    "@buzzform/switch",
+    "card",
+    "radio-group"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/pricing-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\n// Pricing plan selection with card variant\r\nconst pricingSchema = createSchema([\r\n  {\r\n    type: \"radio\",\r\n    name: \"plan\",\r\n    label: \"Select your plan\",\r\n    required: true,\r\n    options: [\r\n      {\r\n        value: \"free\",\r\n        label: \"Free\",\r\n        description: \"For personal projects and experiments\",\r\n      },\r\n      {\r\n        value: \"pro\",\r\n        label: \"Pro\",\r\n        description: \"For professional developers and small teams\",\r\n      },\r\n      {\r\n        value: \"enterprise\",\r\n        label: \"Enterprise\",\r\n        description: \"For large organizations with custom needs\",\r\n      },\r\n    ],\r\n    ui: {\r\n      variant: \"card\",\r\n      card: { size: \"md\", bordered: true },\r\n    },\r\n  },\r\n  {\r\n    type: \"radio\",\r\n    name: \"billing\",\r\n    label: \"Billing cycle\",\r\n    required: true,\r\n    options: [\"Monthly\", \"Yearly\"],\r\n    defaultValue: \"Monthly\",\r\n    ui: { direction: \"horizontal\" },\r\n  },\r\n]);\r\n\r\ntype PricingSchema = InferType<typeof pricingSchema>;\r\n\r\nexport default function PricingFormCard() {\r\n  const handleSubmit = async (data: PricingSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n    toast(\"Plan selected!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-md\">\r\n      <CardHeader>\r\n        <CardTitle>Choose a Plan</CardTitle>\r\n        <CardDescription>\r\n          Select the plan that best fits your needs.\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={pricingSchema}\r\n          onSubmit={handleSubmit}\r\n          settings={{ autoFocus: false }}\r\n        >\r\n          <FormContent className=\"space-y-6\">\r\n            <FormFields />\r\n            <FormSubmit className=\"w-full\">Continue</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/pricing-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

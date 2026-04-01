@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "blog-post-form",
+  "title": "Blog Post Form",
+  "description": "A comprehensive form for writing blog posts.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "@buzzform/upload",
+    "@buzzform/select",
+    "@buzzform/tags",
+    "@buzzform/checkbox",
+    "card",
+    "input",
+    "textarea"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/blog-post-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n  FormReset,\r\n  FormActions,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\n// Blog post form with tags for categories\r\nconst blogPostSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"title\",\r\n    label: \"Post Title\",\r\n    placeholder: \"Enter your post title...\",\r\n    required: true,\r\n    minLength: 5,\r\n    maxLength: 100,\r\n  },\r\n  {\r\n    type: \"tags\",\r\n    name: \"tags\",\r\n    label: \"Tags\",\r\n    placeholder: \"Add tags and press enter...\",\r\n    description: \"Add up to 5 tags to categorize your post.\",\r\n    required: true,\r\n    minTags: 1,\r\n    maxTags: 5,\r\n    maxTagLength: 20,\r\n    ui: {\r\n      delimiters: [\"enter\", \"comma\"],\r\n      variant: \"chips\",\r\n    },\r\n  },\r\n  {\r\n    type: \"tags\",\r\n    name: \"keywords\",\r\n    label: \"SEO Keywords\",\r\n    placeholder: \"Add keywords separated by comma or space...\",\r\n    description: \"Keywords help with search engine optimization.\",\r\n    maxTags: 10,\r\n    ui: {\r\n      delimiters: [\"enter\", \"comma\", \"space\"],\r\n      variant: \"pills\",\r\n      copyable: true,\r\n    },\r\n  },\r\n  {\r\n    type: \"textarea\",\r\n    name: \"excerpt\",\r\n    label: \"Excerpt\",\r\n    placeholder: \"Write a brief summary of your post...\",\r\n    rows: 3,\r\n    maxLength: 200,\r\n  },\r\n]);\r\n\r\ntype BlogPostSchema = InferType<typeof blogPostSchema>;\r\n\r\nexport default function BlogPostFormCard() {\r\n  const handleSubmit = async (data: BlogPostSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n    toast(\"Post draft saved!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-md\">\r\n      <CardHeader>\r\n        <CardTitle>New Blog Post</CardTitle>\r\n        <CardDescription>\r\n          Create a new post with tags and keywords.\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={blogPostSchema}\r\n          onSubmit={handleSubmit}\r\n          settings={{ autoFocus: true }}\r\n        >\r\n          <FormContent className=\"space-y-4\">\r\n            <FormFields />\r\n            <FormActions>\r\n              <FormReset>Clear</FormReset>\r\n              <FormSubmit>Save Draft</FormSubmit>\r\n            </FormActions>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/blog-post-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

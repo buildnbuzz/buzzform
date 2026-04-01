@@ -1,0 +1,28 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "contact-form",
+  "title": "Contact Form",
+  "description": "A simple contact form with validation.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "card",
+    "button",
+    "input",
+    "textarea"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/contact-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n  FormReset,\r\n  FormActions,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\n// Schema with text, email, textarea fields\r\nconst contactSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"name\",\r\n    label: \"Full Name\",\r\n    placeholder: \"John Doe\",\r\n    required: true,\r\n    minLength: 2,\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email Address\",\r\n    placeholder: \"john@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"text\",\r\n    name: \"subject\",\r\n    label: \"Subject\",\r\n    placeholder: \"How can we help?\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"textarea\",\r\n    name: \"message\",\r\n    label: \"Message\",\r\n    placeholder: \"Tell us more about your inquiry...\",\r\n    description: \"Be as detailed as possible so we can help you better.\",\r\n    required: true,\r\n    minLength: 10,\r\n    maxLength: 500,\r\n    rows: 4,\r\n    autoResize: true,\r\n  },\r\n]);\r\n\r\ntype ContactSchema = InferType<typeof contactSchema>;\r\n\r\nexport default function ContactFormExample() {\r\n  const handleSubmit = async (data: ContactSchema) => {\r\n    // Simulate API call\r\n    await new Promise((resolve) => setTimeout(resolve, 1000));\r\n    toast(\"Message sent!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-md\">\r\n      <CardHeader>\r\n        <CardTitle>Contact Us</CardTitle>\r\n        <CardDescription>\r\n          Have a question? Send us a message and we&apos;ll respond within 24\r\n          hours.\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form schema={contactSchema} onSubmit={handleSubmit}>\r\n          <FormContent>\r\n            <FormFields />\r\n            <FormActions>\r\n              <FormReset>Clear</FormReset>\r\n              <FormSubmit>Send Message</FormSubmit>\r\n            </FormActions>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/contact-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

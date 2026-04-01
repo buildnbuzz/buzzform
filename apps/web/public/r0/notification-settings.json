@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "notification-settings",
+  "title": "Notification Settings",
+  "description": "Preferences for email and push notifications.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/switch",
+    "@buzzform/checkbox",
+    "@buzzform/radio",
+    "card",
+    "switch"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/notification-settings.tsx",
+      "content": "\"use client\";\r\n\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\n\r\nconst notificationSettingsSchema = createSchema([\r\n  {\r\n    type: \"switch\",\r\n    name: \"emailNotifications\",\r\n    label: \"Email notifications\",\r\n    description: \"Receive updates and alerts via email\",\r\n    defaultValue: true,\r\n  },\r\n  {\r\n    type: \"switch\",\r\n    name: \"pushNotifications\",\r\n    label: \"Push notifications\",\r\n    description: \"Get notified on your device\",\r\n    defaultValue: false,\r\n  },\r\n  {\r\n    type: \"switch\",\r\n    name: \"marketingEmails\",\r\n    label: \"Marketing emails\",\r\n    description: \"Receive tips, product updates, and promotions\",\r\n    defaultValue: false,\r\n  },\r\n  {\r\n    type: \"switch\",\r\n    name: \"weeklyDigest\",\r\n    label: \"Weekly digest\",\r\n    description: \"A summary of your activity sent every Monday\",\r\n    defaultValue: true,\r\n    disabled: (data: { emailNotifications?: boolean }) =>\r\n      !data.emailNotifications,\r\n  },\r\n]);\r\n\r\ntype NotificationSettingsSchema = InferType<typeof notificationSettingsSchema>;\r\n\r\nexport default function NotificationSettingsCard() {\r\n  const handleSubmit = async (data: NotificationSettingsSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 500));\r\n    toast(\"Settings saved!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n  };\r\n\r\n  return (\r\n    <Card className=\"w-full max-w-md\">\r\n      <CardHeader>\r\n        <CardTitle>Notifications</CardTitle>\r\n        <CardDescription>\r\n          Choose how you want to be notified about updates.\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={notificationSettingsSchema}\r\n          onSubmit={handleSubmit}\r\n          settings={{ autoFocus: false }}\r\n        >\r\n          <FormContent className=\"space-y-4\">\r\n            <FormFields />\r\n            <FormSubmit className=\"w-full\">Save Preferences</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/notification-settings.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

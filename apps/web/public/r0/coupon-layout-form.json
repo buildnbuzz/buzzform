@@ -1,0 +1,30 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "coupon-layout-form",
+  "title": "Coupon Layout Form",
+  "description": "Coupon creation form with a sidebar layout.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/number",
+    "@buzzform/date",
+    "@buzzform/checkbox",
+    "@buzzform/select",
+    "card",
+    "input",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/coupon-layout-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport { toast } from \"sonner\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\n\r\nconst dualActionSchema = createSchema([\r\n  {\r\n    type: \"row\",\r\n    ui: { align: \"center\", gap: 4 },\r\n    fields: [\r\n      {\r\n        type: \"text\",\r\n        name: \"coupon\",\r\n        label: \"Coupon Code\",\r\n        placeholder: \"SUMMER20\",\r\n      },\r\n      {\r\n        type: \"checkbox\",\r\n        name: \"applyAutomatically\",\r\n        label: \"Apply automatically\",\r\n      },\r\n    ],\r\n  },\r\n]);\r\n\r\ntype DualActionSchema = InferType<typeof dualActionSchema>;\r\n\r\nexport default function CouponLayoutForm() {\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Apply Discount</CardTitle>\r\n        <CardDescription>\r\n          Mixed field types aligned in a single row\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={dualActionSchema}\r\n          onSubmit={async (data: DualActionSchema) => {\r\n            await new Promise((r) => setTimeout(r, 1000));\r\n            toast(\"Coupon applied!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields className=\"space-y-4\" />\r\n            <FormSubmit className=\"mt-6 w-full\">Apply</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/coupon-layout-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

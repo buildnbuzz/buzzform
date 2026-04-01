@@ -1,0 +1,31 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "feedback-sheet",
+  "title": "Feedback Sheet",
+  "description": "A slide-out sheet for gathering user feedback.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "@buzzform/checkbox",
+    "@buzzform/radio",
+    "sheet",
+    "button",
+    "input",
+    "textarea",
+    "checkbox"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/feedback-sheet.tsx",
+      "content": "\"use client\";\r\n\r\nimport { useState } from \"react\";\r\nimport { toast } from \"sonner\";\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n  FormReset,\r\n  FormActions,\r\n} from \"@/registry/base/form\";\r\nimport { Button } from \"@/components/ui/button\";\r\nimport {\r\n  Sheet,\r\n  SheetContent,\r\n  SheetDescription,\r\n  SheetHeader,\r\n  SheetTitle,\r\n  SheetTrigger,\r\n} from \"@/components/ui/sheet\";\r\n\r\n// Feedback form with conditional textarea\r\nconst feedbackSchema = createSchema([\r\n  {\r\n    type: \"text\",\r\n    name: \"feature\",\r\n    label: \"Feature Name\",\r\n    placeholder: \"e.g., TextField component\",\r\n    required: true,\r\n    ui: {\r\n      copyable: true,\r\n    },\r\n  },\r\n  {\r\n    type: \"textarea\",\r\n    name: \"feedback\",\r\n    label: \"Your Feedback\",\r\n    placeholder: \"What did you like? What could be improved?\",\r\n    required: true,\r\n    minLength: 20,\r\n    maxLength: 1000,\r\n    rows: 5,\r\n    autoResize: true,\r\n    ui: {\r\n      copyable: true,\r\n    },\r\n  },\r\n  {\r\n    type: \"checkbox\",\r\n    name: \"canContact\",\r\n    label: \"You can contact me for follow-up questions\",\r\n    description: \"We may reach out to understand your feedback better.\",\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email (optional)\",\r\n    placeholder: \"your@email.com\",\r\n    condition: (data: { canContact?: boolean }) => data.canContact === true,\r\n  },\r\n]);\r\n\r\ntype FeedbackSchema = InferType<typeof feedbackSchema>;\r\n\r\nexport default function FeedbackSheetExample() {\r\n  const [open, setOpen] = useState(false);\r\n\r\n  const handleSubmit = async (data: FeedbackSchema) => {\r\n    await new Promise((resolve) => setTimeout(resolve, 1000));\r\n    toast(\"Thank you!\", {\r\n      description: (\r\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n          <code>{JSON.stringify(data, null, 2)}</code>\r\n        </pre>\r\n      ),\r\n    });\r\n    setOpen(false);\r\n  };\r\n\r\n  return (\r\n    <Sheet open={open} onOpenChange={setOpen}>\r\n      <SheetTrigger render={<Button />}>Give Feedback</SheetTrigger>\r\n      <SheetContent side=\"right\" className=\"w-full sm:max-w-md\">\r\n        <SheetHeader>\r\n          <SheetTitle>Share Your Feedback</SheetTitle>\r\n          <SheetDescription>\r\n            Help us make BuzzForm better. Your feedback is invaluable.\r\n          </SheetDescription>\r\n        </SheetHeader>\r\n        <div className=\"flex-1 overflow-y-auto px-4 py-2\">\r\n          <Form schema={feedbackSchema} onSubmit={handleSubmit}>\r\n            <FormContent>\r\n              <FormFields />\r\n              <FormActions>\r\n                <FormReset variant=\"ghost\">Clear</FormReset>\r\n                <FormSubmit>Submit Feedback</FormSubmit>\r\n              </FormActions>\r\n            </FormContent>\r\n          </Form>\r\n        </div>\r\n      </SheetContent>\r\n    </Sheet>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/feedback-sheet.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

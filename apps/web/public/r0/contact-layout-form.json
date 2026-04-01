@@ -1,0 +1,27 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "contact-layout-form",
+  "title": "Contact Layout Form",
+  "description": "Contact form with a sidebar layout.",
+  "dependencies": [
+    "sonner"
+  ],
+  "registryDependencies": [
+    "@buzzform/init",
+    "@buzzform/rhf-provider",
+    "@buzzform/text",
+    "@buzzform/textarea",
+    "@buzzform/select",
+    "card",
+    "input"
+  ],
+  "files": [
+    {
+      "path": "registry/base/examples/contact-layout-form.tsx",
+      "content": "\"use client\";\r\n\r\nimport { createSchema, InferType } from \"@buildnbuzz/buzzform\";\r\nimport { toast } from \"sonner\";\r\nimport {\r\n  Card,\r\n  CardContent,\r\n  CardDescription,\r\n  CardHeader,\r\n  CardTitle,\r\n} from \"@/components/ui/card\";\r\nimport {\r\n  Form,\r\n  FormContent,\r\n  FormFields,\r\n  FormSubmit,\r\n} from \"@/registry/base/form\";\r\n\r\nconst contactSchema = createSchema([\r\n  {\r\n    type: \"row\",\r\n    fields: [\r\n      {\r\n        type: \"text\",\r\n        name: \"firstName\",\r\n        label: \"First Name\",\r\n        placeholder: \"John\",\r\n        required: true,\r\n      },\r\n      {\r\n        type: \"text\",\r\n        name: \"lastName\",\r\n        label: \"Last Name\",\r\n        placeholder: \"Doe\",\r\n        required: true,\r\n      },\r\n    ],\r\n  },\r\n  {\r\n    type: \"email\",\r\n    name: \"email\",\r\n    label: \"Email Address\",\r\n    placeholder: \"john.doe@example.com\",\r\n    required: true,\r\n  },\r\n  {\r\n    type: \"row\",\r\n    fields: [\r\n      {\r\n        type: \"text\",\r\n        name: \"city\",\r\n        label: \"City\",\r\n        placeholder: \"New York\",\r\n        style: { width: \"60%\" },\r\n      },\r\n      {\r\n        type: \"text\",\r\n        name: \"zip\",\r\n        label: \"ZIP Code\",\r\n        placeholder: \"10001\",\r\n        style: { width: \"40%\" },\r\n      },\r\n    ],\r\n  },\r\n]);\r\n\r\ntype ContactSchema = InferType<typeof contactSchema>;\r\n\r\nexport default function ContactLayoutForm() {\r\n  return (\r\n    <Card>\r\n      <CardHeader>\r\n        <CardTitle>Contact Information</CardTitle>\r\n        <CardDescription>\r\n          Side-by-side fields with responsive row layout\r\n        </CardDescription>\r\n      </CardHeader>\r\n      <CardContent>\r\n        <Form\r\n          schema={contactSchema}\r\n          onSubmit={async (data: ContactSchema) => {\r\n            await new Promise((r) => setTimeout(r, 1000));\r\n            toast(\"Contact saved!\", {\r\n              description: (\r\n                <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs\">\r\n                  <code>{JSON.stringify(data, null, 2)}</code>\r\n                </pre>\r\n              ),\r\n            });\r\n          }}\r\n        >\r\n          <FormContent>\r\n            <FormFields className=\"space-y-4\" />\r\n            <FormSubmit className=\"mt-6 w-full\">Save Contact</FormSubmit>\r\n          </FormContent>\r\n        </Form>\r\n      </CardContent>\r\n    </Card>\r\n  );\r\n}\r\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/contact-layout-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}
