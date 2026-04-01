@@ -23,6 +23,60 @@ Aggregates common state for data field components.
 - `isInvalid`, `errors`, `shouldShowErrors` - Error state
 - `ariaDescribedBy`, `descriptionId`, `errorId` - Accessibility IDs
 
+**Example:**
+
+```tsx
+import { useDataField } from "@buildnbuzz/form-react";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+
+function CustomTextField() {
+  const {
+    fieldApi,
+    field,
+    handleChange,
+    handleBlur,
+    label,
+    placeholder,
+    description,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    isInvalid,
+    errors,
+    ariaDescribedBy,
+  } = useDataField<TextFieldDef>();
+
+  const value = (fieldApi.state.value as string) ?? "";
+
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label htmlFor={fieldApi.name}>
+          {label}
+          {isRequired && <span>*</span>}
+        </label>
+      )}
+      <input
+        id={fieldApi.name}
+        type="text"
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        disabled={isDisabled}
+        readOnly={isReadOnly}
+        aria-invalid={isInvalid}
+        aria-describedby={ariaDescribedBy}
+      />
+      {description && <p className="text-sm">{description}</p>}
+      {isInvalid && errors.length > 0 && (
+        <p className="text-sm text-red-500">{errors[0]}</p>
+      )}
+    </div>
+  );
+}
+```
+
 ## Layout Field Hook
 
 ### useLayoutField
@@ -36,6 +90,25 @@ Aggregates state for layout field components.
 - `isHidden`, `isDisabled`, `isConditionMet` - State flags
 - All `FieldContextValue` properties
 
+**Example:**
+
+```tsx
+import { useLayoutField } from "@buildnbuzz/form-react";
+
+function CustomGroupField({ children }) {
+  const { field, label, isHidden, isDisabled } = useLayoutField();
+
+  if (isHidden) return null;
+
+  return (
+    <fieldset disabled={isDisabled}>
+      <legend>{label}</legend>
+      {children}
+    </fieldset>
+  );
+}
+```
+
 ## Options Hook
 
 ### useFieldOptions
@@ -45,6 +118,31 @@ Resolve and normalize options for select, radio, checkbox group.
 **Returns:**
 - `options` - Normalized options array (`{ label, value, disabled, ui }[]`)
 - `isLoading` - Always `false` (reserved for future async sources)
+
+**Example:**
+
+```tsx
+import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+
+function CustomSelectField() {
+  const { fieldApi, handleChange, field } = useDataField<SelectFieldDef>();
+  const { options } = useFieldOptions(field.options);
+
+  return (
+    <select
+      value={fieldApi.state.value ?? ""}
+      onChange={(e) => handleChange(e.target.value)}
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+```
 
 ## Error State Hook
 
@@ -142,21 +240,21 @@ Count errors in nested fields (for groups, arrays, tabs):
 ```tsx
 import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
 
-function CustomGroupField() {
+function CustomGroupField({ children }) {
   const { field } = useLayoutField();
   const errorCount = useNestedErrorCount(field.fields);
 
   return (
-    <div className="border p-4">
-      <div className="flex items-center gap-2">
+    <div className="border p-4 rounded">
+      <div className="flex items-center gap-2 mb-4">
         <h3>{field.label}</h3>
         {errorCount > 0 && (
-          <span className="bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded-full">
+          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
             {errorCount} errors
           </span>
         )}
       </div>
-      {/* nested fields */}
+      {children}
     </div>
   );
 }

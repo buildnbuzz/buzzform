@@ -3,6 +3,10 @@ title: "Developer Guide"
 description: "A practical, end-to-end guide to building with BuzzForm, from installation to production patterns."
 ---
 
+<Callout type="info">
+  **Canonical Schemas:** This guide uses consistent schema examples throughout. See the [canonical schemas file](https://github.com/buildnbuzz/buzzform/blob/main/apps/web/registry/shadcn/examples/canonical-schemas.ts) for the complete reference, or view individual schemas in the [Schema](/docs/schema) documentation.
+</Callout>
+
 ## 1. Installation & Setup
 
 ### What You'll Do
@@ -86,40 +90,36 @@ Define a schema, infer the type, and render a working form in under 5 minutes.
 
 ### Quick Start
 
-```tsx
-"use client";
+For a complete walkthrough, see [Quick Start](/docs/quick-start). Here's the basic pattern:
 
+```tsx title="lib/schemas/contact.ts"
 import { defineSchema, type InferType } from "@buildnbuzz/form-core";
-import {
-  Form,
-  FormContent,
-  FormFields,
-  FormSubmit,
-} from "@/components/buzzform/form";
-import { toast } from "sonner";
 
-// 1. Define schema
-const schema = defineSchema({
+export const contactSchema = defineSchema({
   title: "Contact Form",
   fields: [
-    { type: "text", name: "name", label: "Name", required: true },
+    { type: "text", name: "name", label: "Full Name", required: true },
     { type: "email", name: "email", label: "Email", required: true },
-    { type: "textarea", name: "message", label: "Message" },
+    { type: "textarea", name: "message", label: "Message", required: true },
   ],
 });
 
-// 2. Infer type
-type FormData = InferType<typeof schema.fields>;
-// { name: string; email: string; message?: string }
+export type ContactData = InferType<typeof contactSchema.fields>;
+```
 
-// 3. Render form
+```tsx title="app/contact-form.tsx"
+"use client";
+
+import { contactSchema } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { toast } from "sonner";
+
 export function ContactForm() {
   return (
     <Form
-      schema={schema}
+      schema={contactSchema}
       onSubmit={({ value }) => {
-        const data = value as FormData;
-        toast("Message sent!", { description: `From: ${data.email}` });
+        toast("Message sent!", { description: `From: ${value.email}` });
       }}
     >
       <FormContent>
@@ -130,6 +130,10 @@ export function ContactForm() {
   );
 }
 ```
+
+<Callout type="tip">
+  **Best Practice:** Define schemas in separate files (e.g., `lib/schemas/contact.ts`) for reusability across forms and server actions. See [Schema](/docs/schema) for details.
+</Callout>
 
 ---
 

@@ -34,14 +34,14 @@ Plain object mapping field type strings to React components:
 Wrap your app root with the provider:
 
 ```tsx title="app/layout.tsx"
-import { FormProvider } from "@buildnbuzz/form-react"; // [!code highlight]
-import { registry } from "@/components/buzzform/registry"; // [!code highlight]
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider> {/* [!code highlight] */}
+        <FormProvider registry={registry}>{children}</FormProvider>
       </body>
     </html>
   );
@@ -101,10 +101,10 @@ import { useRegistry } from "@buildnbuzz/form-react";
 
 function CustomFormRenderer() {
   const registry = useRegistry();
-  
+
   // Use registry to look up field components
   const TextComponent = registry.text;
-  
+
   return <TextComponent />;
 }
 ```
@@ -123,7 +123,7 @@ import { customRegistry } from "@/my-custom-registry";
 
 // Override for specific form
 <Form
-  schema={schema}
+  schema={contactSchema}
   registry={customRegistry} // Uses custom registry instead
   onSubmit={handleSubmit}
 >
@@ -211,3 +211,4 @@ export const registry: FieldRegistry = {
 - [`RenderFields`](/docs/render-fields)
 - [Custom Fields](/docs/custom-fields)
 - [Installation](/docs/installation)
+- [Quick Start](/docs/quick-start)

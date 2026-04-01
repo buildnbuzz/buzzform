@@ -31,14 +31,23 @@ Same as `RenderFieldsProps` but renders a single field.
 `RenderFields` renders all fields from your schema:
 
 ```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
 import { RenderFields } from "@buildnbuzz/form-react";
 
-const form = useForm({ schema });
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
 
-<RenderFields
-  fields={schema.fields}
-  form={form}
-/>
+  return (
+    <form onSubmit={form.handleSubmit}>
+      <RenderFields
+        fields={contactSchema.fields}
+        form={form}
+      />
+      <button type="submit">Send Message</button>
+    </form>
+  );
+}
 ```
 
 ## FieldRenderer
@@ -46,14 +55,24 @@ const form = useForm({ schema });
 Render a single field from schema:
 
 ```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
 import { FieldRenderer } from "@buildnbuzz/form-react";
 
-const field = schema.fields[0];
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+  const nameField = contactSchema.fields[0];
 
-<FieldRenderer
-  field={field}
-  form={form}
-/>
+  return (
+    <form onSubmit={form.handleSubmit}>
+      <FieldRenderer
+        field={nameField}
+        form={form}
+      />
+      <button type="submit">Send Message</button>
+    </form>
+  );
+}
 ```
 
 ## Custom Layouts
@@ -61,17 +80,23 @@ const field = schema.fields[0];
 Use `RenderFields` inside custom layouts:
 
 ```tsx
-function CustomFormLayout({ form, schema }) {
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
+import { RenderFields } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4">
         <RenderFields
-          fields={schema.fields.slice(0, 2)}
+          fields={contactSchema.fields.slice(0, 2)}
           form={form}
         />
       </div>
       <RenderFields
-        fields={schema.fields.slice(2)}
+        fields={contactSchema.fields.slice(2)}
         form={form}
       />
     </div>
@@ -84,22 +109,16 @@ function CustomFormLayout({ form, schema }) {
 `RenderFields` handles nested structures automatically:
 
 ```tsx
-const schema = defineSchema({
-  fields: [
-    { type: "text", name: "name", label: "Name" },
-    {
-      type: "group",
-      name: "address",
-      fields: [
-        { type: "text", name: "city", label: "City" },
-        { type: "text", name: "zip", label: "ZIP" },
-      ],
-    },
-  ],
-});
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+import { useForm } from "@buildnbuzz/form-react";
+import { RenderFields } from "@buildnbuzz/form-react";
 
-// Renders nested fields with correct paths
-<RenderFields fields={schema.fields} form={form} />
+export function ProfileForm() {
+  const form = useForm({ schema: userProfileSchema });
+
+  // Renders nested fields with correct paths
+  <RenderFields fields={userProfileSchema.fields} form={form} />;
+}
 ```
 
 ## Registry Override
@@ -108,12 +127,19 @@ Pass a custom registry for this render:
 
 ```tsx
 import { customRegistry } from "@/components/my-form/registry";
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
+import { RenderFields } from "@buildnbuzz/form-react";
 
-<RenderFields
-  fields={schema.fields}
-  form={form}
-  registry={customRegistry}
-/>
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <RenderFields
+    fields={contactSchema.fields}
+    form={form}
+    registry={customRegistry}
+  />;
+}
 ```
 
 ## Fallback Renderer
@@ -121,15 +147,23 @@ import { customRegistry } from "@/components/my-form/registry";
 Render a placeholder for unregistered field types:
 
 ```tsx
-<RenderFields
-  fields={schema.fields}
-  form={form}
-  renderFallback={(field) => (
-    <div className="p-4 bg-muted">
-      Unknown field: {field.type}
-    </div>
-  )}
-/>
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
+import { RenderFields } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <RenderFields
+    fields={contactSchema.fields}
+    form={form}
+    renderFallback={(field) => (
+      <div className="p-4 bg-muted">
+        Unknown field: {field.type}
+      </div>
+    )}
+  />;
+}
 ```
 
 ## Base Path
@@ -137,13 +171,21 @@ Render a placeholder for unregistered field types:
 Render a subsection of nested fields:
 
 ```tsx
-const groupField = schema.fields.find(f => f.type === "group");
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+import { useForm } from "@buildnbuzz/form-react";
+import { RenderFields } from "@buildnbuzz/form-react";
 
-<RenderFields
-  fields={groupField?.fields || []}
-  form={form}
-  basePath="/address" // Resolves paths correctly
-/>
+export function AddressForm() {
+  const form = useForm({ schema: userProfileSchema });
+
+  const addressField = userProfileSchema.fields.find(f => f.type === "group");
+
+  <RenderFields
+    fields={addressField?.fields || []}
+    form={form}
+    basePath="/address" // Resolves paths correctly
+  />;
+}
 ```
 
 ## How It Works

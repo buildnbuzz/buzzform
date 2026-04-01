@@ -119,15 +119,15 @@ Wrap your app root with `FormProvider` so all forms can access the field registr
 
 Import the `registry` from the installed BuzzForm components and the `FormProvider` from `@buildnbuzz/form-react`:
 
-```tsx title="app/layout.tsx"
-import { FormProvider } from "@buildnbuzz/form-react"; // [!code highlight]
-import { registry } from "@/components/buzzform/registry"; // [!code highlight]
+```tsx title="app/layout.tsx" showLineNumbers
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider> {/* [!code highlight] */}
+        <FormProvider registry={registry}>{children}</FormProvider>
       </body>
     </html>
   );
@@ -142,7 +142,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 Create a simple form to confirm everything is wired up:
 
-```tsx
+```tsx title="app/verify-form.tsx" showLineNumbers
 "use client";
 
 import { defineSchema } from "@buildnbuzz/form-core";
@@ -173,3 +173,7 @@ export function VerifyForm() {
 ```
 
 If the form renders and submits without errors, you're good to go.
+
+<Callout type="tip">
+  For a complete working example, see [Quick Start](/docs/quick-start) which shows how to organize schemas in separate files and add validation.
+</Callout>

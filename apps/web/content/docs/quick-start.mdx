@@ -5,7 +5,7 @@ description: Build a complete working form with validation and conditional logic
 
 # Quick Start
 
-This guide walks you through building a real form from scratch. By the end you'll have a working sign-up form with validation, a conditional field, and typed submission data.
+This guide walks you through building a real form from scratch. By the end you'll have a working contact form with validation, a conditional field, and typed submission data.
 
 <Callout type="info">
   Make sure you've completed [Installation](/docs/installation) before continuing.
@@ -13,71 +13,53 @@ This guide walks you through building a real form from scratch. By the end you'l
 
 ## Step 1: Define Your Schema
 
-A `FormSchema` is a plain object with a `fields` array. Each field has a `type`, a `name`, and optional configuration:
+A schema is a plain object with a `fields` array. Each field has a `type`, a `name`, and optional configuration:
 
-```tsx
-import { defineSchema } from "@buildnbuzz/form-core";
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-const schema = defineSchema({
+export const contactSchema = defineSchema({
+  title: "Contact Form",
   fields: [
     { type: "text", name: "name", label: "Full Name", required: true },
     { type: "email", name: "email", label: "Email", required: true },
-    {
-      type: "password",
-      name: "password",
-      label: "Password",
-      minLength: 8,
-    },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      options: ["Developer", "Designer", "Product Manager"],
-      required: true,
-    },
+    { type: "textarea", name: "message", label: "Message", required: true },
   ],
 });
+
+export type ContactData = InferType<typeof contactSchema.fields>;
+// Type: { name: string, email: string, message: string }
 ```
+
+<Callout type="tip">
+  Defining schemas in separate files (like `lib/schemas/contact.ts`) allows you to reuse them in forms, server actions, and API routes. See [Schema](/docs/schema) for details.
+</Callout>
 
 ## Step 2: Create the Form
 
 Render the form with the shadcn registry components. The schema drives rendering and validation:
 
-```tsx
+```tsx title="app/contact-form.tsx"
 "use client";
 
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { contactSchema } from "@/lib/schemas/contact";
 import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { toast } from "sonner";
 
-const schema = defineSchema({
-  fields: [
-    { type: "text", name: "name", label: "Full Name", required: true },
-    { type: "email", name: "email", label: "Email", required: true },
-    { type: "password", name: "password", label: "Password", minLength: 8 },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      options: ["Developer", "Designer", "Product Manager"],
-      required: true,
-    },
-  ],
-});
-
-type FormData = InferType<typeof schema.fields>;
-
-export function SignUpForm() {
+export function ContactForm() {
   return (
     <Form
-      schema={schema}
+      schema={contactSchema}
       onSubmit={({ value }) => {
-        console.log(value);
-        // value is typed as { name: string; email: string; password: string; role: string }
+        // value is typed as ContactData
+        toast("Message sent!", {
+          description: `From: ${value.email}`,
+        });
       }}
     >
       <FormContent>
         <FormFields />
-        <FormSubmit>Create Account</FormSubmit>
+        <FormSubmit>Send Message</FormSubmit>
       </FormContent>
     </Form>
   );
@@ -86,117 +68,206 @@ export function SignUpForm() {
 
 `<FormFields />` renders all fields using the `FieldRegistry` from `<FormProvider>`. Use `<FormSubmit />` for a submit button that auto-disables while submitting.
 
-## Step 3: Add Conditional Logic
+## Step 3: Add Validation
 
-Show a field only when another field has a specific value. The `condition` property uses a declarative AST — no callbacks:
+BuzzForm auto-derives validation from field properties like `required`, `minLength`, etc. You can also add explicit validation rules:
 
-```tsx
-const schema = defineSchema({
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const contactSchema = defineSchema({
+  title: "Contact Form",
   fields: [
-    { type: "text", name: "name", label: "Full Name", required: true },
-    { type: "email", name: "email", label: "Email", required: true },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      options: ["Developer", "Designer", "Manager"],
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      required: true,
+      minLength: 2,
+    },
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+    },
+  ],
+});
+```
+
+Now the form validates:
+- Name must be at least 2 characters
+- Email must be valid format (auto-derived from `type: "email"`)
+- Message must be between 10-500 characters
+
+See [Validation](/docs/validation) for the complete list of validators.
+
+## Step 4: Add Conditional Logic
+
+Show a field only when certain conditions are met. The `condition` property uses a declarative AST — no callbacks:
+
+```tsx title="lib/schemas/contact.ts"
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      required: true,
+      minLength: 2,
+    },
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
       required: true,
     },
     {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+    },
+    // Only shown when subject is "Other"
+    {
       type: "text",
-      name: "teamName",
-      label: "Team Name",
-      // Only shown when role is "Manager"
-      condition: { $data: "/role", eq: "Manager" },
+      name: "otherSubject",
+      label: "Please Specify",
+      condition: { $data: "/subject", eq: "Other" },
       required: true,
     },
   ],
 });
 ```
 
-When `role` is not `"Manager"`, the `teamName` field is unmounted and removed from form state entirely.
+When `subject` is not `"Other"`, the `otherSubject` field is completely removed from the form state.
 
-## Step 4: Add Validation
-
-Use the `validate` property for explicit validation rules. Checks are grouped by trigger:
-
-```tsx
-{
-  type: "text",
-  name: "username",
-  label: "Username",
-  required: true,
-  validate: {
-    onBlur: {
-      checks: [
-        { type: "minLength", message: "At least 3 characters", args: { min: 3 } },
-        { type: "pattern", message: "Letters and numbers only", args: { pattern: "^[a-zA-Z0-9]+$" } },
-      ],
-    },
-  },
-}
-```
+<Callout type="info">
+  **Note:** When using `condition`, you don't need to repeat `required` in the condition. The field is only present when the condition is met, so `required: true` only applies when visible.
+</Callout>
 
 ## Complete Example
 
-```tsx
-"use client";
+Here's the complete form with all features:
 
+```tsx title="lib/schemas/contact.ts"
 import { defineSchema, type InferType } from "@buildnbuzz/form-core";
-import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
 
-const schema = defineSchema({
+export const contactSchema = defineSchema({
+  title: "Contact Form",
   fields: [
-    { type: "text", name: "name", label: "Full Name", required: true },
-    { type: "email", name: "email", label: "Email", required: true },
-    {
-      type: "password",
-      name: "password",
-      label: "Password",
-      minLength: 8,
-      validate: {
-        onBlur: {
-          checks: [
-            { type: "minLength", message: "At least 8 characters", args: { min: 8 } },
-          ],
-        },
-      },
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      placeholder: "John Doe",
+      required: true,
+      minLength: 2,
     },
-    {
-      type: "select",
-      name: "role",
-      label: "Role",
-      options: ["Developer", "Designer", "Manager"],
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
+      placeholder: "john@example.com",
       required: true,
     },
     {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      placeholder: "How can we help?",
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+      description: "Be as detailed as possible so we can help you better.",
+    },
+    {
       type: "text",
-      name: "teamName",
-      label: "Team Name",
-      condition: { $data: "/role", eq: "Manager" },
+      name: "otherSubject",
+      label: "Please Specify",
+      condition: { $data: "/subject", eq: "Other" },
       required: true,
     },
   ],
 });
 
-type FormData = InferType<typeof schema.fields>;
+export type ContactData = InferType<typeof contactSchema.fields>;
+```
 
-export function SignUpForm() {
+```tsx title="app/contact-form.tsx"
+"use client";
+
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { toast } from "sonner";
+
+export function ContactForm() {
   return (
     <Form
-      schema={schema}
-      onSubmit={async ({ value }: { value: FormData }) => {
-        await fetch("/api/signup", {
+      schema={contactSchema}
+      onSubmit={async ({ value }) => {
+        // value is typed as ContactData
+        await fetch("/api/contact", {
           method: "POST",
           body: JSON.stringify(value),
+        });
+        toast("Message sent!", {
+          description: `From: ${value.email}`,
         });
       }}
     >
       <FormContent>
         <FormFields />
-        <FormSubmit>Create Account</FormSubmit>
+        <FormSubmit>Send Message</FormSubmit>
       </FormContent>
     </Form>
   );
 }
 ```
+
+```tsx title="app/actions.ts"
+"use server";
+
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { db } from "@/lib/db";
+
+export async function submitContact(data: ContactData) {
+  // data is fully typed!
+  await db.contacts.create(data);
+}
+```
+
+## Next Steps
+
+Now that you have a working form, explore these topics:
+
+- [Schema](/docs/schema) — Deep dive into schema definition and type inference
+- [Validation](/docs/validation) — Learn about custom validators and async validation
+- [Conditional Logic](/docs/conditional-logic) — Master declarative conditions
+- [Nested Structures](/docs/nested-structures) — Work with groups and arrays
+- [Server Actions](/docs/form-submission) — Handle form submission with server actions

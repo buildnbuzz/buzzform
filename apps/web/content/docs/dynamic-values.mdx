@@ -27,21 +27,21 @@ Reference other field values in your form:
 ### In Labels and Descriptions
 
 ```tsx
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "text",
-      name: "eventName",
-      label: "Event Name",
+      name: "companyName",
+      label: "Company Name",
       required: true,
     },
     {
       type: "text",
       name: "confirmationMessage",
-      // Label shows the event name dynamically
-      label: { $data: "/eventName" },
-      description: "Confirm your registration for: { $data: /eventName }",
-      placeholder: `Enter confirmation for { $data: "/eventName" }`,
+      // Label shows the company name dynamically
+      label: { $data: "/companyName" },
+      description: "Confirm your registration for: { $data: /companyName }",
+      placeholder: `Enter confirmation for { $data: "/companyName" }`,
     },
   ],
 });
@@ -50,7 +50,7 @@ const schema = defineSchema({
 ### In Default Values
 
 ```tsx
-const schema = defineSchema({
+const profileSchema = defineSchema({
   fields: [
     { type: "text", name: "firstName", label: "First Name" },
     { type: "text", name: "lastName", label: "Last Name" },
@@ -68,7 +68,7 @@ const schema = defineSchema({
 ### In Validator Args
 
 ```tsx
-const schema = defineSchema({
+const customFormSchema = defineSchema({
   fields: [
     {
       type: "text",
@@ -103,15 +103,16 @@ Reference external data passed via `contextData`:
 
 ```tsx
 const form = useForm({
-  schema,
+  schema: contactSchema,
   contextData: {
     userRole: "admin",
     maxUploadSize: 10,
     allowedDomains: ["company.com", "partner.com"],
+    supportEmail: "support@example.com",
   },
 });
 
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "email",
@@ -138,6 +139,13 @@ const schema = defineSchema({
       label: "Admin Notes",
       // Only shown for admin users
       condition: { $context: "/userRole", eq: "admin" },
+    },
+    {
+      type: "text",
+      name: "supportContact",
+      label: "Support Contact",
+      // Display dynamic support email
+      description: { $context: "/supportEmail" },
     },
   ],
 });
@@ -187,7 +195,7 @@ resolveDynamicValue("hello", formData, contextData);
 ### Dynamic Field Options
 
 ```tsx
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "select",
@@ -197,8 +205,8 @@ const schema = defineSchema({
     },
     {
       type: "select",
-      name: "state",
-      label: "State",
+      name: "region",
+      label: "State / Province",
       options: [
         { label: "California", value: "CA" },
         { label: "New York", value: "NY" },
@@ -213,12 +221,12 @@ const schema = defineSchema({
 ### Dynamic Validation Thresholds
 
 ```tsx
-const schema = defineSchema({
+const applicationSchema = defineSchema({
   fields: [
     {
       type: "number",
-      name: "riskLevel",
-      label: "Risk Level (1-10)",
+      name: "experienceLevel",
+      label: "Experience Level (1-10)",
       min: 1,
       max: 10,
     },
@@ -226,17 +234,17 @@ const schema = defineSchema({
       type: "text",
       name: "justification",
       label: "Justification",
-      // Required only for high risk
-      required: { $data: "/riskLevel", gte: 7 },
+      // Required only for high experience
+      required: { $data: "/experienceLevel", gte: 7 },
       validate: {
         onSubmit: {
           checks: [
             {
               type: "minLength",
-              message: "High risk requires detailed justification",
-              // Longer min length for higher risk
+              message: "High experience requires detailed justification",
+              // Longer min length for higher experience
               args: {
-                min: { $data: "/riskLevel" }, // min = riskLevel value
+                min: { $data: "/experienceLevel" }, // min = experienceLevel value
               },
             },
           ],
@@ -250,7 +258,7 @@ const schema = defineSchema({
 ### Dynamic Collapsible State
 
 ```tsx
-const schema = defineSchema({
+const settingsSchema = defineSchema({
   fields: [
     {
       type: "checkbox",
@@ -283,3 +291,9 @@ const schema = defineSchema({
 - ✅ In defaultValue
 - ✅ In boolean props (disabled, required, collapsed)
 - ✅ In validator args
+
+## Related
+
+- [Conditional Logic](/docs/conditional-logic) — Use `$data` in conditions
+- [Validation](/docs/validation) — Use `$data` in validator args
+- [Schema](/docs/schema) — Define fields with dynamic values

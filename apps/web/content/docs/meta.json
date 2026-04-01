@@ -12,6 +12,8 @@
     "validation",
     "dynamic-values",
     "output-transformation",
+    "---Fields---",
+    "...fields",
     "---React Adapter---",
     "use-form",
     "form-component",
@@ -20,8 +22,6 @@
     "field-wrappers",
     "field-hooks",
     "custom-fields",
-    "---Fields---",
-    "...fields",
     "---Reference---",
     "developer-guide",
     "migration"

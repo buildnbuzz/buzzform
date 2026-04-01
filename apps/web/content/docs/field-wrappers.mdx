@@ -28,9 +28,10 @@ Use `<Field>` for custom data field components:
 ```tsx
 import { Field } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
+import { contactSchema } from "@/lib/schemas/contact";
 
-function CustomTextField({ children }) {
-  const { fieldApi, field, handleChange, handleBlur } = useDataField();
+function CustomTextField({ form, field }) {
+  const { fieldApi, handleChange, handleBlur } = useDataField();
 
   return (
     <Field field={field} form={form}>
@@ -40,7 +41,6 @@ function CustomTextField({ children }) {
         onChange={(e) => handleChange(e.target.value)}
         onBlur={handleBlur}
       />
-      {children}
     </Field>
   );
 }
@@ -53,14 +53,15 @@ Use `<LayoutField>` for custom layout components:
 ```tsx
 import { LayoutField } from "@buildnbuzz/form-react";
 import { useLayoutField } from "@buildnbuzz/form-react";
+import { userProfileSchema } from "@/lib/schemas/user-profile";
 
-function CustomRowLayout({ children }) {
-  const { field, isHidden, isDisabled } = useLayoutField();
+function CustomRowLayout({ children, form, field }) {
+  const { field: layoutField, isHidden, isDisabled } = useLayoutField();
 
   if (isHidden) return null;
 
   return (
-    <LayoutField field={field} form={form}>
+    <LayoutField field={layoutField} form={form}>
       <div className="flex gap-4">
         {children}
       </div>
@@ -150,9 +151,9 @@ if (!isConditionMet) {
 Wire up cross-field reactivity:
 
 ```tsx
-const schema = defineSchema({
+const registerSchema = defineSchema({
   fields: [
-    { type: "text", name: "password", label: "Password" },
+    { type: "password", name: "password", label: "Password" },
     {
       type: "password",
       name: "confirmPassword",
@@ -195,7 +196,7 @@ Use `<LayoutField>` for containers that don't register values (row, tabs, collap
 import { Field } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 
-function CustomNumberField({ children }) {
+function CustomNumberField({ form, field }) {
   const {
     fieldApi,
     field,
@@ -221,7 +222,6 @@ function CustomNumberField({ children }) {
         disabled={isDisabled}
       />
       {description && <p className="text-sm text-muted">{description}</p>}
-      {children}
     </Field>
   );
 }
@@ -233,13 +233,13 @@ function CustomNumberField({ children }) {
 import { LayoutField } from "@buildnbuzz/form-react";
 import { useLayoutField } from "@buildnbuzz/form-react";
 
-function CustomCardLayout({ children }) {
-  const { field, label, isHidden } = useLayoutField();
+function CustomCardLayout({ children, form, field }) {
+  const { field: layoutField, label, isHidden } = useLayoutField();
 
   if (isHidden) return null;
 
   return (
-    <LayoutField field={field} form={form}>
+    <LayoutField field={layoutField} form={form}>
       <div className="p-4 border rounded">
         {label && <h3 className="font-semibold mb-2">{label}</h3>}
         <div className="space-y-4">

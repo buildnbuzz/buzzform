@@ -18,30 +18,22 @@ Configure output transformation in `useForm`:
 Transform nested data to flat keys:
 
 ```tsx
-const schema = defineSchema({
-  fields: [
-    { type: "text", name: "name", label: "Name" },
-    {
-      type: "group",
-      name: "address",
-      label: "Address",
-      fields: [
-        { type: "text", name: "city", label: "City" },
-        { type: "text", name: "zip", label: "ZIP" },
-      ],
-    },
-  ],
-});
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+import { useForm } from "@buildnbuzz/form-react";
 
-const form = useForm({
-  schema,
-  output: { type: "path" }, // Flatten to dot-notation keys
-  onSubmit: ({ value }) => {
-    // Without output: { name: "John", address: { city: "NYC", zip: "10001" } }
-    // With output:    { name: "John", "address.city": "NYC", "address.zip": "10001" }
-    submitToApi(value);
-  },
-});
+export function ProfileForm() {
+  const form = useForm({
+    schema: userProfileSchema,
+    output: { type: "path" }, // Flatten to dot-notation keys
+    onSubmit: ({ value }) => {
+      // Without output: { name: "John", address: { city: "NYC", zip: "10001" } }
+      // With output:    { name: "John", "address.city": "NYC", "address.zip": "10001" }
+      submitToApi(value);
+    },
+  });
+
+  // ... render form
+}
 ```
 
 ## Custom Delimiter
@@ -50,7 +42,7 @@ Change the delimiter from `.` to another character:
 
 ```tsx
 const form = useForm({
-  schema,
+  schema: userProfileSchema,
   output: {
     type: "path",
     delimiter: "/", // Use slash instead of dot
@@ -152,17 +144,62 @@ const transformedSlash = transformFormOutput(data, {
 ## Example: API Integration
 
 ```tsx
-const form = useForm({
-  schema: userSchema,
-  output: { type: "path" },
-  onSubmit: async ({ value }) => {
-    // value is now flat: { "user.name": "John", "user.email": "john@example.com" }
-    
-    await fetch("/api/users", {
-      method: "POST",
-      body: JSON.stringify(value),
-      headers: { "Content-Type": "application/json" },
-    });
-  },
-});
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+import { useForm } from "@buildnbuzz/form-react";
+
+export function ProfileForm() {
+  const form = useForm({
+    schema: userProfileSchema,
+    output: { type: "path" },
+    onSubmit: async ({ value }) => {
+      // value is now flat: { name: "John", "address.city": "NYC", "address.zip": "10001" }
+
+      await fetch("/api/profile", {
+        method: "POST",
+        body: JSON.stringify(value),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  // ... render form
+}
 ```
+
+## Example: Job Application with Arrays
+
+For complex schemas with arrays, output transformation flattens array indices:
+
+```tsx
+import { jobApplicationSchema } from "@/lib/schemas/job-application";
+import { useForm } from "@buildnbuzz/form-react";
+
+export function ApplicationForm() {
+  const form = useForm({
+    schema: jobApplicationSchema,
+    output: { type: "path" },
+    onSubmit: ({ value }) => {
+      // Transforms to:
+      // {
+      //   "fullName": "John Doe",
+      //   "email": "john@example.com",
+      //   "workHistory.0.company": "Acme Inc.",
+      //   "workHistory.0.role": "Engineer",
+      //   "workHistory.1.company": "Corp",
+      //   "workHistory.1.role": "Senior Engineer",
+      //   "skills.0.name": "React",
+      //   "skills.0.level": "Advanced"
+      // }
+      submitToApi(value);
+    },
+  });
+
+  // ... render form
+}
+```
+
+## Related
+
+- [`useForm` Hook](/docs/use-form)
+- [Nested Structures](/docs/nested-structures) — Working with groups and arrays
+- [Form Submission](/docs/form-submission) — Handle form data

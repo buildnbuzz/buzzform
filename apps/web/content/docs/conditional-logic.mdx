@@ -24,10 +24,10 @@ Check a field value against a condition:
 ```tsx
 {
   type: "text",
-  name: "city",
-  label: "City",
-  // Only enabled when country is selected
-  disabled: { $data: "/country", eq: "" },
+  name: "phone",
+  label: "Phone Number",
+  // Only enabled when contactMethod is "phone"
+  disabled: { $data: "/contactMethod", neq: "phone" },
 }
 ```
 
@@ -38,11 +38,11 @@ Multiple conditions that must all be true:
 ```tsx
 {
   type: "text",
-  name: "company",
-  // Only shown when accountType is "business" AND hasLicense is true
+  name: "companyEmail",
+  // Only shown when accountType is "business" AND hasCompany is true
   condition: [
     { $data: "/accountType", eq: "business" },
-    { $data: "/hasLicense", eq: true },
+    { $data: "/hasCompany", eq: true },
   ],
 }
 ```
@@ -54,12 +54,12 @@ Group conditions logically:
 ```tsx
 {
   type: "text",
-  name: "details",
-  // Show when role is "developer" OR "designer"
+  name: "discountCode",
+  // Show when role is "admin" OR "manager"
   condition: {
     $or: [
-      { $data: "/role", eq: "developer" },
-      { $data: "/role", eq: "designer" },
+      { $data: "/role", eq: "admin" },
+      { $data: "/role", eq: "manager" },
     ],
   },
 }
@@ -102,12 +102,42 @@ Atomic conditions support these operators:
 Use JSON Pointer format (paths start with `/`):
 
 ```tsx
+const contactSchema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+    },
+    {
+      type: "text",
+      name: "otherSubject",
+      label: "Please Specify",
+      // Only shown when subject is "Other"
+      condition: { $data: "/subject", eq: "Other" },
+    },
+  ],
+});
+```
+
+**Important:** When using `condition`, you don't need to repeat the condition in `required`. The field is only present when the condition is met:
+
+```tsx
+// ✅ Good - condition controls visibility, required applies when visible
 {
   type: "text",
-  name: "teamName",
-  label: "Team Name",
-  // Only shown when role is "Manager"
-  condition: { $data: "/role", eq: "Manager" },
+  name: "otherSubject",
+  condition: { $data: "/subject", eq: "Other" },
+  required: true, // Only required when shown
+}
+
+// ❌ Redundant - don't do this
+{
+  type: "text",
+  name: "otherSubject",
+  condition: { $data: "/subject", eq: "Other" },
+  required: { $data: "/subject", eq: "Other" }, // Unnecessary repetition
 }
 ```
 
@@ -125,7 +155,8 @@ const form = useForm({
   schema,
   contextData: {
     userRole: "admin",
-    permissions: ["edit", "delete"],
+    isLocked: false,
+    maxItems: 10,
   },
 });
 
@@ -136,6 +167,8 @@ const form = useForm({
   label: "Admin Notes",
   // Only shown for admin users
   condition: { $context: "/userRole", eq: "admin" },
+  // Disabled when form is locked
+  disabled: { $context: "/isLocked", eq: true },
 }
 ```
 
@@ -152,10 +185,61 @@ Use `condition` when you want to completely remove the field. Use `hidden` when 
 
 ## Examples
 
+### Contact Form with Conditional Fields
+
+Building on the [Quick Start](/docs/quick-start) example:
+
+```tsx
+const contactSchema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "name",
+      label: "Full Name",
+      required: true,
+    },
+    {
+      type: "email",
+      name: "email",
+      label: "Email",
+      required: true,
+    },
+    {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+      required: true,
+    },
+    {
+      type: "textarea",
+      name: "message",
+      label: "Message",
+      required: true,
+    },
+    // Only shown when subject is "Other"
+    {
+      type: "text",
+      name: "otherSubject",
+      label: "Please Specify",
+      condition: { $data: "/subject", eq: "Other" },
+      required: true,
+    },
+    // Only shown for Support subject
+    {
+      type: "text",
+      name: "ticketId",
+      label: "Support Ticket ID",
+      condition: { $data: "/subject", eq: "Support" },
+    },
+  ],
+});
+```
+
 ### Dependent Dropdowns
 
 ```tsx
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "select",
@@ -165,9 +249,9 @@ const schema = defineSchema({
     },
     {
       type: "select",
-      name: "state",
-      label: "State / Province",
-      options: states,
+      name: "region",
+      label: "Region / State",
+      options: regions,
       // Disabled until country is selected
       disabled: { $data: "/country", eq: "" },
     },
@@ -178,7 +262,7 @@ const schema = defineSchema({
 ### Show/Hide Based on Selection
 
 ```tsx
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "radio",
@@ -189,14 +273,23 @@ const schema = defineSchema({
     {
       type: "email",
       name: "email",
-      label: "Email",
+      label: "Email Address",
       condition: { $data: "/contactMethod", eq: "email" },
+      required: true,
     },
     {
       type: "text",
       name: "phone",
-      label: "Phone",
+      label: "Phone Number",
       condition: { $data: "/contactMethod", eq: "phone" },
+      required: true,
+    },
+    {
+      type: "text",
+      name: "address",
+      label: "Mailing Address",
+      condition: { $data: "/contactMethod", eq: "mail" },
+      required: true,
     },
   ],
 });
@@ -205,16 +298,26 @@ const schema = defineSchema({
 ### Complex Conditions
 
 ```tsx
-const schema = defineSchema({
+const orderSchema = defineSchema({
   fields: [
+    {
+      type: "number",
+      name: "orderTotal",
+      label: "Order Total",
+    },
+    {
+      type: "checkbox",
+      name: "isVip",
+      label: "VIP Customer",
+    },
     {
       type: "text",
       name: "discountCode",
       label: "Discount Code",
-      // Show when cart total >= 100 AND customer is not VIP
+      // Show when order total >= 100 AND customer is not VIP
       condition: {
         $and: [
-          { $data: "/cartTotal", gte: 100 },
+          { $data: "/orderTotal", gte: 100 },
           { $data: "/isVip", eq: false },
         ],
       },
@@ -226,7 +329,7 @@ const schema = defineSchema({
 ### Required Conditionally
 
 ```tsx
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
     {
       type: "select",
@@ -241,8 +344,26 @@ const schema = defineSchema({
       // Required only when email is selected
       required: { $data: "/contactMethod", eq: "email" },
     },
+    {
+      type: "text",
+      name: "phone",
+      label: "Phone Number",
+      // Required only when phone is selected
+      required: { $data: "/contactMethod", eq: "phone" },
+    },
   ],
 });
+```
+
+**Note:** In this case, using `condition` might be better than `required` since you only want one contact method:
+
+```tsx
+{
+  type: "email",
+  name: "email",
+  condition: { $data: "/contactMethod", eq: "email" },
+  required: true, // Only required when shown
+}
 ```
 
 ## evaluateVisibility Helper
@@ -258,3 +379,9 @@ const formData = { role: "admin" };
 const isVisible = evaluateVisibility(condition, { formData });
 // true
 ```
+
+## Related
+
+- [Quick Start](/docs/quick-start) — See conditional logic in action
+- [Dynamic Values](/docs/dynamic-values) — Learn about `$data` and `$context` syntax
+- [Schema](/docs/schema) — Define fields with conditions

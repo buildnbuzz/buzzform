@@ -42,40 +42,66 @@ type FormData = InferType<typeof schema.fields>;
 And get rendering, validation, and typed submission data automatically:
 
 ```tsx
-import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
 
 <Form schema={schema} onSubmit={({ value }) => console.log(value)}>
   <FormContent>
     <FormFields />
     <FormSubmit>Submit</FormSubmit>
   </FormContent>
-</Form>
+</Form>;
 ```
 
 ## Key Features
 
 <Cards>
-  <Card title="Schema-Driven" description="Define fields as data. One object is the source of truth for rendering, validation, and TypeScript types." />
-  <Card title="TanStack Form Core" description="Built on TanStack Form — battle-tested state management, async validation, and field-level subscriptions." />
-  <Card title="Declarative Conditions" description="Show, hide, disable, or require fields using a composable AST condition system. No imperative callbacks." />
-  <Card title="Built-in Validators" description="required, email, minLength, pattern, min, max, matches, passwordCriteria, and more — all declarative." />
-  <Card title="Dynamic Values" description="Reference other field values or external context in labels, placeholders, defaults, and validator args using $data and $context references." />
-  <Card title="Registry Pattern" description="Map field types to your own React components. Install shadcn field components via the CLI or bring your own." />
-  <Card title="TypeScript Inference" description="InferType gives you a fully typed form data object from your schema definition — no manual typing needed." />
+  <Card
+    title="Schema-Driven"
+    description="Define fields as data. One object is the source of truth for rendering, validation, and TypeScript types."
+  />
+  <Card
+    title="TanStack Form Core"
+    description="Built on TanStack Form — battle-tested state management, async validation, and field-level subscriptions."
+  />
+  <Card
+    title="Declarative Conditions"
+    description="Show, hide, disable, or require fields using a composable AST condition system. No imperative callbacks."
+  />
+  <Card
+    title="Built-in Validators"
+    description="required, email, minLength, pattern, min, max, matches, passwordCriteria, and more — all declarative."
+  />
+  <Card
+    title="Dynamic Values"
+    description="Reference other field values or external context in labels, placeholders, defaults, and validator args using $data and $context references."
+  />
+  <Card
+    title="Registry Pattern"
+    description="Map field types to your own React components. Install shadcn field components via the CLI or bring your own."
+  />
+  <Card
+    title="TypeScript Inference"
+    description="InferType gives you a fully typed form data object from your schema definition — no manual typing needed."
+  />
 </Cards>
 
 ## Quick Install
 
-```bash
-# Install core packages
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+#### Install all field components and core packages via shadcn registry
 
-# Install all field components via shadcn registry
+```bash
 npx shadcn@latest add @buzzform/all
 ```
 
 <Callout type="info">
-  Add `"@buzzform": "https://form.buildnbuzz.com/r/{name}.json"` to the `registries` field in your `components.json` first. See [Installation](/docs/installation) for full setup details.
+  Add `"@buzzform": "https://form.buildnbuzz.com/r/{name}.json"` to the
+  `registries` field in your `components.json` first. See
+  [Installation](/docs/installation) for full setup details.
 </Callout>
 
 ## How It Works

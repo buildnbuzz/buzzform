@@ -14,14 +14,18 @@ Use `defineSchema()` to define your form:
 ```tsx
 import { defineSchema } from "@buildnbuzz/form-core";
 
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
-    { type: "text", name: "name", label: "Name", required: true },
+    { type: "text", name: "name", label: "Full Name", required: true },
     { type: "email", name: "email", label: "Email", required: true },
-    { type: "number", name: "age", label: "Age", min: 18 },
+    { type: "textarea", name: "message", label: "Message" },
   ],
 });
 ```
+
+<Callout type="tip">
+  **Best Practice:** Define schemas in separate files (e.g., `lib/schemas/contact.ts`) for reusability across forms and server actions. See [File Organization](#file-organization) below.
+</Callout>
 
 ## Type Inference
 
@@ -30,39 +34,78 @@ Use `InferType` to get TypeScript types from your schema's fields:
 ```tsx
 import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-const schema = defineSchema({
+const contactSchema = defineSchema({
   fields: [
-    { type: "text", name: "name", label: "Name", required: true },
-    { type: "email", name: "email", label: "Email" },
-    { type: "checkbox", name: "newsletter", label: "Subscribe" },
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "textarea", name: "message", label: "Message" },
   ],
 });
 
-type FormData = InferType<typeof schema.fields>;
-// Result: { name: string, email?: string, newsletter: boolean }
+type ContactData = InferType<typeof contactSchema.fields>;
+// Result: { name: string, email: string, message?: string }
 ```
 
 This is especially useful for server actions:
 
-```tsx title="actions.ts"
+```tsx title="app/actions.ts"
 "use server";
 
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
-
-const schema = defineSchema({
-  fields: [
-    { type: "text", name: "name", label: "Name" },
-    { type: "email", name: "email", label: "Email" },
-  ],
-});
-
-type ContactData = InferType<typeof schema.fields>;
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { db } from "@/lib/db";
 
 export async function submitContact(data: ContactData) {
   // data is fully typed!
   await db.contacts.create(data);
 }
 ```
+
+## File Organization
+
+For production apps, organize schemas in dedicated files:
+
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  description: "Send us a message",
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "textarea", name: "message", label: "Message", required: true },
+  ],
+});
+
+export type ContactData = InferType<typeof contactSchema.fields>;
+```
+
+Then import in your components and actions:
+
+```tsx title="app/contact-form.tsx"
+"use client";
+
+import { contactSchema } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { submitContact } from "./actions";
+
+export function ContactForm() {
+  return (
+    <Form schema={contactSchema} onSubmit={submitContact}>
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+**Benefits of this pattern:**
+- ✅ Single source of truth for schema
+- ✅ Reusable in forms, server actions, and API routes
+- ✅ Type inference available everywhere
+- ✅ Easy to maintain and update
 
 ## Base Field Properties
 
@@ -75,9 +118,11 @@ Every field has these common properties:
 Use `group` fields to create nested objects:
 
 ```tsx
-const schema = defineSchema({
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+const profileSchema = defineSchema({
   fields: [
-    { type: "text", name: "name", label: "Name" },
+    { type: "text", name: "name", label: "Full Name" },
     {
       type: "group",
       name: "address",
@@ -85,12 +130,14 @@ const schema = defineSchema({
       fields: [
         { type: "text", name: "street", label: "Street" },
         { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP Code" },
       ],
     },
   ],
 });
 
-// Result: { name: string, address: { street: string, city: string } }
+type ProfileData = InferType<typeof profileSchema.fields>;
+// Result: { name: string, address?: { street: string, city: string, zip: string } }
 ```
 
 ## Array Data
@@ -98,21 +145,88 @@ const schema = defineSchema({
 Use `array` fields for repeatable items:
 
 ```tsx
-const schema = defineSchema({
+const jobSchema = defineSchema({
   fields: [
+    { type: "text", name: "name", label: "Name" },
     {
       type: "array",
-      name: "contacts",
-      label: "Contacts",
+      name: "workHistory",
+      label: "Work History",
       minItems: 1,
       maxItems: 5,
       fields: [
-        { type: "text", name: "name", label: "Name" },
-        { type: "email", name: "email", label: "Email" },
+        { type: "text", name: "company", label: "Company" },
+        { type: "text", name: "role", label: "Role" },
+        { type: "text", name: "startDate", label: "Start Date" },
       ],
     },
   ],
 });
 
-// Result: { contacts: Array<{ name: string, email: string }> }
+type JobData = InferType<typeof jobSchema.fields>;
+// Result: { name: string, workHistory: Array<{ company: string, role: string, startDate: string }> }
 ```
+
+## Complete Example
+
+Here's a comprehensive schema combining all features:
+
+```tsx title="lib/schemas/user-profile.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const userProfileSchema = defineSchema({
+  title: "User Profile",
+  description: "Complete your profile information",
+  fields: [
+    // Basic fields
+    { type: "text", name: "firstName", label: "First Name", required: true },
+    { type: "text", name: "lastName", label: "Last Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    
+    // Nested group
+    {
+      type: "group",
+      name: "address",
+      label: "Address",
+      fields: [
+        { type: "text", name: "street", label: "Street" },
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "country", label: "Country" },
+      ],
+    },
+    
+    // Array of items
+    {
+      type: "array",
+      name: "skills",
+      label: "Skills",
+      minItems: 1,
+      fields: [
+        { type: "text", name: "name", label: "Skill Name" },
+        { 
+          type: "select", 
+          name: "level", 
+          label: "Level",
+          options: ["Beginner", "Intermediate", "Advanced"],
+        },
+      ],
+    },
+  ],
+});
+
+export type UserProfileData = InferType<typeof userProfileSchema.fields>;
+// {
+//   firstName: string,
+//   lastName: string,
+//   email: string,
+//   address?: { street: string, city: string, country: string },
+//   skills: Array<{ name: string, level: string }>
+// }
+```
+
+## Related
+
+- [Quick Start](/docs/quick-start) — Build your first form with this schema
+- [Validation](/docs/validation) — Add validation rules to your schema
+- [Conditional Logic](/docs/conditional-logic) — Show/hide fields based on conditions
+- [Default Values](/docs/default-values) — Set default values for fields

@@ -189,13 +189,17 @@ validate: async (value) => {
 
 **After:**
 ```tsx
-// Register custom validator
-const customValidators = {
-  usernameAvailable: async (value: string) => {
+import { defineValidators } from "@buildnbuzz/form-core";
+
+// Register custom validator using defineValidators
+const customValidators = defineValidators({
+  usernameAvailable: async (value: unknown) => {
+    if (typeof value !== "string") return false;
+    
     const available = await checkUsername(value);
     return available ? true : "Username is taken";
   },
-};
+});
 
 const form = useForm({
   schema,
