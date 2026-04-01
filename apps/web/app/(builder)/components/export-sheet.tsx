@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -29,7 +30,7 @@ import { downloadTextFile, toSafeFileName } from "../lib/utils";
 import { useBuilderStore } from "../lib/store";
 
 const starterCommand =
-  "npx shadcn@latest add https://form.buildnbuzz.com/r/starter.json";
+  "npx shadcn@latest add https://form.buildnbuzz.com/r/all.json";
 
 export function ExportSheet() {
   const [open, setOpen] = React.useState(false);
@@ -118,6 +119,16 @@ export function ExportSheet() {
             Builder document file.
           </SheetDescription>
         </SheetHeader>
+        <div className="border-b px-4 py-3">
+          <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100">
+            <AlertTitle>Migration notice</AlertTitle>
+            <AlertDescription>
+              The builder is being migrated to the new framework-agnostic,
+              headless BuzzForm. Exports will be updated as the migration
+              progresses.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         <Tabs
           defaultValue="tsx"
