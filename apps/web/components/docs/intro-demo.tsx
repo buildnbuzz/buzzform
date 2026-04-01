@@ -1,70 +1,46 @@
 "use client";
 
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/registry/base/form";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import { ToastCodeBlock } from "@/components/ui/toast-code-block";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+const codeExample = `import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
 import { toast } from "sonner";
 
-const schema = createSchema([
-  { type: "text", name: "name", label: "Full Name", required: true },
-  { type: "email", name: "email", label: "Email", required: true },
-  { type: "password", name: "password", label: "Password", minLength: 8 },
-]);
+// 1. Define schema
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "password", name: "password", label: "Password", minLength: 8 },
+  ],
+});
 
-const codeExample = `import { Form, FormFields, FormSubmit } from "@/components/buzzform/form";
-import { type Field } from "@buildnbuzz/buzzform";
+// 2. Infer type
+type FormData = InferType<typeof schema.fields>;
+// { name: string; email: string; password: string }
 
-const fields: Field[] = [
-  { type: "text", name: "name", label: "Full Name", required: true },
-  { type: "email", name: "email", label: "Email", required: true },
-  { type: "password", name: "password", label: "Password", minLength: 8 },
-];
-
+// 3. Render form
 export function SignUpForm() {
-  const handleSubmit = async (data) => {
-    // data is fully typed based on your fields
-    toast.success(<pre>{JSON.stringify(data, null, 2)}</pre>);
-  };
-
   return (
-    <Form fields={fields} onSubmit={handleSubmit}>
-      <FormFields />
-      <FormSubmit>Create Account</FormSubmit>
+    <Form
+      schema={schema}
+      onSubmit={({ value }) => {
+        const data = value as FormData;
+        toast("Account created!", { description: data.email });
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Create Account</FormSubmit>
+      </FormContent>
     </Form>
   );
 }`;
 
 export function IntroDemo() {
   return (
-    <div className="not-prose">
-      <Tabs defaultValue="preview">
-        <TabsList className="mb-4">
-          <TabsTrigger value="preview">Preview</TabsTrigger>
-          <TabsTrigger value="code">Code</TabsTrigger>
-        </TabsList>
-        <TabsContent value="preview">
-          <div className="rounded-lg border border-border bg-card p-6 max-w-sm mx-auto">
-            <Form
-              schema={schema}
-              onSubmit={(data) => {
-                toast("Form Submitted!", {
-                  description: (
-                    <ToastCodeBlock code={JSON.stringify(data, null, 2)} />
-                  ),
-                });
-              }}
-              submitLabel="Create Account"
-            />
-          </div>
-        </TabsContent>
-        <TabsContent value="code">
-          <div className="[&_figure]:my-0! [&_figure]:border-border/30! [&_figure]:rounded-lg!">
-            <DynamicCodeBlock lang="tsx" code={codeExample} />
-          </div>
-        </TabsContent>
-      </Tabs>
+    <div className="not-prose [&_figure]:my-0! [&_figure]:border-border/30! [&_figure]:rounded-lg!">
+      <DynamicCodeBlock lang="tsx" code={codeExample} />
     </div>
   );
 }

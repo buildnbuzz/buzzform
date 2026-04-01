@@ -21,6 +21,7 @@ export {
 } from "./contexts";
 
 export type { FieldRendererProps, RenderFieldsProps } from "./renderer";
+export type { LayoutFieldProps } from "./field";
 export type { FormProps } from "./form";
 export type {
   AnyReactFormExtendedApi,

@@ -1,0 +1,262 @@
+---
+title: Field Wrappers
+description: Headless wrappers for custom field components — Field and LayoutField.
+---
+
+# Field Wrappers
+
+`<Field>` and `<LayoutField>` are headless wrappers that wire up TanStack Form registration and visibility logic for custom field components.
+
+## API Reference
+
+<auto-type-table path="../../../../packages/form-react/src/types.ts" name="FieldProps" />
+
+<auto-type-table path="../../../../packages/form-react/src/field.tsx" name="LayoutFieldProps" />
+
+### FieldProps
+
+| Prop | Type | Description |
+|------|------|-------------|
+| `field` | `DataField` | Field schema node |
+| `form` | `FieldFormApi` | TanStack form instance |
+| `validators` | `FieldValidators` | TanStack validators |
+| `contextData` | `object` | External data for dynamic values |
+| `customValidators` | `ValidationRegistry` | Custom validator registry |
+| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
+| `children` | `ReactNode` | Field UI content |
+
+## Field Wrapper
+
+Use `<Field>` for custom data field components:
+
+```tsx
+import { Field } from "@buildnbuzz/form-react";
+import { useDataField } from "@buildnbuzz/form-react";
+import { contactSchema } from "@/lib/schemas/contact";
+
+function CustomTextField({ form, field }) {
+  const { fieldApi, handleChange, handleBlur } = useDataField();
+
+  return (
+    <Field field={field} form={form}>
+      <input
+        type="text"
+        value={fieldApi.state.value ?? ""}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+      />
+    </Field>
+  );
+}
+```
+
+## LayoutField Wrapper
+
+Use `<LayoutField>` for custom layout components:
+
+```tsx
+import { LayoutField } from "@buildnbuzz/form-react";
+import { useLayoutField } from "@buildnbuzz/form-react";
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+
+function CustomRowLayout({ children, form, field }) {
+  const { field: layoutField, isHidden, isDisabled } = useLayoutField();
+
+  if (isHidden) return null;
+
+  return (
+    <LayoutField field={layoutField} form={form}>
+      <div className="flex gap-4">
+        {children}
+      </div>
+    </LayoutField>
+  );
+}
+```
+
+## How Field Works
+
+`<Field>` handles:
+
+1. **TanStack Registration** — Creates field instance via `form.field()`
+2. **Validator Wiring** — Maps `ValidationConfig` to TanStack validators
+3. **Visibility Logic** — Evaluates `condition`, `hidden`, `disabled`, `readOnly`, `required`
+4. **Conditional Removal** — Unmounts field when `condition` is false
+
+```tsx
+// Inside <Field>
+const fieldApi = form.field({
+  name: field.name,
+  defaultValue: field.defaultValue,
+  validators: {
+    onChangeAsync: mappedValidators.onChange,
+    onBlurAsync: mappedValidators.onBlur,
+    onSubmitAsync: mappedValidators.onSubmit,
+  },
+});
+```
+
+## Validator Mapping
+
+`<Field>` maps `ValidationConfig` to TanStack validators:
+
+```tsx
+// Your schema
+{
+  type: "text",
+  name: "username",
+  validate: {
+    onBlur: {
+      checks: [
+        { type: "minLength", message: "Too short", args: { min: 3 } },
+      ],
+    },
+  },
+}
+
+// Mapped to TanStack
+validators: {
+  onBlurAsync: async ({ value }) => {
+    // Runs minLength check
+    // Returns error string or undefined
+  }
+}
+```
+
+## Derived Validation Mode
+
+Control when derived validators run:
+
+```tsx
+<Field
+  field={field}
+  form={form}
+  derivedValidationMode="blur" // or "change" or "submit"
+>
+  <CustomInput />
+</Field>
+```
+
+## Condition Handling
+
+When `condition` evaluates to false:
+
+```tsx
+// Inside <Field>
+if (!isConditionMet) {
+  // Renders ConditionalFieldRemover
+  // Calls form.deleteField() to remove from state
+  return <ConditionalFieldRemover form={form} path={field.name} />;
+}
+```
+
+## listenTo Dependencies
+
+Wire up cross-field reactivity:
+
+```tsx
+const registerSchema = defineSchema({
+  fields: [
+    { type: "password", name: "password", label: "Password" },
+    {
+      type: "password",
+      name: "confirmPassword",
+      label: "Confirm Password",
+      validate: {
+        onSubmit: {
+          checks: [
+            {
+              type: "matches",
+              message: "Passwords don't match",
+              args: { other: { $data: "/password" } },
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+
+// <Field> automatically wires listenTo for $data references
+// confirmPassword field re-validates when password changes
+```
+
+## LayoutField Differences
+
+`<LayoutField>` is simpler than `<Field>`:
+
+| Feature | Field | LayoutField |
+|---------|-------|-------------|
+| TanStack registration | ✅ Yes | ❌ No |
+| Validators | ✅ Yes | ❌ No |
+| Visibility evaluation | ✅ Yes | ✅ Yes |
+| Context provision | ✅ Yes | ✅ Yes |
+
+Use `<LayoutField>` for containers that don't register values (row, tabs, collapsible).
+
+## Example: Custom Data Field
+
+```tsx
+import { Field } from "@buildnbuzz/form-react";
+import { useDataField } from "@buildnbuzz/form-react";
+
+function CustomNumberField({ form, field }) {
+  const {
+    fieldApi,
+    field,
+    handleChange,
+    handleBlur,
+    label,
+    description,
+    isDisabled,
+    isRequired,
+  } = useDataField();
+
+  return (
+    <Field field={field} form={form}>
+      <label>
+        {label}
+        {isRequired && <span>*</span>}
+      </label>
+      <input
+        type="number"
+        value={fieldApi.state.value ?? ""}
+        onChange={(e) => handleChange(parseFloat(e.target.value))}
+        onBlur={handleBlur}
+        disabled={isDisabled}
+      />
+      {description && <p className="text-sm text-muted">{description}</p>}
+    </Field>
+  );
+}
+```
+
+## Example: Custom Layout Field
+
+```tsx
+import { LayoutField } from "@buildnbuzz/form-react";
+import { useLayoutField } from "@buildnbuzz/form-react";
+
+function CustomCardLayout({ children, form, field }) {
+  const { field: layoutField, label, isHidden } = useLayoutField();
+
+  if (isHidden) return null;
+
+  return (
+    <LayoutField field={layoutField} form={form}>
+      <div className="p-4 border rounded">
+        {label && <h3 className="font-semibold mb-2">{label}</h3>}
+        <div className="space-y-4">
+          {children}
+        </div>
+      </div>
+    </LayoutField>
+  );
+}
+```
+
+## Related
+
+- [Custom Fields](/docs/custom-fields)
+- [Field Hooks](/docs/field-hooks)
+- [RenderFields](/docs/render-fields)

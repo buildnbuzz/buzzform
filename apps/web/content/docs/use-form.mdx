@@ -1,0 +1,308 @@
+---
+title: useForm Hook
+description: Complete API reference for the useForm hook — options, context data, and validation.
+---
+
+# useForm Hook
+
+`useForm` wraps TanStack Form's `useForm` with schema-derived defaults, submit validation, and optional output transformation.
+
+## API Reference
+
+<auto-type-table path="../../../../packages/form-react/src/types.ts" name="UseFormOptions" />
+
+### UseFormOptions
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `schema` | `FormSchema` | - | Form schema for defaults and validation |
+| `defaultValues` | `Partial<TFormData>` | - | Override schema-derived defaults |
+| `customValidators` | `ValidationRegistry` | - | Custom validator functions |
+| `contextData` | `object` | - | External data for validators and conditions |
+| `enableSchemaSubmitValidation` | `boolean` | `true` | Enable schema-based submit validation |
+| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | `"blur"` | When to run derived validators |
+| `output` | `OutputConfig` | - | Transform form output (e.g., flatten to path keys) |
+
+All standard TanStack Form options are also supported (`form`, `id`, etc.).
+
+## Basic Usage
+
+```tsx
+"use client";
+
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+
+export function ContactForm() {
+  const form = useForm({
+    schema: contactSchema,
+    onSubmit: ({ value }) => {
+      console.log(value); // { name: string; email: string; subject: string; message: string }
+    },
+  });
+
+  return (
+    <Form form={form} schema={contactSchema}>
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+## Schema-Derived Defaults
+
+`useForm` automatically extracts `defaultValue` from your schema fields:
+
+```tsx
+const profileSchema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "firstName",
+      label: "First Name",
+      defaultValue: "John",
+    },
+    {
+      type: "email",
+      name: "email",
+      label: "Email",
+      defaultValue: "john@example.com",
+    },
+  ],
+});
+
+const form = useForm({ schema: profileSchema });
+// form state includes defaults: { firstName: "John", email: "john@example.com" }
+```
+
+You can override schema defaults:
+
+```tsx
+const form = useForm({
+  schema: profileSchema,
+  defaultValues: {
+    firstName: "Jane", // Overrides schema default
+  },
+});
+```
+
+## Context Data
+
+Pass external data to validators and conditions:
+
+```tsx
+const form = useForm({
+  schema: contactSchema,
+  contextData: {
+    userRole: "admin",
+    maxItems: 10,
+  },
+  onSubmit: ({ value }) => {
+    // Validators can access contextData via { $context: "/userRole" }
+  },
+});
+```
+
+See [Dynamic Values](/docs/dynamic-values) for using `$context` in conditions and validators.
+
+## Custom Validators
+
+Register custom validators using `defineValidators`:
+
+```tsx
+import { defineValidators } from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  usernameAvailable: async (value: unknown) => {
+    if (typeof value !== "string") return false;
+    
+    const available = await checkUsername(value);
+    return available ? true : "Username is taken";
+  },
+  validatePromoCode: async (value: unknown) => {
+    if (typeof value !== "string") return false;
+    
+    const valid = await validatePromo(value);
+    return valid ? true : "Invalid promo code";
+  },
+});
+
+const form = useForm({
+  schema: registerSchema,
+  customValidators,
+});
+```
+
+<Callout type="tip">
+  Use `defineValidators` to create type-safe custom validators. It provides proper typing and ensures validators return the correct format.
+</Callout>
+
+Use custom validators in your schema:
+
+```tsx
+const registerSchema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      validate: {
+        onBlur: {
+          checks: [
+            {
+              type: "usernameAvailable",
+              message: "This username is taken",
+            },
+          ],
+        },
+      },
+    },
+  ],
+});
+```
+
+## Submit Validation
+
+By default, `useForm` builds a TanStack Standard Schema validator from your schema:
+
+```tsx
+const form = useForm({
+  schema: contactSchema,
+  enableSchemaSubmitValidation: true, // Default: true
+});
+```
+
+This runs all validation checks on submit, including:
+- Derived validators (from `required`, `minLength`, etc.)
+- Custom validators in `validate.onSubmit`
+
+Disable if you handle validation manually:
+
+```tsx
+const form = useForm({
+  schema: contactSchema,
+  enableSchemaSubmitValidation: false,
+  // Add your own onSubmit validator
+  validators: {
+    onSubmitAsync: myCustomValidator,
+  },
+});
+```
+
+## Derived Validation Mode
+
+Control when auto-derived validators run:
+
+```tsx
+const form = useForm({
+  schema: contactSchema,
+  derivedValidationMode: "blur", // or "change" or "submit"
+});
+```
+
+- `"blur"` (default) — derived validators run on blur and submit
+- `"change"` — derived validators run on change, blur, and submit
+- `"submit"` — derived validators only run on submit
+
+## Output Transformation
+
+Transform nested data to flat path keys:
+
+```tsx
+const profileSchema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Name" },
+    {
+      type: "group",
+      name: "address",
+      fields: [
+        { type: "text", name: "city", label: "City" },
+        { type: "text", name: "zip", label: "ZIP" },
+      ],
+    },
+  ],
+});
+
+const form = useForm({
+  schema: profileSchema,
+  output: { type: "path" }, // Flatten to dot-notation keys
+  onSubmit: ({ value }) => {
+    // Without output: { name: "John", address: { city: "NYC", zip: "10001" } }
+    // With output:    { name: "John", "address.city": "NYC", "address.zip": "10001" }
+    submitToApi(value);
+  },
+});
+```
+
+See [Output Transformation](/docs/output-transformation) for details.
+
+## Typed Usage
+
+Get full TypeScript inference:
+
+```tsx
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { useForm } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({
+    schema: contactSchema,
+    onSubmit: ({ value }) => {
+      // value is typed as ContactData
+      console.log(value.name);
+      console.log(value.email);
+    },
+  });
+
+  return (
+    <Form form={form} schema={contactSchema}>
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
+  );
+}
+```
+
+## External Form Instance
+
+Create form instance outside `<Form>` for advanced control:
+
+```tsx
+export function ControlledFormDialog() {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm({
+    schema: contactSchema,
+    onSubmit: ({ value }) => {
+      submitData(value);
+      form.reset();
+      setOpen(false);
+    },
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent>
+        <Form form={form} schema={contactSchema}>
+          <FormContent>
+            <FormFields />
+            <FormSubmit>Submit</FormSubmit>
+          </FormContent>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+## Related
+
+- [`<Form>` Component](/docs/form-component)
+- [`<FormProvider>`](/docs/form-provider)
+- [Validation](/docs/validation)
+- [Quick Start](/docs/quick-start)

@@ -1,123 +1,36 @@
 ---
 title: Switch Field
-description: Toggle switch for boolean values with customizable alignment.
+description: Toggle switch for boolean values.
 ---
 
 # Switch Field
 
-The `switch` field renders a toggle switch, an alternative to checkbox for boolean values.
+The `switch` field renders a toggle switch for boolean values.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/switch.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/switch.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "switch",
-    name: "notifications",
-    label: "Enable notifications",
-  },
-]);
-
-export function SwitchFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-The switch field uses the common base field props.
-
-| Prop           | Type      | Default | Description   |
-| -------------- | --------- | ------- | ------------- |
-| `defaultValue` | `boolean` | `false` | Initial state |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="SwitchField" />
 
 ## UI Options
 
-| Option         | Type                            | Default     | Description     |
-| -------------- | ------------------------------- | ----------- | --------------- |
-| `ui.alignment` | `'start' \| 'end' \| 'between'` | `'between'` | Switch position |
+Same as [Text Field](/docs/fields/data/text#ui-options).
 
-## Alignment Options
-
-### Between (Default)
-
-Label on left, switch on right with full-width spacing:
+## Basic Usage
 
 ```tsx
-{
-  type: "switch",
-  name: "enabled",
-  label: "Enable feature",
-  ui: { alignment: "between" },
-}
-```
-
-### Start
-
-Switch on left, label on right:
-
-```tsx
-{
-  type: "switch",
-  name: "enabled",
-  label: "Enable feature",
-  ui: { alignment: "start" },
-}
-```
-
-### End
-
-Label on left, switch immediately after:
-
-```tsx
-{
-  type: "switch",
-  name: "enabled",
-  label: "Enable feature",
-  ui: { alignment: "end" },
-}
+const schema = defineSchema({
+  fields: [
+    {
+      type: "switch",
+      name: "notifications",
+      label: "Enable Notifications",
+      defaultValue: true,
+    },
+  ],
+});
 ```
 
 ## Examples
-
-### Settings Panel
-
-```tsx
-const schema = createSchema([
-  {
-    type: "switch",
-    name: "emailNotifications",
-    label: "Email notifications",
-    description: "Receive updates via email",
-    defaultValue: true,
-  },
-  {
-    type: "switch",
-    name: "pushNotifications",
-    label: "Push notifications",
-    description: "Receive push notifications on your device",
-  },
-  {
-    type: "switch",
-    name: "marketingEmails",
-    label: "Marketing emails",
-    description: "Receive promotional content and offers",
-  },
-]);
-```
 
 ### Feature Toggle
 
@@ -125,27 +38,40 @@ const schema = createSchema([
 {
   type: "switch",
   name: "darkMode",
-  label: "Dark mode",
-  description: "Switch to dark theme",
+  label: "Dark Mode",
+  description: "Switch between light and dark themes",
 }
 ```
 
-### Conditional Content
+### Required Switch
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "switch",
-    name: "isPublic",
-    label: "Make project public",
-    description: "Anyone can view this project",
-  },
-  {
-    type: "text",
-    name: "accessCode",
-    label: "Access Code",
-    description: "Required for private projects",
-    hidden: (data) => data.isPublic,
-  },
-]);
+{
+  type: "switch",
+  name: "consent",
+  label: "I consent to data processing",
+  required: true,
+}
 ```
+
+### Disabled Switch
+
+```tsx
+{
+  type: "switch",
+  name: "premium",
+  label: "Premium Features",
+  disabled: true,
+  description: "Upgrade to unlock",
+}
+```
+
+## Auto-Derived Validators
+
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+
+## Related
+
+- [Checkbox Field](/docs/fields/data/checkbox)

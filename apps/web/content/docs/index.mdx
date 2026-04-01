@@ -1,79 +1,115 @@
 ---
 title: Introduction
-description: BuzzForm is a schema-driven form library for React and shadcn/ui that eliminates boilerplate while maintaining full control over your forms.
+description: BuzzForm is a schema-driven form library for React built on TanStack Form.
 ---
 
 # Introduction
 
-**BuzzForm** is a modern, schema-driven form library designed specifically for React applications using [shadcn/ui](https://ui.shadcn.com). Define your forms as data, and let BuzzForm handle the rendering, validation, and state management - all with minimal boilerplate.
+BuzzForm is a schema-driven form library for React. Define your form as a plain object and BuzzForm handles rendering, validation, and conditional logic — with full TypeScript inference.
+
+It ships as two packages:
+
+- `@buildnbuzz/form-core` — framework-agnostic types, validation, and utilities. No React, no DOM.
+- `@buildnbuzz/form-react` — React adapter built on [TanStack Form](https://tanstack.com/form). Provides `useForm`, `<Form>`, `<FormProvider>`, and field hooks.
+
+The UI layer is delivered as a [shadcn registry](https://ui.shadcn.com/docs/registry) — install field components into your codebase and customize them freely.
 
 ## Why BuzzForm?
 
-Building forms in React can be repetitive and error-prone. You often find yourself:
+Building forms in React is repetitive. You end up writing the same input wiring, validation logic, and conditional visibility code over and over. BuzzForm lets you declare your form structure once:
 
-- Writing the same input patterns over and over
-- Manually wiring up validation logic
-- Managing complex conditional field visibility
-- Handling array fields and nested data structures
+```tsx
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-BuzzForm solves these problems by letting you **declare your form structure once** and automatically generating:
+const schema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      minLength: 8,
+      criteria: { requireUppercase: true, requireNumber: true },
+    },
+  ],
+});
 
-- **Fully typed form components** with TypeScript inference
-- **Zod validation schemas** from your field definitions
-- **Accessible, styled UI** using shadcn/ui components
-- **Smart defaults** that work out of the box
+type FormData = InferType<typeof schema.fields>;
+// { name: string; email: string; password: string }
+```
+
+And get rendering, validation, and typed submission data automatically:
+
+```tsx
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
+
+<Form schema={schema} onSubmit={({ value }) => console.log(value)}>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>;
+```
 
 ## Key Features
 
 <Cards>
-  <Card title="🎯 Schema-Driven">
-    Define fields as data. Your form structure becomes a single source of truth
-    for rendering, validation, and types.
-  </Card>
-  <Card title="🧩 17+ Field Types">
-    Text, password, select, date, upload, arrays, tabs, and more—all built-in
-    and ready to use.
-  </Card>
-  <Card title="⚡ Auto Validation">
-    Generates Zod schemas automatically from your field definitions. No manual
-    schema writing required.
-  </Card>
-  <Card title="🎨 shadcn/ui Native">
-    Beautiful, accessible components that match your existing shadcn/ui design
-    system perfectly.
-  </Card>
-  <Card title="🔌 Adapter Pattern">
-    Built on React Hook Form with a clean adapter pattern. Extensible to other
-    form libraries.
-  </Card>
-  <Card title="📦 Registry Ready">
-    Install individual components via the shadcn CLI. Only include what you
-    need.
-  </Card>
+  <Card
+    title="Schema-Driven"
+    description="Define fields as data. One object is the source of truth for rendering, validation, and TypeScript types."
+  />
+  <Card
+    title="TanStack Form Core"
+    description="Built on TanStack Form — battle-tested state management, async validation, and field-level subscriptions."
+  />
+  <Card
+    title="Declarative Conditions"
+    description="Show, hide, disable, or require fields using a composable AST condition system. No imperative callbacks."
+  />
+  <Card
+    title="Built-in Validators"
+    description="required, email, minLength, pattern, min, max, matches, passwordCriteria, and more — all declarative."
+  />
+  <Card
+    title="Dynamic Values"
+    description="Reference other field values or external context in labels, placeholders, defaults, and validator args using $data and $context references."
+  />
+  <Card
+    title="Registry Pattern"
+    description="Map field types to your own React components. Install shadcn field components via the CLI or bring your own."
+  />
+  <Card
+    title="TypeScript Inference"
+    description="InferType gives you a fully typed form data object from your schema definition — no manual typing needed."
+  />
 </Cards>
 
-## A Quick Look
+## Quick Install
 
-Here's what building a form with BuzzForm looks like:
+#### Install all field components and core packages via shadcn registry
 
-<IntroDemo />
+```bash
+npx shadcn@latest add @buzzform/all
+```
 
-That's it. No manual `register` calls, no separate validation schema, no repetitive JSX. Just declare your fields and go.
+<Callout type="info">
+  Add `"@buzzform": "https://form.buildnbuzz.com/r/{name}.json"` to the
+  `registries` field in your `components.json` first. See
+  [Installation](/docs/installation) for full setup details.
+</Callout>
 
 ## How It Works
 
-1. **Define your fields** as an array of field objects, each with a `type`, `name`, and optional configuration
-2. **BuzzForm infers the schema** and generates a Zod validator automatically
-3. **Render with `<FormFields />`** which maps your field definitions to shadcn/ui components
-4. **Handle submission** with full TypeScript inference on your data
+1. **Install** — add the core packages and field components via the shadcn registry
+2. **Define a schema** — create a `FormSchema` with a `fields` array using `defineSchema()`
+3. **Wrap with provider** — add `<FormProvider registry={registry}>` to your root layout
+4. **Render** — use `<Form schema={schema}>` with `<FormContent>`, `<FormFields />`, and `<FormSubmit>` — fields render automatically via your registry
+5. **Handle submission** — get fully typed data in your `onSubmit` callback
 
-## Who Is This For?
-
-BuzzForm is ideal for:
-
-- **Developers using shadcn/ui** who want a consistent form experience
-- **Teams building admin panels** or internal tools with many forms
-- **Projects requiring complex forms** with conditional logic, arrays, and nested data
-- **Anyone tired of form boilerplate** who wants to move faster
-
-## What's Next?
+<IntroDemo />

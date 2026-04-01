@@ -1,271 +1,133 @@
 ---
 title: Select Field
-description: Dropdown with search, multi-select, and async options.
+description: Dropdown select with search, multi-select, and clearable options.
 ---
 
 # Select Field
 
-The `select` field provides a dropdown with optional search, multiple selection, and async data loading with dependency support.
+The `select` field renders a dropdown select with optional search and multi-select support.
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/select.json
-```
-
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/select.json
-```
-
-## Usage
-
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "select",
-    name: "country",
-    label: "Country",
-    options: [
-      { label: "United States", value: "us" },
-      { label: "Canada", value: "ca" },
-      { label: "Mexico", value: "mx" },
-    ],
-  },
-]);
-
-export function SelectFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
-```
-
-## Properties
-
-| Prop           | Type                | Default | Description                    |
-| -------------- | ------------------- | ------- | ------------------------------ |
-| `options`      | `Array \| Function` | -       | Static or async options        |
-| `dependencies` | `string[]`          | -       | Fields that trigger refetch    |
-| `hasMany`      | `boolean`           | `false` | Allow multiple selections      |
-| `minSelected`  | `number`            | -       | Minimum selections (`hasMany`) |
-| `maxSelected`  | `number`            | -       | Maximum selections (`hasMany`) |
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="SelectField" />
 
 ## UI Options
 
-| Option               | Type      | Default        | Description                   |
-| -------------------- | --------- | -------------- | ----------------------------- |
-| `ui.isSearchable`    | `boolean` | `true`         | Enable search filtering       |
-| `ui.isClearable`     | `boolean` | `false`        | Show clear button             |
-| `ui.maxVisibleChips` | `number`  | -              | Limit visible chips (hasMany) |
-| `ui.emptyMessage`    | `string`  | `"No options"` | Empty state message           |
-| `ui.loadingMessage`  | `string`  | `"Loading..."` | Loading state message         |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `isSearchable` | `boolean` | `true` | Enable search input inside the dropdown |
+| `isClearable` | `boolean` | `true` (when not required) | Show a clear button when a value is selected |
+| `emptyMessage` | `string` | `"No results found."` | Message shown when no options match |
+| `className` | `string` | - | CSS class applied to the field container |
+| `width` | `string \| number` | - | Inline width applied to the field |
 
-## Option Format
+## Basic Usage
 
-Options can be strings or objects:
+### Single Select
 
 ```tsx
-// String array
-options: ["Small", "Medium", "Large"];
-
-// Object array
-options: [
-  { label: "Small", value: "sm" },
-  { label: "Medium", value: "md", description: "Most popular" },
-  { label: "Large", value: "lg", disabled: true },
-];
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: [
+        { label: "Admin", value: "admin" },
+        { label: "User", value: "user" },
+        { label: "Guest", value: "guest" },
+      ],
+      required: true,
+    },
+  ],
+});
 ```
 
-### Option Properties
+### Multi-Select
 
-| Property      | Type                          | Description    |
-| ------------- | ----------------------------- | -------------- |
-| `label`       | `string \| ReactNode`         | Display text   |
-| `value`       | `string \| number \| boolean` | Option value   |
-| `description` | `string`                      | Secondary text |
-| `icon`        | `ReactNode`                   | Leading icon   |
-| `badge`       | `string`                      | Trailing badge |
-| `disabled`    | `boolean`                     | Disable option |
+```tsx
+{
+  type: "select",
+  name: "interests",
+  label: "Interests",
+  hasMany: true,
+  options: ["Design", "Development", "Marketing", "Sales"],
+  minSelected: 1,
+  maxSelected: 3,
+}
+```
 
-## Features
+## Examples
 
-### Searchable Select
-
-Filter options by typing:
+### With Search
 
 ```tsx
 {
   type: "select",
   name: "country",
   label: "Country",
-  options: countries, // Large list
-  ui: { isSearchable: true },
-}
-```
-
-### Multi-Select
-
-Allow multiple selections:
-
-```tsx
-{
-  type: "select",
-  name: "tags",
-  label: "Tags",
-  hasMany: true,
-  options: ["React", "TypeScript", "Next.js", "Tailwind"],
-  ui: { maxVisibleChips: 3 }, // Show "+2 more" for extras
-}
-```
-
-### Async Options
-
-Load options dynamically:
-
-```tsx
-{
-  type: "select",
-  name: "user",
-  label: "User",
-  options: async () => {
-    const users = await fetchUsers();
-    return users.map(u => ({ label: u.name, value: u.id }));
-  },
-}
-```
-
-### Dependent Dropdowns
-
-Refetch options when another field changes:
-
-```tsx
-const schema = createSchema([
-  {
-    type: "select",
-    name: "country",
-    label: "Country",
-    options: countries,
-  },
-  {
-    type: "select",
-    name: "state",
-    label: "State",
-    dependencies: ["country"], // Refetch when country changes
-    options: async ({ data }) => {
-      if (!data.country) return [];
-      return await fetchStates(data.country);
-    },
-    disabled: (data) => !data.country,
-  },
-  {
-    type: "select",
-    name: "city",
-    label: "City",
-    dependencies: ["country", "state"],
-    options: async ({ data }) => {
-      if (!data.state) return [];
-      return await fetchCities(data.country, data.state);
-    },
-    disabled: (data) => !data.state,
-  },
-]);
-```
-
-## Examples
-
-### Role Selector
-
-```tsx
-{
-  type: "select",
-  name: "role",
-  label: "Role",
-  required: true,
-  options: [
-    { label: "Viewer", value: "viewer", description: "Can view content" },
-    { label: "Editor", value: "editor", description: "Can edit content" },
-    { label: "Admin", value: "admin", description: "Full access" },
-  ],
-  ui: { isClearable: true },
-}
-```
-
-### Category Multi-Select
-
-```tsx
-{
-  type: "select",
-  name: "categories",
-  label: "Categories",
-  hasMany: true,
-  required: true,
-  options: [
-    { label: "Technology", value: "tech", icon: <LaptopIcon /> },
-    { label: "Design", value: "design", icon: <PaletteIcon /> },
-    { label: "Business", value: "business", icon: <BriefcaseIcon /> },
-  ],
+  options: countries,
   ui: {
     isSearchable: true,
-    maxVisibleChips: 2,
+    isClearable: true,
+    emptyMessage: "No country found",
   },
 }
 ```
 
-### Timezone Selector
+### With Option Descriptions
 
 ```tsx
 {
   type: "select",
-  name: "timezone",
-  label: "Timezone",
-  options: Intl.supportedValuesOf("timeZone").map(tz => ({
-    label: tz.replace(/_/g, " "),
-    value: tz,
-  })),
-  defaultValue: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  ui: { isSearchable: true },
+  name: "plan",
+  label: "Plan",
+  options: [
+    { label: "Free", value: "free", ui: { description: "$0/month" } },
+    { label: "Pro", value: "pro", ui: { description: "$29/month" } },
+    { label: "Enterprise", value: "enterprise", ui: { description: "Custom pricing" } },
+  ],
 }
 ```
 
-## Radix UI Setup
-
-<Callout type="warning">
-  The Select component uses **Base UI's render prop pattern** by default. If
-  your project uses **Radix UI primitives** (standard in shadcn/ui), you must
-  update the component to use the `asChild` pattern.
-</Callout>
-
-### The Fix
-
-Search for `render={<ComboboxTrigger />}` in `components/buzzform/fields/select.tsx` and replace the entire `InputGroupButton` block with this snippet:
+### With Disabled Options
 
 ```tsx
-<InputGroupButton
-  id={fieldId}
-  asChild
-  className="flex-1 justify-between font-normal h-8 px-3"
-  disabled={isDisabled || isReadOnly}
->
-  <ComboboxTrigger>
-    {selectedOption ? (
-      <span className="flex items-center gap-2 truncate text-left">
-        {selectedOption.icon && (
-          <span className="shrink-0 text-muted-foreground">
-            {selectedOption.icon}
-          </span>
-        )}
-        <span className="truncate">
-          {getSelectOptionLabelString(selectedOption)}
-        </span>
-      </span>
-    ) : (
-      <ComboboxValue>
-        {(value) =>
-          value ?? <span className="text-muted-foreground">{placeholder}</span>
-        }
-      </ComboboxValue>
-    )}
-  </ComboboxTrigger>
-</InputGroupButton>
+{
+  type: "select",
+  name: "region",
+  label: "Region",
+  options: [
+    { label: "US", value: "us" },
+    { label: "UK", value: "uk" },
+    { label: "EU", value: "eu", disabled: true },
+  ],
+}
 ```
+
+### Dynamic Option Disabled
+
+```tsx
+{
+  type: "select",
+  name: "state",
+  label: "State",
+  options: [
+    { label: "California", value: "CA" },
+    { label: "Texas", value: "TX", disabled: { $data: "/country", neq: "US" } },
+  ],
+}
+```
+
+## Auto-Derived Validators
+
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `hasMany: true` + `minSelected` | `minSelected` |
+| `hasMany: true` + `maxSelected` | `maxSelected` |
+
+## Related
+
+- [Radio Field](/docs/fields/data/radio)
+- [Checkbox Field](/docs/fields/data/checkbox)

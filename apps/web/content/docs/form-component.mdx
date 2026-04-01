@@ -1,207 +1,246 @@
 ---
 title: Form Component
-description: API reference for Form, FormSubmit, FormReset, and other form components.
+description: API reference for the Form component — auto-render, manual children, and props.
 ---
 
 # Form Component
 
-The `Form` component and its companions provide a complete form UI with automatic field rendering and state management.
+This page documents the headless `<Form>` from `@buildnbuzz/form-react`. For most apps, prefer the shadcn registry form components (`@/components/buzzform/form`) shown in [Quick Start](/docs/quick-start).
 
-## Form
+## API Reference
 
-The main form component that wraps your entire form.
+<auto-type-table path="../../../../packages/form-react/src/form.tsx" name="FormProps" />
 
-```tsx
-import { Form } from "@/components/buzzform/form";
+| Prop | Type | Description |
+|------|------|-------------|
+| `form` | `FieldFormApi` | TanStack form instance from `useForm` |
+| `fields` | `Field[]` | Schema fields to auto-render |
+| `registry` | `FieldRegistry` | Optional registry override |
+| `renderFallback` | `(field) => ReactNode` | Fallback for unregistered field types |
+| `basePath` | `string` | Parent path for nested fields |
+| `contextData` | `object` | External data for dynamic values |
+| `customValidators` | `ValidationRegistry` | Custom validator registry |
+| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
+| `onSubmit` | `(e) => void` | Custom submit handler |
+| `children` | `ReactNode` | Custom content to render |
 
-<Form
-  schema={schema}
-  onSubmit={(data) => console.log(data)}
-  submitLabel="Save"
-/>;
-```
+All standard HTML `<form>` attributes are also supported.
 
-### Properties
+## Auto-Render Pattern
 
-| Property           | Type                                   | Default          | Description                                            |
-| ------------------ | -------------------------------------- | ---------------- | ------------------------------------------------------ |
-| `schema`           | `BuzzFormSchema`                       | -                | Schema from `createSchema()`                           |
-| `fields`           | `Field[]`                              | -                | Override fields (if not using schema.fields)           |
-| `defaultValues`    | `object \| function`                   | -                | Initial form values                                    |
-| `onSubmit`         | `(data) => void`                       | -                | Submit handler                                         |
-| `mode`             | `'onChange' \| 'onBlur' \| 'onSubmit'` | Provider default | Validation mode                                        |
-| `adapter`          | `AdapterFactory`                       | Provider default | Form library adapter                                   |
-| `settings`         | `FormSettings`                         | -                | Form behavior settings                                 |
-| `disabled`         | `boolean`                              | `false`          | Disable entire form                                    |
-| `requireDirty`     | `boolean`                              | `false`          | Only allow submit when dirty                           |
-| `disableIfInvalid` | `boolean`                              | `false`          | Disable submit until valid                             |
-| `showSubmit`       | `boolean`                              | `true`           | Show auto submit button                                |
-| `submitLabel`      | `string`                               | `"Submit"`       | Submit button text                                     |
-| `submitClassName`  | `string`                               | -                | Submit button styling                                  |
-| `output`           | `OutputConfig`                         | -                | Output data shape ([docs](/docs/output-configuration)) |
-| `registry`         | `FieldRegistry`                        | -                | Custom field registry                                  |
-| `className`        | `string`                               | -                | Form container class                                   |
-
-### Ref Access
-
-Access the form adapter via ref:
+Pass `fields` to auto-render all fields from your schema:
 
 ```tsx
-const formRef = useRef<FormAdapter>(null);
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+import { FormFields } from "@/components/buzzform/form";
 
-<Form ref={formRef} schema={schema} onSubmit={handleSubmit} />;
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
 
-// Later...
-formRef.current?.reset();
-formRef.current?.setValue("email", "new@example.com");
-```
-
-## Compound Components
-
-For custom layouts, use the compound component pattern:
-
-```tsx
-<Form schema={schema} onSubmit={handleSubmit}>
-  <FormContent className="space-y-6">
-    <FormMessage />
-    <FormFields />
-    <FormActions>
-      <FormReset>Clear</FormReset>
-      <FormSubmit>Save Changes</FormSubmit>
-    </FormActions>
-  </FormContent>
-</Form>
-```
-
-### FormContent
-
-Renders the actual `<form>` element. Required when using children.
-
-```tsx
-<FormContent className="space-y-4">{/* Form contents */}</FormContent>
-```
-
-### FormFields
-
-Renders all fields from the schema.
-
-```tsx
-<FormFields className="gap-4" />
-```
-
-### FormField
-
-Render a single field by name.
-
-```tsx
-<FormField name="email" />
-<FormField name="password" />
-```
-
-### FormSubmit
-
-Submit button with automatic loading state.
-
-```tsx
-<FormSubmit submittingText="Saving..." variant="default" size="lg">
-  Save Changes
-</FormSubmit>
-```
-
-| Property         | Type                     | Default           | Description                  |
-| ---------------- | ------------------------ | ----------------- | ---------------------------- |
-| `submittingText` | `string`                 | `"Submitting..."` | Text during submission       |
-| `disabled`       | `boolean`                | -                 | Additional disable condition |
-| `variant`        | `ButtonProps['variant']` | `"default"`       | Button variant               |
-| `size`           | `ButtonProps['size']`    | -                 | Button size                  |
-
-### FormReset
-
-Reset button that clears the form.
-
-```tsx
-<FormReset variant="outline">Clear Form</FormReset>
-```
-
-Automatically disabled when form is not dirty or is submitting.
-
-### FormAction
-
-Generic action button with form-aware disable state.
-
-```tsx
-<FormAction onClick={handlePreview}>Preview</FormAction>
-```
-
-### FormActions
-
-Container for action buttons with alignment.
-
-```tsx
-<FormActions align="between">
-  <FormReset />
-  <FormSubmit />
-</FormActions>
-```
-
-| Property | Type                                        | Default | Description      |
-| -------- | ------------------------------------------- | ------- | ---------------- |
-| `align`  | `'start' \| 'center' \| 'end' \| 'between'` | `'end'` | Button alignment |
-
-### FormMessage
-
-Displays form-level error messages.
-
-```tsx
-<FormMessage />;
-
-{
-  /* Or with custom message */
+  // Auto-renders all fields + children
+  <Form form={form} fields={contactSchema.fields}>
+    <button type="submit">Send Message</button>
+  </Form>;
 }
-<FormMessage>Something went wrong</FormMessage>;
 ```
 
-## useFormContext
+## Manual Children Pattern
 
-Access form state from any child component.
+Render custom layouts without auto-rendering:
 
 ```tsx
-import { useFormContext } from "@/components/buzzform/form";
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+import { FormFields } from "@/components/buzzform/form";
 
-function CustomComponent() {
-  const { form, fields, disabled } = useFormContext();
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <Form form={form}>
+    <div className="grid grid-cols-2 gap-4">
+      <FormFields fields={contactSchema.fields} />
+    </div>
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Registry Override
+
+Pass a custom registry for this form only:
+
+```tsx
+import { customRegistry } from "@/components/my-form/registry";
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <Form
+    form={form}
+    fields={contactSchema.fields}
+    registry={customRegistry} // Override global registry
+  >
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Fallback Renderer
+
+Render a placeholder for unregistered field types:
+
+```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <Form
+    form={form}
+    fields={contactSchema.fields}
+    renderFallback={(field) => (
+      <div className="p-4 bg-muted rounded">
+        <p>Unknown field type: {field.type}</p>
+      </div>
+    )}
+  >
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Base Path
+
+Render a subsection of a nested schema:
+
+```tsx
+import { userProfileSchema } from "@/lib/schemas/user-profile";
+import { useForm, Form } from "@buildnbuzz/form-react";
+import { FormFields } from "@/components/buzzform/form";
+
+export function AddressForm() {
+  const form = useForm({ schema: userProfileSchema });
+
+  const addressField = userProfileSchema.fields.find(f => f.type === "group");
+
+  // Render only address fields
+  <Form
+    form={form}
+    fields={addressField?.fields}
+    basePath="/address"
+  >
+    <button type="submit">Update Address</button>
+  </Form>;
+}
+```
+
+## Custom Submit Handler
+
+Add custom logic before form submission:
+
+```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <Form
+    form={form}
+    fields={contactSchema.fields}
+    onSubmit={(e) => {
+      // Custom logic before TanStack submit
+      console.log("Submitting...");
+    }}
+  >
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Derived Validation Mode
+
+Override the validation mode for this render:
+
+```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ schema: contactSchema });
+
+  <Form
+    form={form}
+    fields={contactSchema.fields}
+    derivedValidationMode="blur"
+  >
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Context Data
+
+Pass context data for dynamic values and validators:
+
+```tsx
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+
+export function ContactForm() {
+  const form = useForm({ 
+    schema: contactSchema,
+    contextData: { maxAttempts: 3 },
+  });
+
+  <Form
+    form={form}
+    fields={contactSchema.fields}
+    contextData={{ maxAttempts: 3 }}
+  >
+    <button type="submit">Send Message</button>
+  </Form>;
+}
+```
+
+## Full Example
+
+```tsx
+"use client";
+
+import { contactSchema } from "@/lib/schemas/contact";
+import { useForm, Form } from "@buildnbuzz/form-react";
+import { FormFields, FormMessage } from "@/components/buzzform/form";
+
+export function ContactForm() {
+  const form = useForm({
+    schema: contactSchema,
+    onSubmit: ({ value }) => {
+      console.log(value);
+    },
+  });
 
   return (
-    <div>
-      <p>Is submitting: {form.formState.isSubmitting ? "Yes" : "No"}</p>
-      <p>Is dirty: {form.formState.isDirty ? "Yes" : "No"}</p>
-    </div>
+    <Form
+      form={form}
+      fields={contactSchema.fields}
+      contextData={{ maxAttempts: 3 }}
+      derivedValidationMode="blur"
+    >
+      <FormMessage />
+      <button type="submit">Send Message</button>
+    </Form>
   );
 }
 ```
 
-### Context Properties
+## Related
 
-| Property           | Type            | Description               |
-| ------------------ | --------------- | ------------------------- |
-| `form`             | `FormAdapter`   | Form adapter instance     |
-| `fields`           | `Field[]`       | Field definitions         |
-| `registry`         | `FieldRegistry` | Field component registry  |
-| `disabled`         | `boolean`       | Whether form is disabled  |
-| `requireDirty`     | `boolean`       | Whether dirty is required |
-| `disableIfInvalid` | `boolean`       | Whether valid is required |
-
-## FormAdapter Methods
-
-When using `useFormContext` or a ref, you have access to:
-
-| Method                       | Description                                   |
-| ---------------------------- | --------------------------------------------- |
-| `form.getValues()`           | Get all current values                        |
-| `form.setValue(name, value)` | Set a field value                             |
-| `form.reset(values?)`        | Reset to default or provided values           |
-| `form.watch(name?)`          | Watch a field value reactively                |
-| `form.validate(name?)`       | Trigger validation                            |
-| `form.setError(name, error)` | Set a field error                             |
-| `form.clearErrors(name?)`    | Clear field errors                            |
-| `form.formState`             | Access isSubmitting, isDirty, isValid, errors |
+- [`useForm` Hook](/docs/use-form)
+- [`<FormProvider>`](/docs/form-provider)
+- [`RenderFields`](/docs/render-fields)
+- [Quick Start](/docs/quick-start)

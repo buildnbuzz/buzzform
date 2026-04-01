@@ -1,74 +1,92 @@
 ---
 title: Checkbox Field
-description: Boolean checkbox input for single true/false values.
+description: Single checkbox, tri-state, or checkbox group.
 ---
 
 # Checkbox Field
 
-The `checkbox` field renders a single checkbox for boolean values.
+The `checkbox` field supports three modes:
+1. **Single** — boolean value (`true`/`false`)
+2. **Tri-state** — `true`/`false`/`null`
+3. **Group** — multiple selections (`string[]`)
 
-## Installation
+## Schema Properties
 
-```bash tab="pnpm"
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/checkbox.json
-```
+### Single Checkbox
 
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/checkbox.json
-```
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="CheckboxField" />
 
-## Usage
+Extends `BaseField` with:
+- `type: "checkbox"`
+- `hasMany?: false` (default)
+- `tristate?: false` (default)
+- Value type: `boolean`
+
+### Tri-state Checkbox
+
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="TristateCheckboxField" />
+
+Extends `BaseField` with:
+- `type: "checkbox"`
+- `hasMany?: false`
+- `tristate: true`
+- Value type: `boolean | null`
+
+### Checkbox Group
+
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="CheckboxGroupField" />
+
+Extends `BaseField` with:
+- `type: "checkbox"`
+- `hasMany: true`
+- `options: FieldOption[] | string[]`
+- `minSelected?: number`
+- `maxSelected?: number`
+- Value type: `string[]`
+
+## Basic Usage
+
+### Single Checkbox
 
 ```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
-
-const schema = createSchema([
-  {
-    type: "checkbox",
-    name: "terms",
-    label: "I agree to the terms and conditions",
-    required: true,
-  },
-]);
-
-export function CheckboxFieldDemo() {
-  return <Form schema={schema} onSubmit={console.log} />;
-}
+const schema = defineSchema({
+  fields: [
+    {
+      type: "checkbox",
+      name: "agree",
+      label: "I agree to the terms",
+      required: true,
+    },
+  ],
+});
 ```
 
-## Properties
-
-The checkbox field uses the common base field props. No additional props are needed.
-
-| Prop           | Type      | Default | Description               |
-| -------------- | --------- | ------- | ------------------------- |
-| `required`     | `boolean` | `false` | Must be checked to submit |
-| `defaultValue` | `boolean` | `false` | Initial checked state     |
-
-## Examples
-
-### Terms Agreement
+### Tri-state Checkbox
 
 ```tsx
 {
   type: "checkbox",
-  name: "terms",
-  label: (
-    <>
-      I agree to the{" "}
-      <a href="/terms" className="underline">
-        terms of service
-      </a>{" "}
-      and{" "}
-      <a href="/privacy" className="underline">
-        privacy policy
-      </a>
-    </>
-  ),
-  required: true,
+  name: "confirmation",
+  label: "Do you confirm?",
+  tristate: true,
+  description: "Yes / No / Not sure",
 }
 ```
+
+### Checkbox Group
+
+```tsx
+{
+  type: "checkbox",
+  name: "permissions",
+  label: "Permissions",
+  hasMany: true,
+  options: ["Read", "Write", "Delete"],
+  minSelected: 1,
+}
+```
+
+## Examples
 
 ### Newsletter Signup
 
@@ -76,38 +94,56 @@ The checkbox field uses the common base field props. No additional props are nee
 {
   type: "checkbox",
   name: "newsletter",
-  label: "Subscribe to our newsletter",
-  description: "We'll send you updates about new features and promotions.",
+  label: "Subscribe to newsletter",
   defaultValue: true,
 }
 ```
 
-### Optional Checkbox
+### Required Checkbox
 
 ```tsx
 {
   type: "checkbox",
-  name: "rememberMe",
-  label: "Remember me",
+  name: "terms",
+  label: "I accept the terms and conditions",
+  required: true,
 }
 ```
 
-### Conditional Field
-
-Show additional fields when checked:
+### Checkbox Group with Descriptions
 
 ```tsx
-const schema = createSchema([
-  {
-    type: "checkbox",
-    name: "hasDiscount",
-    label: "Apply discount code",
-  },
-  {
-    type: "text",
-    name: "discountCode",
-    label: "Discount Code",
-    hidden: (data) => !data.hasDiscount,
-  },
-]);
+{
+  type: "checkbox",
+  name: "notifications",
+  label: "Notification Preferences",
+  hasMany: true,
+  options: [
+    { label: "Email", value: "email", ui: { description: "Receive email notifications" } },
+    { label: "SMS", value: "sms", ui: { description: "Receive text messages" } },
+    { label: "Push", value: "push", ui: { description: "Receive push notifications" } },
+  ],
+}
 ```
+
+## Auto-Derived Validators
+
+| Property | Validator |
+|----------|-----------|
+| `required: true` | `required` |
+| `hasMany: true` + `minSelected` | `minSelected` |
+| `hasMany: true` + `maxSelected` | `maxSelected` |
+
+## Value Types
+
+| Mode | Type |
+|------|------|
+| Single | `boolean` |
+| Tri-state | `boolean \| null` |
+| Group | `string[]` |
+
+## Related
+
+- [Switch Field](/docs/fields/data/switch)
+- [Radio Field](/docs/fields/data/radio)
+- [Select Field](/docs/fields/data/select)

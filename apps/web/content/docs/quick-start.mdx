@@ -1,110 +1,273 @@
 ---
 title: Quick Start
-description: Get a form running in under 2 minutes.
+description: Build a complete working form with validation and conditional logic in under five minutes.
 ---
 
 # Quick Start
 
-Get BuzzForm running in your project in **3 simple steps**.
+This guide walks you through building a real form from scratch. By the end you'll have a working contact form with validation, a conditional field, and typed submission data.
 
 <Callout type="info">
-  This guide assumes you have a React project with
-  [shadcn/ui](https://ui.shadcn.com/docs/installation) already set up.
+  Make sure you've completed [Installation](/docs/installation) before continuing.
 </Callout>
 
-## Step 1: Install BuzzForm
+## Step 1: Define Your Schema
 
-Run the starter command to install all BuzzForm components and dependencies:
+A schema is a plain object with a `fields` array. Each field has a `type`, a `name`, and optional configuration:
 
-```bash tab="pnpm" selected
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+    { type: "textarea", name: "message", label: "Message", required: true },
+  ],
+});
+
+export type ContactData = InferType<typeof contactSchema.fields>;
+// Type: { name: string, email: string, message: string }
 ```
 
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
-
-```bash tab="yarn"
-yarn dlx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
-
-```bash tab="bun"
-bunx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
-```
-
-<Callout type="warning">
-  **Radix UI Users:** If your project uses traditional Radix UI primitives
-  (standard in shadcn/ui), you may need to manually update the `Select`
-  component to use `asChild` instead of `render`. [See the fix
-  here](/docs/fields/data/select#radix-ui-setup).
+<Callout type="tip">
+  Defining schemas in separate files (like `lib/schemas/contact.ts`) allows you to reuse them in forms, server actions, and API routes. See [Schema](/docs/schema) for details.
 </Callout>
 
-## Step 2: Add the Provider
+## Step 2: Create the Form
 
-Wrap your app with `BuzzFormProvider` in your root layout:
+Render the form with the shadcn registry components. The schema drives rendering and validation:
 
-```tsx title="app/layout.tsx" {1} {8}
-import { BuzzFormProvider } from "@/components/buzzform/provider";
+```tsx title="app/contact-form.tsx"
+"use client";
 
-export default function RootLayout({ children }) {
+import { contactSchema } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { toast } from "sonner";
+
+export function ContactForm() {
   return (
-    <html>
-      <body>
-        <BuzzFormProvider>{children}</BuzzFormProvider>
-      </body>
-    </html>
+    <Form
+      schema={contactSchema}
+      onSubmit={({ value }) => {
+        // value is typed as ContactData
+        toast("Message sent!", {
+          description: `From: ${value.email}`,
+        });
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
   );
 }
 ```
 
-## Step 3: Try a Form
+`<FormFields />` renders all fields using the `FieldRegistry` from `<FormProvider>`. Use `<FormSubmit />` for a submit button that auto-disables while submitting.
 
-Install a ready-made signup form to see BuzzForm in action:
+## Step 3: Add Validation
 
-```bash tab="pnpm" selected
-pnpm dlx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
+BuzzForm auto-derives validation from field properties like `required`, `minLength`, etc. You can also add explicit validation rules:
+
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      required: true,
+      minLength: 2,
+    },
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+    },
+  ],
+});
 ```
 
-```bash tab="npm"
-npx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
+Now the form validates:
+- Name must be at least 2 characters
+- Email must be valid format (auto-derived from `type: "email"`)
+- Message must be between 10-500 characters
+
+See [Validation](/docs/validation) for the complete list of validators.
+
+## Step 4: Add Conditional Logic
+
+Show a field only when certain conditions are met. The `condition` property uses a declarative AST — no callbacks:
+
+```tsx title="lib/schemas/contact.ts"
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      required: true,
+      minLength: 2,
+    },
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
+      required: true,
+    },
+    {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+    },
+    // Only shown when subject is "Other"
+    {
+      type: "text",
+      name: "otherSubject",
+      label: "Please Specify",
+      condition: { $data: "/subject", eq: "Other" },
+      required: true,
+    },
+  ],
+});
 ```
 
-```bash tab="yarn"
-yarn dlx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
+When `subject` is not `"Other"`, the `otherSubject` field is completely removed from the form state.
+
+<Callout type="info">
+  **Note:** When using `condition`, you don't need to repeat `required` in the condition. The field is only present when the condition is met, so `required: true` only applies when visible.
+</Callout>
+
+## Complete Example
+
+Here's the complete form with all features:
+
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+
+export const contactSchema = defineSchema({
+  title: "Contact Form",
+  fields: [
+    { 
+      type: "text", 
+      name: "name", 
+      label: "Full Name", 
+      placeholder: "John Doe",
+      required: true,
+      minLength: 2,
+    },
+    { 
+      type: "email", 
+      name: "email", 
+      label: "Email", 
+      placeholder: "john@example.com",
+      required: true,
+    },
+    {
+      type: "select",
+      name: "subject",
+      label: "Subject",
+      options: ["General", "Support", "Sales", "Other"],
+      required: true,
+    },
+    { 
+      type: "textarea", 
+      name: "message", 
+      label: "Message", 
+      placeholder: "How can we help?",
+      required: true,
+      minLength: 10,
+      maxLength: 500,
+      description: "Be as detailed as possible so we can help you better.",
+    },
+    {
+      type: "text",
+      name: "otherSubject",
+      label: "Please Specify",
+      condition: { $data: "/subject", eq: "Other" },
+      required: true,
+    },
+  ],
+});
+
+export type ContactData = InferType<typeof contactSchema.fields>;
 ```
 
-```bash tab="bun"
-bunx shadcn@latest add https://form.buildnbuzz.com/r/signup-form.json
-```
+```tsx title="app/contact-form.tsx"
+"use client";
 
-Use it in any page:
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { toast } from "sonner";
 
-```tsx title="app/page.tsx" {1} {4}
-import { SignUpForm } from "@/components/buzzform/signup";
-
-export default function Page() {
-  return <SignUpForm />;
+export function ContactForm() {
+  return (
+    <Form
+      schema={contactSchema}
+      onSubmit={async ({ value }) => {
+        // value is typed as ContactData
+        await fetch("/api/contact", {
+          method: "POST",
+          body: JSON.stringify(value),
+        });
+        toast("Message sent!", {
+          description: `From: ${value.email}`,
+        });
+      }}
+    >
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
+  );
 }
 ```
 
----
+```tsx title="app/actions.ts"
+"use server";
 
-**That's it!** You now have a working form with validation, password generation, and more.
+import { contactSchema, type ContactData } from "@/lib/schemas/contact";
+import { db } from "@/lib/db";
 
-<Cards>
-  <Card
-    title="Your First Form"
-    href="/docs/your-first-form"
-    description="Learn to build forms from scratch"
-  />
-  <Card
-    title="Schema Reference"
-    href="/docs/schema"
-    description="Explore all field types and options"
-  />
-  <Card
-    title="Examples Gallery"
-    href="/examples"
-    description="Browse 20+ ready-to-use form examples"
-  />
-</Cards>
+export async function submitContact(data: ContactData) {
+  // data is fully typed!
+  await db.contacts.create(data);
+}
+```
+
+## Next Steps
+
+Now that you have a working form, explore these topics:
+
+- [Schema](/docs/schema) — Deep dive into schema definition and type inference
+- [Validation](/docs/validation) — Learn about custom validators and async validation
+- [Conditional Logic](/docs/conditional-logic) — Master declarative conditions
+- [Nested Structures](/docs/nested-structures) — Work with groups and arrays
+- [Server Actions](/docs/form-submission) — Handle form submission with server actions

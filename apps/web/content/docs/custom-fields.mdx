@@ -1,0 +1,373 @@
+---
+title: Custom Field Components
+description: Build your own field component UI using any UI library and wire it into BuzzForm's registry.
+---
+
+# Custom Field Components
+
+BuzzForm's registry pattern lets you provide your own component for any supported field type. The built-in shadcn components are just one implementation — you can build your own using any UI library (Radix, Mantine, Chakra, plain HTML, etc.) and register them in the field registry.
+
+<Callout type="info">
+  This guide covers building **custom UI components** for BuzzForm's existing field types (text, email, select, etc.). The set of supported field types is defined by `@buildnbuzz/form-core` and cannot be extended at this time.
+</Callout>
+
+## How It Works
+
+BuzzForm separates **logic** from **UI**:
+
+- **Logic layer** (`@buildnbuzz/form-react`) — handles state, validation, visibility, and accessibility via hooks like `useDataField` and `useLayoutField`
+- **UI layer** (your registry) — renders the visual component using whatever UI library you choose
+
+Your custom component calls BuzzForm hooks to get field state and handlers, then renders its own UI.
+
+## Step-by-Step: Building a Custom Text Field
+
+### Step 1: Create the Component
+
+Use `useDataField` to get all the state and handlers you need:
+
+```tsx title="components/my-form/fields/text.tsx"
+"use client";
+
+import { useDataField } from "@buildnbuzz/form-react";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+
+export function MyTextField() {
+  const {
+    fieldApi,
+    field,
+    handleChange,
+    handleBlur,
+    label,
+    placeholder,
+    description,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    isInvalid,
+    errors,
+    ariaDescribedBy,
+    descriptionId,
+    errorId,
+  } = useDataField<TextFieldDef>();
+
+  const value = (fieldApi.state.value as string) ?? "";
+
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label htmlFor={fieldApi.name} className="block font-medium text-sm">
+          {label}
+          {isRequired && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+
+      <input
+        id={fieldApi.name}
+        name={fieldApi.name}
+        type="text"
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+        placeholder={placeholder}
+        disabled={isDisabled}
+        readOnly={isReadOnly}
+        aria-invalid={isInvalid}
+        aria-describedby={ariaDescribedBy}
+        className="w-full px-3 py-2 border rounded-md"
+      />
+
+      {description && !isInvalid && (
+        <p id={descriptionId} className="text-sm text-gray-500">
+          {description}
+        </p>
+      )}
+
+      {isInvalid && errors.length > 0 && (
+        <p id={errorId} className="text-sm text-red-500">
+          {errors[0]}
+        </p>
+      )}
+    </div>
+  );
+}
+```
+
+### Step 2: Register in Your Registry
+
+Add your custom component to the registry:
+
+```ts title="components/my-form/registry.ts"
+"use client";
+
+import type { FieldRegistry } from "@buildnbuzz/form-react";
+import { MyTextField } from "./fields/text";
+
+export const registry: FieldRegistry = {
+  text: MyTextField,
+  // ... add more custom field components
+};
+```
+
+### Step 3: Provide the Registry
+
+Pass your custom registry to `FormProvider`:
+
+```tsx title="app/layout.tsx"
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/my-form/registry";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={registry}>{children}</FormProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+That's it — your custom text field now renders for every `type: "text"` field in any schema.
+
+## Hooks Reference
+
+### useDataField
+
+The primary hook for data field components. Returns everything you need:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `fieldApi` | `FieldApi` | TanStack field API (state, value, meta) |
+| `field` | `Field` | The raw field schema definition |
+| `formData` | `object` | Current form values |
+| `handleChange` | `(value) => void` | Change handler (includes trim, transforms) |
+| `handleBlur` | `() => void` | Blur handler (triggers validation) |
+| `label` | `string \| undefined` | Resolved label (supports `$data`/`$context`) |
+| `description` | `string \| undefined` | Resolved description |
+| `placeholder` | `string \| undefined` | Resolved placeholder |
+| `isDisabled` | `boolean` | Whether field is disabled |
+| `isReadOnly` | `boolean` | Whether field is read-only |
+| `isRequired` | `boolean` | Whether field is required |
+| `isHidden` | `boolean` | Whether field is hidden |
+| `isInvalid` | `boolean` | Whether field has errors |
+| `errors` | `string[]` | Array of error messages |
+| `ariaDescribedBy` | `string` | Combined value for `aria-describedby` |
+| `descriptionId` | `string` | ID for description element |
+| `errorId` | `string` | ID for error element |
+| `contextData` | `object` | External context data |
+
+### useLayoutField
+
+For layout/container components (row, group, tabs, collapsible):
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `field` | `Field` | The raw field schema definition |
+| `form` | `FormApi` | TanStack form instance |
+| `label` | `string \| undefined` | Resolved label |
+| `description` | `string \| undefined` | Resolved description |
+| `isHidden` | `boolean` | Whether field is hidden |
+| `isDisabled` | `boolean` | Whether field is disabled |
+| `isConditionMet` | `boolean` | Whether visibility condition is met |
+
+### useFieldOptions
+
+For fields with options (select, radio, checkbox group):
+
+```tsx
+import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
+
+function MySelectField() {
+  const { fieldApi, handleChange, field } = useDataField();
+  const { options } = useFieldOptions(field.options);
+
+  return (
+    <select
+      value={fieldApi.state.value ?? ""}
+      onChange={(e) => handleChange(e.target.value)}
+    >
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value} disabled={opt.disabled}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+```
+
+### useNestedErrorCount
+
+For container fields that show error badges:
+
+```tsx
+import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
+
+function MyGroupField({ children }: { children?: React.ReactNode }) {
+  const { field } = useLayoutField();
+  const errorCount = useNestedErrorCount(field.fields);
+
+  return (
+    <div className="border p-4 rounded">
+      <div className="flex items-center gap-2 mb-4">
+        <h3>{field.label}</h3>
+        {errorCount > 0 && (
+          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+            {errorCount} errors
+          </span>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+```
+
+## Best Practices
+
+### Always Use handleChange and handleBlur
+
+Use the handlers from `useDataField`, not the raw `fieldApi` methods. BuzzForm's handlers include trimming and transforms:
+
+```tsx
+// ✅ Good — uses BuzzForm's handlers
+const { handleChange, handleBlur } = useDataField();
+<input onChange={(e) => handleChange(e.target.value)} onBlur={handleBlur} />
+
+// ❌ Bad — bypasses trim and future transforms
+const { fieldApi } = useDataField();
+<input onChange={(e) => fieldApi.handleChange(e.target.value)} onBlur={fieldApi.handleBlur} />
+```
+
+### Type Your Field Definitions
+
+Import the specific field type for better autocomplete:
+
+```tsx
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+
+function MySelectField() {
+  const { field } = useDataField<SelectFieldDef>();
+  // field.options, field.hasMany, etc. are now typed
+}
+```
+
+### Use the `ui` Property for Custom Config
+
+Pass UI-specific config via the opaque `ui` property in your schema:
+
+```tsx
+// In your schema
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      ui: {
+        icon: "user",
+        variant: "outlined",
+      },
+    },
+  ],
+});
+
+// In your renderer
+interface TextUi {
+  icon?: string;
+  variant?: "outlined" | "filled";
+}
+
+function MyTextField() {
+  const { field } = useDataField();
+  const ui = field.ui as TextUi | undefined;
+  // Use ui.icon, ui.variant for rendering
+}
+```
+
+## Example: Complete Select Field with Radix
+
+```tsx
+"use client";
+
+import * as Select from "@radix-ui/react-select";
+import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+
+export function RadixSelectField() {
+  const {
+    fieldApi,
+    field,
+    handleChange,
+    handleBlur,
+    label,
+    isDisabled,
+    isRequired,
+    isInvalid,
+    errors,
+    errorId,
+  } = useDataField<SelectFieldDef>();
+
+  const { options } = useFieldOptions(field.options);
+  const value = (fieldApi.state.value as string) ?? "";
+
+  return (
+    <div className="space-y-2">
+      {label && (
+        <label className="block font-medium text-sm">
+          {label}
+          {isRequired && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+
+      <Select.Root
+        value={value}
+        onValueChange={handleChange}
+        disabled={isDisabled}
+      >
+        <Select.Trigger
+          onBlur={handleBlur}
+          aria-invalid={isInvalid}
+          className="w-full px-3 py-2 border rounded-md"
+        >
+          <Select.Value placeholder="Select..." />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Content className="bg-white border rounded-md shadow-lg">
+            <Select.Viewport>
+              {options.map((opt) => (
+                <Select.Item
+                  key={opt.value}
+                  value={opt.value}
+                  disabled={opt.disabled}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  <Select.ItemText>{opt.label}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+
+      {isInvalid && errors.length > 0 && (
+        <p id={errorId} className="text-sm text-red-500">{errors[0]}</p>
+      )}
+    </div>
+  );
+}
+```
+
+Register it:
+
+```ts
+export const registry: FieldRegistry = {
+  select: RadixSelectField,
+};
+```
+
+## Related
+
+- [Field Hooks](/docs/field-hooks)
+- [Field Wrappers](/docs/field-wrappers)
+- [`<FormProvider>`](/docs/form-provider)

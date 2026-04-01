@@ -2,16 +2,15 @@
   "title": "Data Fields",
   "pages": [
     "text",
+    "email",
     "password",
     "textarea",
     "number",
-    "date",
     "select",
-    "radio",
-    "checkbox",
-    "checkbox-group",
-    "switch",
+    "date",
     "tags",
-    "upload"
+    "checkbox",
+    "switch",
+    "radio"
   ]
 }
