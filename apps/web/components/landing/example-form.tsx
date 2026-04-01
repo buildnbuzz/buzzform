@@ -1,79 +1,74 @@
 "use client";
 
 import { useState } from "react";
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/registry/base/form";
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { Form } from "@/registry/shadcn/form";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import Link from "next/link";
 
-const schema = createSchema([
-  {
-    type: "text",
-    name: "name",
-    label: "Name",
-    placeholder: "John Doe",
-    required: true,
-  },
-  {
-    type: "email",
-    name: "email",
-    label: "Email",
-    placeholder: "john@example.com",
-    required: true,
-    autoComplete: "email",
-  },
-  {
-    type: "password",
-    name: "password",
-    label: "Password",
-    placeholder: "••••••••",
-    required: true,
-    minLength: 8,
-    ui: {
-      allowGenerate: true,
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "name",
+      label: "Name",
+      placeholder: "John Doe",
+      required: true,
     },
-  },
-  {
-    type: "select",
-    name: "role",
-    label: "Role",
-    options: [
-      { label: "Developer", value: "dev" },
-      { label: "Designer", value: "design" },
-      { label: "Product Manager", value: "pm" },
-    ],
-    defaultValue: "dev",
-    required: true,
-  },
-  {
-    type: "checkbox",
-    name: "terms",
-    label: (
-      <span>
-        I agree to the <Link href="/terms">terms</Link> and{" "}
-        <Link href="/privacy">privacy policy</Link>
-      </span>
-    ),
-    required: true,
-  },
-]);
+    {
+      type: "email",
+      name: "email",
+      label: "Email",
+      placeholder: "john@example.com",
+      required: true,
+      autoComplete: "email",
+    },
+    {
+      type: "password",
+      name: "password",
+      label: "Password",
+      placeholder: "••••••••",
+      required: true,
+      minLength: 8,
+      ui: {
+        allowGenerate: true,
+      },
+    },
+    {
+      type: "select",
+      name: "role",
+      label: "Role",
+      options: [
+        { label: "Developer", value: "dev" },
+        { label: "Designer", value: "design" },
+        { label: "Product Manager", value: "pm" },
+      ],
+      defaultValue: "dev",
+      required: true,
+    },
+    {
+      type: "checkbox",
+      name: "terms",
+      label: "I agree to the terms and privacy policy",
+      required: true,
+    },
+  ],
+});
+
+type ExampleSchema = InferType<typeof schema.fields>;
 
 const emptyState = `{
   // Submit the form to see data here
 }`;
 
 export function ExampleForm() {
-  const [submittedData, setSubmittedData] = useState<Record<
-    string,
-    unknown
-  > | null>(null);
+  const [submittedData, setSubmittedData] = useState<ExampleSchema | null>(null);
 
   return (
     <div className="space-y-4">
       <Form
         schema={schema}
-        onSubmit={(data) => setSubmittedData(data)}
-        submitLabel="Create Account"
+        onSubmit={({ value }) => setSubmittedData(value as ExampleSchema)}
+        actions={{ submitLabel: "Create Account" }}
       />
 
       <div className="[&_figure]:my-0! [&_figure]:border-border/30! [&_figure]:rounded-lg! [&_pre]:text-xs!">
