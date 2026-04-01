@@ -1,4 +1,5 @@
-import { source } from "@/lib/source";
+import { source, getRawPageContent } from "@/lib/source";
+import { DocsCopyPage } from "@/components/docs/docs-copy-page";
 import {
   DocsBody,
   DocsDescription,
@@ -17,9 +18,15 @@ export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
 
   const MDX = page.data.body;
 
+  const rawContent = await getRawPageContent(page.slugs);
+  const pageUrl = `https://form.buildnbuzz.com/docs/${page.slugs.join("/")}`;
+
   return (
     <DocsPage toc={page.data.toc} full={page.data.full}>
-      <DocsTitle>{page.data.title}</DocsTitle>
+      <div className="flex items-center justify-between">
+        <DocsTitle>{page.data.title}</DocsTitle>
+        <DocsCopyPage content={rawContent} url={pageUrl} />
+      </div>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
         <MDX
@@ -38,7 +45,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata(
-  props: PageProps<"/docs/[[...slug]]">
+  props: PageProps<"/docs/[[...slug]]">,
 ): Promise<Metadata> {
   const params = await props.params;
   const page = source.getPage(params.slug);
