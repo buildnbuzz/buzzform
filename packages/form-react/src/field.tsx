@@ -286,19 +286,23 @@ export function Field<TFormData extends UnknownData = UnknownData>({
  * Headless wrapper for layout fields (Row, Tabs, etc.) that provides
  * visibility logic and context without TanStack form registration.
  */
+export interface LayoutFieldProps<
+  TFormData extends UnknownData = UnknownData,
+> {
+  field: CoreField;
+  form: FieldFormApi<TFormData>;
+  contextData?: UnknownData;
+  basePath?: string;
+  children: React.ReactNode;
+}
+
 export function LayoutField<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
   basePath,
   children,
-}: {
-  field: CoreField;
-  form: FieldFormApi<TFormData>;
-  contextData?: UnknownData;
-  basePath?: string;
-  children: React.ReactNode;
-}) {
+}: LayoutFieldProps<TFormData>) {
   const pointer = useMemo(() => {
     if (!basePath) return "";
     return basePath.startsWith("/") ? basePath : fromDotNotation(basePath);
