@@ -56,7 +56,12 @@ npx shadcn@latest init
 ```
 Or use any other method, following the [instructions](https://ui.shadcn.com/docs/installation).
 
-2. Add a `@buzzform` to the shadcn registries - in the file `components.json`, add a line to the `registries` section:
+2. Add `@buildnbuzz/buzzform` package to your project:
+```
+npm add @buildnbuzz/buzzform
+```
+
+3. Add a `@buzzform` to the shadcn registries - in the file `components.json`, add a line to the `registries` section:
 ```jsonc
 {
   // ... existing config
@@ -65,7 +70,7 @@ Or use any other method, following the [instructions](https://ui.shadcn.com/docs
   }
 }
 ```
-3. Add the BuzzForm components:
+4. Add the BuzzForm components:
 ```bash
 npx shadcn@latest add @buzzform/all
 ```
