@@ -74,6 +74,31 @@ npm add @buildnbuzz/buzzform
 ```bash
 npx shadcn@latest add @buzzform/all
 ```
+5. Add a BuzzForm provider to the React app:
+- Create file `components/providers/BuzzFormProvider.tsx` with content:
+```tsx
+"use client";
+
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
+
+export default function BuzzFormProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <FormProvider registry={registry}>{children}</FormProvider>;
+}
+```
+And add it to the `app/layout.tsx`:
+```tsx
+import BuzzFormProvider from "@/components/providers/BuzzFormProvider";
+...
+      <body className="min-h-full flex flex-col">
+        <BuzzFormProvider>{children}</BuzzFormProvider>
+      </body>
+...
+```
 
 This will install the core BuzzForm components and dependencies into your project.
 
