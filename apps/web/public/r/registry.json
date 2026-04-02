@@ -4,10 +4,10 @@
   "homepage": "https://form.buildnbuzz.com",
   "items": [
     {
-      "name": "init",
+      "name": "form",
       "type": "registry:ui",
-      "title": "BuzzForm (v2)",
-      "description": "Core BuzzForm v2 components using @buildnbuzz/form-react and the new field registry.",
+      "title": "Form",
+      "description": "The core Form component for BuzzForm v2.",
       "dependencies": [
         "@buildnbuzz/form-core",
         "@buildnbuzz/form-react",
@@ -20,7 +20,16 @@
           "path": "registry/shadcn/form.tsx",
           "type": "registry:component",
           "target": "components/buzzform/form.tsx"
-        },
+        }
+      ]
+    },
+    {
+      "name": "init",
+      "type": "registry:ui",
+      "title": "BuzzForm (v2)",
+      "description": "Core BuzzForm v2 components using @buildnbuzz/form-react and the new field registry.",
+      "registryDependencies": ["@buzzform/form"],
+      "files": [
         {
           "path": "registry/shadcn/registry.template.ts",
           "type": "registry:component",
