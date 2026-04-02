@@ -1,0 +1,35 @@
+{
+  "skill_name": "buzzform",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I just set up BuzzForm in my Next.js app with the shadcn registry. Can you create a contact form with name, email, and a message field? Name and email should be required. I want it in a card layout with a submit button.",
+      "expected_output": "A schema using defineSchema with 3 fields (text, email, textarea), correct InferType usage, correct imports from @/components/buzzform/form, and Form wrapped in a Card component with FormContent/FormFields/FormSubmit.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I need a job application form. It should have a 'position type' radio with Full-time, Part-time, and Freelance options. If they pick Freelance, show a 'hourly rate' number field (min $25, max $500) and a 'portfolio URL' text field that's required. If they pick Full-time, show an 'expected salary' number input instead.",
+      "expected_output": "Schema with radio field using options array, conditional fields using { $data: '/positionType', eq: 'freelance' } for hourly rate and portfolio, { $data: '/positionType', eq: 'fulltime' } for salary. Number fields should use min/max. Portfolio should use condition + required: true (static). JSON Pointer paths must start with /.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "We have an internal tool where admins can create user accounts. The form should have username, email, and role (select: admin, editor, viewer). Only admins should see a 'permissions' checkbox group with Read, Write, Delete options. Email needs to be validated against allowed company domains passed in via context data. Wire up the custom validator too.",
+      "expected_output": "Schema with select field for role, checkbox group (hasMany: true, options array) with condition: { $context: '/userRole', eq: 'admin' }. Email field with validate.onBlur containing a custom check referencing { $context: '/allowedDomains' } in args. A defineValidators call for the domain validator. contextData prop on Form component.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Build me an event registration schema. Use tabs for 'Personal Info', 'Event Details', and 'Preferences'. Personal info needs name, email, phone. Event Details should have a date picker, a multi-select for sessions, and an array for 'guests' where each guest has name and email. Preferences tab should have notification switch and dietary needs text field inside a collapsible.",
+      "expected_output": "Schema with type: 'tabs' at root with 3 tabs. Fields should be flat (not nested via group) unless explicitly asked. Date field, select with hasMany: true, array field with nested row/fields. Collapsible wrapping switch and text field. InferType should produce a flat object since tabs don't nest data.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "We have this old form using createSchema from @buildnbuzz/buzzform. Can you migrate it to the new API? Here's the schema: createSchema({ fields: [{ type: 'text', name: 'company', label: 'Company', required: true }, { type: 'select', name: 'size', options: ['1-10', '11-50', '50+'] }] })",
+      "expected_output": "Replace createSchema with defineSchema from @buildnbuzz/form-core. Add InferType. Update imports: Form/FormContent/FormFields/FormSubmit from @/components/buzzform/form, registry from @/components/buzzform/registry. FormProvider setup or per-form registry. Mention removing @buildnbuzz/buzzform from package.json.",
+      "files": []
+    }
+  ]
+}

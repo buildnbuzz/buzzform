@@ -137,6 +137,21 @@ const schema = defineSchema({
 });
 ```
 
+Register custom validators with `defineValidators`:
+
+```ts
+import { defineValidators } from "@buildnbuzz/form-core";
+
+const customValidators = defineValidators({
+  usernameAvailable: async (value: unknown) => {
+    if (typeof value !== "string") return false;
+    
+    const available = await checkUsername(value);
+    return available ? true : "Username is taken";
+  },
+});
+```
+
 ### Output Transforms
 
 Flatten nested submission data into path-keyed format:
