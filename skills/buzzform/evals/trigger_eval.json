@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I need to add a 'department' select field to our employee onboarding form schema. Options should be Engineering, Marketing, Sales, and HR. Make it required.",
+    "should_trigger": true
+  },
+  {
+    "query": "the hourly rate field should only show up when someone picks 'contractor' from the employment type radio. how do i wire that up with $data?",
+    "should_trigger": true
+  },
+  {
+    "query": "We're getting a weird bug where the form submits empty strings for text fields even though the user typed whitespace. I think it's related to the trim property on the text field schema?",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you help me set up a custom async validator that checks if a username is already taken? It should run on blur with a 500ms debounce and hit our /api/check-username endpoint",
+    "should_trigger": true
+  },
+  {
+    "query": "i want to reorganize this long form into tabs - put personal info in one tab and address fields in another. the data should stay flat though, not nested by tab",
+    "should_trigger": true
+  },
+  {
+    "query": "We need to migrate our old createSchema calls from @buildnbuzz/buzzform to the new packages. There are about 12 schemas across the app. What's the process?",
+    "should_trigger": true
+  },
+  {
+    "query": "how do I make certain fields only visible to admin users? the role comes from our auth context, not from the form data itself",
+    "should_trigger": true
+  },
+  {
+    "query": "I'm trying to do a repeatable 'work experience' section where users can add multiple entries. Each entry needs company name, job title, and start/end dates. Is there an array field type for this?",
+    "should_trigger": true
+  },
+  {
+    "query": "The registry isn't picking up my custom DateRangePicker component. I registered it in @/components/buzzform/registry but RenderFields still shows the fallback. What am I missing?",
+    "should_trigger": true
+  },
+  {
+    "query": "can you extract the TypeScript type from this schema? i want to use InferType but I'm not sure if the group fields will create nested objects or stay flat",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a contact form on my landing page. Just plain HTML with name, email, and message fields. No framework, just vanilla JS with a fetch call to our API.",
+    "should_trigger": false
+  },
+  {
+    "query": "Can you write a Zod schema for validating our user registration API payload? It needs username (string, min 3), email (email format), and password (min 8, must contain number).",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I validate a form in React Hook Form? I want to show inline errors under each field and disable the submit button while there are validation errors.",
+    "should_trigger": false
+  },
+  {
+    "query": "I'm building a multi-step wizard with Formik. Each step should validate before allowing the user to proceed. How do I share state between steps?",
+    "should_trigger": false
+  },
+  {
+    "query": "We need to add a dark mode toggle to our Next.js app. It should persist the user's preference in localStorage and apply the theme class to the html element.",
+    "should_trigger": false
+  },
+  {
+    "query": "Can you help me create a TanStack Table with sorting, filtering, and pagination? The data comes from a REST API and I need server-side pagination.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a JSON Schema (draft-07) for validating our config.json file. It needs to enforce that 'port' is a number between 1024-65535 and 'host' is a valid hostname.",
+    "should_trigger": false
+  },
+  {
+    "query": "I want to build a dynamic form builder UI where admins can drag-and-drop fields to design forms. Think Google Forms but self-hosted. What's the best approach?",
+    "should_trigger": false
+  },
+  {
+    "query": "Our shadcn Select component isn't closing when I click outside. I think it's a portal/z-index issue. The dropdown renders inside a Dialog component.",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I set up TanStack Form with React? I need useForm, field validation on blur, and a way to get typed form values on submit.",
+    "should_trigger": false
+  }
+]

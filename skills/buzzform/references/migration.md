@@ -6,44 +6,57 @@ Goal: replace deprecated `@buildnbuzz/buzzform` with `@buildnbuzz/form-core` + `
 
 ```bash
 pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
-pnpm add @tanstack/react-form @tanstack/form-core
 ```
 
 Remove the deprecated package from `package.json` if present:
 - `@buildnbuzz/buzzform`
 
-## 2) Add the shadcn registry (Next.js + shadcn/ui)
+## 2) Add the shadcn registry
 
-```bash
-npx shadcn@latest add https://form.buildnbuzz.com/r/starter.json
+Add to `components.json`:
+```json
+{ "registries": { "@buzzform": "https://form.buildnbuzz.com/r/{name}.json" } }
 ```
 
-This creates registry + form components used in examples.
+Then install all components:
+```bash
+npx shadcn@latest add @buzzform/all
+```
+
+This creates the form components and field registry at `@/components/buzzform/`.
 
 ## 3) Update imports and API usage
 
-- `createSchema` -> `defineSchema` from `@buildnbuzz/form-core`
-- `InferType` from `@buildnbuzz/form-core`
-- React hooks/components from `@buildnbuzz/form-react`
-- Form UI from the registry (example): `@/registry/shadcn/form`
+| Old | New |
+|---|---|
+| `createSchema` | `defineSchema` from `@buildnbuzz/form-core` |
+| `InferType` | `InferType` from `@buildnbuzz/form-core` |
+| React hooks | `useForm`, `useDataField`, etc. from `@buildnbuzz/form-react` |
+| `@/registry/shadcn/form` | `@/components/buzzform/form` |
+| `@/registry/shadcn/fields` | `@/components/buzzform/registry` |
+| `shadcnRegistry` | `registry` |
 
 ## 4) Add the provider (recommended)
 
 ```tsx
-// app/providers/buzz-form.tsx
-"use client";
-
+// app/layout.tsx
 import { FormProvider } from "@buildnbuzz/form-react";
-import { shadcnRegistry } from "@/registry/shadcn/fields";
+import { registry } from "@/components/buzzform/registry";
 
-export function BuzzFormProvider({ children }: { children: React.ReactNode }) {
-  return <FormProvider registry={shadcnRegistry}>{children}</FormProvider>;
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <FormProvider registry={registry}>{children}</FormProvider>
+      </body>
+    </html>
+  );
 }
 ```
 
-Wrap your app root with `BuzzFormProvider`.
-
 ## 5) Sanity check schema behavior
 
+- `createSchema` → `defineSchema` (same shape, just renamed).
 - Tabs/row/collapsible are layout-only; use `group` for nested data.
-- `$data`/`$context` paths are absolute JSON Pointer strings.
+- `$data`/`$context` paths are JSON Pointer format (`/fieldName`, not `fieldName`).
+- `InferType` treats dynamic `required` (e.g., `required: { $data: "/flag" }`) as optional.
