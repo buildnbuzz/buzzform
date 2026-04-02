@@ -1,59 +1,36 @@
 ---
 title: Installation
-description: Install BuzzForm packages, add field components via the shadcn registry, and set up FormProvider.
+description: Install BuzzForm packages and set up your form registry.
 ---
 
 # Installation
 
-BuzzForm ships as two npm packages plus a shadcn component registry for the UI layer.
+BuzzForm offers two installation paths depending on your UI setup.
 
-<Callout type="warning">
-  The old `@buildnbuzz/buzzform` package is deprecated. Use `@buildnbuzz/form-core` and `@buildnbuzz/form-react` for new development. See the [Migration Guide](/docs/migration) for upgrading.
-</Callout>
+<Tabs items={["Shadcn/ui", "Custom UI"]}>
+<Tab value="Shadcn/ui">
 
-## 1. Install Packages
+This is the recommended path for most users. Installs pre-built field components that match your shadcn design system.
 
-Install the core and React adapter packages:
+## Add Registry to Config
 
-```package-install
-@buildnbuzz/form-core @buildnbuzz/form-react
-```
-
-### Peer Dependencies
-
-Both packages require TanStack Form:
-
-```package-install
-@tanstack/react-form @tanstack/form-core
-```
-
-<Callout type="info">
-  If you use the `array` field type, also install the drag-and-drop dependencies:
-  `@dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`
-</Callout>
-
-## 2. Add the BuzzForm Registry to Your shadcn Config
-
-Add the `@buzzform` registry namespace to your `components.json` so you can install BuzzForm components with short names:
+Add the BuzzForm registry to your `components.json`:
 
 ```json title="components.json"
 {
-  // ... existing config
   "registries": {
     "@buzzform": "https://form.buildnbuzz.com/r/{name}.json"
   }
 }
 ```
 
-This lets you run `npx shadcn@latest add @buzzform/text` instead of the full URL.
+<Callout type="info">
+  We're working on eliminating this manual step in future updates.
+</Callout>
 
-## 3. Install Field Components
+## Install Components
 
-Field components are delivered via the shadcn registry. They live in your codebase so you can customize them freely.
-
-### Recommended: Install Everything
-
-Install all field types, the form components, and a complete registry in one command:
+Install everything with one command:
 
 ```bash
 npx shadcn@latest add @buzzform/all
@@ -61,69 +38,106 @@ npx shadcn@latest add @buzzform/all
 
 This installs:
 
-- `form.tsx` — Form, FormContent, FormFields, FormActions, FormSubmit, FormReset, FormMessage
-- `registry.ts` — Complete field registry with all fields pre-registered
-- All field components (text, email, password, textarea, number, select, checkbox, switch, radio, date, tags, row, group, collapsible, tabs, array)
-- All required UI components and dependencies
+- Core packages (`@buildnbuzz/form-core`, `@buildnbuzz/form-react`, TanStack Form)
+- All field components (text, email, select, checkbox, etc.)
+- Form components (`Form`, `FormContent`, `FormFields`, etc.)
+- Complete registry at `components/buzzform/registry.ts`
 
-<Accordions>
-<Accordion title="Alternative: Install Core + Individual Fields">
+### Install Individual Fields
 
-If you prefer to only install the fields you need, start with the `init` package:
+If you prefer to install fields individually:
 
 ```bash
+# Core packages + template registry
 npx shadcn@latest add @buzzform/init
-```
 
-This installs:
-
-- `form.tsx` — Form, FormContent, FormFields, FormActions, FormSubmit, FormReset, FormMessage
-- `registry.ts` — A **template** registry with all imports commented out
-
-Then install individual field components as needed:
-
-```bash
+# Then add fields as needed
 npx shadcn@latest add @buzzform/text
 npx shadcn@latest add @buzzform/email
 npx shadcn@latest add @buzzform/select
-# ... etc.
+# ... etc
 ```
 
-After installing each field, uncomment the corresponding import and entry in `components/buzzform/registry.ts`:
+After installing each field, uncomment the corresponding import in `components/buzzform/registry.ts`.
 
-```ts title="components/buzzform/registry.ts"
+</Tab>
+<Tab value="Custom UI">
+
+Use this path if you want to build your own field components with a custom UI library (Radix, Mantine, Chakra, plain HTML, etc.).
+
+## Install Packages
+
+Install the core packages:
+
+```bash
+pnpm add @buildnbuzz/form-core @buildnbuzz/form-react @tanstack/react-form @tanstack/form-core
+```
+
+## Build Custom Components
+
+Create your own field components using BuzzForm hooks:
+
+```tsx title="components/my-form/text-field.tsx"
+"use client";
+
+import { useDataField } from "@buildnbuzz/form-react";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+
+export function TextField() {
+  const { fieldApi, handleChange, handleBlur, label, isRequired } =
+    useDataField<TextFieldDef>();
+
+  return (
+    <div>
+      <label htmlFor={fieldApi.name}>
+        {label}
+        {isRequired && <span>*</span>}
+      </label>
+      <input
+        id={fieldApi.name}
+        value={fieldApi.state.value ?? ""}
+        onChange={(e) => handleChange(e.target.value)}
+        onBlur={handleBlur}
+      />
+    </div>
+  );
+}
+```
+
+## Create Registry
+
+Build your field registry:
+
+```ts title="components/my-form/registry.ts"
 "use client";
 
 import type { FieldRegistry } from "@buildnbuzz/form-react";
-
-// Uncomment the fields you've installed:
-import { TextField } from "./fields/text";
-import { EmailField } from "./fields/email";
-// import { PasswordField } from "./fields/password";
-// ... etc.
+import { TextField } from "./text-field";
+import { EmailField } from "./email-field";
 
 export const registry: FieldRegistry = {
   text: TextField,
   email: EmailField,
-  // password: PasswordField,
-  // ... etc.
+  // ... add more fields
 };
 ```
 
-</Accordion>
-</Accordions>
+</Tab>
+</Tabs>
 
-## 4. Set Up FormProvider
+## Set Up Provider (Optional)
 
-Wrap your app root with `FormProvider` so all forms can access the field registry without prop drilling.
+Wrap your app root with `FormProvider` to make the registry available globally:
 
-Import the `registry` from the installed BuzzForm components and the `FormProvider` from `@buildnbuzz/form-react`:
-
-```tsx title="app/layout.tsx" showLineNumbers
+```tsx title="app/layout.tsx"
 import { FormProvider } from "@buildnbuzz/form-react";
-import { registry } from "@/components/buzzform/registry";
+import { registry } from "@/components/buzzform/registry"; // or your custom registry
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>
@@ -135,18 +149,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```
 
 <Callout type="tip">
-  The registry is just a plain object mapping field type strings to React components. You only need to include the field types your app actually uses.
+  Alternatively, pass `registry` directly to each `<Form>` component instead of using the provider. See [Form Component](/docs/form-component) for details.
 </Callout>
 
-## 5. Verify Your Install
+## Verification
 
-Create a simple form to confirm everything is wired up:
+Create a simple form to verify your setup:
 
-```tsx title="app/verify-form.tsx" showLineNumbers
+```tsx title="app/verify-form.tsx"
 "use client";
 
 import { defineSchema } from "@buildnbuzz/form-core";
-import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import {
+  Form,
+  FormContent,
+  FormFields,
+  FormSubmit,
+} from "@/components/buzzform/form";
 
 const schema = defineSchema({
   fields: [
@@ -160,7 +179,7 @@ export function VerifyForm() {
     <Form
       schema={schema}
       onSubmit={({ value }) => {
-        console.log(value); // { name: string, email: string }
+        console.log(value);
       }}
     >
       <FormContent>
@@ -175,5 +194,6 @@ export function VerifyForm() {
 If the form renders and submits without errors, you're good to go.
 
 <Callout type="tip">
-  For a complete working example, see [Quick Start](/docs/quick-start) which shows how to organize schemas in separate files and add validation.
+  For a complete working example with validation and conditional logic, see
+  [Quick Start](/docs/quick-start).
 </Callout>
