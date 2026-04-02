@@ -1,136 +1,130 @@
-# 🐝 BuzzForm
+# BuzzForm
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![npm version](https://img.shields.io/npm/v/@buildnbuzz/buzzform.svg)](https://www.npmjs.com/package/@buildnbuzz/buzzform)
+[![npm version](https://img.shields.io/npm/v/@buildnbuzz/form-core.svg)](https://www.npmjs.com/package/@buildnbuzz/form-core)
 [![React](https://img.shields.io/badge/React-18%20%7C%2019-61dafb.svg)](https://react.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org)
 
-A simple, customizable React form library for shadcn/ui and Next.js.
+A schema-driven form library for React built on TanStack Form. Define your form once and get type-safe forms with validation, conditional logic, and full rendering control.
 
-BuzzForm lets you declare fields once and get clean, polished forms with live validation, inline feedback, and full rendering control — all with minimal boilerplate.
+BuzzForm separates form logic from UI — define schemas in plain TypeScript, get automatic type inference, and render with your favorite UI library (shadcn/ui, Radix, Mantine, or custom components).
 
-Perfect for settings pages, dashboards, and SaaS apps built with shadcn/ui.
+Perfect for settings pages, dashboards, and SaaS apps that need flexible, maintainable forms.
 
 ## ✨ Features
 
-- **Schema-Driven Forms** — Define your form structure in a simple JSON-like schema
-- **Full Type Safety** — End-to-end TypeScript support with inferred types
-- **shadcn/ui Integration** — Drop-in components that match your design system
-- **React Hook Form + Zod** — Built on rock-solid foundations
-- **17+ Field Types** — Text, Number, Password, Select, Date, Checkbox, Switch, Radio, Textarea, Tags, Upload, Array, Group, Collapsible, Tabs, Row, and custom Render fields
-- **Conditional Logic** — Show/hide fields based on form state
-- **Custom Rendering** — Full control over field appearance when needed
-- **Validation** — Built-in Zod integration with live inline feedback
+- **Schema-Driven Forms** — Define your form structure in a simple TypeScript object
+- **Full Type Safety** — End-to-end TypeScript with auto-inferred types from your schema
+- **TanStack Form Core** — Built on TanStack Form for battle-tested state management
+- **UI Agnostic** — Bring your own UI or use the shadcn/ui registry components
+- **17+ Field Types** — Text, Number, Password, Select, Date, Checkbox, Switch, Radio, Textarea, Tags, Array, Group, Collapsible, Tabs, Row, and more
+- **Conditional Logic** — Show/hide/disable fields with declarative conditions (no callbacks)
+- **Auto Validation** — Validators derived from schema properties plus custom rules
+- **Dynamic Values** — Reference other fields or external context in labels, defaults, and validators
 - **Minimal Boilerplate** — Focus on your form logic, not wiring
 
 ## 📦 Monorepo Structure
 
-This turborepo contains:
+This Turborepo contains:
 
 ```
 ├── apps/
-│   └── web/           # Documentation site & component registry (Next.js 16)
+│   └── web/                    # Documentation site & component registry
 │
 ├── packages/
-│   └── buzzform/      # Core library (@buildnbuzz/buzzform)
+│   ├── form-core/              # Framework-agnostic primitives (@buildnbuzz/form-core)
+│   ├── form-react/             # React adapter (@buildnbuzz/form-react)
+│   ├── buzzform/               # DEPRECATED - legacy package
+│   └── eslint-config/          # Shared ESLint config
 ```
 
 ### Apps
 
 | Directory  | Description                                                                                                                      |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `apps/web` | The BuzzForm documentation website, component registry, and showcase examples. Built with Next.js 16, Fumadocs, and TailwindCSS. |
+| `apps/web` | The BuzzForm documentation website, component registry, and showcase examples. Built with Next.js, Fumadocs, and TailwindCSS.    |
 
 ### Packages
 
-| Package                | Description                                                                                            |
-| ---------------------- | ------------------------------------------------------------------------------------------------------ |
-| `@buildnbuzz/buzzform` | The core BuzzForm library. Schema definitions, field types, adapters, and React Hook Form integration. |
+| Package                    | Description                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `@buildnbuzz/form-core`    | **Core Package** — Framework-agnostic schema types, validation, and utilities. Zero DOM dependencies.  |
+| `@buildnbuzz/form-react`   | **React Adapter** — React primitives built on TanStack Form. Hooks, providers, and field renderers.    |
+| `@buildnbuzz/buzzform`     | **Deprecated** — Legacy package. Migrate to `form-core` + `form-react`. See [Migration Guide](https://form.buildnbuzz.com/docs/migration). |
 
 ## 🚀 Quick Start
 
 ### Installation
 
+**With shadcn/ui:**
 ```bash
-npx shadcn@latest add https://form.buildnbuzz.com/r/starter
+# Add registry to components.json first, then:
+npx shadcn@latest add @buzzform/all
 ```
 
-This will install the core BuzzForm components and dependencies into your project.
+**Headless / Custom UI:**
+```bash
+pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+```
+
+See [Installation](https://form.buildnbuzz.com/docs/installation) for full setup instructions.
 
 ### Basic Usage
 
-```tsx
-import { createSchema } from "@buildnbuzz/buzzform";
-import { Form } from "@/components/buzzform/form";
+```tsx title="lib/schemas/contact.ts"
+import { defineSchema, type InferType } from "@buildnbuzz/form-core";
 
-const schema = createSchema([
-  { type: "email", name: "email", label: "Email", required: true },
-  {
-    type: "password",
-    name: "password",
-    label: "Password",
-    required: true,
-    minLength: 8,
-  },
-]);
+export const contactSchema = defineSchema({
+  fields: [
+    { type: "text", name: "name", label: "Full Name", required: true },
+    { type: "email", name: "email", label: "Email", required: true },
+  ],
+});
 
-export function LoginForm() {
+export type ContactData = InferType<typeof contactSchema.fields>;
+```
+
+```tsx title="app/contact-form.tsx"
+import { contactSchema } from "@/lib/schemas/contact";
+import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+
+export function ContactForm() {
   return (
-    <Form
-      schema={schema}
-      onSubmit={(data) => console.log(data)}
-      submitLabel="Sign In"
-    />
+    <Form schema={contactSchema} onSubmit={({ value }) => console.log(value)}>
+      <FormContent>
+        <FormFields />
+        <FormSubmit>Send Message</FormSubmit>
+      </FormContent>
+    </Form>
   );
 }
 ```
 
+See [Quick Start](https://form.buildnbuzz.com/docs/quick-start) for a complete example with validation and server actions.
+
 ## 🛠 Development
 
-### Prerequisites
-
-- Node.js 18+
-- pnpm 9+
-
-### Setup
-
 ```bash
-# Install dependencies
-pnpm install
-
-# Start development (runs both web app and package in watch mode)
-pnpm dev
-
-# Build all packages
-pnpm build
+pnpm install    # Install dependencies
+pnpm dev        # Start development
+pnpm build      # Build all packages
 ```
 
-### Working with the Monorepo
-
-This project uses [Turborepo](https://turbo.build/repo) for efficient builds and caching.
-
-```bash
-# Run dev server for web app only
-cd apps/web && pnpm dev
-
-# Build the core package only
-cd packages/buzzform && pnpm build
-```
+See [Development](https://form.buildnbuzz.com/docs/development) for detailed setup.
 
 ## 📚 Documentation
 
-Visit [form.buildnbuzz.com](https://form.buildnbuzz.com) for full documentation, including:
+Visit [form.buildnbuzz.com](https://form.buildnbuzz.com) for full documentation:
 
-- [Getting Started](https://form.buildnbuzz.com/docs)
-- [Installation Guide](https://form.buildnbuzz.com/docs/installation)
+- [Quick Start](https://form.buildnbuzz.com/docs/quick-start)
+- [Installation](https://form.buildnbuzz.com/docs/installation)
 - [Schema Reference](https://form.buildnbuzz.com/docs/schema)
-- [Field Types](https://form.buildnbuzz.com/docs/fields/types)
 - [Validation](https://form.buildnbuzz.com/docs/validation)
-- [Showcase Examples](https://form.buildnbuzz.com/examples)
+- [Custom Fields](https://form.buildnbuzz.com/docs/custom-fields)
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions welcome! See [Contributing Guide](https://form.buildnbuzz.com/docs/contributing) for details.
 
 ## 📄 License
 

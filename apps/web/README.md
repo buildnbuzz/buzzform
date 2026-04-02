@@ -1,4 +1,4 @@
-# 🐝 BuzzForm Web
+# BuzzForm Web
 
 The official documentation website, component registry, and showcase for [BuzzForm](https://form.buildnbuzz.com).
 
@@ -57,8 +57,8 @@ npx shadcn@latest add https://form.buildnbuzz.com/r/array
 - **Styling**: [TailwindCSS 4](https://tailwindcss.com)
 - **UI Components**: [shadcn/ui](https://ui.shadcn.com)
 - **Icons**: [HugeIcons](https://hugeicons.com), [Lucide](https://lucide.dev), [Phosphor](https://phosphoricons.com), [Tabler](https://tabler.io/icons)
-- **Forms**: [@buildnbuzz/buzzform](../../packages/buzzform)
-- **Validation**: [Zod](https://zod.dev)
+- **Forms**: [`@buildnbuzz/form-core`](../../packages/form-core), [`@buildnbuzz/form-react`](../../packages/form-react)
+- **Validation**: [TanStack Form](https://tanstack.com/form)
 
 ## 🚀 Getting Started
 
