@@ -19,7 +19,7 @@ import {
   getSeconds,
 } from "date-fns";
 import { IconPlaceholder } from "@/components/icon-placeholder";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as BaseCalendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -269,7 +269,7 @@ export function DateField() {
 
   const calendarPopover = (
     <div className="flex flex-col">
-      <Calendar
+      <BaseCalendar
         mode="single"
         selected={dateValue}
         onSelect={handleDateSelect}
