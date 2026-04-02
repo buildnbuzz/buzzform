@@ -11,7 +11,11 @@ import {
   type FieldRegistry,
   type UseFormOptionsWithSchema,
 } from "@buildnbuzz/form-react";
-import type { Field as CoreField, FormSchema } from "@buildnbuzz/form-core";
+import type {
+  Field as CoreField,
+  FormSchema,
+  ValidationRun,
+} from "@buildnbuzz/form-core";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +26,7 @@ interface FormContextValue {
   registry: FieldRegistry;
   schema?: FormSchema;
   formId: string;
+  derivedValidationMode?: ValidationRun;
 }
 
 const FormContext = React.createContext<FormContextValue | null>(null);
@@ -58,6 +63,7 @@ type FormOwnProps = {
 type FormWithInstance = FormOwnProps & {
   form: FieldFormApi;
   schema?: FormSchema;
+  derivedValidationMode?: ValidationRun;
 };
 
 type FormWithSchema<TSchema extends FormSchema = FormSchema> = FormOwnProps &
@@ -71,7 +77,9 @@ type FormProps<TSchema extends FormSchema = FormSchema> =
 
 // --- Form ---
 
-function Form<TSchema extends FormSchema = FormSchema>(props: FormProps<TSchema>) {
+function Form<TSchema extends FormSchema = FormSchema>(
+  props: FormProps<TSchema>,
+) {
   const contextRegistry = React.useContext(RegistryContext);
   const registry = props.registry ?? contextRegistry;
   const formId = React.useId();
@@ -84,7 +92,15 @@ function Form<TSchema extends FormSchema = FormSchema>(props: FormProps<TSchema>
 
   if ("form" in props && props.form) {
     return (
-      <FormContext.Provider value={{ form: props.form, registry, schema: props.schema, formId }}>
+      <FormContext.Provider
+        value={{
+          form: props.form,
+          registry,
+          schema: props.schema,
+          formId,
+          derivedValidationMode: props.derivedValidationMode,
+        }}
+      >
         <FormProvider registry={registry}>{props.children}</FormProvider>
       </FormContext.Provider>
     );
@@ -113,7 +129,9 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   ...tanstackOpts
 }: FormWithSchema<TSchema> & { registry: FieldRegistry; formId: string }) {
   if (process.env.NODE_ENV === "development" && children && actions) {
-    console.warn("<Form>: `actions` prop is ignored when children are provided.");
+    console.warn(
+      "<Form>: `actions` prop is ignored when children are provided.",
+    );
   }
 
   const {
@@ -136,7 +154,9 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   } as UseFormOptionsWithSchema<TSchema>);
 
   return (
-    <FormContext.Provider value={{ form, registry, schema, formId }}>
+    <FormContext.Provider
+      value={{ form, registry, schema, formId, derivedValidationMode }}
+    >
       <FormProvider registry={registry}>
         {children ?? (
           <FormContent>
@@ -164,13 +184,14 @@ function FormContent({
   children,
   ...props
 }: FormContentProps) {
-  const { form, registry, formId } = useFormContext();
+  const { form, registry, formId, derivedValidationMode } = useFormContext();
 
   return (
     <HeadlessForm
       id={formId}
       form={form}
       registry={registry}
+      derivedValidationMode={derivedValidationMode}
       className={cn("flex flex-col gap-4", className)}
       {...props}
     >
@@ -193,12 +214,17 @@ type FormFieldsProps = {
 };
 
 function FormFields({ className }: FormFieldsProps) {
-  const { form, registry, schema } = useFormContext();
+  const { form, registry, schema, derivedValidationMode } = useFormContext();
   const fields = (schema?.fields ?? []) as readonly CoreField[];
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
-      <RenderFields fields={fields} form={form} registry={registry} />
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={registry}
+        derivedValidationMode={derivedValidationMode}
+      />
     </div>
   );
 }
@@ -228,14 +254,27 @@ function FormActions({ className, align = "end", ...props }: FormActionsProps) {
 
 // --- FormSubmit ---
 
-type FormSubmitProps = Omit<React.ComponentProps<typeof Button>, "type" | "form"> & {
+type FormSubmitProps = Omit<
+  React.ComponentProps<typeof Button>,
+  "type" | "form"
+> & {
   submittingText?: string;
 };
 
-function FormSubmit({ children, submittingText = "Submitting...", disabled, ...props }: FormSubmitProps) {
+function FormSubmit({
+  children,
+  submittingText = "Submitting...",
+  disabled,
+  ...props
+}: FormSubmitProps) {
   const { form, formId } = useFormContext();
   return (
-    <form.Subscribe selector={(s) => ({ canSubmit: s.canSubmit, isSubmitting: s.isSubmitting })}>
+    <form.Subscribe
+      selector={(s) => ({
+        canSubmit: s.canSubmit,
+        isSubmitting: s.isSubmitting,
+      })}
+    >
       {({ canSubmit, isSubmitting }) => (
         <Button
           type="submit"
@@ -252,14 +291,24 @@ function FormSubmit({ children, submittingText = "Submitting...", disabled, ...p
 
 // --- FormReset ---
 
-type FormResetProps = Omit<React.ComponentProps<typeof Button>, "type" | "onClick"> & {
+type FormResetProps = Omit<
+  React.ComponentProps<typeof Button>,
+  "type" | "onClick"
+> & {
   disabled?: boolean;
 };
 
-function FormReset({ children, disabled, variant = "outline", ...props }: FormResetProps) {
+function FormReset({
+  children,
+  disabled,
+  variant = "outline",
+  ...props
+}: FormResetProps) {
   const { form } = useFormContext();
   return (
-    <form.Subscribe selector={(s) => ({ isSubmitting: s.isSubmitting, isDirty: s.isDirty })}>
+    <form.Subscribe
+      selector={(s) => ({ isSubmitting: s.isSubmitting, isDirty: s.isDirty })}
+    >
       {({ isSubmitting, isDirty }) => (
         <Button
           type="button"
@@ -277,19 +326,27 @@ function FormReset({ children, disabled, variant = "outline", ...props }: FormRe
 
 // --- FormMessage ---
 
-function FormMessage({ className, children, ...props }: React.ComponentProps<"div">) {
+function FormMessage({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div">) {
   const { form } = useFormContext();
   return (
     <form.Subscribe selector={(s) => s.errors}>
       {(errors) => {
         const rootError = errors[0];
-        const message = children ?? (typeof rootError === "string" ? rootError : null);
+        const message =
+          children ?? (typeof rootError === "string" ? rootError : null);
         if (!message) return null;
         return (
           <div
             role="alert"
             data-slot="form-message"
-            className={cn("rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive", className)}
+            className={cn(
+              "rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive",
+              className,
+            )}
             {...props}
           >
             {message}
