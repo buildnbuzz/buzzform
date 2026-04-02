@@ -50,9 +50,24 @@ This turborepo contains:
 ## 🚀 Quick Start
 
 ### Installation
+1. Add `shadcn/ui` to your project:
+```
+npx shadcn@latest init
+```
+Or use any other method, following the [instructions](https://ui.shadcn.com/docs/installation).
 
+2. Add a `@buzzform` to the shadcn registries - in the file `components.json`, add a line to the `registries` section:
+```jsonc
+{
+  // ... existing config
+  "registries": {
+    "@buzzform": "https://form.buildnbuzz.com/r/{name}.json"
+  }
+}
+```
+3. Add the BuzzForm components:
 ```bash
-npx shadcn@latest add https://form.buildnbuzz.com/r/starter
+npx shadcn@latest add @buzzform/all
 ```
 
 This will install the core BuzzForm components and dependencies into your project.
