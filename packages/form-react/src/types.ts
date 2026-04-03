@@ -57,9 +57,9 @@ export interface UseFormOptionsWithSchema<
   TSchema extends FormSchema,
   TFormData extends UnknownData = UnknownData,
 > extends Omit<
-    AnyTanstackFormOptions<TFormData>,
-    "defaultValues" | "onSubmit"
-  > {
+  AnyTanstackFormOptions<TFormData>,
+  "defaultValues" | "onSubmit"
+> {
   /** Form schema used to derive defaults and build runtime validation. */
   schema: TSchema;
   /** Optional overrides merged over schema-derived defaults. */
@@ -79,9 +79,8 @@ export interface UseFormOptionsWithSchema<
 }
 
 /** Convenience `useForm` options type using generic `FormSchema`. */
-export type UseFormOptions<
-  TFormData extends UnknownData = UnknownData,
-> = UseFormOptionsWithSchema<FormSchema, TFormData>;
+export type UseFormOptions<TFormData extends UnknownData = UnknownData> =
+  UseFormOptionsWithSchema<FormSchema, TFormData>;
 
 /** TanStack field validators with validation slot generics widened to `any`. */
 export type AnyFieldValidators = FieldValidators<
@@ -100,14 +99,11 @@ export type AnyFieldValidators = FieldValidators<
 >;
 
 /** Minimal form API contract required by the headless `<Field>` wrapper. */
-export type FieldFormApi<
-  TFormData extends UnknownData = UnknownData,
-> = AnyReactFormExtendedApi<TFormData>;
+export type FieldFormApi<TFormData extends UnknownData = UnknownData> =
+  AnyReactFormExtendedApi<TFormData>;
 
 /** Props for the headless `<Field>` wrapper. */
-export interface FieldProps<
-  TFormData extends UnknownData = UnknownData,
-> {
+export interface FieldProps<TFormData extends UnknownData = UnknownData> {
   /** Data field schema node. */
   field: DataField;
   /** TanStack form instance from `useForm`. */
@@ -118,7 +114,7 @@ export interface FieldProps<
   customValidators?: ValidationRegistry;
   /** Explicit TanStack validators merged with generated schema validators. */
   validators?: AnyFieldValidators;
-  /** Which run includes derived checks (defaults to `blur`). */
+  /** Which run includes derived checks (defaults to `submit`). */
   derivedValidationMode?: ValidationRun;
   /** Field UI content; rendered inside `form.Field` when mounted and visible. */
   children: ReactNode;

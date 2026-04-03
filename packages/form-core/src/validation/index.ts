@@ -9,11 +9,7 @@ import type {
 } from "../types";
 import { resolveDynamicValue } from "../dynamic";
 import { evaluateVisibility } from "../conditions";
-import {
-  escapePointer,
-  getByPath,
-  splitPointer,
-} from "../utils/path";
+import { escapePointer, getByPath, splitPointer } from "../utils/path";
 import { walkFields } from "../utils/walk";
 
 // ============================================================================
@@ -138,11 +134,19 @@ export const builtInValidators = {
   },
 
   min: (value: unknown, args?: ValidatorArgsMap["min"]) => {
-    return numberRange(value, args as Record<string, unknown> | undefined, "min");
+    return numberRange(
+      value,
+      args as Record<string, unknown> | undefined,
+      "min",
+    );
   },
 
   max: (value: unknown, args?: ValidatorArgsMap["max"]) => {
-    return numberRange(value, args as Record<string, unknown> | undefined, "max");
+    return numberRange(
+      value,
+      args as Record<string, unknown> | undefined,
+      "max",
+    );
   },
 
   precision: (value: unknown, args?: ValidatorArgsMap["precision"]) => {
@@ -165,10 +169,9 @@ export const builtInValidators = {
 
   step: (value: unknown, args?: ValidatorArgsMap["step"]) => {
     if (typeof value !== "number" || Number.isNaN(value)) return false;
-    const step = getNumberArg(
-      args as Record<string, unknown> | undefined,
-      ["step"],
-    );
+    const step = getNumberArg(args as Record<string, unknown> | undefined, [
+      "step",
+    ]);
     if (step === undefined) return true;
     if (step === 0) return false;
 
@@ -226,14 +229,23 @@ export const builtInValidators = {
   },
 
   minTags: (value: unknown, args?: ValidatorArgsMap["minTags"]) => {
-    return minLengthLike(value, args as Record<string, unknown> | undefined, ["min", "minTags"]);
+    return minLengthLike(value, args as Record<string, unknown> | undefined, [
+      "min",
+      "minTags",
+    ]);
   },
 
   maxTags: (value: unknown, args?: ValidatorArgsMap["maxTags"]) => {
-    return maxLengthLike(value, args as Record<string, unknown> | undefined, ["max", "maxTags"]);
+    return maxLengthLike(value, args as Record<string, unknown> | undefined, [
+      "max",
+      "maxTags",
+    ]);
   },
-  
-  passwordCriteria: (value: unknown, args?: ValidatorArgsMap["passwordCriteria"]) => {
+
+  passwordCriteria: (
+    value: unknown,
+    args?: ValidatorArgsMap["passwordCriteria"],
+  ) => {
     if (typeof value !== "string") return false;
     if (args?.requireUppercase && !/[A-Z]/.test(value)) return false;
     if (args?.requireLowercase && !/[a-z]/.test(value)) return false;
@@ -290,7 +302,10 @@ export interface ValidateFieldsOptions {
 }
 
 /** Determine if a check should be skipped for the provided value. */
-export function shouldSkipCheck(check: ValidationCheck, value: unknown): boolean {
+export function shouldSkipCheck(
+  check: ValidationCheck,
+  value: unknown,
+): boolean {
   const isEmpty = value === undefined || value === null || value === "";
   if (!isEmpty) return false;
   return check.type !== "required";
@@ -352,7 +367,7 @@ export async function validateField(
   options?: ValidateFieldsOptions,
 ): Promise<FieldValidationResult> {
   const run = options?.run ?? "submit";
-  const derivedRun = options?.derivedRun ?? "blur";
+  const derivedRun = options?.derivedRun ?? "submit";
   const includeDerived = options?.includeDerived ?? derivedRun === run;
   const ctx: ValidationContext = {
     formData,
@@ -488,7 +503,7 @@ export async function validateFields(
 ): Promise<ValidationResult> {
   const errorsByPath: Record<string, string> = {};
   const run = options?.run ?? "submit";
-  const derivedRun = options?.derivedRun ?? "blur";
+  const derivedRun = options?.derivedRun ?? "submit";
   const includeDerived = options?.includeDerived ?? derivedRun === run;
   const ctx: ValidationContext = {
     formData,

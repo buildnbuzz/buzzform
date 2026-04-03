@@ -5,21 +5,21 @@ export {
   useDataFieldContext,
   useFieldApi,
 } from "./field-context";
-export type {
-  FieldContextValue,
-  DataFieldContextValue,
-} from "./field-context";
+export type { FieldContextValue, DataFieldContextValue } from "./field-context";
 
 export { useFormContext } from "./form-context";
 
 export {
   RegistryContext,
+  FormConfigContext,
+  useFormConfig,
   useRegistry,
   FormProvider,
 } from "./registry-context";
 export type {
   FieldRegistry,
   FormProviderProps,
+  FormConfig,
 } from "./registry-context";
 
 // Composable UI hooks
@@ -44,10 +44,7 @@ export type { FieldOptionsState } from "./hooks/use-field-options";
 
 // Primary field hooks
 export { useDataField } from "./hooks/use-data-field";
-export type {
-  DataFieldState,
-  DataFieldOptions,
-} from "./hooks/use-data-field";
+export type { DataFieldState, DataFieldOptions } from "./hooks/use-data-field";
 
 export { useLayoutField } from "./hooks/use-layout-field";
 export type {
@@ -55,4 +52,7 @@ export type {
   LayoutFieldOptions,
 } from "./hooks/use-layout-field";
 
-export { useNestedErrorCount, collectDataFieldNames } from "./hooks/use-nested-error-count";
+export {
+  useNestedErrorCount,
+  collectDataFieldNames,
+} from "./hooks/use-nested-error-count";

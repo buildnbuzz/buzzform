@@ -6,9 +6,13 @@ import type {
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
-import { escapePointer, fromDotNotation, toDotNotation } from "@buildnbuzz/form-core";
+import {
+  escapePointer,
+  fromDotNotation,
+  toDotNotation,
+} from "@buildnbuzz/form-core";
 import { Field, LayoutField } from "./field";
-import { RegistryContext, type FieldRegistry } from "./contexts";
+import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
 
 type FallbackRenderer = (field: CoreField) => ReactNode;
@@ -46,8 +50,10 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   renderFallback,
   basePath,
 }: FieldRendererProps<TFormData>) {
-  const contextRegistry = useContext(RegistryContext);
-  const resolvedRegistry = registry ?? contextRegistry;
+  const config = useContext(FormConfigContext);
+  const resolvedRegistry = registry ?? config?.registry;
+  const resolvedDerivedValidationMode =
+    derivedValidationMode ?? config?.derivedValidationMode;
   const Component = resolvedRegistry?.[field.type];
   const basePointer = toPointer(basePath);
   const resolvedField = isDataField(field)
@@ -58,12 +64,14 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
     form,
     contextData,
     customValidators,
-    derivedValidationMode,
-    registry,
+    derivedValidationMode: resolvedDerivedValidationMode,
+    registry: resolvedRegistry,
     renderFallback,
     basePointer,
   });
-  const componentNode = Component ? <Component>{nestedContent}</Component> : null;
+  const componentNode = Component ? (
+    <Component>{nestedContent}</Component>
+  ) : null;
 
   if (!Component) {
     if (renderFallback) {
@@ -96,7 +104,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
       form={form}
       contextData={contextData}
       customValidators={customValidators}
-      derivedValidationMode={derivedValidationMode}
+      derivedValidationMode={resolvedDerivedValidationMode}
     >
       <Component>{nestedContent}</Component>
     </Field>
@@ -136,6 +144,11 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   renderFallback,
   basePath,
 }: RenderFieldsProps<TFormData>) {
+  const config = useContext(FormConfigContext);
+  const resolvedRegistry = registry ?? config?.registry;
+  const resolvedDerivedValidationMode =
+    derivedValidationMode ?? config?.derivedValidationMode;
+
   return (
     <>
       {fields.map((field, index) => {
@@ -150,8 +163,8 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
             form={form}
             contextData={contextData}
             customValidators={customValidators}
-            derivedValidationMode={derivedValidationMode}
-            registry={registry}
+            derivedValidationMode={resolvedDerivedValidationMode}
+            registry={resolvedRegistry}
             renderFallback={renderFallback}
             basePath={basePath}
           />
@@ -242,7 +255,10 @@ function joinPointer(basePointer: string, segment: string): string {
   return `${basePointer}/${escaped}`;
 }
 
-function resolveDataFieldName(field: DataField, basePointer: string): DataField {
+function resolveDataFieldName(
+  field: DataField,
+  basePointer: string,
+): DataField {
   const nextName = toDotNotation(joinPointer(basePointer, field.name));
   if (nextName === field.name) return field;
   return {

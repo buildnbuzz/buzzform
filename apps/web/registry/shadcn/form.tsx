@@ -5,7 +5,7 @@ import {
   Form as HeadlessForm,
   FormProvider,
   RenderFields,
-  RegistryContext,
+  FormConfigContext,
   useForm,
   type FieldFormApi,
   type FieldRegistry,
@@ -80,8 +80,12 @@ type FormProps<TSchema extends FormSchema = FormSchema> =
 function Form<TSchema extends FormSchema = FormSchema>(
   props: FormProps<TSchema>,
 ) {
-  const contextRegistry = React.useContext(RegistryContext);
-  const registry = props.registry ?? contextRegistry;
+  const config = React.useContext(FormConfigContext);
+  const registry = props.registry ?? config?.registry;
+  const derivedValidationMode =
+    (props as FormWithInstance).derivedValidationMode ??
+    (props as FormWithSchema<TSchema>).derivedValidationMode ??
+    config?.derivedValidationMode;
   const formId = React.useId();
 
   if (!registry) {
@@ -98,10 +102,15 @@ function Form<TSchema extends FormSchema = FormSchema>(
           registry,
           schema: props.schema,
           formId,
-          derivedValidationMode: props.derivedValidationMode,
+          derivedValidationMode,
         }}
       >
-        <FormProvider registry={registry}>{props.children}</FormProvider>
+        <FormProvider
+          registry={registry}
+          derivedValidationMode={derivedValidationMode}
+        >
+          {props.children}
+        </FormProvider>
       </FormContext.Provider>
     );
   }
@@ -110,6 +119,7 @@ function Form<TSchema extends FormSchema = FormSchema>(
     <FormInner
       {...(props as FormWithSchema<TSchema>)}
       registry={registry}
+      derivedValidationMode={derivedValidationMode}
       formId={formId}
     />
   );
@@ -127,7 +137,11 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   contextData,
   derivedValidationMode,
   ...tanstackOpts
-}: FormWithSchema<TSchema> & { registry: FieldRegistry; formId: string }) {
+}: FormWithSchema<TSchema> & {
+  registry: FieldRegistry;
+  formId: string;
+  derivedValidationMode?: ValidationRun;
+}) {
   if (process.env.NODE_ENV === "development" && children && actions) {
     console.warn(
       "<Form>: `actions` prop is ignored when children are provided.",
@@ -157,7 +171,10 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
     <FormContext.Provider
       value={{ form, registry, schema, formId, derivedValidationMode }}
     >
-      <FormProvider registry={registry}>
+      <FormProvider
+        registry={registry}
+        derivedValidationMode={derivedValidationMode}
+      >
         {children ?? (
           <FormContent>
             <FormFields />

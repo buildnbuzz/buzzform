@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import {
   useForm as useTanstackForm,
   type StandardSchemaV1,
@@ -13,6 +13,7 @@ import type {
   UseFormOptionsWithSchema,
 } from "./types";
 import { buildStandardSchemaValidator } from "./validator";
+import { FormConfigContext } from "./contexts";
 
 /**
  * Wraps TanStack `useForm` with schema defaults, runtime submit validation, and optional output transform.
@@ -29,6 +30,7 @@ export function useForm<TFormData extends UnknownData>(
 export function useForm<TFormData extends UnknownData>(
   opts: UseFormOptions<TFormData>,
 ): AnyReactFormExtendedApi<TFormData> {
+  const config = useContext(FormConfigContext);
   const {
     schema,
     defaultValues,
@@ -36,7 +38,7 @@ export function useForm<TFormData extends UnknownData>(
     customValidators,
     contextData,
     enableSchemaSubmitValidation = true,
-    derivedValidationMode,
+    derivedValidationMode = config?.derivedValidationMode,
     output,
     onSubmit,
     ...tanstackOpts

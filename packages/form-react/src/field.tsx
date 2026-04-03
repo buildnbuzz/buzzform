@@ -40,10 +40,26 @@ const buildValidator = <TFormData extends UnknownData>(
   customValidators?: ValidationRegistry,
 ) => {
   return async (input: unknown) => {
+    const isObjectInput = typeof input === "object" && input !== null;
     const value =
-      typeof input === "object" && input !== null && "value" in input
+      isObjectInput && "value" in input
         ? (input as { value: unknown }).value
         : input;
+    const fieldApi =
+      isObjectInput && "fieldApi" in input
+        ? (input as { fieldApi: AnyFieldApi }).fieldApi
+        : undefined;
+
+    // If we have fieldApi, we can check if the field has been modified.
+    // We skip validation for pristine fields to avoid "red flashes" on blur/close.
+    // However, we MUST NOT skip it during submission, otherwise 'required' checks won't run.
+    if (
+      fieldApi &&
+      fieldApi.state.meta.isPristine &&
+      !form.store.state.isSubmitting
+    ) {
+      return undefined;
+    }
 
     return runChecks(
       checks,
@@ -99,7 +115,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   }, [deps, fieldName]);
 
   const generatedValidators = useMemo(() => {
-    const derivedRun = derivedValidationMode ?? "blur";
+    const derivedRun = derivedValidationMode ?? "submit";
     const changeGroup = getValidationGroup(resolvedField.validate, "change");
     const blurGroup = getValidationGroup(resolvedField.validate, "blur");
     const changeChecks = collectFieldValidationChecks(resolvedField, "change", {
@@ -222,30 +238,19 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       evaluateVisibility(resolvedField.required, ctx);
 
     if (!isConditionMet) {
-      return (
-        <ConditionalFieldRemover
-          form={form}
-          name={field.name}
-        />
-      );
+      return <ConditionalFieldRemover form={form} name={field.name} />;
     }
 
     if (isHidden) {
       return (
-        <form.Field
-          name={field.name as never}
-          validators={mergedValidators}
-        >
+        <form.Field name={field.name as never} validators={mergedValidators}>
           {() => null}
         </form.Field>
       );
     }
 
     return (
-      <form.Field
-        name={field.name as never}
-        validators={mergedValidators}
-      >
+      <form.Field name={field.name as never} validators={mergedValidators}>
         {(tanstackField: AnyFieldApi) => (
           <FieldContext.Provider
             value={{
@@ -273,22 +278,14 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     return renderField();
   }
 
-  return (
-    <form.Subscribe
-      selector={depsSelector}
-    >
-      {renderField}
-    </form.Subscribe>
-  );
+  return <form.Subscribe selector={depsSelector}>{renderField}</form.Subscribe>;
 }
 
 /**
  * Headless wrapper for layout fields (Row, Tabs, etc.) that provides
  * visibility logic and context without TanStack form registration.
  */
-export interface LayoutFieldProps<
-  TFormData extends UnknownData = UnknownData,
-> {
+export interface LayoutFieldProps<TFormData extends UnknownData = UnknownData> {
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
@@ -378,13 +375,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
     );
   };
 
-  return (
-    <form.Subscribe
-      selector={depsSelector}
-    >
-      {renderField}
-    </form.Subscribe>
-  );
+  return <form.Subscribe selector={depsSelector}>{renderField}</form.Subscribe>;
 }
 
 function resolveRelativeDataPaths<TField extends DataField>(
