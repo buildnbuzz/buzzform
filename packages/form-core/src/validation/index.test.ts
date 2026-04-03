@@ -73,11 +73,19 @@ describe("builtInValidators", () => {
       requireSpecial: true,
     };
     expect(builtInValidators.passwordCriteria("Abcdef1!", criteria)).toBe(true);
-    expect(builtInValidators.passwordCriteria("abcdef1!", criteria)).toBe(false); // no uppercase
-    expect(builtInValidators.passwordCriteria("ABCDEF1!", criteria)).toBe(false); // no lowercase
-    expect(builtInValidators.passwordCriteria("Abcdefg!", criteria)).toBe(false); // no number
-    expect(builtInValidators.passwordCriteria("Abcdef12", criteria)).toBe(false); // no special
-    expect(builtInValidators.passwordCriteria("Abcdef1!", {})).toBe(true);        // no criteria = pass
+    expect(builtInValidators.passwordCriteria("abcdef1!", criteria)).toBe(
+      false,
+    ); // no uppercase
+    expect(builtInValidators.passwordCriteria("ABCDEF1!", criteria)).toBe(
+      false,
+    ); // no lowercase
+    expect(builtInValidators.passwordCriteria("Abcdefg!", criteria)).toBe(
+      false,
+    ); // no number
+    expect(builtInValidators.passwordCriteria("Abcdef12", criteria)).toBe(
+      false,
+    ); // no special
+    expect(builtInValidators.passwordCriteria("Abcdef1!", {})).toBe(true); // no criteria = pass
   });
 });
 
@@ -97,12 +105,7 @@ describe("deriveFieldChecks", () => {
     });
 
     const types = checks.map((check) => check.type);
-    expect(types).toEqual([
-      "required",
-      "pattern",
-      "minLength",
-      "maxLength",
-    ]);
+    expect(types).toEqual(["required", "pattern", "minLength", "maxLength"]);
   });
 
   it("derives precision and step checks from number fields", () => {
@@ -117,7 +120,11 @@ describe("deriveFieldChecks", () => {
   });
 
   it("derives email format check for email fields", () => {
-    const checks = deriveFieldChecks({ type: "email", name: "email", minLength: 5 });
+    const checks = deriveFieldChecks({
+      type: "email",
+      name: "email",
+      minLength: 5,
+    });
     const types = checks.map((c) => c.type);
     expect(types).toContain("email");
     expect(types).toContain("minLength");
@@ -131,7 +138,10 @@ describe("deriveFieldChecks", () => {
     });
     const criteriaCheck = checks.find((c) => c.type === "passwordCriteria");
     expect(criteriaCheck).toBeDefined();
-    expect(criteriaCheck?.args).toEqual({ requireUppercase: true, requireNumber: true });
+    expect(criteriaCheck?.args).toEqual({
+      requireUppercase: true,
+      requireNumber: true,
+    });
   });
 
   it("does not derive passwordCriteria when criteria is absent", () => {
@@ -187,7 +197,9 @@ describe("collectFieldValidationChecks", () => {
       minLength: 2,
       validate: {
         onSubmit: {
-          checks: [{ type: "maxLength", message: "Too long", args: { max: 5 } }],
+          checks: [
+            { type: "maxLength", message: "Too long", args: { max: 5 } },
+          ],
         },
       },
     };
@@ -234,7 +246,11 @@ describe("validateFields", () => {
       },
     ];
 
-    const result = await validateFields(fields, { title: "" }, { run: "blur" });
+    const result = await validateFields(
+      fields,
+      { title: "" },
+      { run: "blur", includeDerived: true },
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/title"]).toBe("This field is required.");
@@ -254,7 +270,7 @@ describe("validateFields", () => {
     const tooShort = await validateFields(
       fields,
       { code: "A" },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(tooShort.errorsByPath["/code"]).toBe(
       "Must be at least 3 characters.",
@@ -263,16 +279,14 @@ describe("validateFields", () => {
     const tooLong = await validateFields(
       fields,
       { code: "ABCDEF" },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
-    expect(tooLong.errorsByPath["/code"]).toBe(
-      "Must be at most 5 characters.",
-    );
+    expect(tooLong.errorsByPath["/code"]).toBe("Must be at most 5 characters.");
 
     const invalidPattern = await validateFields(
       fields,
       { code: "AbC" },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(invalidPattern.errorsByPath["/code"]).toBe("Invalid format.");
   });
@@ -287,10 +301,18 @@ describe("validateFields", () => {
       },
     ];
 
-    const tooLow = await validateFields(fields, { age: 16 }, { run: "blur" });
+    const tooLow = await validateFields(
+      fields,
+      { age: 16 },
+      { run: "blur", includeDerived: true },
+    );
     expect(tooLow.errorsByPath["/age"]).toBe("Must be at least 18.");
 
-    const tooHigh = await validateFields(fields, { age: 70 }, { run: "blur" });
+    const tooHigh = await validateFields(
+      fields,
+      { age: 70 },
+      { run: "blur", includeDerived: true },
+    );
     expect(tooHigh.errorsByPath["/age"]).toBe("Must be at most 65.");
   });
 
@@ -307,7 +329,7 @@ describe("validateFields", () => {
     const badPrecision = await validateFields(
       fields,
       { amount: 12.345 },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(badPrecision.errorsByPath["/amount"]).toBe(
       "Must have at most 2 decimal places.",
@@ -352,14 +374,14 @@ describe("validateFields", () => {
     const badEmail = await validateFields(
       fields,
       { email: "wrong", confirmEmail: "wrong" },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(badEmail.errorsByPath["/email"]).toBe("Invalid email.");
 
     const mismatch = await validateFields(
       fields,
       { email: "ada@example.com", confirmEmail: "grace@example.com" },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(mismatch.errorsByPath["/confirmEmail"]).toBe("Emails must match.");
   });
@@ -380,13 +402,17 @@ describe("validateFields", () => {
       },
     ];
 
-    const tooFew = await validateFields(fields, { tags: ["a"] }, { run: "blur" });
+    const tooFew = await validateFields(
+      fields,
+      { tags: ["a"] },
+      { run: "blur", includeDerived: true },
+    );
     expect(tooFew.errorsByPath["/tags"]).toBe("Add at least 2 items.");
 
     const tooMany = await validateFields(
       fields,
       { tags: ["a", "b", "c", "d"] },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
     expect(tooMany.errorsByPath["/tags"]).toBe("Cannot exceed 3 items.");
   });
@@ -406,7 +432,7 @@ describe("validateFields", () => {
     expect(result.valid).toBe(true);
   });
 
-  it("does not include derived checks on submit by default", async () => {
+  it("includes derived checks on submit by default", async () => {
     const fields = [
       {
         type: "text" as const,
@@ -415,10 +441,14 @@ describe("validateFields", () => {
       },
     ];
 
-    const result = await validateFields(fields, { title: "" }, { run: "submit" });
+    const result = await validateFields(
+      fields,
+      { title: "" },
+      { run: "submit" },
+    );
 
-    expect(result.valid).toBe(true);
-    expect(result.errorsByPath["/title"]).toBeUndefined();
+    expect(result.valid).toBe(false);
+    expect(result.errorsByPath["/title"]).toBe("This field is required.");
   });
 
   it("includes derived checks when derivedRun matches run", async () => {
@@ -430,10 +460,14 @@ describe("validateFields", () => {
       },
     ];
 
-    const result = await validateFields(fields, { title: "" }, {
-      run: "submit",
-      derivedRun: "submit",
-    });
+    const result = await validateFields(
+      fields,
+      { title: "" },
+      {
+        run: "submit",
+        derivedRun: "submit",
+      },
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/title"]).toBe("This field is required.");
@@ -448,10 +482,14 @@ describe("validateFields", () => {
       },
     ];
 
-    const result = await validateFields(fields, { title: "" }, {
-      run: "submit",
-      includeDerived: true,
-    });
+    const result = await validateFields(
+      fields,
+      { title: "" },
+      {
+        run: "submit",
+        includeDerived: true,
+      },
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/title"]).toBe("This field is required.");
@@ -475,7 +513,7 @@ describe("validateFields", () => {
     const result = await validateFields(
       fields,
       { items: [{ label: "" }, { label: "ok" }] },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
 
     expect(result.valid).toBe(false);
@@ -491,23 +529,33 @@ describe("validateFields", () => {
 // ============================================================================
 
 describe("validateField", () => {
-  it("respects derivedRun default (blur)", async () => {
+  it("respects derivedRun default (submit)", async () => {
     const field = {
       type: "text" as const,
       name: "title",
       required: true,
     };
 
-    const submitResult = await validateField(field, "/title", { title: "" }, {
-      run: "submit",
-    });
-    expect(submitResult.valid).toBe(true);
+    const blurResult = await validateField(
+      field,
+      "/title",
+      { title: "" },
+      {
+        run: "blur",
+      },
+    );
+    expect(blurResult.valid).toBe(true);
 
-    const blurResult = await validateField(field, "/title", { title: "" }, {
-      run: "blur",
-    });
-    expect(blurResult.valid).toBe(false);
-    expect(blurResult.error).toBe("This field is required.");
+    const submitResult = await validateField(
+      field,
+      "/title",
+      { title: "" },
+      {
+        run: "submit",
+      },
+    );
+    expect(submitResult.valid).toBe(false);
+    expect(submitResult.error).toBe("This field is required.");
   });
 
   it("includes derived checks when includeDerived is true", async () => {
@@ -517,10 +565,15 @@ describe("validateField", () => {
       min: 18,
     };
 
-    const result = await validateField(field, "/age", { age: 16 }, {
-      run: "submit",
-      includeDerived: true,
-    });
+    const result = await validateField(
+      field,
+      "/age",
+      { age: 16 },
+      {
+        run: "submit",
+        includeDerived: true,
+      },
+    );
 
     expect(result.valid).toBe(false);
     expect(result.error).toBe("Must be at least 18.");
@@ -558,7 +611,7 @@ describe("validatePath", () => {
       fields,
       "/profile/tags/0/label",
       { profile: { tags: [{ label: "" }] } },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
 
     expect(result.valid).toBe(false);
@@ -584,7 +637,7 @@ describe("validatePath", () => {
       fields,
       "/report/2024",
       { report: { "2024": "" } },
-      { run: "blur" },
+      { run: "blur", includeDerived: true },
     );
 
     expect(result.valid).toBe(false);
@@ -600,9 +653,14 @@ describe("validatePath", () => {
       },
     ];
 
-    const result = await validatePath(fields, "/missing", { title: "" }, {
-      run: "blur",
-    });
+    const result = await validatePath(
+      fields,
+      "/missing",
+      { title: "" },
+      {
+        run: "blur",
+      },
+    );
 
     expect(result.valid).toBe(true);
   });
@@ -623,12 +681,17 @@ describe("validatePath", () => {
       },
     ];
 
-    const result = await validatePath(fields, "/secret/code", {
-      show: false,
-      secret: { code: "" },
-    }, {
-      run: "blur",
-    });
+    const result = await validatePath(
+      fields,
+      "/secret/code",
+      {
+        show: false,
+        secret: { code: "" },
+      },
+      {
+        run: "blur",
+      },
+    );
 
     expect(result.valid).toBe(true);
   });
@@ -649,7 +712,11 @@ describe("validateSchema", () => {
       ],
     };
 
-    const result = await validateSchema(schema, { email: "" }, { run: "blur" });
+    const result = await validateSchema(
+      schema,
+      { email: "" },
+      { run: "blur", includeDerived: true },
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/email"]).toBe("This field is required.");
@@ -671,12 +738,16 @@ describe("validateSchema", () => {
       },
     };
 
-    const result = await validateSchema(schema, {}, {
-      run: "blur",
-      validators: {
-        customFail: () => false,
+    const result = await validateSchema(
+      schema,
+      {},
+      {
+        run: "blur",
+        validators: {
+          customFail: () => false,
+        },
       },
-    });
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath[FORM_ERROR_PATH]).toBe("Form invalid");
@@ -692,12 +763,16 @@ describe("validateSchema", () => {
       },
     };
 
-    const result = await validateSchema(schema, {}, {
-      run: "blur",
-      validators: {
-        customFail: () => false,
+    const result = await validateSchema(
+      schema,
+      {},
+      {
+        run: "blur",
+        validators: {
+          customFail: () => false,
+        },
       },
-    });
+    );
 
     expect(result.valid).toBe(true);
     expect(result.errorsByPath[FORM_ERROR_PATH]).toBeUndefined();
@@ -719,12 +794,17 @@ describe("validateSchema", () => {
       },
     };
 
-    const result = await validateSchema(schema, { title: "" }, {
-      run: "blur",
-      validators: {
-        customFail: () => false,
+    const result = await validateSchema(
+      schema,
+      { title: "" },
+      {
+        run: "blur",
+        includeDerived: true,
+        validators: {
+          customFail: () => false,
+        },
       },
-    });
+    );
 
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/title"]).toBe("This field is required.");

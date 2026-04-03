@@ -21,7 +21,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         <BuzzFormProvider>
-          <FormProvider registry={registry}>{children}</FormProvider>
+          <FormProvider registry={registry} derivedValidationMode="blur">
+            {children}
+          </FormProvider>
         </BuzzFormProvider>
       </RootProvider>
     </ThemeProvider>

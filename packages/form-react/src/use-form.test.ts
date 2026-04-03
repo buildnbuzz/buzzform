@@ -1,3 +1,4 @@
+import { useContext } from "react";
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
 import { useForm as tanstackUseForm } from "@tanstack/react-form";
 import type { FormSchema } from "@buildnbuzz/form-core";
@@ -14,6 +15,7 @@ vi.mock("react", async () => {
   return {
     ...actual,
     useMemo: <T>(factory: () => T): T => factory(),
+    useContext: vi.fn(() => null),
   };
 });
 
@@ -134,5 +136,20 @@ describe("useForm", () => {
     type FormData = { name: string; extra?: number };
     const result = useForm<FormData>({ schema });
     expectTypeOf(result).toEqualTypeOf<AnyReactFormExtendedApi<FormData>>();
+  });
+
+  it("picks up derivedValidationMode from context when not provided", () => {
+    const schema: FormSchema = {
+      fields: [{ type: "text", name: "email" }],
+    };
+
+    vi.mocked(useContext).mockReturnValue({
+      derivedValidationMode: "onBlur",
+    });
+
+    useForm({ schema });
+
+    const validatorCall = vi.mocked(buildStandardSchemaValidator).mock.calls[0];
+    expect(validatorCall?.[1]?.derivedValidationMode).toBe("onBlur");
   });
 });
