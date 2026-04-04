@@ -58,6 +58,8 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 interface ArrayUi {
+  /** Visual style for the array container. Defaults to `"default"`. */
+  variant?: "default" | "minimal";
   /** Label for the add button. Defaults to `"Add Item"`. */
   addLabel?: string;
   /** Empty state message. Defaults to `"No items added yet."`. */
@@ -121,15 +123,21 @@ function ArrayItem({
   const rowPath = `${fieldApiName}.${index}`;
 
   const rowData = form.getFieldValue(rowPath as never);
+  const rowFormData =
+    rowData && typeof rowData === "object"
+      ? (rowData as Record<string, unknown>)
+      : { value: rowData };
   const resolvedLabel = rowLabel
     ? String(
         resolveDynamicValue(
           rowLabel as string,
-          (rowData ?? {}) as Record<string, unknown>,
+          rowFormData,
           (contextData ?? {}) as Record<string, unknown>,
         ) ?? "",
       ).trim() || `Item ${index + 1}`
-    : `Item ${index + 1}`;
+    : field.mode === "flat" && rowData !== undefined && rowData !== null
+      ? String(rowData)
+      : `Item ${index + 1}`;
 
   const errorCount = useNestedErrorCount(field.fields, rowPath);
 
@@ -246,7 +254,7 @@ function ArrayItem({
           </CardHeader>
 
           <CollapsibleContent>
-            <div className="p-4 space-y-4">
+            <div className="p-4 flex flex-col gap-4">
               <RenderFields
                 fields={field.fields}
                 form={form}
@@ -260,11 +268,158 @@ function ArrayItem({
   );
 }
 
-// ---------------------------------------------------------------------------
-// ArrayField
-// ---------------------------------------------------------------------------
+function MinimalArrayItem({
+  id,
+  index,
+  field,
+  form,
+  fieldApiName,
+  rowLabel,
+  contextData,
+  isSortable,
+  isDisabled,
+  isReadOnly,
+  canRemove,
+  canDuplicate,
+  allowDuplicate,
+  onRemove,
+  onDuplicate,
+}: ArrayItemProps) {
+  const rowPath = `${fieldApiName}.${index}`;
+  const rowData = form.getFieldValue(rowPath as never);
+  const rowFormData =
+    rowData && typeof rowData === "object"
+      ? (rowData as Record<string, unknown>)
+      : { value: rowData };
+  const resolvedLabel = rowLabel
+    ? String(
+        resolveDynamicValue(
+          rowLabel as string,
+          rowFormData,
+          (contextData ?? {}) as Record<string, unknown>,
+        ) ?? "",
+      ).trim()
+    : "";
 
-export function ArrayField() {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled: !isSortable || isDisabled });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      className="border rounded-lg bg-background px-3 py-2"
+    >
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          {resolvedLabel && (
+            <p className="text-xs text-muted-foreground mb-2">
+              {resolvedLabel}
+            </p>
+          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <RenderFields
+              fields={field.fields}
+              form={form}
+              basePath={rowPath}
+            />
+          </div>
+        </div>
+
+        {!isReadOnly && (
+          <div className="flex items-center gap-1 shrink-0">
+            {isSortable && !isDisabled && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                {...attributes}
+                {...listeners}
+                title="Drag"
+              >
+                <IconPlaceholder
+                  lucide="GripVertical"
+                  hugeicons="DragDropIcon"
+                  tabler="IconGripVertical"
+                  phosphor="DotsSixVertical"
+                  remixicon="RiDraggable"
+                  className="size-3.5"
+                />
+              </Button>
+            )}
+            {allowDuplicate && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => onDuplicate(index)}
+                disabled={!canDuplicate || isDisabled}
+                title="Duplicate"
+              >
+                <IconPlaceholder
+                  lucide="Copy"
+                  hugeicons="Copy01Icon"
+                  tabler="IconCopy"
+                  phosphor="Copy"
+                  remixicon="RiFileCopyLine"
+                  className="size-3.5"
+                />
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-destructive"
+              onClick={() => onRemove(index)}
+              disabled={!canRemove || isDisabled}
+              title="Remove"
+            >
+              <IconPlaceholder
+                lucide="Trash2"
+                hugeicons="Delete02Icon"
+                tabler="IconTrash"
+                phosphor="Trash"
+                remixicon="RiDeleteBinLine"
+                className="size-3.5"
+              />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface ArrayFieldState {
+  fieldApi: ReturnType<typeof useDataField>["fieldApi"];
+  field: ArrayFieldDef;
+  form: ReturnType<typeof useDataField>["form"];
+  isDisabled: boolean;
+  isReadOnly: boolean;
+  isRequired: boolean;
+  label?: string;
+  description?: string;
+  errors: string[];
+  isInvalid: boolean;
+  descriptionId: string;
+  errorId: string;
+  contextData: unknown;
+}
+
+function DefaultArrayField(state: ArrayFieldState) {
   const {
     fieldApi,
     field,
@@ -279,7 +434,7 @@ export function ArrayField() {
     descriptionId,
     errorId,
     contextData,
-  } = useDataField<ArrayFieldDef>();
+  } = state;
 
   const ui = field.ui as ArrayUi | undefined;
   const addLabel = ui?.addLabel ?? "Add Item";
@@ -492,7 +647,7 @@ export function ArrayField() {
                         items={itemIds}
                         strategy={verticalListSortingStrategy}
                       >
-                        <div className="space-y-3">
+                        <div className="flex flex-col gap-3">
                           {items.map((_, index) => (
                             <ArrayItem
                               key={itemIds[index]}
@@ -545,4 +700,227 @@ export function ArrayField() {
       </FieldGroup>
     </>
   );
+}
+
+function MinimalArrayField(state: ArrayFieldState) {
+  const {
+    fieldApi,
+    field,
+    form,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    label,
+    description,
+    errors,
+    isInvalid,
+    descriptionId,
+    errorId,
+    contextData,
+  } = state;
+
+  const ui = field.ui as ArrayUi | undefined;
+  const addLabel = ui?.addLabel ?? "Add Item";
+  const emptyMessage = ui?.emptyMessage ?? "No items added yet.";
+  const isSortable = ui?.isSortable !== false;
+  const showErrorBadge = ui?.showErrorBadge !== false;
+  const allowDuplicate = ui?.allowDuplicate ?? false;
+
+  const items = Array.isArray(fieldApi.state.value) ? fieldApi.state.value : [];
+
+  const canAddMore =
+    field.maxItems === undefined || items.length < field.maxItems;
+  const canRemoveAny =
+    field.minItems === undefined || items.length > field.minItems;
+
+  // Stable DnD IDs keyed by position — sufficient since we reorder in-place
+  const dndId = React.useId();
+  const itemIds = items.map((_, i) => `${fieldApi.name}-${i}`);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    const from = itemIds.indexOf(active.id as string);
+    const to = itemIds.indexOf(over.id as string);
+    if (from !== -1 && to !== -1) fieldApi.moveValue(from, to);
+  };
+
+  const handleAdd = () => {
+    if (!isDisabled && !isReadOnly && canAddMore)
+      fieldApi.pushValue(undefined as never);
+  };
+
+  const handleRemove = (index: number) => fieldApi.removeValue(index);
+
+  const handleDuplicate = (index: number) => {
+    if (canAddMore) fieldApi.insertValue(index + 1, items[index] as never);
+  };
+
+  const totalErrorCount = useNestedErrorCount(field.fields, fieldApi.name);
+  const isEffectivelyRequired =
+    isRequired || (typeof field.minItems === "number" && field.minItems >= 1);
+
+  return (
+    <FieldGroup data-field={fieldApi.name}>
+      <Field data-invalid={isInvalid} data-disabled={isDisabled}>
+        <FieldSet disabled={isDisabled} className="flex flex-col gap-4">
+          <div className="flex items-center gap-2">
+            {label && (
+              <FieldLegend className="text-sm font-semibold">
+                {label}
+                {isEffectivelyRequired && (
+                  <span className="text-destructive ml-1">*</span>
+                )}
+              </FieldLegend>
+            )}
+            {items.length > 0 && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                {items.length}
+              </Badge>
+            )}
+            {showErrorBadge && totalErrorCount > 0 && (
+              <Badge variant="destructive" className="h-5 px-1.5 text-xs">
+                {totalErrorCount}
+              </Badge>
+            )}
+            {!isReadOnly && (
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={handleAdd}
+                  disabled={!canAddMore || isDisabled}
+                  title={addLabel}
+                >
+                  <IconPlaceholder
+                    lucide="Plus"
+                    hugeicons="Add01Icon"
+                    tabler="IconPlus"
+                    phosphor="Plus"
+                    remixicon="RiAddLine"
+                    className="size-4"
+                  />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {description && !isInvalid && (
+            <FieldDescription id={descriptionId}>
+              {description}
+            </FieldDescription>
+          )}
+          {isInvalid && <FieldError id={errorId} errors={errors} />}
+
+          {items.length === 0 ? (
+            <div className="flex items-center justify-between border border-dashed rounded-lg px-3 py-3">
+              <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+              {!isReadOnly && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdd}
+                  disabled={!canAddMore || isDisabled}
+                >
+                  <IconPlaceholder
+                    lucide="Plus"
+                    hugeicons="Add01Icon"
+                    tabler="IconPlus"
+                    phosphor="Plus"
+                    remixicon="RiAddLine"
+                    className="size-4 mr-1.5"
+                  />
+                  {addLabel}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <DndContext
+              id={dndId}
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={itemIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col gap-3">
+                  {items.map((_, index) => (
+                    <MinimalArrayItem
+                      key={itemIds[index]}
+                      id={itemIds[index]!}
+                      index={index}
+                      field={field}
+                      form={form}
+                      fieldApiName={fieldApi.name}
+                      rowLabel={ui?.rowLabel}
+                      contextData={contextData}
+                      isSortable={isSortable}
+                      isDisabled={isDisabled}
+                      isReadOnly={isReadOnly}
+                      canRemove={canRemoveAny}
+                      canDuplicate={canAddMore}
+                      allowDuplicate={allowDuplicate}
+                      onRemove={handleRemove}
+                      onDuplicate={handleDuplicate}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+        </FieldSet>
+      </Field>
+    </FieldGroup>
+  );
+}
+
+export function ArrayField() {
+  const {
+    fieldApi,
+    field,
+    form,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    label,
+    description,
+    errors,
+    isInvalid,
+    descriptionId,
+    errorId,
+    contextData,
+  } = useDataField<ArrayFieldDef>();
+
+  const state: ArrayFieldState = {
+    fieldApi,
+    field,
+    form,
+    isDisabled,
+    isReadOnly,
+    isRequired,
+    label,
+    description,
+    errors,
+    isInvalid,
+    descriptionId,
+    errorId,
+    contextData,
+  };
+
+  const ui = field.ui as ArrayUi | undefined;
+  const variant = ui?.variant ?? "default";
+
+  if (variant === "minimal") return <MinimalArrayField {...state} />;
+  return <DefaultArrayField {...state} />;
 }
