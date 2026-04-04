@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 import type { Field } from "../types";
 import { getVisibleFields } from "./visibility";
 
+const isArrayField = (field: Field): field is Extract<Field, { type: "array" }> =>
+  field.type === "array";
+
 const fields: Field[] = [
   { type: "text", name: "title" },
   {
@@ -15,6 +18,24 @@ const fields: Field[] = [
     condition: { $data: "/showProfile", eq: true },
     fields: [{ type: "text", name: "nickname" }],
   },
+  {
+    type: "array",
+    name: "socials",
+    mode: "flat",
+    fields: [{ type: "text", name: "" }],
+  },
+  {
+    type: "array",
+    name: "contacts",
+    fields: [
+      { type: "text", name: "type" },
+      {
+        type: "text",
+        name: "value",
+        condition: { $data: "/showContactValue", eq: true },
+      },
+    ],
+  },
 ];
 
 describe("getVisibleFields", () => {
@@ -27,6 +48,8 @@ describe("getVisibleFields", () => {
       "title",
       "secret",
       "profile",
+      "socials",
+      "contacts",
     ]);
 
     const secret = visible[1];
@@ -41,6 +64,37 @@ describe("getVisibleFields", () => {
     expect(visible.map((f) => ("name" in f ? f.name : f.type))).toEqual([
       "title",
       "secret",
+      "socials",
+      "contacts",
     ]);
+  });
+
+  it("keeps flat array fields as a single-item tuple after filtering", () => {
+    const visible = getVisibleFields(fields, {
+      formData: { showSecret: true, showProfile: true },
+    });
+
+    const socials = visible
+      .filter(isArrayField)
+      .find((field) => field.name === "socials");
+    expect(socials).toBeDefined();
+    expect(socials?.type).toBe("array");
+    expect(socials?.fields.length).toBe(1);
+    expect(socials?.fields[0]?.type).toBe("text");
+  });
+
+  it("filters nested array fields based on child conditions", () => {
+    const visible = getVisibleFields(fields, {
+      formData: { showSecret: true, showProfile: true, showContactValue: false },
+    });
+
+    const contacts = visible
+      .filter(isArrayField)
+      .find((field) => field.name === "contacts");
+    expect(contacts).toBeDefined();
+    const contactFieldNames = contacts?.fields.flatMap((field) =>
+      "name" in field ? [field.name] : [],
+    );
+    expect(contactFieldNames).toEqual(["type"]);
   });
 });

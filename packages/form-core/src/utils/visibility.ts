@@ -42,11 +42,31 @@ export function getVisibleFields(
         break;
       }
 
-      case "group":
-      case "array": {
+      case "group": {
         result.push({
           ...field,
           hidden: isHidden || field.hidden,
+          fields: getVisibleFields(field.fields, ctx),
+        });
+        break;
+      }
+
+      case "array": {
+        const hidden = isHidden || field.hidden;
+
+        if (field.mode === "flat") {
+          const nextFields = getVisibleFields(field.fields, ctx);
+          result.push({
+            ...field,
+            hidden,
+            fields: nextFields as [Field],
+          });
+          break;
+        }
+
+        result.push({
+          ...field,
+          hidden,
           fields: getVisibleFields(field.fields, ctx),
         });
         break;

@@ -393,12 +393,10 @@ export interface GroupField extends BaseField<UnknownData> {
 }
 
 /**
- * Array field - repeatable fields.
+ * Common properties for array fields.
  */
-export interface ArrayField extends BaseField<unknown[]> {
+export interface BaseArrayField extends BaseField<unknown[]> {
   type: "array";
-  /** Fields for each array item. */
-  fields: Field[];
   /**
    * Minimum number of items. Disables remove at minimum and blocks submit via validation.
    */
@@ -408,6 +406,45 @@ export interface ArrayField extends BaseField<unknown[]> {
    */
   maxItems?: number;
 }
+
+/**
+ * Nested array field (default). Each array item is an object containing multiple fields.
+ */
+export interface NestedArrayField extends BaseArrayField {
+  /**
+   * Nested mode (default). Each array item is an object containing multiple fields.
+   */
+  mode?: "nest";
+  /** Fields for each array item. */
+  fields: Field[];
+}
+
+/**
+ * Flat array field. Each array item is a single value from the provided field.
+ */
+export interface FlatArrayField extends BaseArrayField {
+  /**
+   * Flat mode. Each array item is a single value from the provided field.
+   */
+  mode: "flat";
+  /**
+   * Exactly one field for the array item value.
+   *
+   * @remarks [type]
+   * Omit the child `name` (or set it to an empty string) to map the item value
+   * directly to the array element (e.g. `tags: string[]`). Provide a `name` to
+   * wrap each item in an object (e.g. `socials: { url: string }[]`).
+   */
+  fields: [FlatArrayItemField];
+}
+
+/**
+ * Array field - repeatable fields.
+ *
+ * @remarks [type]
+ * Discriminated union between "nest" and "flat" modes.
+ */
+export type ArrayField = NestedArrayField | FlatArrayField;
 
 /** Option for select and radio fields. */
 export interface FieldOption<TValue = string> {
@@ -438,6 +475,25 @@ export type DataField =
   | RadioField
   | GroupField
   | ArrayField;
+
+/**
+ * Data field shape used when a flat array item omits its name.
+ *
+ * @remarks [type]
+ * This is intentionally narrow — only `name` is optional and may be `""`.
+ */
+export type UnnamedDataField = Omit<
+  Exclude<DataField, GroupField | ArrayField>,
+  "name"
+> & { name?: "" };
+
+/**
+ * Field type used for flat array items.
+ *
+ * @remarks [type]
+ * Allows omitting `name` (or using `""`) to represent a direct item value.
+ */
+export type FlatArrayItemField = Field;
 
 // ============================================================================
 // 6. LAYOUT FIELDS (v0.1)
@@ -500,7 +556,7 @@ export type LayoutField = RowField | TabsField | CollapsibleField;
 // ============================================================================
 
 /** Union of all supported fields in v0.1. */
-export type Field = DataField | LayoutField;
+export type Field = DataField | LayoutField | UnnamedDataField;
 
 /** Union of all field type string literals. */
 export type FieldType = Field["type"];
@@ -565,6 +621,9 @@ type UnionToIntersection<T> = (
   ? I
   : never;
 
+type DataFieldLike = DataField | UnnamedDataField;
+type FieldLike = Field;
+
 /**
  * Maps each data field to its inferred value type.
  *
@@ -572,7 +631,7 @@ type UnionToIntersection<T> = (
  * Single source of truth for field → value resolution.
  * Extend this when adding new field types.
  */
-interface FieldValueMap<TField extends DataField> {
+interface FieldValueMap<TField extends DataFieldLike> {
   text: string;
   email: string;
   password: string;
@@ -597,16 +656,18 @@ interface FieldValueMap<TField extends DataField> {
 }
 
 /** Resolve the inferred value type for a data field. */
-type FieldValue<TField extends DataField> =
+type FieldValue<TField extends DataFieldLike> =
   TField["type"] extends keyof FieldValueMap<TField>
     ? FieldValueMap<TField>[TField["type"]]
     : never;
 
 /** Resolve the data shape contribution of a single field (data or layout). */
-type FieldDataShape<TField extends Field> = TField extends DataField
-  ? TField["required"] extends true
-    ? { [K in TField["name"]]: FieldValue<TField> }
-    : { [K in TField["name"]]?: FieldValue<TField> }
+type FieldDataShape<TField extends FieldLike> = TField extends DataFieldLike
+  ? TField["name"] extends "" | undefined
+    ? FieldValue<TField>
+    : TField["required"] extends true
+      ? { [K in Extract<TField["name"], string>]: FieldValue<TField> }
+      : { [K in Extract<TField["name"], string>]?: FieldValue<TField> }
   : TField extends RowField
     ? InferType<TField["fields"]>
     : TField extends TabsField
@@ -623,11 +684,11 @@ type FieldDataShape<TField extends Field> = TField extends DataField
  * Fields with `required: true` (literal) produce required keys; all others are optional.
  * Dynamic conditions cannot be resolved at compile time and default to optional.
  */
-export type InferType<TFields extends readonly Field[]> =
+export type InferType<TFields extends readonly FieldLike[]> =
   TFields extends readonly [infer Head, ...infer Tail]
     ? Simplify<
-        FieldDataShape<Extract<Head, Field>> &
-          InferType<Tail extends readonly Field[] ? Tail : []>
+        FieldDataShape<Extract<Head, FieldLike>> &
+          InferType<Tail extends readonly FieldLike[] ? Tail : []>
       >
     : [TFields[number]] extends [never]
       // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity

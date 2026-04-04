@@ -340,7 +340,7 @@ export function collectFieldValidationChecks(
   run: ValidationRun,
   options?: { includeDerived?: boolean },
 ): ValidationCheck[] {
-  if (!hasFieldName(field)) return [];
+  if (!isDataFieldLike(field)) return [];
   const group = getValidationGroup(field.validate, run);
   const userChecks = group?.checks ?? [];
 
@@ -378,7 +378,7 @@ export async function validateField(
     return { valid: true };
   }
 
-  if (!hasFieldName(field)) {
+  if (!isDataFieldLike(field)) {
     return { valid: true };
   }
 
@@ -395,7 +395,8 @@ export async function validateField(
   return { valid: true };
 }
 
-function joinPointer(base: string, name: string): string {
+function joinPointer(base: string, name?: string): string {
+  if (!name) return base;
   const segment = escapePointer(name);
   return base ? `${base}/${segment}` : `/${segment}`;
 }
@@ -428,14 +429,15 @@ function findFieldByPath(
   let match: Field | undefined;
 
   walkFields(fields, (field, walkCtx) => {
-    if (match || !hasFieldName(field)) return;
+    if (match || !isDataFieldLike(field)) return;
 
     const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
       evaluateVisibility(candidate.condition, ctx),
     );
     if (!allConditionsPass) return;
 
-    if (matchesSchemaPath(joinPointer(walkCtx.path, field.name), path)) {
+    const fieldName = "name" in field && typeof field.name === "string" ? field.name : "";
+    if (matchesSchemaPath(joinPointer(walkCtx.path, fieldName), path)) {
       match = field;
     }
   });
@@ -513,8 +515,9 @@ export async function validateFields(
   const visit = async (field: Field, basePath: string): Promise<void> => {
     if (!evaluateVisibility(field.condition, ctx)) return;
 
-    if (hasFieldName(field)) {
-      const fieldPath = joinPointer(basePath, field.name);
+    if (isDataFieldLike(field)) {
+      const fieldName = "name" in field && typeof field.name === "string" ? field.name : "";
+      const fieldPath = joinPointer(basePath, fieldName);
       const checks = collectFieldValidationChecks(field, run, {
         includeDerived,
       });
@@ -659,7 +662,7 @@ export function runValidationCheck(
 
 /** Derive built-in checks from field configuration. */
 export function deriveFieldChecks(field: Field): ValidationCheck[] {
-  if (!hasFieldName(field)) return [];
+  if (!isDataFieldLike(field)) return [];
   const checks: ValidationCheck[] = [];
 
   if (field.required === true) {
@@ -797,6 +800,10 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
   return checks;
 }
 
-function hasFieldName(field: Field): field is DataField {
-  return "name" in field && typeof field.name === "string";
+function isLayoutField(field: Field): boolean {
+  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+}
+
+function isDataFieldLike(field: Field): field is DataField {
+  return !isLayoutField(field);
 }

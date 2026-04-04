@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { defineSchema } from "../src";
-import type { Field, FormSchema, InferType, UnknownData } from "../src";
+import type { ArrayField, Field, FormSchema, InferType, UnknownData } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
@@ -121,5 +121,97 @@ describe("form-core types", () => {
     expectTypeOf<Shape["email"]>().toEqualTypeOf<string>();
     expectTypeOf<Shape["age"]>().toEqualTypeOf<number | undefined>();
     expectTypeOf<Shape["active"]>().toEqualTypeOf<boolean | undefined>();
+  });
+
+  it("infers nested array shape (default)", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "items",
+          fields: [
+            { type: "text", name: "label", required: true },
+            { type: "checkbox", name: "active" },
+          ],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["items"]>().toEqualTypeOf<
+      { label: string; active?: boolean }[] | undefined
+    >();
+    void schema;
+  });
+
+  it("accepts flat array items with omitted name", () => {
+    const _valid: ArrayField = {
+      type: "array",
+      name: "tags",
+      mode: "flat",
+      fields: [{ type: "text", required: true }],
+    };
+    expectTypeOf(_valid).toBeObject();
+  });
+
+  it("infers flat array shape with empty name", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "tags",
+          mode: "flat",
+          fields: [{ type: "text", name: "", required: true }],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["tags"]>().toEqualTypeOf<string[] | undefined>();
+    void schema;
+  });
+
+  it("infers flat array shape with non-empty name", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "socials",
+          mode: "flat",
+          fields: [{ type: "text", name: "url", required: true }],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["socials"]>().toEqualTypeOf<{ url: string }[] | undefined>();
+    void schema;
+  });
+
+  it("rejects multiple fields in flat mode", () => {
+    const _invalid: ArrayField = {
+      type: "array",
+      name: "test",
+      mode: "flat",
+      // @ts-expect-error - Flat mode only allows exactly one field (tuple [Field])
+      fields: [
+        { type: "text", name: "f1" },
+        { type: "text", name: "f2" },
+      ],
+    };
+    void _invalid;
+  });
+
+  it("allows multiple fields in nested mode", () => {
+    const _valid: ArrayField = {
+      type: "array",
+      name: "test",
+      mode: "nest",
+      fields: [
+        { type: "text", name: "f1" },
+        { type: "text", name: "f2" },
+      ],
+    };
+    expectTypeOf(_valid).toBeObject();
   });
 });
