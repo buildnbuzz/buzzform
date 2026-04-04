@@ -52,3 +52,5 @@ export {
   collapsibleFieldProperties,
   formSettingsProperties,
 } from "./field-properties";
+
+export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/dnd";
