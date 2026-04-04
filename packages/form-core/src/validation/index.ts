@@ -9,7 +9,7 @@ import type {
 } from "../types";
 import { resolveDynamicValue } from "../dynamic";
 import { evaluateVisibility } from "../conditions";
-import { escapePointer, getByPath, splitPointer } from "../utils/path";
+import { getByPath, joinPointer, splitPointer } from "../utils/path";
 import { walkFields } from "../utils/walk";
 
 // ============================================================================
@@ -393,12 +393,6 @@ export async function validateField(
 
   if (message) return { valid: false, error: message };
   return { valid: true };
-}
-
-function joinPointer(base: string, name?: string): string {
-  if (!name) return base;
-  const segment = escapePointer(name);
-  return base ? `${base}/${segment}` : `/${segment}`;
 }
 
 function isRuntimeArrayIndex(segment: string): boolean {

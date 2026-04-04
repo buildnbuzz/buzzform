@@ -6,6 +6,7 @@ import {
   evaluateVisibility,
   fromDotNotation,
   getByPath,
+  joinPointer,
   runValidationCheck,
   shouldSkipCheck,
   splitPointer,
@@ -200,16 +201,6 @@ function toAbsolutePointer(path: string): string {
   if (!path) return "";
   if (path.startsWith("/")) return path;
   return fromDotNotation(path);
-}
-
-function joinPointer(basePath: string, segment?: string): string {
-  if (!segment) return basePath;
-  const escaped = escapePointer(segment);
-  if (!basePath) return `/${escaped}`;
-  if (basePath === "/") return `/${escaped}`;
-  return basePath.endsWith("/")
-    ? `${basePath}${escaped}`
-    : `${basePath}/${escaped}`;
 }
 
 function getParentPointer(pointer: string): string {

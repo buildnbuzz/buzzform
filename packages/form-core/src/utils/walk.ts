@@ -1,5 +1,5 @@
 import type { Field, FieldOption } from "../types";
-import { escapePointer } from "./path";
+import { joinPointer } from "./path";
 
 /** Context provided to a walk visitor. */
 export interface WalkContext {
@@ -16,11 +16,6 @@ export type WalkVisitor = (field: Field, ctx: WalkContext) => void;
 export interface WalkFieldsOptions {
   /** How array child paths should be represented during traversal. */
   arrayItemPath?: "container" | "wildcard";
-}
-
-function joinPointer(base: string, segment: string): string {
-  if (base === "") return `/${segment}`;
-  return `${base}/${segment}`;
 }
 
 function walkField(
@@ -53,7 +48,7 @@ function walkField(
 
     case "group": {
       const nextParents = [...ctx.parents, field];
-      const groupPath = joinPointer(ctx.path, escapePointer(field.name));
+      const groupPath = joinPointer(ctx.path, field.name);
       for (const child of field.fields) {
         walkField(child, { path: groupPath, parents: nextParents }, visitor, options);
       }
@@ -62,7 +57,7 @@ function walkField(
 
     case "array": {
       const nextParents = [...ctx.parents, field];
-      const arrayPath = joinPointer(ctx.path, escapePointer(field.name));
+      const arrayPath = joinPointer(ctx.path, field.name);
       const itemPath =
         options.arrayItemPath === "container" ? arrayPath : `${arrayPath}/*`;
       for (const child of field.fields) {

@@ -7,11 +7,7 @@ import type {
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
-import {
-  escapePointer,
-  fromDotNotation,
-  toDotNotation,
-} from "@buildnbuzz/form-core";
+import { fromDotNotation, joinPointer, toDotNotation } from "@buildnbuzz/form-core";
 import { Field, LayoutField } from "./field";
 import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
@@ -254,13 +250,6 @@ function renderNestedFields<TFormData extends UnknownData>({
 function toPointer(path?: string): string {
   if (!path) return "";
   return fromDotNotation(path);
-}
-
-function joinPointer(basePointer: string, segment?: string): string {
-  if (!segment) return basePointer;
-  const escaped = escapePointer(segment);
-  if (basePointer === "") return `/${escaped}`;
-  return `${basePointer}/${escaped}`;
 }
 
 function resolveDataFieldName(
