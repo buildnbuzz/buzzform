@@ -58,12 +58,10 @@ export function nodeToField(
   // the default slot.
   if (isContainerType(fieldType) && "fields" in node.field) {
     const childIds = node.children[DEFAULT_SLOT] ?? [];
-    return {
-      ...node.field,
-      fields: childIds
-        .map((childId) => nodeToField(nodes, childId))
-        .filter(Boolean) as Field[],
-    };
+    const nestedFields = childIds
+      .map((childId) => nodeToField(nodes, childId))
+      .filter(Boolean) as Field[];
+    return { ...node.field, fields: nestedFields } as Field;
   }
 
   // Leaf data field — return as-is.

@@ -43,7 +43,9 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@buildnbuzz/form-core": "workspace:^"
+    "@buildnbuzz/form-core": "workspace:^",
+    "nanoid": "^5.0.9",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:^",
