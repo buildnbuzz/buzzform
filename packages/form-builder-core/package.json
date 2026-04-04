@@ -42,6 +42,9 @@
     "check-types": "tsc --noEmit",
     "lint": "eslint ."
   },
+  "dependencies": {
+    "@buildnbuzz/form-core": "workspace:^"
+  },
   "devDependencies": {
     "@repo/eslint-config": "workspace:^",
     "@repo/typescript-config": "workspace:^"
