@@ -21,7 +21,8 @@ export function useResolvedFieldText<
   TFormData extends UnknownData = UnknownData,
 >(options: ResolvedFieldTextOptions = {}) {
   const { field, formData, contextData } = useFieldContext<TField, TFormData>();
-  const nameFallback = "name" in field ? field.name : "";
+  const nameFallback =
+    "name" in field && typeof field.name === "string" ? field.name : "";
   const labelValue = "label" in field ? field.label : undefined;
   const placeholderValue = "placeholder" in field ? field.placeholder : undefined;
   const descriptionValue = "description" in field ? field.description : undefined;

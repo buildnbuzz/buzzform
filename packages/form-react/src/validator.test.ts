@@ -112,6 +112,39 @@ describe("buildStandardSchemaValidator", () => {
     }
   });
 
+  it("supports flat array item validations when name is omitted", async () => {
+    const schema: FormSchema = {
+      fields: [
+        {
+          type: "array",
+          name: "tags",
+          mode: "flat",
+          fields: [
+            {
+              type: "text",
+              validate: {
+                onSubmit: {
+                  checks: [{ type: "email", message: "Invalid tag" }],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const validator = buildStandardSchemaValidator(schema);
+    const result = await validator["~standard"].validate({
+      tags: ["valid@example.com", "bad-email"],
+    });
+
+    expect("issues" in result).toBe(true);
+    if ("issues" in result && result.issues) {
+      expect(result.issues[0]?.message).toBe("Invalid tag");
+      expect(result.issues[0]?.path).toEqual(["tags", "1"]);
+    }
+  });
+
   it("attaches form-level errors to root when no path is provided", async () => {
     const schema: FormSchema = {
       fields: [{ type: "number", name: "min" }],

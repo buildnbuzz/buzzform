@@ -11,6 +11,7 @@ import {
   splitPointer,
   walkFields,
   type DataField,
+  type UnnamedDataField,
   type FormSchema,
   type ValidationCheck,
   type ValidationRegistry,
@@ -40,7 +41,7 @@ export function buildStandardSchemaValidator<TFormData>(
   const derivedValidationMode = options.derivedValidationMode ?? "submit";
   const fieldEntries: Array<{
     pointer: string;
-    field: DataField;
+    field: DataFieldLike;
     checks: ValidationCheck[];
   }> = [];
 
@@ -147,8 +148,14 @@ export function buildStandardSchemaValidator<TFormData>(
   };
 }
 
-function isDataField(field: FormSchema["fields"][number]): field is DataField {
-  return "name" in field;
+type DataFieldLike = DataField | UnnamedDataField;
+
+function isLayoutField(field: FormSchema["fields"][number]): boolean {
+  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+}
+
+function isDataField(field: FormSchema["fields"][number]): field is DataFieldLike {
+  return !isLayoutField(field);
 }
 
 function expandWildcardPointers(
@@ -195,7 +202,8 @@ function toAbsolutePointer(path: string): string {
   return fromDotNotation(path);
 }
 
-function joinPointer(basePath: string, segment: string): string {
+function joinPointer(basePath: string, segment?: string): string {
+  if (!segment) return basePath;
   const escaped = escapePointer(segment);
   if (!basePath) return `/${escaped}`;
   if (basePath === "/") return `/${escaped}`;
