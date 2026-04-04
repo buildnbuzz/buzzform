@@ -502,6 +502,25 @@ export type LayoutField = RowField | TabsField | CollapsibleField;
 /** Union of all supported fields in v0.1. */
 export type Field = DataField | LayoutField;
 
+/** Union of all field type string literals. */
+export type FieldType = Field["type"];
+
+/**
+ * Returns `true` if the given field type can hold child fields.
+ *
+ * Includes `group` and `array` (data containers) as well as `row`,
+ * `tabs`, and `collapsible` (layout containers).
+ */
+export function isContainerType(type: FieldType): boolean {
+  return (
+    type === "group" ||
+    type === "array" ||
+    type === "row" ||
+    type === "tabs" ||
+    type === "collapsible"
+  );
+}
+
 /** Root schema container. */
 export interface FormSchema {
   /** Optional stable schema identifier. */
