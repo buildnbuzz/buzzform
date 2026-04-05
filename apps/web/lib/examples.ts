@@ -182,6 +182,13 @@ export const exampleCategories: ExampleCategory[] = [
         description: "Settings organized in collapsible sections.",
         file: "collapsible-settings-form.tsx",
       },
+      {
+        slug: "minimal-array-form",
+        id: "MinimalArrayForm",
+        name: "Minimal Array",
+        description: "Sleek inline lists using the minimal variant.",
+        file: "minimal-array-form.tsx",
+      },
     ],
   },
 ];

@@ -722,6 +722,26 @@
       ]
     },
     {
+      "name": "minimal-array-form",
+      "type": "registry:block",
+      "title": "Minimal Array Form",
+      "description": "Sleek inline lists using the minimal variant.",
+      "registryDependencies": [
+        "@buzzform/array",
+        "@buzzform/text",
+        "@buzzform/row",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/minimal-array-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/minimal-array-form.tsx"
+        }
+      ]
+    },
+    {
       "name": "group-field-form",
       "type": "registry:block",
       "title": "Group Field Form",

@@ -17,3 +17,4 @@ export { default as CheckoutForm } from "../../registry/shadcn/examples/checkout
 export { default as ArrayFieldExample } from "../../registry/shadcn/examples/array-field-form";
 export { default as GroupFieldExample } from "../../registry/shadcn/examples/group-field-form";
 export { default as CollapsibleSettingsForm } from "../../registry/shadcn/examples/collapsible-settings-form";
+export { default as MinimalArrayForm } from "../../registry/shadcn/examples/minimal-array-form";
