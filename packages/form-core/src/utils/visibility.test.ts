@@ -21,7 +21,7 @@ const fields: Field[] = [
   {
     type: "array",
     name: "socials",
-    mode: "flat",
+    primitive: true,
     fields: [{ type: "text", name: "" }],
   },
   {
@@ -69,7 +69,7 @@ describe("getVisibleFields", () => {
     ]);
   });
 
-  it("keeps flat array fields as a single-item tuple after filtering", () => {
+  it("keeps primitive array fields unchanged after filtering", () => {
     const visible = getVisibleFields(fields, {
       formData: { showSecret: true, showProfile: true },
     });

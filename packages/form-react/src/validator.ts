@@ -11,12 +11,14 @@ import {
   shouldSkipCheck,
   splitPointer,
   walkFields,
-  type DataField,
-  type UnnamedDataField,
-  type FormSchema,
-  type ValidationCheck,
-  type ValidationRegistry,
-  type ValidationRun,
+  isDataField,
+} from "@buildnbuzz/form-core";
+import type { 
+  DataField,
+  FormSchema,
+  ValidationCheck,
+  ValidationRegistry,
+  ValidationRun,
 } from "@buildnbuzz/form-core";
 import type { UnknownData } from "./types";
 
@@ -42,7 +44,7 @@ export function buildStandardSchemaValidator<TFormData>(
   const derivedValidationMode = options.derivedValidationMode ?? "submit";
   const fieldEntries: Array<{
     pointer: string;
-    field: DataFieldLike;
+    field: DataField;
     checks: ValidationCheck[];
   }> = [];
 
@@ -149,15 +151,7 @@ export function buildStandardSchemaValidator<TFormData>(
   };
 }
 
-type DataFieldLike = DataField | UnnamedDataField;
 
-function isLayoutField(field: FormSchema["fields"][number]): boolean {
-  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
-}
-
-function isDataField(field: FormSchema["fields"][number]): field is DataFieldLike {
-  return !isLayoutField(field);
-}
 
 function expandWildcardPointers(
   data: UnknownData,

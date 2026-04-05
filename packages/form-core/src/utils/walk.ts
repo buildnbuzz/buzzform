@@ -60,7 +60,7 @@ function walkField(
       const arrayPath = joinPointer(ctx.path, field.name);
       const itemPath =
         options.arrayItemPath === "container" ? arrayPath : `${arrayPath}/*`;
-      for (const child of field.fields) {
+      for (const child of field.fields as Field[]) {
         walkField(child, { path: itemPath, parents: nextParents }, visitor, options);
       }
       break;

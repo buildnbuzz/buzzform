@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { defineSchema } from "../src";
-import type { ArrayField, Field, FormSchema, InferType, UnknownData } from "../src";
+import type { ArrayFieldDef, Field, FormSchema, InferType, PrimitiveArrayField, UnknownData } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
@@ -144,23 +144,23 @@ describe("form-core types", () => {
     void schema;
   });
 
-  it("accepts flat array items with omitted name", () => {
-    const _valid: ArrayField = {
+  it("accepts primitive array items with omitted name", () => {
+    const _valid: PrimitiveArrayField = {
       type: "array",
       name: "tags",
-      mode: "flat",
+      primitive: true,
       fields: [{ type: "text", required: true }],
     };
     expectTypeOf(_valid).toBeObject();
   });
 
-  it("infers flat array shape with empty name", () => {
+  it("infers primitive array shape with empty name", () => {
     const schema = defineSchema({
       fields: [
         {
           type: "array",
           name: "tags",
-          mode: "flat",
+          primitive: true,
           fields: [{ type: "text", name: "", required: true }],
         },
       ],
@@ -171,29 +171,29 @@ describe("form-core types", () => {
     void schema;
   });
 
-  it("infers flat array shape with non-empty name", () => {
+  it("infers primitive array shape with non-empty name", () => {
     const schema = defineSchema({
       fields: [
         {
           type: "array",
           name: "socials",
-          mode: "flat",
+          primitive: true,
           fields: [{ type: "text", name: "url", required: true }],
         },
       ],
     });
 
     type Shape = InferType<typeof schema.fields>;
-    expectTypeOf<Shape["socials"]>().toEqualTypeOf<{ url: string }[] | undefined>();
+    expectTypeOf<Shape["socials"]>().toEqualTypeOf<string[] | undefined>();
     void schema;
   });
 
-  it("rejects multiple fields in flat mode", () => {
-    const _invalid: ArrayField = {
+  it("rejects multiple fields in primitive mode", () => {
+    const _invalid: ArrayFieldDef = {
       type: "array",
       name: "test",
-      mode: "flat",
-      // @ts-expect-error - Flat mode only allows exactly one field (tuple [Field])
+      primitive: true,
+      // @ts-expect-error - Primitive mode only allows exactly one field (tuple)
       fields: [
         { type: "text", name: "f1" },
         { type: "text", name: "f2" },
@@ -202,11 +202,10 @@ describe("form-core types", () => {
     void _invalid;
   });
 
-  it("allows multiple fields in nested mode", () => {
-    const _valid: ArrayField = {
+  it("allows multiple fields in standard array", () => {
+    const _valid: ArrayFieldDef = {
       type: "array",
       name: "test",
-      mode: "nest",
       fields: [
         { type: "text", name: "f1" },
         { type: "text", name: "f2" },

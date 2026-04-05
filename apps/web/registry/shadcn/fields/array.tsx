@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { ArrayField as ArrayFieldDef } from "@buildnbuzz/form-core";
+import type { ArrayFieldDef, Field as CoreField } from "@buildnbuzz/form-core";
 import {
   useDataField,
   RenderFields,
@@ -135,11 +135,11 @@ function ArrayItem({
           (contextData ?? {}) as Record<string, unknown>,
         ) ?? "",
       ).trim() || `Item ${index + 1}`
-    : field.mode === "flat" && rowData !== undefined && rowData !== null
+    : field.primitive === true && rowData !== undefined && rowData !== null
       ? String(rowData)
       : `Item ${index + 1}`;
 
-  const errorCount = useNestedErrorCount(field.fields, rowPath);
+  const errorCount = useNestedErrorCount(field.fields as CoreField[], rowPath);
 
   const {
     attributes,
@@ -256,7 +256,7 @@ function ArrayItem({
           <CollapsibleContent>
             <div className="p-4 flex flex-col gap-4">
               <RenderFields
-                fields={field.fields}
+                fields={field.fields as CoreField[]}
                 form={form}
                 basePath={rowPath}
               />
@@ -318,87 +318,94 @@ function MinimalArrayItem({
         transition,
         opacity: isDragging ? 0.5 : 1,
       }}
-      className="border rounded-lg bg-background px-3 py-2"
+      className="flex w-full items-start gap-3 py-1 group/array-item"
     >
-      <div className="flex items-center gap-3">
-        <div className="flex-1 min-w-0">
-          {resolvedLabel && (
-            <p className="text-xs text-muted-foreground mb-2">
-              {resolvedLabel}
-            </p>
+      <div className="flex-1 min-w-0">
+        {resolvedLabel && field.primitive !== true && (
+          <p className="text-xs text-muted-foreground mb-2">{resolvedLabel}</p>
+        )}
+        <div
+          className={cn(
+            "flex flex-col gap-4 w-full",
+            field.primitive === true &&
+              "**:data-[slot=field-label]:hidden **:data-[slot=field-description]:hidden",
           )}
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
-            <RenderFields
-              fields={field.fields}
-              form={form}
-              basePath={rowPath}
-            />
-          </div>
+        >
+          <RenderFields
+            fields={field.fields as CoreField[]}
+            form={form}
+            basePath={rowPath}
+          />
         </div>
+      </div>
 
-        {!isReadOnly && (
-          <div className="flex items-center gap-1 shrink-0">
-            {isSortable && !isDisabled && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                {...attributes}
-                {...listeners}
-                title="Drag"
-              >
-                <IconPlaceholder
-                  lucide="GripVertical"
-                  hugeicons="DragDropIcon"
-                  tabler="IconGripVertical"
-                  phosphor="DotsSixVertical"
-                  remixicon="RiDraggable"
-                  className="size-3.5"
-                />
-              </Button>
-            )}
-            {allowDuplicate && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7"
-                onClick={() => onDuplicate(index)}
-                disabled={!canDuplicate || isDisabled}
-                title="Duplicate"
-              >
-                <IconPlaceholder
-                  lucide="Copy"
-                  hugeicons="Copy01Icon"
-                  tabler="IconCopy"
-                  phosphor="Copy"
-                  remixicon="RiFileCopyLine"
-                  className="size-3.5"
-                />
-              </Button>
-            )}
+      {!isReadOnly && (
+        <div
+          className={cn(
+            "flex items-center gap-1 shrink-0",
+            field.primitive === true ? "mt-0.5" : "mt-7",
+          )}
+        >
+          {isSortable && !isDisabled && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-destructive"
-              onClick={() => onRemove(index)}
-              disabled={!canRemove || isDisabled}
-              title="Remove"
+              className="h-7 w-7"
+              {...attributes}
+              {...listeners}
+              title="Drag"
             >
               <IconPlaceholder
-                lucide="Trash2"
-                hugeicons="Delete02Icon"
-                tabler="IconTrash"
-                phosphor="Trash"
-                remixicon="RiDeleteBinLine"
+                lucide="GripVertical"
+                hugeicons="DragDropIcon"
+                tabler="IconGripVertical"
+                phosphor="DotsSixVertical"
+                remixicon="RiDraggable"
                 className="size-3.5"
               />
             </Button>
-          </div>
-        )}
-      </div>
+          )}
+          {allowDuplicate && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={() => onDuplicate(index)}
+              disabled={!canDuplicate || isDisabled}
+              title="Duplicate"
+            >
+              <IconPlaceholder
+                lucide="Copy"
+                hugeicons="Copy01Icon"
+                tabler="IconCopy"
+                phosphor="Copy"
+                remixicon="RiFileCopyLine"
+                className="size-3.5"
+              />
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-destructive"
+            onClick={() => onRemove(index)}
+            disabled={!canRemove || isDisabled}
+            title="Remove"
+          >
+            <IconPlaceholder
+              lucide="Trash2"
+              hugeicons="Delete02Icon"
+              tabler="IconTrash"
+              phosphor="Trash"
+              remixicon="RiDeleteBinLine"
+              className="size-3.5"
+            />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -412,10 +419,10 @@ interface ArrayFieldState {
   isRequired: boolean;
   label?: string;
   description?: string;
-  errors: string[];
+  errors: ReturnType<typeof useDataField>["errors"];
   isInvalid: boolean;
-  descriptionId: string;
-  errorId: string;
+  descriptionId?: string;
+  errorId?: string;
   contextData: unknown;
 }
 
@@ -489,7 +496,10 @@ function DefaultArrayField(state: ArrayFieldState) {
     }
   };
 
-  const totalErrorCount = useNestedErrorCount(field.fields, fieldApi.name);
+  const totalErrorCount = useNestedErrorCount(
+    field.fields as CoreField[],
+    fieldApi.name,
+  );
   const isEffectivelyRequired =
     isRequired || (typeof field.minItems === "number" && field.minItems >= 1);
 
@@ -531,7 +541,7 @@ function DefaultArrayField(state: ArrayFieldState) {
               <CardHeader className="px-4 py-3 flex flex-row items-center justify-between bg-muted/50 border-b gap-3">
                 <div className="flex items-center gap-2 min-w-0 flex-1">
                   {label && (
-                    <FieldLegend className="text-sm font-semibold truncate">
+                    <FieldLegend className="text-sm font-semibold truncate mb-0">
                       {label}
                       {isEffectivelyRequired && (
                         <span className="text-destructive ml-1">*</span>
@@ -762,7 +772,10 @@ function MinimalArrayField(state: ArrayFieldState) {
     if (canAddMore) fieldApi.insertValue(index + 1, items[index] as never);
   };
 
-  const totalErrorCount = useNestedErrorCount(field.fields, fieldApi.name);
+  const totalErrorCount = useNestedErrorCount(
+    field.fields as CoreField[],
+    fieldApi.name,
+  );
   const isEffectivelyRequired =
     isRequired || (typeof field.minItems === "number" && field.minItems >= 1);
 
@@ -772,7 +785,7 @@ function MinimalArrayField(state: ArrayFieldState) {
         <FieldSet disabled={isDisabled} className="flex flex-col gap-4">
           <div className="flex items-center gap-2">
             {label && (
-              <FieldLegend className="text-sm font-semibold">
+              <FieldLegend className="text-sm font-semibold mb-0">
                 {label}
                 {isEffectivelyRequired && (
                   <span className="text-destructive ml-1">*</span>

@@ -54,13 +54,9 @@ export function getVisibleFields(
       case "array": {
         const hidden = isHidden || field.hidden;
 
-        if (field.mode === "flat") {
-          const nextFields = getVisibleFields(field.fields, ctx);
-          result.push({
-            ...field,
-            hidden,
-            fields: nextFields as [Field],
-          });
+        if (field.primitive) {
+          // Primitive arrays have exactly one child field — no visibility filtering needed.
+          result.push({ ...field, hidden });
           break;
         }
 

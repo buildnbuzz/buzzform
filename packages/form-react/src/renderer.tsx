@@ -3,11 +3,10 @@ import type { ReactNode } from "react";
 import type {
   Field as CoreField,
   DataField,
-  UnnamedDataField,
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
-import { fromDotNotation, joinPointer, toDotNotation } from "@buildnbuzz/form-core";
+import { fromDotNotation, joinPointer, toDotNotation, isDataField } from "@buildnbuzz/form-core";
 import { Field, LayoutField } from "./field";
 import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
@@ -171,15 +170,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   );
 }
 
-type DataFieldLike = DataField | UnnamedDataField;
 
-function isLayoutField(field: CoreField): boolean {
-  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
-}
-
-function isDataField(field: CoreField): field is DataFieldLike {
-  return !isLayoutField(field);
-}
 
 function renderNestedFields<TFormData extends UnknownData>({
   field,
@@ -253,15 +244,16 @@ function toPointer(path?: string): string {
 }
 
 function resolveDataFieldName(
-  field: DataFieldLike,
+  field: DataField,
   basePointer: string,
 ): DataField {
-  const nextName = toDotNotation(joinPointer(basePointer, field.name));
-  if (typeof field.name === "string" && nextName === field.name) {
-    return field as DataField;
+  const name = field.name ?? "";
+  const nextName = toDotNotation(joinPointer(basePointer, name));
+  if (nextName === name) {
+    return field;
   }
   return {
     ...field,
     name: nextName,
-  } as DataField;
+  };
 }

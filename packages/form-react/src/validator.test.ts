@@ -112,13 +112,47 @@ describe("buildStandardSchemaValidator", () => {
     }
   });
 
-  it("supports flat array item validations when name is omitted", async () => {
+  it("supports primitive array item validations when name is omitted", async () => {
     const schema: FormSchema = {
       fields: [
         {
           type: "array",
           name: "tags",
-          mode: "flat",
+          primitive: true,
+          fields: [
+            {
+              type: "text",
+              name: "",
+              validate: {
+                onSubmit: {
+                  checks: [{ type: "email", message: "Invalid tag" }],
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+
+    const validator = buildStandardSchemaValidator(schema);
+    const result = await validator["~standard"].validate({
+      tags: ["valid@example.com", "bad-email"],
+    });
+
+    expect("issues" in result).toBe(true);
+    if ("issues" in result && result.issues) {
+      expect(result.issues[0]?.message).toBe("Invalid tag");
+      expect(result.issues[0]?.path).toEqual(["tags", "1"]);
+    }
+  });
+
+  it("validates primitive array items when name property is completely omitted", async () => {
+    const schema = {
+      fields: [
+        {
+          type: "array",
+          name: "tags",
+          primitive: true,
           fields: [
             {
               type: "text",
@@ -131,7 +165,7 @@ describe("buildStandardSchemaValidator", () => {
           ],
         },
       ],
-    };
+    } as FormSchema;
 
     const validator = buildStandardSchemaValidator(schema);
     const result = await validator["~standard"].validate({
