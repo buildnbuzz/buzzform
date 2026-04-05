@@ -30,6 +30,7 @@ Alternative: `const schema = { fields: [...] } as const satisfies FormSchema;` â
 | No `required` or dynamic `required` | Optional key (`?`) |
 | `type: "group"` | Nested object |
 | `type: "array"` | Array of nested objects |
+| `type: "array"` + `primitive: true` | `string[]`, `number[]`, etc. |
 | `type: "select"` + `hasMany: true` | `string[]` |
 | `type: "checkbox"` + `tristate: true` | `boolean \| null` |
 | `type: "checkbox"` + `hasMany: true` | `string[]` |
@@ -54,7 +55,7 @@ Alternative: `const schema = { fields: [...] } as const satisfies FormSchema;` â
 | `switch` | `boolean` | Toggle |
 | `radio` | `string` | `options` |
 | `group` | nested object | `fields` â€” creates named nested data |
-| `array` | `T[]` | `fields`, `minItems`, `maxItems` â€” repeatable sections |
+| `array` | `T[]` | `fields`, `minItems`, `maxItems`, `primitive` | Repeatable sections â€” use `primitive: true` for simple value lists |
 
 ### Layout Fields (visual-only, no data)
 
@@ -99,6 +100,20 @@ Options for `select`, `radio`, and checkbox group accept strings or `{ label, va
 options: ["Option 1", "Option 2"]
 // or
 options: [{ label: "Admin", value: "admin" }, { label: "User", value: "user" }]
+```
+
+## Array Variants
+
+Use `ui: { variant: "minimal" }` for a sleek, borderless list aesthetic. This is the recommended variant for primitive arrays (e.g., tags, simple links) or clean nested structures.
+
+```ts
+{
+  type: "array",
+  name: "tags",
+  primitive: true,
+  ui: { variant: "minimal" },
+  fields: [{ type: "text" }],
+}
 ```
 
 ## `pattern` Expects a String

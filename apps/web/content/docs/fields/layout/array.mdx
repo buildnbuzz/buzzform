@@ -9,20 +9,23 @@ The `array` field renders repeatable fields for dynamic lists.
 
 ## Schema Properties
 
-<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="ArrayField" />
+<auto-type-table
+  path="../../../../../../packages/form-core/src/types.ts"
+  name="ArrayField"
+/>
 
 ## UI Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `variant` | `"default" | "minimal"` | `"default"` | Visual style for the array container |
-| `addLabel` | `string` | `"Add Item"` | Label for the add button |
-| `emptyMessage` | `string` | `"No items added yet."` | Message shown when no items exist |
-| `rowLabel` | `unknown` | `"Item #N"` | Row header label — use `{ $data: "fieldName" }` (or `{ $data: "/value" }` for flat arrays) |
-| `isSortable` | `boolean` | `true` | Enable drag-to-reorder |
-| `showErrorBadge` | `boolean` | `true` | Show error-count badge in header |
-| `allowDuplicate` | `boolean` | `false` | Show a duplicate button per row |
-| `confirmDelete` | `boolean` | `true` | Require confirmation before deleting all items |
+| Option           | Type       | Default                 | Description                                                                                |
+| ---------------- | ---------- | ----------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------ |
+| `variant`        | `"default" | "minimal"`              | `"default"`                                                                                | Visual style for the array container |
+| `addLabel`       | `string`   | `"Add Item"`            | Label for the add button                                                                   |
+| `emptyMessage`   | `string`   | `"No items added yet."` | Message shown when no items exist                                                          |
+| `rowLabel`       | `unknown`  | `"Item #N"`             | Row header label — use `{ $data: "fieldName" }` (or `{ $data: "/value" }` for flat arrays) |
+| `isSortable`     | `boolean`  | `true`                  | Enable drag-to-reorder                                                                     |
+| `showErrorBadge` | `boolean`  | `true`                  | Show error-count badge in header                                                           |
+| `allowDuplicate` | `boolean`  | `false`                 | Show a duplicate button per row                                                            |
+| `confirmDelete`  | `boolean`  | `true`                  | Require confirmation before deleting all items                                             |
 
 ## Basic Usage
 
@@ -100,16 +103,16 @@ const schema = defineSchema({
 }
 ```
 
-### Minimal Variant
+### Minimal VariantW
 
 ```tsx
 {
   type: "array",
   name: "socialLinks",
   label: "Social links",
-  mode: "flat",
+  primitive: true,
   ui: { variant: "minimal" },
-  fields: [{ type: "text", label: "URL" }],
+  fields: [{ type: "text", placeholder: "https://..." }],
 }
 ```
 
@@ -145,31 +148,32 @@ Array fields **do** contribute to form data as arrays:
 // Result type: { contacts: Array<{ name: string, email: string }> }
 ```
 
-## Flat Mode
+## Primitive Arrays
 
-Use `mode: "flat"` for arrays of single values. Omit the item `name` to map
-the item value directly into the array.
+Use `primitive: true` for arrays of single values. Omit the item `name` to map the item value directly into the array. This is perfect for simple lists of strings, numbers, or dates.
 
 ```ts
 // Schema
 {
   type: "array",
   name: "tags",
-  mode: "flat",
-  fields: [{ type: "text" }],
+  primitive: true,
+  fields: [
+    { type: "text" } // Name is omitted
+  ],
 }
 
 // Result type: { tags: string[] }
 ```
 
-If you provide a `name`, each item is wrapped in an object:
+If you provide a `name` for a field inside a primitive array, each item will still be wrapped in an object:
 
 ```ts
 // Schema
 {
   type: "array",
   name: "socials",
-  mode: "flat",
+  primitive: true,
   fields: [{ type: "text", name: "url" }],
 }
 
@@ -178,8 +182,8 @@ If you provide a `name`, each item is wrapped in an object:
 
 ## Auto-Derived Validators
 
-| Property | Validator |
-|----------|-----------|
+| Property   | Validator  |
+| ---------- | ---------- |
 | `minItems` | `minItems` |
 | `maxItems` | `maxItems` |
 
@@ -200,14 +204,14 @@ Use `{ $data: "fieldName" }` to display a field value from each row:
 }
 ```
 
-For flat arrays, use `{ $data: "/value" }` to reference the current item:
+For primitive arrays, use `{ $data: "/" }` to reference the current item value:
 
 ```tsx
 {
   type: "array",
   name: "tags",
-  mode: "flat",
-  rowLabel: { $data: "/value" },
+  primitive: true,
+  rowLabel: { $data: "/" },
   fields: [{ type: "text" }],
 }
 ```
