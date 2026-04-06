@@ -24,14 +24,19 @@ export function collectDataFieldNames(
   const basePointer = basePath ? fromDotNotation(basePath) : "";
   const names: string[] = [];
 
+  const isLayoutField = (field: Field) =>
+    field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+
   walkFields(fields, (field, ctx) => {
-    if ("name" in field && typeof field.name === "string") {
-      // ctx.path is the parent pointer; append this field's escaped name segment
-      const segment = escapePointer(field.name);
-      const fieldPointer = ctx.path ? `${ctx.path}/${segment}` : `/${segment}`;
-      const fullPointer = basePointer ? `${basePointer}${fieldPointer}` : fieldPointer;
-      names.push(toDotNotation(fullPointer));
-    }
+    if (isLayoutField(field)) return;
+    const fieldPointer =
+      "name" in field && typeof field.name === "string" && field.name.length > 0
+        ? ctx.path
+          ? `${ctx.path}/${escapePointer(field.name)}`
+          : `/${escapePointer(field.name)}`
+        : ctx.path;
+    const fullPointer = basePointer ? `${basePointer}${fieldPointer}` : fieldPointer;
+    names.push(toDotNotation(fullPointer));
   });
 
   return names;

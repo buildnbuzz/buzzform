@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "minimal-array-form",
+  "title": "Minimal Array Form",
+  "description": "Sleek inline lists using the minimal variant.",
+  "registryDependencies": [
+    "@buzzform/array",
+    "@buzzform/text",
+    "@buzzform/row",
+    "card",
+    "sonner"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/examples/minimal-array-form.tsx",
+      "content": "\"use client\";\n\nimport { defineSchema, type InferType } from \"@buildnbuzz/form-core\";\nimport { toast } from \"sonner\";\nimport { Form, FormContent, FormSubmit } from \"@/registry/shadcn/form\";\nimport {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from \"@/components/ui/card\";\n\nconst profileSchema = defineSchema({\n  fields: [\n    {\n      type: \"array\",\n      name: \"links\",\n      label: \"Social Links\",\n      description: \"Add links to your social profiles or portfolios.\",\n      primitive: true,\n      ui: {\n        variant: \"minimal\",\n        addLabel: \"Add Link\",\n      },\n      fields: [\n        {\n          type: \"text\",\n          placeholder: \"https://x.com/username\",\n          required: true,\n        },\n      ],\n    },\n    {\n      type: \"array\",\n      name: \"experiences\",\n      label: \"Work Experience\",\n      description: \"List your previous roles and companies.\",\n      primitive: false,\n      ui: {\n        variant: \"minimal\",\n        addLabel: \"Add Experience\",\n      },\n      fields: [\n        {\n          type: \"row\",\n          ui: { gap: 16, responsive: true },\n          fields: [\n            {\n              type: \"text\",\n              name: \"company\",\n              label: \"Company\",\n              placeholder: \"Acme Corp\",\n              required: true,\n            },\n            {\n              type: \"text\",\n              name: \"title\",\n              label: \"Job Title\",\n              placeholder: \"Software Engineer\",\n              required: true,\n            },\n          ],\n        },\n      ],\n    },\n  ],\n});\n\ntype ProfileSchemaType = InferType<typeof profileSchema.fields>;\n\nexport default function MinimalArrayForm() {\n  const handleSubmit = async ({ value }: { value: unknown }) => {\n    const data = value as ProfileSchemaType;\n    await new Promise((r) => setTimeout(r, 800));\n    toast(\"Profile saved!\", {\n      description: (\n        <pre className=\"mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs text-white pointer-events-auto\">\n          <code>{JSON.stringify(data, null, 2)}</code>\n        </pre>\n      ),\n    });\n  };\n\n  return (\n    <Card className=\"w-full max-w-2xl\">\n      <CardHeader>\n        <CardTitle>Minimal Arrays</CardTitle>\n        <CardDescription>\n          Using variant: &quot;minimal&quot; for both primitive strings and\n          complex objects to create clean, inline lists without bulky borders.\n        </CardDescription>\n      </CardHeader>\n      <CardContent>\n        <Form\n          schema={profileSchema}\n          onSubmit={handleSubmit}\n          defaultValues={{\n            links: [\"https://github.com/buildnbuzz\"],\n            experiences: [{ company: \"Vercel\", title: \"Frontend Engineer\" }],\n          }}\n        >\n          <FormContent autoRender>\n            <FormSubmit className=\"w-full mt-6\">Save Layout</FormSubmit>\n          </FormContent>\n        </Form>\n      </CardContent>\n    </Card>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/minimal-array-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

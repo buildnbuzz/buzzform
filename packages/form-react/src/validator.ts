@@ -6,15 +6,19 @@ import {
   evaluateVisibility,
   fromDotNotation,
   getByPath,
+  joinPointer,
   runValidationCheck,
   shouldSkipCheck,
   splitPointer,
   walkFields,
-  type DataField,
-  type FormSchema,
-  type ValidationCheck,
-  type ValidationRegistry,
-  type ValidationRun,
+  isDataField,
+} from "@buildnbuzz/form-core";
+import type { 
+  DataField,
+  FormSchema,
+  ValidationCheck,
+  ValidationRegistry,
+  ValidationRun,
 } from "@buildnbuzz/form-core";
 import type { UnknownData } from "./types";
 
@@ -147,9 +151,7 @@ export function buildStandardSchemaValidator<TFormData>(
   };
 }
 
-function isDataField(field: FormSchema["fields"][number]): field is DataField {
-  return "name" in field;
-}
+
 
 function expandWildcardPointers(
   data: UnknownData,
@@ -193,15 +195,6 @@ function toAbsolutePointer(path: string): string {
   if (!path) return "";
   if (path.startsWith("/")) return path;
   return fromDotNotation(path);
-}
-
-function joinPointer(basePath: string, segment: string): string {
-  const escaped = escapePointer(segment);
-  if (!basePath) return `/${escaped}`;
-  if (basePath === "/") return `/${escaped}`;
-  return basePath.endsWith("/")
-    ? `${basePath}${escaped}`
-    : `${basePath}/${escaped}`;
 }
 
 function getParentPointer(pointer: string): string {

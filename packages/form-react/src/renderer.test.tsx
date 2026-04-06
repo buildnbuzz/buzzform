@@ -99,7 +99,7 @@ function createTestRegistry(): FieldRegistry {
     return (
       <div data-testid="array-field">
         <RenderFields
-          fields={field.fields}
+          fields={field.fields as CoreField[]}
           form={form}
           contextData={contextData}
           registry={registry}
@@ -306,6 +306,61 @@ describe("RenderFields", () => {
     expect(text.getAttribute("data-name")).toBe("addresses.*.city");
     expect(text.getAttribute("data-api-name")).toBe("addresses.*.city");
   });
+
+  it("keeps primitive array item fields at the array item path when name is omitted", () => {
+    const { form } = createFormHarness({
+      tags: ["react", "tanstack"],
+    });
+    const registry = createTestRegistry();
+    const fields: CoreField[] = [
+      {
+        type: "array",
+        name: "tags",
+        primitive: true,
+        fields: [{ type: "text", name: "" }],
+      },
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={registry}
+      />,
+    );
+
+    const text = screen.getByTestId("text-field");
+    expect(text.getAttribute("data-name")).toBe("tags.*");
+    expect(text.getAttribute("data-api-name")).toBe("tags.*");
+  });
+
+  it("handles primitive array item fields when name property is completely omitted", () => {
+    const { form } = createFormHarness({
+      tags: ["react", "tanstack"],
+    });
+    const registry = createTestRegistry();
+    const fields: CoreField[] = [
+      {
+        type: "array",
+        name: "tags",
+        primitive: true,
+        fields: [{ type: "text" }],
+      } as CoreField,
+    ];
+
+    render(
+      <RenderFields
+        fields={fields}
+        form={form}
+        registry={registry}
+      />,
+    );
+
+    const text = screen.getByTestId("text-field");
+    expect(text.getAttribute("data-name")).toBe("tags.*");
+    expect(text.getAttribute("data-api-name")).toBe("tags.*");
+  });
+
 
   it("hides layout fields when hidden evaluates true using relative data paths", () => {
     const { form } = createFormHarness({

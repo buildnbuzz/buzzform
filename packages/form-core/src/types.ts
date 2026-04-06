@@ -393,10 +393,12 @@ export interface GroupField extends BaseField<UnknownData> {
 }
 
 /**
- * Array field - repeatable fields.
+ * Standard array field — each item is an object composed from its child fields.
  */
 export interface ArrayField extends BaseField<unknown[]> {
   type: "array";
+  /** Must be absent or `false` for standard (nested-object) arrays. */
+  primitive?: false;
   /** Fields for each array item. */
   fields: Field[];
   /**
@@ -408,6 +410,54 @@ export interface ArrayField extends BaseField<unknown[]> {
    */
   maxItems?: number;
 }
+
+/**
+ * A data field that holds a single primitive value (excludes containers).
+ *
+ * @remarks [type]
+ * Used to restrict the child field of a primitive array.
+ */
+export type PrimitiveDataField = Exclude<DataField, GroupField | ArrayField | PrimitiveArrayField>;
+
+/**
+ * A primitive data field with an optional `name`.
+ *
+ * @remarks [type]
+ * Used as the child of a `PrimitiveArrayField`. When `name` is omitted or `""`,
+ * the item value maps directly into the array element (e.g. `tags: string[]`).
+ * Providing a `name` wraps each item in an object (e.g. `socials: { url: string }[]`).
+ */
+export type PrimitiveArrayItemField = Omit<PrimitiveDataField, "name"> & { name?: string };
+
+/**
+ * Primitive array field — each item is a single primitive value.
+ *
+ * The child field's `name` can be omitted entirely to map the value directly
+ * into the array element (e.g. `tags: string[]`).
+ */
+export interface PrimitiveArrayField extends BaseField<unknown[]> {
+  type: "array";
+  /** Must be `true` for primitive (flat-value) arrays. */
+  primitive: true;
+  /** Exactly one primitive data field for each array item. */
+  fields: [PrimitiveArrayItemField];
+  /**
+   * Minimum number of items. Disables remove at minimum and blocks submit via validation.
+   */
+  minItems?: number;
+  /**
+   * Maximum number of items. Disables add at maximum and blocks submit via validation.
+   */
+  maxItems?: number;
+}
+
+/**
+ * Union of all array field variants.
+ *
+ * @remarks [type]
+ * Discriminated by `primitive` — mirrors the checkbox `hasMany` pattern.
+ */
+export type ArrayFieldDef = ArrayField | PrimitiveArrayField;
 
 /** Option for select and radio fields. */
 export interface FieldOption<TValue = string> {
@@ -437,7 +487,8 @@ export type DataField =
   | SwitchField
   | RadioField
   | GroupField
-  | ArrayField;
+  | ArrayField
+  | PrimitiveArrayField;
 
 // ============================================================================
 // 6. LAYOUT FIELDS (v0.1)
@@ -502,6 +553,25 @@ export type LayoutField = RowField | TabsField | CollapsibleField;
 /** Union of all supported fields in v0.1. */
 export type Field = DataField | LayoutField;
 
+/** Union of all field type string literals. */
+export type FieldType = Field["type"];
+
+/**
+ * Returns `true` if the given field type can hold child fields.
+ *
+ * Includes `group` and `array` (data containers) as well as `row`,
+ * `tabs`, and `collapsible` (layout containers).
+ */
+export function isContainerType(type: FieldType): boolean {
+  return (
+    type === "group" ||
+    type === "array" ||
+    type === "row" ||
+    type === "tabs" ||
+    type === "collapsible"
+  );
+}
+
 /** Root schema container. */
 export interface FormSchema {
   /** Optional stable schema identifier. */
@@ -516,6 +586,16 @@ export interface FormSchema {
   validate?: ValidationConfig;
   /** Optional schema metadata. */
   meta?: UnknownData;
+}
+
+/** Type guard to test if a Field is a LayoutField */
+export function isLayoutField(field: Field): field is LayoutField {
+  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+}
+
+/** Type guard to test if a Field is a DataField */
+export function isDataField(field: Field): field is DataField {
+  return !isLayoutField(field);
 }
 
 // ============================================================================
@@ -546,6 +626,9 @@ type UnionToIntersection<T> = (
   ? I
   : never;
 
+/** Any field that carries a data value (includes primitive array item fields with optional `name`). */
+type AnyDataField = DataField | PrimitiveArrayItemField;
+
 /**
  * Maps each data field to its inferred value type.
  *
@@ -553,7 +636,7 @@ type UnionToIntersection<T> = (
  * Single source of truth for field → value resolution.
  * Extend this when adding new field types.
  */
-interface FieldValueMap<TField extends DataField> {
+interface FieldValueMap<TField extends AnyDataField> {
   text: string;
   email: string;
   password: string;
@@ -574,11 +657,15 @@ interface FieldValueMap<TField extends DataField> {
   switch: boolean;
   radio: string;
   group: TField extends GroupField ? InferType<TField["fields"]> : never;
-  array: TField extends ArrayField ? InferType<TField["fields"]>[] : never;
+  array: TField extends PrimitiveArrayField
+    ? FieldValue<TField["fields"][0]>[]
+    : TField extends ArrayField
+      ? InferType<TField["fields"]>[]
+      : never;
 }
 
 /** Resolve the inferred value type for a data field. */
-type FieldValue<TField extends DataField> =
+type FieldValue<TField extends AnyDataField> =
   TField["type"] extends keyof FieldValueMap<TField>
     ? FieldValueMap<TField>[TField["type"]]
     : never;

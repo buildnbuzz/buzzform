@@ -277,7 +277,7 @@ export function extractDependenciesFromFields(fields: Field[]): Set<string> {
     }
 
     if (field.type === "group" || field.type === "array") {
-      extractDependenciesFromFields(field.fields).forEach((dep) => deps.add(dep));
+      extractDependenciesFromFields(field.fields as Field[]).forEach((dep) => deps.add(dep));
     }
   }
 

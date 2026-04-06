@@ -6,11 +6,7 @@ import type {
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
-import {
-  escapePointer,
-  fromDotNotation,
-  toDotNotation,
-} from "@buildnbuzz/form-core";
+import { fromDotNotation, joinPointer, toDotNotation, isDataField } from "@buildnbuzz/form-core";
 import { Field, LayoutField } from "./field";
 import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
@@ -174,9 +170,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   );
 }
 
-function isDataField(field: CoreField): field is DataField {
-  return "name" in field && typeof field.name === "string";
-}
+
 
 function renderNestedFields<TFormData extends UnknownData>({
   field,
@@ -249,18 +243,15 @@ function toPointer(path?: string): string {
   return fromDotNotation(path);
 }
 
-function joinPointer(basePointer: string, segment: string): string {
-  const escaped = escapePointer(segment);
-  if (basePointer === "") return `/${escaped}`;
-  return `${basePointer}/${escaped}`;
-}
-
 function resolveDataFieldName(
   field: DataField,
   basePointer: string,
 ): DataField {
-  const nextName = toDotNotation(joinPointer(basePointer, field.name));
-  if (nextName === field.name) return field;
+  const name = field.name ?? "";
+  const nextName = toDotNotation(joinPointer(basePointer, name));
+  if (nextName === name) {
+    return field;
+  }
   return {
     ...field,
     name: nextName,

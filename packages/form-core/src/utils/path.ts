@@ -112,6 +112,16 @@ export function escapePointer(segment: string): string {
   return segment.replace(/~/g, "~0").replace(/\//g, "~1");
 }
 
+/**
+ * Join a base pointer with an optional segment, skipping empty segments.
+ */
+export function joinPointer(basePointer: string, segment?: string): string {
+  if (!segment) return basePointer;
+  const escaped = escapePointer(segment);
+  if (basePointer === "") return `/${escaped}`;
+  return `${basePointer}/${escaped}`;
+}
+
 /** Convert a JSON Pointer path into dot notation. */
 export function toDotNotation(pointer: string): string {
   if (pointer === "" || pointer === "/") return "";

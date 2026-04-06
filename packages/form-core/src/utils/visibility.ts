@@ -42,11 +42,27 @@ export function getVisibleFields(
         break;
       }
 
-      case "group":
-      case "array": {
+      case "group": {
         result.push({
           ...field,
           hidden: isHidden || field.hidden,
+          fields: getVisibleFields(field.fields, ctx),
+        });
+        break;
+      }
+
+      case "array": {
+        const hidden = isHidden || field.hidden;
+
+        if (field.primitive) {
+          // Primitive arrays have exactly one child field — no visibility filtering needed.
+          result.push({ ...field, hidden });
+          break;
+        }
+
+        result.push({
+          ...field,
+          hidden,
           fields: getVisibleFields(field.fields, ctx),
         });
         break;

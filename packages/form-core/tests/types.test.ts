@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { defineSchema } from "../src";
-import type { Field, FormSchema, InferType, UnknownData } from "../src";
+import type { ArrayFieldDef, Field, FormSchema, InferType, PrimitiveArrayField, UnknownData } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
@@ -121,5 +121,96 @@ describe("form-core types", () => {
     expectTypeOf<Shape["email"]>().toEqualTypeOf<string>();
     expectTypeOf<Shape["age"]>().toEqualTypeOf<number | undefined>();
     expectTypeOf<Shape["active"]>().toEqualTypeOf<boolean | undefined>();
+  });
+
+  it("infers nested array shape (default)", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "items",
+          fields: [
+            { type: "text", name: "label", required: true },
+            { type: "checkbox", name: "active" },
+          ],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["items"]>().toEqualTypeOf<
+      { label: string; active?: boolean }[] | undefined
+    >();
+    void schema;
+  });
+
+  it("accepts primitive array items with omitted name", () => {
+    const _valid: PrimitiveArrayField = {
+      type: "array",
+      name: "tags",
+      primitive: true,
+      fields: [{ type: "text", required: true }],
+    };
+    expectTypeOf(_valid).toBeObject();
+  });
+
+  it("infers primitive array shape with empty name", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "tags",
+          primitive: true,
+          fields: [{ type: "text", name: "", required: true }],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["tags"]>().toEqualTypeOf<string[] | undefined>();
+    void schema;
+  });
+
+  it("infers primitive array shape with non-empty name", () => {
+    const schema = defineSchema({
+      fields: [
+        {
+          type: "array",
+          name: "socials",
+          primitive: true,
+          fields: [{ type: "text", name: "url", required: true }],
+        },
+      ],
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    expectTypeOf<Shape["socials"]>().toEqualTypeOf<string[] | undefined>();
+    void schema;
+  });
+
+  it("rejects multiple fields in primitive mode", () => {
+    const _invalid: ArrayFieldDef = {
+      type: "array",
+      name: "test",
+      primitive: true,
+      // @ts-expect-error - Primitive mode only allows exactly one field (tuple)
+      fields: [
+        { type: "text", name: "f1" },
+        { type: "text", name: "f2" },
+      ],
+    };
+    void _invalid;
+  });
+
+  it("allows multiple fields in standard array", () => {
+    const _valid: ArrayFieldDef = {
+      type: "array",
+      name: "test",
+      fields: [
+        { type: "text", name: "f1" },
+        { type: "text", name: "f2" },
+      ],
+    };
+    expectTypeOf(_valid).toBeObject();
   });
 });

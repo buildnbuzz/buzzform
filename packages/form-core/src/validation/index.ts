@@ -1,15 +1,15 @@
 import type {
   Field,
-  DataField,
   FormSchema,
   ValidationCheck,
   ValidationConfig,
   ValidationGroup,
   ValidatorArgsMap,
 } from "../types";
+import { isDataField } from "../types";
 import { resolveDynamicValue } from "../dynamic";
 import { evaluateVisibility } from "../conditions";
-import { escapePointer, getByPath, splitPointer } from "../utils/path";
+import { getByPath, joinPointer, splitPointer } from "../utils/path";
 import { walkFields } from "../utils/walk";
 
 // ============================================================================
@@ -340,7 +340,7 @@ export function collectFieldValidationChecks(
   run: ValidationRun,
   options?: { includeDerived?: boolean },
 ): ValidationCheck[] {
-  if (!hasFieldName(field)) return [];
+  if (!isDataField(field)) return [];
   const group = getValidationGroup(field.validate, run);
   const userChecks = group?.checks ?? [];
 
@@ -378,7 +378,7 @@ export async function validateField(
     return { valid: true };
   }
 
-  if (!hasFieldName(field)) {
+  if (!isDataField(field)) {
     return { valid: true };
   }
 
@@ -393,11 +393,6 @@ export async function validateField(
 
   if (message) return { valid: false, error: message };
   return { valid: true };
-}
-
-function joinPointer(base: string, name: string): string {
-  const segment = escapePointer(name);
-  return base ? `${base}/${segment}` : `/${segment}`;
 }
 
 function isRuntimeArrayIndex(segment: string): boolean {
@@ -428,7 +423,7 @@ function findFieldByPath(
   let match: Field | undefined;
 
   walkFields(fields, (field, walkCtx) => {
-    if (match || !hasFieldName(field)) return;
+    if (match || !isDataField(field)) return;
 
     const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
       evaluateVisibility(candidate.condition, ctx),
@@ -513,7 +508,7 @@ export async function validateFields(
   const visit = async (field: Field, basePath: string): Promise<void> => {
     if (!evaluateVisibility(field.condition, ctx)) return;
 
-    if (hasFieldName(field)) {
+    if (isDataField(field)) {
       const fieldPath = joinPointer(basePath, field.name);
       const checks = collectFieldValidationChecks(field, run, {
         includeDerived,
@@ -542,7 +537,7 @@ export async function validateFields(
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i += 1) {
             const itemPath = `${fieldPath}/${i}`;
-            for (const child of field.fields) {
+            for (const child of field.fields as Field[]) {
               await visit(child, itemPath);
             }
           }
@@ -659,7 +654,7 @@ export function runValidationCheck(
 
 /** Derive built-in checks from field configuration. */
 export function deriveFieldChecks(field: Field): ValidationCheck[] {
-  if (!hasFieldName(field)) return [];
+  if (!isDataField(field)) return [];
   const checks: ValidationCheck[] = [];
 
   if (field.required === true) {
@@ -797,6 +792,3 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
   return checks;
 }
 
-function hasFieldName(field: Field): field is DataField {
-  return "name" in field && typeof field.name === "string";
-}
