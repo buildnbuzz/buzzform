@@ -1,5 +1,15 @@
 # @buildnbuzz/form-core
 
+## 0.1.2
+
+### Patch Changes
+
+- [#113](https://github.com/buildnbuzz/buzzform/pull/113) [`2dd53b5`](https://github.com/buildnbuzz/buzzform/commit/2dd53b5f33a164d32c109e0f71eba65522f599dc) Thanks [@ladparth](https://github.com/ladparth)! - - Added `PrimitiveArrayField` to support flat value arrays (e.g., `tags: string[]`).
+  - Introduced `ArrayFieldDef` union for discriminated array variants.
+  - Added `isContainerType`, `isLayoutField`, and `isDataField` type guards.
+  - Enhanced `InferType` to support primitive arrays with optional child names.
+  - Updated validation logic to handle primitive array structures.
+
 ## 0.1.1
 
 ### Patch Changes
