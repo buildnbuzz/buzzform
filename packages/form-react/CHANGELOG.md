@@ -1,5 +1,16 @@
 # @buildnbuzz/form-react
 
+## 0.1.2
+
+### Patch Changes
+
+- [#113](https://github.com/buildnbuzz/buzzform/pull/113) [`2dd53b5`](https://github.com/buildnbuzz/buzzform/commit/2dd53b5f33a164d32c109e0f71eba65522f599dc) Thanks [@ladparth](https://github.com/ladparth)! - - Added support for `PrimitiveArrayField` in the form renderer.
+  - Allowed array items without a `name` property to support direct mapping of primitive values.
+  - Refactored `joinPointer` helper to be shared from `@buildnbuzz/form-core`.
+  - Updated field text resolution and error counting hooks to handle primitive array structures.
+- Updated dependencies [[`2dd53b5`](https://github.com/buildnbuzz/buzzform/commit/2dd53b5f33a164d32c109e0f71eba65522f599dc)]:
+  - @buildnbuzz/form-core@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
