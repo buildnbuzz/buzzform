@@ -75,7 +75,7 @@ export default function MinimalArrayForm() {
     await new Promise((r) => setTimeout(r, 800));
     toast("Profile saved!", {
       description: (
-        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs text-white pointer-events-auto">
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-muted text-muted-foreground p-3 text-xs pointer-events-auto">
           <code>{JSON.stringify(data, null, 2)}</code>
         </pre>
       ),
