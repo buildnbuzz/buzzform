@@ -74,7 +74,7 @@ export default function FeedbackSheetExample() {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast("Thank you!", {
       description: (
-        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-zinc-950 p-3 text-xs">
+        <pre className="mt-2 max-h-48 overflow-auto rounded-md bg-muted text-muted-foreground p-3 text-xs">
           <code>{JSON.stringify(data, null, 2)}</code>
         </pre>
       ),
