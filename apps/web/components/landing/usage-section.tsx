@@ -5,7 +5,7 @@ import { ArrowRight01Icon, Settings01Icon } from "@hugeicons/core-free-icons";
 import Link from "next/link";
 
 export function UsageSection() {
-  const code = `import { defineSchema } from "@buildnbuzz/form-core";
+  const code = `import { defineSchema } from "@buildnbuzz/form-react";
 import { Form } from "@/registry/shadcn/form";
 
 const schema = defineSchema({

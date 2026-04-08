@@ -16,7 +16,7 @@ This guide walks you through building a real form from scratch. By the end you'l
 A schema is a plain object with a `fields` array. Each field has a `type`, a `name`, and optional configuration:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",
@@ -73,7 +73,7 @@ export function ContactForm() {
 BuzzForm auto-derives validation from field properties like `required`, `minLength`, etc. You can also add explicit validation rules:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",
@@ -169,7 +169,7 @@ When `subject` is not `"Other"`, the `otherSubject` field is completely removed 
 Here's the complete form with all features:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",

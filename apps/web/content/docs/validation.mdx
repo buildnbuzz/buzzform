@@ -149,7 +149,7 @@ const registerSchema = defineSchema({
 First, register the custom validator using `defineValidators`:
 
 ```tsx
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 const customValidators = defineValidators({
   usernameAvailable: async (value: unknown) => {
@@ -213,7 +213,7 @@ BuzzForm provides these built-in validators:
 Register custom validators globally using `defineValidators`:
 
 ```tsx
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 // Define your custom validators with proper typing
 const customValidators = defineValidators({
@@ -307,7 +307,7 @@ const form = useForm({
 Building on the [Quick Start](/docs/quick-start) contact form:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",

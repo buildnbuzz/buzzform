@@ -1,12 +1,12 @@
 ---
 title: Migration Guide
-description: Upgrading from @buildnbuzz/buzzform to @buildnbuzz/form-core + @buildnbuzz/form-react.
+description: Upgrading from @buildnbuzz/buzzform to @buildnbuzz/form-react + @buildnbuzz/form-react.
 ---
 
 # Migration Guide
 
 <Callout type="warning">
-  `@buildnbuzz/buzzform` is deprecated. All new development should use `@buildnbuzz/form-core` and `@buildnbuzz/form-react`.
+  `@buildnbuzz/buzzform` is deprecated. All new development should use `@buildnbuzz/form-react` and `@buildnbuzz/form-react`.
 </Callout>
 
 This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package to the new two-package architecture.
@@ -34,7 +34,7 @@ Uninstall the old package and install the new ones:
 pnpm remove @buildnbuzz/buzzform
 
 # Install new packages
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+pnpm add @buildnbuzz/form-react @buildnbuzz/form-react
 
 # Peer dependencies (if not already installed)
 pnpm add @tanstack/react-form @tanstack/form-core
@@ -54,7 +54,7 @@ const schema = createSchema([
 
 **After:**
 ```tsx
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   fields: [
@@ -75,7 +75,7 @@ type FormData = InferType<typeof schema>;
 
 **After:**
 ```tsx
-import { InferType } from "@buildnbuzz/form-core";
+import { InferType } from "@buildnbuzz/form-react";
 
 type FormData = InferType<typeof schema.fields>;
 // Note: .fields is now required
@@ -102,7 +102,7 @@ const form = useRhf({
 **After:**
 ```tsx
 import { useForm } from "@buildnbuzz/form-react";
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   fields: [
@@ -189,7 +189,7 @@ validate: async (value) => {
 
 **After:**
 ```tsx
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 // Register custom validator using defineValidators
 const customValidators = defineValidators({
@@ -367,7 +367,7 @@ export function ContactForm() {
 ```tsx
 "use client";
 
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
 
 const schema = defineSchema({

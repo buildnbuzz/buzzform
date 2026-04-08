@@ -1,6 +1,6 @@
 "use client";
 
-import type { EmailField as EmailFieldDef } from "@buildnbuzz/form-core";
+import type { EmailField as EmailFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Input } from "@/components/ui/input";
 import { CopyButton } from "../components/copy-button";

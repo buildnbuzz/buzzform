@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import {
   Form,
   FormContent,
@@ -15,6 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import Link from "next/link";
 
 // Login form with password
@@ -31,7 +37,36 @@ const loginSchema = defineSchema({
     {
       type: "password",
       name: "password",
-      label: "Password",
+      label: (
+        <span className="flex items-center gap-1.5">
+          Password
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <IconPlaceholder
+                    hugeicons="InformationCircleIcon"
+                    tabler="IconInfoCircle"
+                    phosphor="Info"
+                    remixicon="RiInformationLine"
+                    className="size-4"
+                  />
+                  <span className="sr-only">More info</span>
+                </button>
+              }
+            />
+            <TooltipContent side="right">
+              <p className="text-xs font-normal">
+                Must be at least 8 characters.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </span>
+      ),
       placeholder: "Enter your password",
       required: true,
       minLength: 8,

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { TagsField as TagsFieldDef } from "@buildnbuzz/form-core";
+import type { TagsField as TagsFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { CopyButton } from "../components/copy-button";
 import {

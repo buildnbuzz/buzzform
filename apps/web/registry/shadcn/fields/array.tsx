@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import type { ArrayFieldDef, Field as CoreField } from "@buildnbuzz/form-core";
+import type { ArrayFieldDef, CoreField } from "@buildnbuzz/form-react";
 import {
   useDataField,
   RenderFields,
   useNestedErrorCount,
 } from "@buildnbuzz/form-react";
-import { resolveDynamicValue } from "@buildnbuzz/form-core";
+import { resolveDynamicValue } from "@buildnbuzz/form-react";
 import {
   DndContext,
   closestCenter,

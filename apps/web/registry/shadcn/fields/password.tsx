@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { PasswordField as PasswordFieldDef } from "@buildnbuzz/form-core";
+import type { PasswordField as PasswordFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

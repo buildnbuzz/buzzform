@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-core";
+import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useNestedErrorCount } from "@buildnbuzz/form-react";
 import {
   Collapsible,

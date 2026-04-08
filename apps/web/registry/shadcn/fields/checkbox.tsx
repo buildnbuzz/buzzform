@@ -1,6 +1,6 @@
 "use client";
 
-import type { CheckboxField as CheckboxFieldDef } from "@buildnbuzz/form-core";
+import type { CheckboxField as CheckboxFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

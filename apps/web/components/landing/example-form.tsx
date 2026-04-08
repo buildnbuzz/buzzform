@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { Form } from "@/registry/shadcn/form";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 

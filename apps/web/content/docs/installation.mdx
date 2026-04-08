@@ -38,7 +38,7 @@ npx shadcn@latest add @buzzform/all
 
 This installs:
 
-- Core packages (`@buildnbuzz/form-core`, `@buildnbuzz/form-react`, TanStack Form)
+- Core packages (`@buildnbuzz/form-react`, `@buildnbuzz/form-react`, TanStack Form)
 - All field components (text, email, select, checkbox, etc.)
 - Form components (`Form`, `FormContent`, `FormFields`, etc.)
 - Complete registry at `components/buzzform/registry.ts`
@@ -70,7 +70,7 @@ Use this path if you want to build your own field components with a custom UI li
 Install the core packages:
 
 ```bash
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react @tanstack/react-form @tanstack/form-core
+pnpm add @buildnbuzz/form-react @buildnbuzz/form-react @tanstack/react-form @tanstack/form-core
 ```
 
 ## Build Custom Components
@@ -81,7 +81,7 @@ Create your own field components using BuzzForm hooks:
 "use client";
 
 import { useDataField } from "@buildnbuzz/form-react";
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-react";
 
 export function TextField() {
   const { fieldApi, handleChange, handleBlur, label, isRequired } =
@@ -159,7 +159,7 @@ Create a simple form to verify your setup:
 ```tsx title="app/verify-form.tsx"
 "use client";
 
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 import {
   Form,
   FormContent,

@@ -12,10 +12,10 @@ import {
   type UseFormOptionsWithSchema,
 } from "@buildnbuzz/form-react";
 import type {
-  Field as CoreField,
+  CoreField,
   FormSchema,
   ValidationRun,
-} from "@buildnbuzz/form-core";
+} from "@buildnbuzz/form-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

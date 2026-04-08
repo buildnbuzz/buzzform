@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import type { CollapsibleField as CollapsibleFieldDef } from "@buildnbuzz/form-core";
+import type { CollapsibleField as CollapsibleFieldDef } from "@buildnbuzz/form-react";
 import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
-import { resolveDynamicValue, toDotNotation } from "@buildnbuzz/form-core";
+import { resolveDynamicValue, toDotNotation } from "@buildnbuzz/form-react";
 import {
   Collapsible,
   CollapsibleContent,

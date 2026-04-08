@@ -1,6 +1,6 @@
 "use client";
 
-import type { RadioField as RadioFieldDef } from "@buildnbuzz/form-core";
+import type { RadioField as RadioFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {

@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
-import type { NormalizedOption } from "@buildnbuzz/form-core";
+import type { NormalizedOption } from "@buildnbuzz/form-react";
 import {
   Combobox,
   ComboboxContent,

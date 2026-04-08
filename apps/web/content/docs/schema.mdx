@@ -12,7 +12,7 @@ A BuzzForm schema is the single source of truth for your form. It defines the fi
 Use `defineSchema()` to define your form:
 
 ```tsx
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 
 const contactSchema = defineSchema({
   fields: [
@@ -32,7 +32,7 @@ const contactSchema = defineSchema({
 Use `InferType` to get TypeScript types from your schema's fields:
 
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const contactSchema = defineSchema({
   fields: [
@@ -65,7 +65,7 @@ export async function submitContact(data: ContactData) {
 For production apps, organize schemas in dedicated files:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",
@@ -118,7 +118,7 @@ Every field has these common properties:
 Use `group` fields to create nested objects:
 
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const profileSchema = defineSchema({
   fields: [
@@ -172,7 +172,7 @@ type JobData = InferType<typeof jobSchema.fields>;
 Here's a comprehensive schema combining all features:
 
 ```tsx title="lib/schemas/user-profile.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const userProfileSchema = defineSchema({
   title: "User Profile",

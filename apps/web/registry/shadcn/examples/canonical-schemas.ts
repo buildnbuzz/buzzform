@@ -6,7 +6,7 @@
  * prefer using these schemas or variations of them.
  */
 
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 /**
  * Contact Form Schema
