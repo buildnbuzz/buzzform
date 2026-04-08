@@ -8,7 +8,7 @@ import { evaluateVisibility, type EvaluationContext } from "../conditions";
  * - `hidden`: keeps fields but marks them invisible
  */
 export function getVisibleFields(
-  fields: Field[],
+  fields: readonly Field[],
   ctx: EvaluationContext,
 ): Field[] {
   const result: Field[] = [];
