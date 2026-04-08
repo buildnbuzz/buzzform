@@ -28,12 +28,27 @@ import { registry } from "@/components/buzzform/registry";
 
 **Define schema + render form**
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoIcon } from "lucide-react";
 
 const schema = defineSchema({
   fields: [
-    { type: "text", name: "name", label: "Name", required: true },
+    {
+      type: "text",
+      name: "name",
+      label: (
+        <span className="flex items-center gap-1.5">
+          Name
+          <Tooltip>
+            <TooltipTrigger render={<InfoIcon className="size-4" />} />
+            <TooltipContent>Your full legal name.</TooltipContent>
+          </Tooltip>
+        </span>
+      ),
+      required: true,
+    },
     { type: "email", name: "email", label: "Email", required: true },
   ],
 });
@@ -54,7 +69,8 @@ export function ContactForm() {
 
 ## Key Concepts
 
-- Use `defineSchema` from `@buildnbuzz/form-core` (not `createSchema`). `createSchema` was the deprecated API from the old `@buildnbuzz/buzzform` package — `defineSchema` has the same shape but provides better type narrowing for `InferType`.
+- Use `defineSchema` from `@buildnbuzz/form-react` (NOT `@buildnbuzz/form-core`). While available in core, importing from the React package enables global module augmentation, allowing you to use `ReactNode` (JSX) directly in `label` and `description` properties.
+- **React Overrides:** You can pass rich JSX (tooltips, icons, help text) to `label` and `description` in your schemas. This is the preferred way to add field-level documentation or custom UI elements without building custom field components.
 - **Layout fields** (`row`, `tabs`, `collapsible`) are visual-only — they don't create nested data. This is the most common mistake: wrapping fields in `tabs` and expecting nested output. Tabs organize UI; `group` organizes data. Use `group` inside tabs if you need nested objects.
 - `$data` uses JSON Pointer paths into form data (e.g., `"/employmentStatus"`). Supports relative paths inside groups/arrays — the React adapter resolves them to absolute paths automatically.
 - `$context` uses JSON Pointer paths into external context data passed via `contextData` prop. Think of `$context` as "who is filling out this form" (role, permissions) vs `$data` as "what they chose in the form".
@@ -64,12 +80,13 @@ export function ContactForm() {
 ## Imports
 
 ```ts
-// Core
-import { defineSchema, defineValidators, extractDefaults, type InferType, type FormSchema } from "@buildnbuzz/form-core";
-
-// React adapter
-import { useForm, FormProvider, useDataField, useLayoutField, useFieldOptions,
-         RenderFields, Field, Form } from "@buildnbuzz/form-react";
+// React package (Preferred import for all user-facing APIs)
+import { 
+  defineSchema, type InferType, type FormSchema,
+  useForm, FormProvider, useDataField, useLayoutField, useFieldOptions,
+  RenderFields, Field, Form,
+  walkFields, isDataField, toDotNotation, fromDotNotation
+} from "@buildnbuzz/form-react";
 
 // Shadcn form components (installed via registry)
 import { Form, FormContent, FormFields, FormActions, FormSubmit, FormReset, FormMessage } from "@/components/buzzform/form";

@@ -5,7 +5,7 @@
 `defineSchema` wraps your schema object with `as const` internally, which preserves the literal types needed for `InferType` to produce precise TypeScript types. Without it, field names and types widen to `string` and inference breaks.
 
 ```ts
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   title: "User Profile",
@@ -15,9 +15,29 @@ const schema = defineSchema({
     { type: "number", name: "age", label: "Age", min: 18, max: 120 },
   ],
 });
+```
 
-type FormData = InferType<typeof schema.fields>;
-// { firstName: string; email: string; age?: number }
+### React Node Overrides (UI)
+
+When using `@buildnbuzz/form-react`, you can pass rich React elements (tooltips, icons, formatted text) to `label` and `description` properties. To enable this, always import `defineSchema` from the React package.
+
+```tsx
+import { defineSchema } from "@buildnbuzz/form-react";
+import { InfoIcon } from "lucide-react";
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "text",
+      name: "username",
+      label: (
+        <span className="flex items-center gap-1">
+          Username <InfoIcon className="size-3" />
+        </span>
+      ),
+    },
+  ],
+});
 ```
 
 Alternative: `const schema = { fields: [...] } as const satisfies FormSchema;` — this works identically but is more verbose. Use it when you need to avoid a function call (e.g., for module-level constants in some bundler configurations).
