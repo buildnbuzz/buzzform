@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { DataField } from "@buildnbuzz/form-core";
 import type { UnknownData } from "../../types";
 import type { DataFieldContextValue } from "../field-context";
@@ -18,11 +19,11 @@ export interface DataFieldState<
 > extends DataFieldContextValue<TField, TFormData>,
   FieldErrorState {
   /** Resolved field label. */
-  label: string;
+  label: ReactNode;
   /** Resolved field placeholder. */
   placeholder: string;
   /** Resolved field description. */
-  description: string;
+  description: ReactNode;
   /** ID for the description element (if any). */
   descriptionId?: string;
   /** ID for the error element (if any). */
@@ -61,7 +62,7 @@ export function useDataField<
   const errorState = useFieldErrorState(options);
   const a11y = useFieldA11yIds({
     fieldId: ctx.fieldApi.name,
-    description: text.description,
+    description: typeof text.description === "string" ? text.description : undefined,
     isInvalid: errorState.isInvalid,
   });
 

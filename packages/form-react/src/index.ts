@@ -1,3 +1,90 @@
+import {
+  type ReactNode,
+} from "react";
+import {
+  defineSchema,
+  isDataField,
+  isContainerType,
+  walkFields,
+  toDotNotation,
+  fromDotNotation,
+  resolveDynamicValue,
+  evaluateVisibility,
+  defineValidators,
+  builtInValidators,
+  extractDefaults,
+  flattenToPathKeys,
+  expandPathKeys,
+  transformFormOutput,
+  resolveOptions,
+  clampNumber,
+  applyNumericPrecision,
+  formatNumberWithSeparator,
+  parseFormattedNumber,
+} from "@buildnbuzz/form-core";
+
+export {
+  defineSchema,
+  isDataField,
+  isContainerType,
+  walkFields,
+  toDotNotation,
+  fromDotNotation,
+  resolveDynamicValue,
+  evaluateVisibility,
+  defineValidators,
+  builtInValidators,
+  extractDefaults,
+  flattenToPathKeys,
+  expandPathKeys,
+  transformFormOutput,
+  resolveOptions,
+  clampNumber,
+  applyNumericPrecision,
+  formatNumberWithSeparator,
+  parseFormattedNumber,
+};
+
+// --- Core Types ---
+export type {
+  InferType,
+  FormSchema,
+  Field as CoreField,
+  DataField,
+  LayoutField,
+  FieldOption,
+  ArrayFieldDef,
+  GroupField,
+  TextField,
+  SelectField,
+  PasswordField,
+  DateField,
+  CheckboxField,
+  CheckboxGroupField,
+  EmailField,
+  NumberField,
+  RadioField,
+  RowField,
+  SwitchField,
+  TabsField,
+  Tab,
+  TagsField,
+  TextareaField,
+  TristateCheckboxField,
+  CollapsibleField,
+  DynamicText,
+  DynamicString,
+  DynamicBoolean,
+  VisibilityCondition,
+  ValidationRegistry,
+  ValidationFunction,
+  ValidationContext,
+  ValidationRun,
+  ValidationResult,
+  NormalizedOption,
+  OptionsConfig,
+} from "@buildnbuzz/form-core";
+
 export { useForm } from "./use-form";
 export { Field } from "./field";
 export { Form } from "./form";
@@ -53,3 +140,9 @@ export type {
   FieldOptionsState,
   ResolvedFieldTextOptions,
 } from "./contexts";
+
+declare module "@buildnbuzz/form-core" {
+  interface FrameworkOverrides {
+    react: ReactNode;
+  }
+}

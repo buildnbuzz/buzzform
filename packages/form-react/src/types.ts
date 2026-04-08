@@ -13,6 +13,12 @@ import type {
   ValidationRun,
 } from "@buildnbuzz/form-core";
 
+declare module "@buildnbuzz/form-core" {
+  interface FrameworkOverrides {
+    react: ReactNode;
+  }
+}
+
 /** Shared dictionary type used by form-react runtime and API surfaces. */
 export type UnknownData = Record<string, unknown>;
 

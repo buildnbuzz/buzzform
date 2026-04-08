@@ -72,9 +72,9 @@ function TextResolverReader({
   spy,
 }: {
   spy: (values: {
-    label: string;
+    label: ReactNode;
     placeholder: string;
-    description: string;
+    description: ReactNode;
   }) => void;
 }) {
   const resolved = useResolvedFieldText();

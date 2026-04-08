@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import type { StandardSchemaV1 } from "@tanstack/react-form";
 import {
   collectFieldValidationChecks,
@@ -214,7 +215,8 @@ function resolveRelativeDataPaths<T>(value: T, basePointer: string): T {
 }
 
 function resolveDynamicPaths(value: unknown, basePointer: string): unknown {
-  if (!value || typeof value !== "object") return value;
+  if (!value || typeof value !== "object" || isValidElement(value))
+    return value;
 
   if (Array.isArray(value)) {
     let changed = false;
