@@ -16,8 +16,6 @@ jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
-    # Skip CI for version bump PRs (only package.json + CHANGELOG changes)
-    if: "!startsWith(github.event.pull_request.title, 'chore: version packages')"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
