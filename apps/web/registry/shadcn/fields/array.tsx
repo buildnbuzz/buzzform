@@ -417,8 +417,8 @@ interface ArrayFieldState {
   isDisabled: boolean;
   isReadOnly: boolean;
   isRequired: boolean;
-  label?: string;
-  description?: string;
+  label?: React.ReactNode;
+  description?: React.ReactNode;
   errors: ReturnType<typeof useDataField>["errors"];
   isInvalid: boolean;
   descriptionId?: string;
