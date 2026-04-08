@@ -143,8 +143,8 @@ The primary hook for data field components. Returns everything you need:
 | `formData` | `object` | Current form values |
 | `handleChange` | `(value) => void` | Change handler (includes trim, transforms) |
 | `handleBlur` | `() => void` | Blur handler (triggers validation) |
-| `label` | `string \| undefined` | Resolved label (supports `$data`/`$context`) |
-| `description` | `string \| undefined` | Resolved description |
+| `label` | `ReactNode \| undefined` | Resolved label (supports `$data`/`$context`) |
+| `description` | `ReactNode \| undefined` | Resolved description |
 | `placeholder` | `string \| undefined` | Resolved placeholder |
 | `isDisabled` | `boolean` | Whether field is disabled |
 | `isReadOnly` | `boolean` | Whether field is read-only |
@@ -165,8 +165,8 @@ For layout/container components (row, group, tabs, collapsible):
 |----------|------|-------------|
 | `field` | `Field` | The raw field schema definition |
 | `form` | `FormApi` | TanStack form instance |
-| `label` | `string \| undefined` | Resolved label |
-| `description` | `string \| undefined` | Resolved description |
+| `label` | `ReactNode \| undefined` | Resolved label |
+| `description` | `ReactNode \| undefined` | Resolved description |
 | `isHidden` | `boolean` | Whether field is hidden |
 | `isDisabled` | `boolean` | Whether field is disabled |
 | `isConditionMet` | `boolean` | Whether visibility condition is met |

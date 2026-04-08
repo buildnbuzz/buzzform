@@ -107,6 +107,43 @@ export function ContactForm() {
 - ✅ Type inference available everywhere
 - ✅ Easy to maintain and update
 
+## React Overrides (UI)
+
+When using `@buildnbuzz/form-react`, you can pass rich React elements (like tooltips, icons, or custom components) directly to `label` and `description` fields. 
+
+<Callout type="warn">
+  **Import Source:** To enable ReactNode support in your schemas, you must import `defineSchema` and `InferType` from **`@buildnbuzz/form-react`** instead of `@buildnbuzz/form-core`.
+</Callout>
+
+### Using Tooltips in Labels
+
+A common pattern is adding an info icon with a tooltip to a field label:
+
+```tsx
+import { defineSchema } from "@buildnbuzz/form-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoIcon } from "lucide-react";
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "password",
+      name: "password",
+      label: (
+        <span className="flex items-center gap-1.5">
+          Password
+          <Tooltip>
+            <TooltipTrigger render={<InfoIcon className="size-4 text-muted-foreground cursor-help" />} />
+            <TooltipContent>Must be at least 8 characters long.</TooltipContent>
+          </Tooltip>
+        </span>
+      ),
+      required: true,
+    },
+  ],
+});
+```
+
 ## Base Field Properties
 
 Every field has these common properties:
