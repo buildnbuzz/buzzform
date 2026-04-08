@@ -67,15 +67,11 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@buildnbuzz/form-core": "workspace:^",
     "@tanstack/form-core": "^1.28.5",
     "@tanstack/react-form": "^1.28.5",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
-    "@buildnbuzz/form-core": {
-      "optional": false
-    },
     "@tanstack/form-core": {
       "optional": false
     },
