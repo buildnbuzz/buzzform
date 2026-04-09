@@ -1,5 +1,14 @@
 # @buildnbuzz/form-core
 
+## 0.1.3
+
+### Patch Changes
+
+- [#118](https://github.com/buildnbuzz/buzzform/pull/118) [`bdcbbd8`](https://github.com/buildnbuzz/buzzform/commit/bdcbbd80ed39a0b8b09f115f6dc22daf607a0402) Thanks [@ladparth](https://github.com/ladparth)! - - Introduced `FrameworkOverrides` interface to support global module augmentation for UI-specific text types.
+  - Updated `label` and `description` in `BaseField`, `FieldOption`, and `Tab` to use `DynamicText` (supports framework-specific overrides like `ReactNode`).
+  - Transitioned all field and tab collections (`fields`, `tabs`) to `readonly` to enforce schema immutability.
+  - Broadened `walkFields`, `extractDependenciesFromFields`, and `getVisibleFields` to handle `readonly` arrays and generic field shapes.
+
 ## 0.1.2
 
 ### Patch Changes
