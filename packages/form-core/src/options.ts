@@ -1,10 +1,9 @@
 import type {
-  DynamicBoolean,
   FieldOption,
   OptionResolverRegistry,
   OptionsConfig,
 } from "./types";
-import { resolveDynamicValue } from "./dynamic";
+import { evaluateVisibility } from "./conditions";
 
 /** Preserve resolver map literal types. */
 export function defineOptionResolvers<const T extends OptionResolverRegistry>(
@@ -35,9 +34,7 @@ export interface NormalizedOption {
  *
  * @param option - A FieldOption object or a plain string shorthand.
  */
-export function normalizeSelectOption(
-  option: FieldOption | string,
-): Omit<FieldOption, "disabled"> & { disabled?: DynamicBoolean } {
+export function normalizeSelectOption(option: FieldOption | string): FieldOption {
   if (typeof option === "string") {
     return { value: option, label: option };
   }
@@ -86,8 +83,12 @@ export function resolveOption(
     label: getSelectOptionLabel(option),
     value: getSelectOptionValue(option),
     disabled:
-      resolveDynamicValue<boolean>(option.disabled, formData, contextData) ??
-      false,
+      option.disabled === undefined
+        ? false
+        : evaluateVisibility(option.disabled, {
+            formData,
+            contextData,
+          }),
     ui: option.ui,
   };
 }

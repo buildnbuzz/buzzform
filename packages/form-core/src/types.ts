@@ -527,7 +527,7 @@ export interface FieldOption<TValue = string> {
   /** Option value. */
   value: TValue;
   /** Option disabled state. */
-  disabled?: DynamicBoolean;
+  disabled?: VisibilityCondition;
   /** UI-specific configuration for this option (e.g., description, icon). */
   ui?: UnknownData;
 }

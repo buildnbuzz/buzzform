@@ -20,13 +20,12 @@ import {
   type InferType,
 } from "@buildnbuzz/form-react";
 
-const API_BASE = "https://countriesnow.space/api/v0.1/countries";
+const API_BASE = "https://countriesnow.space/api/v0.1";
 
 /** Response shape for the countries endpoint. */
 interface CountryEntry {
   iso2: string;
   country: string;
-  cities: string[];
 }
 
 /** Response shape for the states endpoint. */
@@ -45,30 +44,28 @@ interface StateEntry {
  */
 const locationResolvers = defineOptionResolvers({
   listCountries: async () => {
-    console.log("[listCountries] Fetching from:", API_BASE);
     try {
-      const response = await fetch(API_BASE);
-      console.log("[listCountries] Response status:", response.status, response.ok);
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      const response = await fetch(`${API_BASE}/countries`);
+      if (!response.ok) {
+        toast.error("Could not fetch countries. Please try again later.");
+        return [];
+      }
 
       const json = await response.json();
-      console.log("[listCountries] JSON keys:", Object.keys(json));
-      console.log("[listCountries] data length:", json.data?.length);
-      console.log("[listCountries] first entry:", json.data?.[0]);
       const countries = json.data as CountryEntry[];
 
-      const result = countries
+      return countries
         .map((c) => ({
           label: c.country,
           value: c.country,
         }))
+        .filter(
+          (opt, i, arr) => arr.findIndex((o) => o.value === opt.value) === i,
+        )
         .sort((a: { label: string }, b: { label: string }) =>
           a.label.localeCompare(b.label),
         );
-      console.log("[listCountries] Returning", result.length, "options. First 3:", result.slice(0, 3));
-      return result;
-    } catch (error) {
-      console.error("[listCountries] FAILED:", error);
+    } catch {
       toast.error("Could not fetch countries. Check your network connection.");
       return [];
     }
@@ -76,29 +73,28 @@ const locationResolvers = defineOptionResolvers({
 
   listStates: async ({ data }) => {
     const country = data.country as string;
-    console.log("[listStates] Called with country:", country);
     if (!country) return [];
 
-    const url = `${API_BASE}/states/q?country=${encodeURIComponent(country)}`;
-    console.log("[listStates] Fetching from:", url);
+    const url = `${API_BASE}/countries/states/q?country=${encodeURIComponent(country)}`;
     try {
-      const response = await fetch(url);
-      console.log("[listStates] Response status:", response.status, response.ok);
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      const response = await fetch(url, { redirect: "follow" });
+      if (!response.ok) {
+        toast.error(`Could not fetch states for ${country}. Please try again.`);
+        return [];
+      }
 
       const json = await response.json();
-      console.log("[listStates] JSON keys:", Object.keys(json));
-      console.log("[listStates] states count:", json.data?.states?.length);
       const states = json.data.states as StateEntry[];
 
-      const result = states.map((s) => ({
-        label: s.name,
-        value: s.name,
-      }));
-      console.log("[listStates] Returning", result.length, "options");
-      return result;
-    } catch (error) {
-      console.error("[listStates] FAILED:", error);
+      return states
+        .map((s) => ({
+          label: s.name,
+          value: s.name,
+        }))
+        .filter(
+          (opt, i, arr) => arr.findIndex((o) => o.value === opt.value) === i,
+        );
+    } catch {
       toast.error("Could not fetch states. Check your network connection.");
       return [];
     }
@@ -107,28 +103,30 @@ const locationResolvers = defineOptionResolvers({
   listCities: async ({ data }) => {
     const country = data.country as string;
     const state = data.state as string;
-    console.log("[listCities] Called with country:", country, "state:", state);
     if (!country || !state) return [];
 
-    const url = `${API_BASE}/state/cities/q?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}`;
-    console.log("[listCities] Fetching from:", url);
+    const url = `${API_BASE}/countries/state/cities/q?country=${encodeURIComponent(country)}&state=${encodeURIComponent(state)}`;
     try {
       const response = await fetch(url);
-      console.log("[listCities] Response status:", response.status, response.ok);
-      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      if (!response.ok) {
+        toast.error(
+          `Could not fetch cities for ${state}, ${country}. Please try again.`,
+        );
+        return [];
+      }
 
       const json = await response.json();
-      console.log("[listCities] cities count:", json.data?.length);
       const cities = json.data as string[];
 
-      const result = cities.map((city) => ({
-        label: city,
-        value: city,
-      }));
-      console.log("[listCities] Returning", result.length, "options");
-      return result;
-    } catch (error) {
-      console.error("[listCities] FAILED:", error);
+      return cities
+        .map((city) => ({
+          label: city,
+          value: city,
+        }))
+        .filter(
+          (opt, i, arr) => arr.findIndex((o) => o.value === opt.value) === i,
+        );
+    } catch {
       toast.error("Could not fetch cities. Check your network connection.");
       return [];
     }

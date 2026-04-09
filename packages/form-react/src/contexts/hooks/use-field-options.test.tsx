@@ -4,7 +4,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useFieldOptions } from "./use-field-options";
 import { FieldContext } from "../field-context";
-import type { OptionResolverRegistry } from "@buildnbuzz/form-core";
+import type {
+  OptionResolverRegistry,
+  NormalizedOption,
+} from "@buildnbuzz/form-core";
+import type { FieldFormApi, UnknownData } from "../../types";
 
 const mockStore = {
   state: {
@@ -15,11 +19,21 @@ const mockStore = {
 
 const mockForm = {
   store: mockStore,
-} as any;
+} as unknown as FieldFormApi<UnknownData>;
+
+const mockFieldApi = {
+  state: { value: undefined },
+  handleChange: vi.fn(),
+  name: "testField",
+};
 
 const baseFieldContext = {
   form: mockForm,
-  field: { type: "select", name: "testField", dependencies: ["/categoryId"] } as any,
+  field: {
+    type: "select" as const,
+    name: "testField",
+    dependencies: ["/categoryId"],
+  },
   formData: { categoryId: "cat_1" },
   contextData: undefined,
   fieldPath: "/testField",
@@ -29,12 +43,19 @@ const baseFieldContext = {
   isReadOnly: false,
   isRequired: false,
   optionResolvers: undefined as OptionResolverRegistry | undefined,
+  fieldApi: mockFieldApi,
 };
 
-function createWrapper(contextValue = baseFieldContext) {
-  return ({ children }: { children: React.ReactNode }) => (
-    <FieldContext.Provider value={contextValue}>{children}</FieldContext.Provider>
-  );
+function createWrapper(contextValue: typeof baseFieldContext = baseFieldContext) {
+  function Wrapper({ children }: { children: React.ReactNode }) {
+    return (
+      <FieldContext.Provider value={contextValue}>
+        {children}
+      </FieldContext.Provider>
+    );
+  }
+  Wrapper.displayName = "TestFieldContextWrapper";
+  return Wrapper;
 }
 
 describe("useFieldOptions", () => {
@@ -66,8 +87,8 @@ describe("useFieldOptions", () => {
 
     expect(result.current.options).toEqual([{ label: "Async", value: "async", disabled: false }]);
     expect(fetcher).toHaveBeenCalledWith({
-      formData: { categoryId: "cat_1" },
-      contextData: undefined,
+      data: { categoryId: "cat_1" },
+      context: undefined,
     });
   });
 
@@ -95,8 +116,8 @@ describe("useFieldOptions", () => {
 
     expect(result.current.options).toEqual([{ label: "Cat 1 Item", value: "item1", disabled: false }]);
     expect(categoryOptionsResolver).toHaveBeenCalledWith({
-      formData: { categoryId: "cat_1" },
-      contextData: undefined,
+      data: { categoryId: "cat_1" },
+      context: undefined,
     }, { limit: 10 });
   });
 
