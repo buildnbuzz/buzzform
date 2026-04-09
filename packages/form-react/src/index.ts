@@ -17,6 +17,7 @@ import {
   expandPathKeys,
   transformFormOutput,
   resolveOptions,
+  defineOptionResolvers,
   clampNumber,
   applyNumericPrecision,
   formatNumberWithSeparator,
@@ -39,6 +40,7 @@ export {
   expandPathKeys,
   transformFormOutput,
   resolveOptions,
+  defineOptionResolvers,
   clampNumber,
   applyNumericPrecision,
   formatNumberWithSeparator,
@@ -83,6 +85,7 @@ export type {
   ValidationResult,
   NormalizedOption,
   OptionsConfig,
+  OptionResolverRegistry,
 } from "@buildnbuzz/form-core";
 
 export { useForm } from "./use-form";

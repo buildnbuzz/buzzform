@@ -9,6 +9,7 @@ import type {
   DataField,
   FormSchema,
   OutputConfig,
+  OptionResolverRegistry,
   ValidationRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
@@ -72,6 +73,8 @@ export interface UseFormOptionsWithSchema<
   defaultValues?: Partial<TFormData>;
   /** Optional custom validation registry. */
   customValidators?: ValidationRegistry;
+  /** Optional custom option resolver registry. */
+  optionResolvers?: OptionResolverRegistry;
   /** Optional context data used by dynamic validators. */
   contextData?: UnknownData;
   /** Enables schema-derived submit validation. Defaults to `true`. */
@@ -118,6 +121,8 @@ export interface FieldProps<TFormData extends UnknownData = UnknownData> {
   contextData?: UnknownData;
   /** Custom validators registry passed to `form-core` checks. */
   customValidators?: ValidationRegistry;
+  /** Custom option resolvers registry passed to option resolving hooks. */
+  optionResolvers?: OptionResolverRegistry;
   /** Explicit TanStack validators merged with generated schema validators. */
   validators?: AnyFieldValidators;
   /** Which run includes derived checks (defaults to `submit`). */

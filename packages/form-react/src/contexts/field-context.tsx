@@ -1,6 +1,6 @@
 import { createContext, useContext } from "react";
 import type { AnyFieldApi } from "@tanstack/form-core";
-import type { Field as CoreField, DataField } from "@buildnbuzz/form-core";
+import type { Field as CoreField, DataField, OptionResolverRegistry } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "../types";
 
 /** Value exposed by `FieldContext` for field renderer components. */
@@ -20,6 +20,8 @@ export interface FieldContextValue<
   formData: TFormData;
   /** External context data used by dynamic evaluation and validators. */
   contextData?: UnknownData;
+  /** Custom option resolvers passed down for options fetching hooks. */
+  optionResolvers?: OptionResolverRegistry;
   /** Whether the field is currently hidden. */
   isHidden: boolean;
   /** Whether the field condition currently evaluates to mounted. */

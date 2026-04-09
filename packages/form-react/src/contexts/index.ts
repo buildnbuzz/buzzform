@@ -42,6 +42,8 @@ export type {
 export { useFieldOptions } from "./hooks/use-field-options";
 export type { FieldOptionsState } from "./hooks/use-field-options";
 
+export { useDependenciesSelector } from "./hooks/use-dependencies-selector";
+
 // Primary field hooks
 export { useDataField } from "./hooks/use-data-field";
 export type { DataFieldState, DataFieldOptions } from "./hooks/use-data-field";
