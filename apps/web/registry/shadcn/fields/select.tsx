@@ -98,7 +98,7 @@ export function SelectField() {
     ariaDescribedBy,
   } = useDataField<SelectFieldDef>();
 
-  const { options } = useFieldOptions(field.options);
+  const { options, isLoading } = useFieldOptions(field.options);
 
   const ui = field.ui as SelectUi | undefined;
   const isClearable = ui?.isClearable ?? !isRequired;
@@ -160,7 +160,7 @@ export function SelectField() {
             multiple={hasMany}
             value={selectedValues}
             onValueChange={handleValueChange}
-            disabled={isDisabled || isReadOnly}
+            disabled={isDisabled || isReadOnly || isLoading}
             itemToStringValue={(opt) =>
               typeof opt.label === "string" ? opt.label : opt.value
             }

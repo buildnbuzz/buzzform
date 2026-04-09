@@ -119,7 +119,7 @@ export function RadioField() {
   });
 
   // Get options
-  const { options } = useFieldOptions(field.options);
+  const { options, isLoading } = useFieldOptions(field.options);
 
   return (
     <FieldGroup
@@ -153,106 +153,118 @@ export function RadioField() {
             className={layoutClasses}
             aria-describedby={ariaDescribedBy}
           >
-            {options.map((opt, i) => {
-              const { value: val, label: optLabel, disabled: optDisabled, ui: optUi } = opt;
-              const optDesc = (optUi as OptionUi | undefined)?.description;
-              const isOptDisabled = optDisabled || isDisabled;
-              const isSelected = value === val;
-              const id = `${fieldApi.name}-${i}`;
+            {isLoading ? (
+              <div className="py-2 text-sm text-muted-foreground animate-pulse">
+                Loading options...
+              </div>
+            ) : (
+              options.map((opt, i) => {
+                const {
+                  value: val,
+                  label: optLabel,
+                  disabled: optDisabled,
+                  ui: optUi,
+                } = opt;
+                const optDesc = (optUi as OptionUi | undefined)?.description;
+                const isOptDisabled = optDisabled || isDisabled;
+                const isSelected = value === val;
+                const id = `${fieldApi.name}-${i}`;
 
-              // Card variant
-              if (isCardVariant) {
-                const showDescription = optDesc && cardSize !== "sm";
+                // Card variant
+                if (isCardVariant) {
+                  const showDescription = optDesc && cardSize !== "sm";
 
+                  return (
+                    <label
+                      key={`${val}-${i}`}
+                      htmlFor={id}
+                      className={cn(
+                        "cursor-pointer transition-all duration-150 rounded-lg flex items-start gap-3",
+                        cardSizeClasses[cardSize],
+                        cardBordered && "border",
+                        cardBordered &&
+                          isSelected &&
+                          "border-primary ring-1 ring-primary/20 bg-primary/5 dark:bg-primary/10",
+                        cardBordered &&
+                          !isSelected &&
+                          "border-border hover:border-foreground/20 hover:bg-accent/30",
+                        !cardBordered && "hover:bg-accent/50",
+                        !cardBordered && isSelected && "bg-accent",
+                        isOptDisabled &&
+                          "opacity-50 cursor-not-allowed pointer-events-none",
+                      )}
+                      data-checked={isSelected}
+                      data-disabled={isOptDisabled}
+                    >
+                      <RadioGroupItem
+                        value={val}
+                        id={id}
+                        disabled={isOptDisabled}
+                        className="shrink-0 mt-0.5"
+                        autoFocus={ui?.autoFocus && i === 0}
+                      />
+                      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={cn(
+                              "font-medium",
+                              cardSize === "lg" ? "text-base" : "text-sm",
+                            )}
+                          >
+                            {optLabel}
+                          </span>
+                        </div>
+                        {showDescription && (
+                          <span
+                            className={cn(
+                              "text-muted-foreground line-clamp-2",
+                              cardSize === "lg" ? "text-sm" : "text-xs",
+                            )}
+                          >
+                            {optDesc}
+                          </span>
+                        )}
+                      </div>
+                    </label>
+                  );
+                }
+
+                // Default variant
                 return (
-                  <label
+                  <Field
                     key={`${val}-${i}`}
-                    htmlFor={id}
+                    orientation="horizontal"
                     className={cn(
-                      // Base styles
-                      "cursor-pointer transition-all duration-150 rounded-lg",
-                      "flex items-start gap-3",
-                      cardSizeClasses[cardSize],
-                      // Border styles
-                      cardBordered && "border",
-                      cardBordered &&
-                        isSelected &&
-                        "border-primary ring-1 ring-primary/20 bg-primary/5 dark:bg-primary/10",
-                      cardBordered &&
-                        !isSelected &&
-                        "border-border hover:border-foreground/20 hover:bg-accent/30",
-                      // Non-bordered styles
-                      !cardBordered && "hover:bg-accent/50",
-                      !cardBordered && isSelected && "bg-accent",
-                      // Disabled styles
-                      isOptDisabled &&
-                        "opacity-50 cursor-not-allowed pointer-events-none",
+                      "items-center gap-2.5 space-y-0",
+                      isHorizontal && !columns && "w-auto",
+                      isOptDisabled && "opacity-50 cursor-not-allowed",
                     )}
-                    data-checked={isSelected}
-                    data-disabled={isOptDisabled}
                   >
                     <RadioGroupItem
                       value={val}
                       id={id}
                       disabled={isOptDisabled}
-                      className="shrink-0 mt-0.5"
                       autoFocus={ui?.autoFocus && i === 0}
                     />
-                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "font-medium",
-                            cardSize === "lg" ? "text-base" : "text-sm",
-                          )}
-                        >
-                          {optLabel}
-                        </span>
-                      </div>
-                      {showDescription && (
-                        <span
-                          className={cn(
-                            "text-muted-foreground line-clamp-2",
-                            cardSize === "lg" ? "text-sm" : "text-xs",
-                          )}
-                        >
-                          {optDesc}
-                        </span>
+                    <FieldLabel
+                      htmlFor={id}
+                      className={cn(
+                        "font-normal cursor-pointer m-0 text-sm",
+                        isOptDisabled && "cursor-not-allowed",
                       )}
-                    </div>
-                  </label>
+                    >
+                      <span>{optLabel}</span>
+                    </FieldLabel>
+                  </Field>
                 );
-              }
+              })
+            )}
 
-              // Default variant
-              return (
-                <Field
-                  key={`${val}-${i}`}
-                  orientation="horizontal"
-                  className={cn(
-                    "items-center gap-2.5 space-y-0",
-                    isHorizontal && !columns && "w-auto",
-                    isOptDisabled && "opacity-50 cursor-not-allowed",
-                  )}
-                >
-                  <RadioGroupItem
-                    value={val}
-                    id={id}
-                    disabled={isOptDisabled}
-                    autoFocus={ui?.autoFocus && i === 0}
-                  />
-                  <FieldLabel
-                    htmlFor={id}
-                    className={cn(
-                      "font-normal cursor-pointer m-0 text-sm",
-                      isOptDisabled && "cursor-not-allowed",
-                    )}
-                  >
-                    <span>{optLabel}</span>
-                  </FieldLabel>
-                </Field>
-              );
-            })}
+            {options.length === 0 && !isLoading && (
+              <div className="py-2 text-sm text-muted-foreground italic">
+                No options available
+              </div>
+            )}
           </RadioGroup>
         </FieldContent>
 
