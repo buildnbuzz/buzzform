@@ -228,6 +228,10 @@ export interface BaseField<TValue = unknown> {
   /** Declarative validation rules. */
   validate?: ValidationConfig;
 
+  // --- Reactivity ---
+  /** Explicit data paths to track for triggering dynamic evaluations and async resolvers. */
+  dependencies?: DataPath[];
+
   // --- HTML ---
   /** HTML autocomplete attribute. */
   autoComplete?: string;
@@ -317,8 +321,8 @@ export interface NumberField extends BaseField<number> {
 /** Select input field. */
 export interface SelectField extends BaseField<string | string[]> {
   type: "select";
-  /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: Array<FieldOption<string> | string>;
+  /** Available options. Supports static arrays, registry resolvers, or inline functions. */
+  options: OptionsConfig;
   /** Enable multi-select mode. */
   hasMany?: boolean;
   /** Minimum number of selections (only applies when hasMany is true). */
@@ -379,8 +383,8 @@ export interface CheckboxGroupField extends BaseField<string[]> {
   type: "checkbox";
   /** Enable multi-select mode; renders a group of checkboxes from options. */
   hasMany: true;
-  /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: Array<FieldOption<string> | string>;
+  /** Available options. Supports static arrays, registry resolvers, or inline functions. */
+  options: OptionsConfig;
   /** Minimum number of selections. */
   minSelected?: number;
   /** Maximum number of selections. */
@@ -395,8 +399,8 @@ export interface SwitchField extends BaseField<boolean> {
 /** Radio input field. */
 export interface RadioField extends BaseField<string> {
   type: "radio";
-  /** Available options. Strings are normalized to `{ label, value }` at render time. */
-  options: Array<FieldOption<string> | string>;
+  /** Available options. Supports static arrays, registry resolvers, or inline functions. */
+  options: OptionsConfig;
 }
 
 /**
@@ -474,6 +478,47 @@ export interface PrimitiveArrayField extends BaseField<unknown[]> {
  * Discriminated by `primitive` — mirrors the checkbox `hasMany` pattern.
  */
 export type ArrayFieldDef = ArrayField | PrimitiveArrayField;
+
+// ============================================================================
+// 5.5. OPTIONS & RESOLVERS
+// ============================================================================
+
+/** Context provided to option resolver functions. */
+export interface OptionResolverContext {
+  /** The current form values. */
+  data: Record<string, unknown>;
+  /** External context data. */
+  context?: Record<string, unknown>;
+}
+
+/** Function signature for dynamic option resolution. */
+export type OptionResolverFn = (
+  ctx: OptionResolverContext,
+  args?: Record<string, unknown>,
+) => Promise<Array<FieldOption | string>> | Array<FieldOption | string>;
+
+/** Serialized registry configuration for option resolution. */
+export interface OptionResolverConfig {
+  /** Key of the resolver in the OptionResolverRegistry. */
+  resolver: string;
+  /** Optional static arguments passed to the resolver. */
+  args?: Record<string, unknown>;
+}
+
+/** Registry mapping resolver keys to functions. */
+export type OptionResolverRegistry = Record<string, OptionResolverFn>;
+
+/**
+ * Options configuration for a field.
+ * Supports static arrays, serialized registry lookups, or inline functions.
+ *
+ * @remarks [type]
+ */
+export type OptionsConfig =
+  | Array<FieldOption | string>
+  | OptionResolverConfig
+  | OptionResolverFn;
+
 
 /** Option for select and radio fields. */
 export interface FieldOption<TValue = string> {

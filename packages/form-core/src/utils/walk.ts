@@ -1,4 +1,4 @@
-import type { Field, FieldOption } from "../types";
+import type { Field, OptionsConfig } from "../types";
 import { joinPointer } from "./path";
 
 /** Context provided to a walk visitor. */
@@ -31,7 +31,12 @@ function walkField(
     case "collapsible": {
       const nextParents = [...ctx.parents, field];
       for (const child of field.fields) {
-        walkField(child, { path: ctx.path, parents: nextParents }, visitor, options);
+        walkField(
+          child,
+          { path: ctx.path, parents: nextParents },
+          visitor,
+          options,
+        );
       }
       break;
     }
@@ -40,7 +45,12 @@ function walkField(
       const nextParents = [...ctx.parents, field];
       for (const tab of field.tabs) {
         for (const child of tab.fields) {
-          walkField(child, { path: ctx.path, parents: nextParents }, visitor, options);
+          walkField(
+            child,
+            { path: ctx.path, parents: nextParents },
+            visitor,
+            options,
+          );
         }
       }
       break;
@@ -50,7 +60,12 @@ function walkField(
       const nextParents = [...ctx.parents, field];
       const groupPath = joinPointer(ctx.path, field.name);
       for (const child of field.fields) {
-        walkField(child, { path: groupPath, parents: nextParents }, visitor, options);
+        walkField(
+          child,
+          { path: groupPath, parents: nextParents },
+          visitor,
+          options,
+        );
       }
       break;
     }
@@ -61,7 +76,12 @@ function walkField(
       const itemPath =
         options.arrayItemPath === "container" ? arrayPath : `${arrayPath}/*`;
       for (const child of field.fields as Field[]) {
-        walkField(child, { path: itemPath, parents: nextParents }, visitor, options);
+        walkField(
+          child,
+          { path: itemPath, parents: nextParents },
+          visitor,
+          options,
+        );
       }
       break;
     }
@@ -93,11 +113,12 @@ export function walkFields(
 
 /**
  * Collect option values from a field for easy validation use.
+ * Note: Only returns values for static option arrays.
  */
 export function getOptionValues(
-  field: { options?: Array<FieldOption | string> } | undefined,
+  field: { options?: OptionsConfig } | undefined,
 ): unknown[] {
-  if (!field?.options) return [];
+  if (!field?.options || !Array.isArray(field.options)) return [];
   return field.options.map((option) =>
     typeof option === "string" ? option : option.value,
   );

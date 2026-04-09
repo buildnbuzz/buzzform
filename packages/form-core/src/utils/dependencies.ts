@@ -254,6 +254,12 @@ export function extractDependencies(field: Field): Set<string> {
     extractFromDynamicValue(field.description as DynamicValue<unknown>, deps);
   }
 
+  if ("dependencies" in field && Array.isArray(field.dependencies)) {
+    for (const dep of field.dependencies) {
+      if (typeof dep === "string") deps.add(dep);
+    }
+  }
+
   return deps;
 }
 

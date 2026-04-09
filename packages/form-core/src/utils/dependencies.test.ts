@@ -57,6 +57,18 @@ describe("extractDependencies", () => {
     ]);
   });
 
+  it("includes explicit dependencies property", () => {
+    const explicitDepsField: Field = {
+      type: "text",
+      name: "dynamic_text",
+      dependencies: ["/user/id", "/api/config"],
+    };
+    expect(Array.from(extractDependencies(explicitDepsField))).toEqual([
+      "/user/id",
+      "/api/config",
+    ]);
+  });
+
   it("includes dependencies from derived checks", () => {
     const deriveSpy = vi
       .spyOn(validation, "deriveFieldChecks")
