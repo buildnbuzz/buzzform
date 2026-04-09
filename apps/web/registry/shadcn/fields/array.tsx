@@ -61,11 +61,13 @@ interface ArrayUi {
   /** Visual style for the array container. Defaults to `"default"`. */
   variant?: "default" | "minimal";
   /** Label for the add button. Defaults to `"Add Item"`. */
-  addLabel?: string;
+  addLabel?: React.ReactNode;
   /** Empty state message. Defaults to `"No items added yet."`. */
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   /** Row header label — use `{ $data: "fieldName" }` to show a field value. Falls back to `"Item #N"`. */
   rowLabel?: unknown;
+  /** Fallback row label when dynamic path is missing or empty. Defaults to `"Item #N"`. */
+  rowLabelFallback?: string;
   /** Enable drag-to-reorder. Defaults to `true`. */
   isSortable?: boolean;
   /** Show error-count badge in the container header. Defaults to `true`. */
@@ -74,6 +76,14 @@ interface ArrayUi {
   allowDuplicate?: boolean;
   /** Require confirmation before deleting all items. Defaults to `true`. */
   confirmDelete?: boolean;
+  /** Title for the delete confirmation dialog. */
+  confirmDeleteTitle?: React.ReactNode;
+  /** Description for the delete confirmation dialog. */
+  confirmDeleteDescription?: React.ReactNode;
+  /** Label for the cancel button in delete confirmation. */
+  confirmDeleteCancelLabel?: string;
+  /** Label for the confirm button in delete confirmation. */
+  confirmDeleteActionLabel?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,6 +97,7 @@ interface ArrayItemProps {
   form: ReturnType<typeof useDataField>["form"];
   fieldApiName: string;
   rowLabel: unknown;
+  rowLabelFallback?: string;
   contextData: unknown;
   isSortable: boolean;
   isDisabled: boolean;
@@ -109,6 +120,7 @@ function ArrayItem({
   form,
   fieldApiName,
   rowLabel,
+  rowLabelFallback,
   contextData,
   isSortable,
   isDisabled,
@@ -127,6 +139,9 @@ function ArrayItem({
     rowData && typeof rowData === "object"
       ? (rowData as Record<string, unknown>)
       : { value: rowData };
+
+  const defaultRowLabel = rowLabelFallback ?? `Item ${index + 1}`;
+
   const resolvedLabel = rowLabel
     ? String(
         resolveDynamicValue(
@@ -134,10 +149,10 @@ function ArrayItem({
           rowFormData,
           (contextData ?? {}) as Record<string, unknown>,
         ) ?? "",
-      ).trim() || `Item ${index + 1}`
+      ).trim() || defaultRowLabel
     : field.primitive === true && rowData !== undefined && rowData !== null
       ? String(rowData)
-      : `Item ${index + 1}`;
+      : defaultRowLabel;
 
   const errorCount = useNestedErrorCount(field.fields as CoreField[], rowPath);
 
@@ -275,6 +290,7 @@ function MinimalArrayItem({
   form,
   fieldApiName,
   rowLabel,
+  rowLabelFallback,
   contextData,
   isSortable,
   isDisabled,
@@ -291,6 +307,9 @@ function MinimalArrayItem({
     rowData && typeof rowData === "object"
       ? (rowData as Record<string, unknown>)
       : { value: rowData };
+
+  const defaultRowLabel = rowLabelFallback ?? `Item ${index + 1}`;
+
   const resolvedLabel = rowLabel
     ? String(
         resolveDynamicValue(
@@ -298,7 +317,7 @@ function MinimalArrayItem({
           rowFormData,
           (contextData ?? {}) as Record<string, unknown>,
         ) ?? "",
-      ).trim()
+      ).trim() || defaultRowLabel
     : "";
 
   const {
@@ -452,6 +471,16 @@ function DefaultArrayField(state: ArrayFieldState) {
   const confirmDelete = ui?.confirmDelete !== false;
 
   const items = Array.isArray(fieldApi.state.value) ? fieldApi.state.value : [];
+
+  const confirmDeleteTitle = ui?.confirmDeleteTitle ?? "Delete all items?";
+  const confirmDeleteDescription =
+    ui?.confirmDeleteDescription ??
+    (items.length === 1
+      ? "This will remove the item. This cannot be undone."
+      : `This will remove all ${items.length} items. This cannot be undone.`);
+  const confirmDeleteCancelLabel = ui?.confirmDeleteCancelLabel ?? "Cancel";
+  const confirmDeleteActionLabel = ui?.confirmDeleteActionLabel ?? "Delete All";
+
   const [showDeleteAllDialog, setShowDeleteAllDialog] = React.useState(false);
 
   const canAddMore =
@@ -511,14 +540,13 @@ function DefaultArrayField(state: ArrayFieldState) {
       >
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete all items?</AlertDialogTitle>
+            <AlertDialogTitle>{confirmDeleteTitle}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will remove all {items.length}{" "}
-              {items.length === 1 ? "item" : "items"}. This cannot be undone.
+              {confirmDeleteDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{confirmDeleteCancelLabel}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={() => {
@@ -527,7 +555,7 @@ function DefaultArrayField(state: ArrayFieldState) {
                 setShowDeleteAllDialog(false);
               }}
             >
-              Delete All
+              {confirmDeleteActionLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -595,7 +623,7 @@ function DefaultArrayField(state: ArrayFieldState) {
                       className="h-7 w-7"
                       onClick={handleAdd}
                       disabled={!canAddMore || isDisabled}
-                      title={addLabel}
+                      title={typeof addLabel === "string" ? addLabel : "Add"}
                     >
                       <IconPlaceholder
                         lucide="Plus"
@@ -667,6 +695,7 @@ function DefaultArrayField(state: ArrayFieldState) {
                               form={form}
                               fieldApiName={fieldApi.name}
                               rowLabel={ui?.rowLabel}
+                              rowLabelFallback={ui?.rowLabelFallback}
                               contextData={contextData}
                               isSortable={isSortable}
                               isDisabled={isDisabled}
@@ -811,7 +840,7 @@ function MinimalArrayField(state: ArrayFieldState) {
                   className="h-7 w-7"
                   onClick={handleAdd}
                   disabled={!canAddMore || isDisabled}
-                  title={addLabel}
+                  title={typeof addLabel === "string" ? addLabel : "Add Item"}
                 >
                   <IconPlaceholder
                     lucide="Plus"
@@ -877,6 +906,7 @@ function MinimalArrayField(state: ArrayFieldState) {
                       form={form}
                       fieldApiName={fieldApi.name}
                       rowLabel={ui?.rowLabel}
+                      rowLabelFallback={ui?.rowLabelFallback}
                       contextData={contextData}
                       isSortable={isSortable}
                       isDisabled={isDisabled}
