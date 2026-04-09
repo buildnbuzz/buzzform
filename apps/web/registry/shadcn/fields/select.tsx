@@ -4,7 +4,6 @@ import * as React from "react";
 import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
 import type { NormalizedOption } from "@buildnbuzz/form-react";
-import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import {
   Combobox,
   ComboboxContent,
@@ -17,7 +16,6 @@ import {
   ComboboxChipsInput,
   ComboboxValue,
 } from "@/components/ui/combobox";
-import { InputGroupInput } from "@/components/ui/input-group";
 import {
   Field,
   FieldContent,
@@ -33,8 +31,6 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 interface SelectUi {
-  /** Enable search input inside the dropdown. Defaults to `true`. */
-  isSearchable?: boolean;
   /** Show a clear button when a value is selected. Defaults to `true` when not required. */
   isClearable?: boolean;
   /** className applied to `<FieldGroup>`. */
@@ -45,8 +41,6 @@ interface SelectUi {
   labels?: {
     /** Message shown when no options match the search query. */
     empty?: React.ReactNode;
-    /** Placeholder for the search input. */
-    searchPlaceholder?: string;
   };
 }
 
@@ -183,6 +177,7 @@ export function SelectField() {
                         <ComboboxChip key={opt.value}>{opt.label}</ComboboxChip>
                       ))}
                       <ComboboxChipsInput
+                        disabled={isDisabled || isReadOnly}
                         placeholder={values.length === 0 ? placeholder : ""}
                       />
                     </React.Fragment>
@@ -192,6 +187,7 @@ export function SelectField() {
             ) : (
               <ComboboxInput
                 id={fieldApi.name}
+                disabled={isDisabled || isReadOnly}
                 placeholder={placeholder}
                 aria-invalid={isInvalid}
                 aria-describedby={ariaDescribedBy}
@@ -201,12 +197,7 @@ export function SelectField() {
             )}
 
             <ComboboxContent>
-              {ui?.isSearchable !== false && (
-                <ComboboxPrimitive.Input
-                  render={<InputGroupInput />}
-                  placeholder={ui?.labels?.searchPlaceholder ?? "Search..."}
-                />
-              )}
+
               <ComboboxEmpty>
                 {ui?.labels?.empty ?? "No results found."}
               </ComboboxEmpty>
