@@ -9,7 +9,7 @@ BuzzForm is a schema-driven form library for React. Define your form as a plain 
 
 It ships as two packages:
 
-- `@buildnbuzz/form-core` — framework-agnostic types, validation, and utilities. No React, no DOM.
+- `@buildnbuzz/form-react` — framework-agnostic types, validation, and utilities. No React, no DOM.
 - `@buildnbuzz/form-react` — React adapter built on [TanStack Form](https://tanstack.com/form). Provides `useForm`, `<Form>`, `<FormProvider>`, and field hooks.
 
 The UI layer is delivered as a [shadcn registry](https://ui.shadcn.com/docs/registry) — install field components into your codebase and customize them freely.
@@ -19,7 +19,7 @@ The UI layer is delivered as a [shadcn registry](https://ui.shadcn.com/docs/regi
 Building forms in React is repetitive. You end up writing the same input wiring, validation logic, and conditional visibility code over and over. BuzzForm lets you declare your form structure once:
 
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   fields: [
@@ -99,7 +99,7 @@ npx shadcn@latest add @buzzform/all
 
 **Headless / Custom UI:**
 ```bash
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+pnpm add @buildnbuzz/form-react @buildnbuzz/form-react
 ```
 
 <Callout type="info">

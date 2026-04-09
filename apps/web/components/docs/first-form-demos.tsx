@@ -1,6 +1,6 @@
 "use client";
 
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 import { useForm, Form, FormProvider } from "@buildnbuzz/form-react";
 import { registry as shadcnRegistry } from "@/registry/shadcn/registry";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
@@ -16,7 +16,7 @@ const basicSchema = defineSchema({
   ],
 });
 
-const basicCode = `import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+const basicCode = `import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { useForm, Form } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
@@ -70,7 +70,7 @@ const validationSchema = defineSchema({
   ],
 });
 
-const validationCode = `import { defineSchema } from "@buildnbuzz/form-core";
+const validationCode = `import { defineSchema } from "@buildnbuzz/form-react";
 import { useForm, Form } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
@@ -123,7 +123,7 @@ const fullSchema = defineSchema({
   ],
 });
 
-const fullCode = `import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+const fullCode = `import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { useForm, Form } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({

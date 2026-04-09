@@ -1,7 +1,7 @@
 "use client";
 
 import type { CSSProperties, ReactNode } from "react";
-import type { RowField as RowFieldDef } from "@buildnbuzz/form-core";
+import type { RowField as RowFieldDef } from "@buildnbuzz/form-react";
 import { useLayoutField } from "@buildnbuzz/form-react";
 import { cn } from "@/lib/utils";
 

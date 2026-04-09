@@ -16,16 +16,22 @@ The `array` field renders repeatable fields for dynamic lists.
 
 ## UI Options
 
-| Option           | Type       | Default                 | Description                                                                                |
-| ---------------- | ---------- | ----------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------ |
-| `variant`        | `"default" | "minimal"`              | `"default"`                                                                                | Visual style for the array container |
-| `addLabel`       | `string`   | `"Add Item"`            | Label for the add button                                                                   |
-| `emptyMessage`   | `string`   | `"No items added yet."` | Message shown when no items exist                                                          |
-| `rowLabel`       | `unknown`  | `"Item #N"`             | Row header label — use `{ $data: "fieldName" }` (or `{ $data: "/value" }` for flat arrays) |
-| `isSortable`     | `boolean`  | `true`                  | Enable drag-to-reorder                                                                     |
-| `showErrorBadge` | `boolean`  | `true`                  | Show error-count badge in header                                                           |
-| `allowDuplicate` | `boolean`  | `false`                 | Show a duplicate button per row                                                            |
-| `confirmDelete`  | `boolean`  | `true`                  | Require confirmation before deleting all items                                             |
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `variant` | `"default" \| "minimal"` | `"default"` | Visual style for the container |
+| `rowLabel` | `unknown` | `"Item #N"` | Row header label (supports `$data`) |
+| `isSortable` | `boolean` | `true` | Enable drag-to-reorder |
+| `showErrorBadge` | `boolean` | `true` | Show error-count badge in header |
+| `allowDuplicate` | `boolean` | `false` | Show a duplicate button per row |
+| `confirmDelete` | `boolean` | `true` | Require confirmation before delete all |
+| `labels` | `object` | - | Text and label overrides |
+| `labels.add` | `ReactNode` | `"Add Item"` | Label for the add button |
+| `labels.empty` | `ReactNode` | `"No items added yet."` | Message shown when no items exist |
+| `labels.rowFallback` | `string` | `"Item #N"` | Fallback when `rowLabel` is empty |
+
+<Callout type="info">
+  **React Overrides:** The `label`, `description`, `ui.labels.add`, and `ui.labels.empty` properties all support `ReactNode` (JSX) when importing `defineSchema` from `@buildnbuzz/form-react`.
+</Callout>
 
 ## Basic Usage
 
@@ -74,8 +80,10 @@ const schema = defineSchema({
   name: "projects",
   label: "Projects",
   ui: {
-    addLabel: "Add Project",
-    emptyMessage: "No projects added yet",
+    labels: {
+      add: "Add Project",
+      empty: "No projects added yet",
+    },
     isSortable: true,
     allowDuplicate: true,
     confirmDelete: true,

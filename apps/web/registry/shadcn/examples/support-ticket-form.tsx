@@ -14,7 +14,7 @@ import {
   FormSubmit,
 } from "@/registry/shadcn/form";
 import { toast } from "sonner";
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const categoryOptions = [
   {

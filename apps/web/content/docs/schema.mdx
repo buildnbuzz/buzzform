@@ -12,7 +12,7 @@ A BuzzForm schema is the single source of truth for your form. It defines the fi
 Use `defineSchema()` to define your form:
 
 ```tsx
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 
 const contactSchema = defineSchema({
   fields: [
@@ -32,7 +32,7 @@ const contactSchema = defineSchema({
 Use `InferType` to get TypeScript types from your schema's fields:
 
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const contactSchema = defineSchema({
   fields: [
@@ -65,7 +65,7 @@ export async function submitContact(data: ContactData) {
 For production apps, organize schemas in dedicated files:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",
@@ -107,6 +107,43 @@ export function ContactForm() {
 - ✅ Type inference available everywhere
 - ✅ Easy to maintain and update
 
+## React Overrides (UI)
+
+When using `@buildnbuzz/form-react`, you can pass rich React elements (like tooltips, icons, or custom components) directly to `label` and `description` fields. 
+
+<Callout type="warn">
+  **Import Source:** To enable ReactNode support in your schemas, you must import `defineSchema` and `InferType` from **`@buildnbuzz/form-react`** instead of `@buildnbuzz/form-core`.
+</Callout>
+
+### Using Tooltips in Labels
+
+A common pattern is adding an info icon with a tooltip to a field label:
+
+```tsx
+import { defineSchema } from "@buildnbuzz/form-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { InfoIcon } from "lucide-react";
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "password",
+      name: "password",
+      label: (
+        <span className="flex items-center gap-1.5">
+          Password
+          <Tooltip>
+            <TooltipTrigger render={<InfoIcon className="size-4 text-muted-foreground cursor-help" />} />
+            <TooltipContent>Must be at least 8 characters long.</TooltipContent>
+          </Tooltip>
+        </span>
+      ),
+      required: true,
+    },
+  ],
+});
+```
+
 ## Base Field Properties
 
 Every field has these common properties:
@@ -118,7 +155,7 @@ Every field has these common properties:
 Use `group` fields to create nested objects:
 
 ```tsx
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const profileSchema = defineSchema({
   fields: [
@@ -172,7 +209,7 @@ type JobData = InferType<typeof jobSchema.fields>;
 Here's a comprehensive schema combining all features:
 
 ```tsx title="lib/schemas/user-profile.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const userProfileSchema = defineSchema({
   title: "User Profile",

@@ -17,7 +17,7 @@ Install the core packages and set up your field registry.
 
 ```bash
 # Install core packages
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+pnpm add @buildnbuzz/form-react @buildnbuzz/form-react
 
 # Install all BuzzForm field components via shadcn registry
 npx shadcn@latest add @buzzform/all
@@ -93,7 +93,7 @@ Define a schema, infer the type, and render a working form in under 5 minutes.
 For a complete walkthrough, see [Quick Start](/docs/quick-start). Here's the basic pattern:
 
 ```tsx title="lib/schemas/contact.ts"
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 export const contactSchema = defineSchema({
   title: "Contact Form",
@@ -146,7 +146,7 @@ Create strongly-typed form schemas that auto-generate TypeScript types.
 ### Using `defineSchema` (Recommended)
 
 ```ts
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   title: "User Profile",
@@ -166,7 +166,7 @@ type FormData = InferType<typeof schema.fields>;
 ### Using `as const satisfies FormSchema` (Alternative)
 
 ```ts
-import type { FormSchema, InferType } from "@buildnbuzz/form-core";
+import type { FormSchema, InferType } from "@buildnbuzz/form-react";
 
 const schema = {
   fields: [{ type: "text", name: "name", label: "Name", required: true }],
@@ -998,7 +998,7 @@ const schema = defineSchema({
 import {
   defineValidators,
   type ValidationContext,
-} from "@buildnbuzz/form-core";
+} from "@buildnbuzz/form-react";
 
 const customValidators = defineValidators({
   // Validator that receives resolved $data/$context values
@@ -1034,7 +1034,7 @@ Define sync validators and pass them via `customValidators`:
 
 ```ts
 // Define custom validators
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 const customValidators = defineValidators({
   // Username availability check (sync example)
@@ -1081,7 +1081,7 @@ For server-side validation (e.g., checking username availability, promo codes), 
 
 ```ts
 // Define async validators
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 const customValidators = defineValidators({
   // Async username availability check
@@ -1180,7 +1180,7 @@ const schema = defineSchema({
 
 ```tsx
 // Use in form
-import { defineValidators } from "@buildnbuzz/form-core";
+import { defineValidators } from "@buildnbuzz/form-react";
 
 const customValidators = defineValidators({
   usernameAvailable: async (value: unknown) => {
@@ -2306,7 +2306,7 @@ The shadcn `Form` components use `form.Subscribe` internally:
 Transform nested data to flat path-based keys for API submission:
 
 ```ts
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 
 const schema = defineSchema({
   fields: [
@@ -2498,7 +2498,7 @@ Use for fields that hold data: `text`, `email`, `select`, `array`, `group`, etc.
 
 ```tsx
 import { useDataField } from "@buildnbuzz/form-react";
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-react";
 
 export function CustomTextField() {
   const {
@@ -2560,7 +2560,7 @@ Use for layout containers: `row`, `tabs`, `collapsible`.
 
 ```tsx
 import { useLayoutField, RenderFields } from "@buildnbuzz/form-react";
-import type { TabsField as TabsFieldDef } from "@buildnbuzz/form-core";
+import type { TabsField as TabsFieldDef } from "@buildnbuzz/form-react";
 
 export function CustomTabsField() {
   const {
@@ -2599,7 +2599,7 @@ export function CustomTabsField() {
 
 ```tsx
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 
 export function SelectField() {
   const { field } = useDataField<SelectFieldDef>();
@@ -2624,7 +2624,7 @@ export function SelectField() {
 
 ```tsx
 import { useDataField, useNestedErrorCount } from "@buildnbuzz/form-react";
-import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-core";
+import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-react";
 
 export function GroupField({ children }: { children: React.ReactNode }) {
   const { field, fieldApi } = useDataField<GroupFieldDef>();
@@ -2653,7 +2653,7 @@ export function GroupField({ children }: { children: React.ReactNode }) {
 ```tsx
 "use client";
 
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -2756,7 +2756,7 @@ export function CustomTextField() {
 "use client";
 
 import * as React from "react";
-import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-core";
+import type { GroupField as GroupFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useNestedErrorCount } from "@buildnbuzz/form-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -2869,7 +2869,7 @@ export function CustomGroupField({ children }: { children: React.ReactNode }) {
 ```tsx
 "use client";
 
-import type { RowField as RowFieldDef } from "@buildnbuzz/form-core";
+import type { RowField as RowFieldDef } from "@buildnbuzz/form-react";
 import { useLayoutField } from "@buildnbuzz/form-react";
 import { cn } from "@/lib/utils";
 
@@ -3075,7 +3075,7 @@ Keep schemas separate from UI components.
 
 ```ts
 // schemas/user-profile.schema.ts
-import { defineSchema } from "@buildnbuzz/form-core";
+import { defineSchema } from "@buildnbuzz/form-react";
 
 export const userProfileSchema = defineSchema({
   title: "User Profile",
@@ -3119,7 +3119,7 @@ Create form components that accept schema as a prop.
 
 ```tsx
 // components/dynamic-form.tsx
-import type { FormSchema } from "@buildnbuzz/form-core";
+import type { FormSchema } from "@buildnbuzz/form-react";
 
 interface DynamicFormProps<T extends FormSchema> {
   schema: T;
@@ -3633,7 +3633,7 @@ import {
   defineSchema,
   type InferType,
   type FormSchema,
-} from "@buildnbuzz/form-core";
+} from "@buildnbuzz/form-react";
 
 // React hooks and components
 import {

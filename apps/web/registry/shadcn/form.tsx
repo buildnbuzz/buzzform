@@ -12,10 +12,10 @@ import {
   type UseFormOptionsWithSchema,
 } from "@buildnbuzz/form-react";
 import type {
-  Field as CoreField,
+  CoreField,
   FormSchema,
   ValidationRun,
-} from "@buildnbuzz/form-core";
+} from "@buildnbuzz/form-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -275,7 +275,7 @@ type FormSubmitProps = Omit<
   React.ComponentProps<typeof Button>,
   "type" | "form"
 > & {
-  submittingText?: string;
+  submittingText?: React.ReactNode;
 };
 
 function FormSubmit({
@@ -354,7 +354,7 @@ function FormMessage({
       {(errors) => {
         const rootError = errors[0];
         const message =
-          children ?? (typeof rootError === "string" ? rootError : null);
+          children ?? (typeof rootError === "string" || React.isValidElement(rootError) ? (rootError as React.ReactNode) : null);
         if (!message) return null;
         return (
           <div

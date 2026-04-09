@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import type { TextareaField as TextareaFieldDef } from "@buildnbuzz/form-core";
+import type { TextareaField as TextareaFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Textarea } from "@/components/ui/textarea";
 import { CopyButton } from "../components/copy-button";

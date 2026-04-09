@@ -29,7 +29,7 @@ Aggregates common state for data field components.
 
 ```tsx
 import { useDataField } from "@buildnbuzz/form-react";
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-react";
 
 function CustomTextField() {
   const {
@@ -129,7 +129,7 @@ Resolve and normalize options for select, radio, checkbox group.
 
 ```tsx
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 
 function CustomSelectField() {
   const { fieldApi, handleChange, field } = useDataField<SelectFieldDef>();

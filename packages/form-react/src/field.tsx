@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, isValidElement } from "react";
 import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   type DataField,
@@ -387,7 +387,8 @@ function resolveRelativeDataPaths<TField extends DataField>(
 }
 
 function resolveDynamicPaths(value: unknown, basePointer: string): unknown {
-  if (!value || typeof value !== "object") return value;
+  if (!value || typeof value !== "object" || isValidElement(value))
+    return value;
 
   if (Array.isArray(value)) {
     let changed = false;

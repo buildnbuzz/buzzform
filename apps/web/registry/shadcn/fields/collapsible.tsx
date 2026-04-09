@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import type { CollapsibleField as CollapsibleFieldDef } from "@buildnbuzz/form-core";
+import type { CollapsibleField as CollapsibleFieldDef } from "@buildnbuzz/form-react";
 import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
-import { resolveDynamicValue, toDotNotation } from "@buildnbuzz/form-core";
+import { resolveDynamicValue, toDotNotation } from "@buildnbuzz/form-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -68,7 +68,7 @@ function TriggerLabel({
   showErrorBadge,
   bold,
 }: {
-  label: string;
+  label: React.ReactNode;
   icon?: React.ReactNode;
   errorCount: number;
   showErrorBadge: boolean;
@@ -139,7 +139,7 @@ export function CollapsibleField({ children }: { children?: React.ReactNode }) {
         <CollapsibleTrigger
           className="w-full px-2 py-2 rounded-md flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer"
           aria-expanded={isOpen}
-          aria-label={`${isOpen ? "Collapse" : "Expand"} ${label}`}
+          aria-label={`${isOpen ? "Collapse" : "Expand"} ${typeof label === "string" ? label : "Section"}`}
         >
           <TriggerLabel {...triggerLabelProps} />
           <TriggerChevron open={isOpen} />
@@ -162,7 +162,7 @@ export function CollapsibleField({ children }: { children?: React.ReactNode }) {
           <CollapsibleTrigger
             className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer"
             aria-expanded={isOpen}
-            aria-label={`${isOpen ? "Collapse" : "Expand"} ${label}`}
+            aria-label={`${isOpen ? "Collapse" : "Expand"} ${typeof label === "string" ? label : "Section"}`}
           >
             <TriggerLabel {...triggerLabelProps} />
             <TriggerChevron open={isOpen} />
@@ -190,7 +190,7 @@ export function CollapsibleField({ children }: { children?: React.ReactNode }) {
               isOpen && "border-b",
             )}
             aria-expanded={isOpen}
-            aria-label={`${isOpen ? "Collapse" : "Expand"} ${label}`}
+            aria-label={`${isOpen ? "Collapse" : "Expand"} ${typeof label === "string" ? label : "Section"}`}
           >
             <TriggerLabel {...triggerLabelProps} bold />
             <TriggerChevron open={isOpen} />

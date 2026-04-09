@@ -1,13 +1,13 @@
 "use client";
 
 import * as React from "react";
-import type { NumberField as NumberFieldDef } from "@buildnbuzz/form-core";
+import type { NumberField as NumberFieldDef } from "@buildnbuzz/form-react";
 import {
   clampNumber,
   applyNumericPrecision,
   formatNumberWithSeparator,
   parseFormattedNumber,
-} from "@buildnbuzz/form-core";
+} from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Input } from "@/components/ui/input";
 import { CopyButton } from "../components/copy-button";

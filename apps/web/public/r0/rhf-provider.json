@@ -11,7 +11,7 @@
   "files": [
     {
       "path": "registry/base/rhf-provider.tsx",
-      "content": "\"use client\";\r\n\r\nimport { FormProvider } from \"@buildnbuzz/buzzform\";\r\nimport { useRhf } from \"@buildnbuzz/buzzform/rhf\";\r\nimport { zodResolver } from \"@buildnbuzz/buzzform/zod\";\r\n\r\nexport const BuzzFormProvider = ({\r\n  children,\r\n}: {\r\n  children: React.ReactNode;\r\n}) => {\r\n  return (\r\n    <FormProvider adapter={useRhf} resolver={zodResolver} mode=\"onBlur\">\r\n      {children}\r\n    </FormProvider>\r\n  );\r\n};\r\n",
+      "content": "\"use client\";\n\nimport { FormProvider } from \"@buildnbuzz/buzzform\";\nimport { useRhf } from \"@buildnbuzz/buzzform/rhf\";\nimport { zodResolver } from \"@buildnbuzz/buzzform/zod\";\n\nexport const BuzzFormProvider = ({\n  children,\n}: {\n  children: React.ReactNode;\n}) => {\n  return (\n    <FormProvider adapter={useRhf} resolver={zodResolver} mode=\"onBlur\">\n      {children}\n    </FormProvider>\n  );\n};\n",
       "type": "registry:component",
       "target": "components/buzzform/provider.tsx"
     }

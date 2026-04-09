@@ -47,13 +47,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@buildnbuzz/form-core": "workspace:^"
+    "@buildnbuzz/form-core": "workspace:^",
+    "@tanstack/form-core": "^1.28.5",
+    "@tanstack/react-form": "^1.28.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:^",
     "@repo/typescript-config": "workspace:^",
-    "@tanstack/form-core": "^1.28.5",
-    "@tanstack/react-form": "^1.28.5",
     "@testing-library/react": "^16.3.0",
     "@types/node": "^22.15.3",
     "@types/react": "^19.2.2",
@@ -67,21 +67,9 @@
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
-    "@buildnbuzz/form-core": "workspace:^",
-    "@tanstack/form-core": "^1.28.5",
-    "@tanstack/react-form": "^1.28.5",
     "react": "^18 || ^19"
   },
   "peerDependenciesMeta": {
-    "@buildnbuzz/form-core": {
-      "optional": false
-    },
-    "@tanstack/form-core": {
-      "optional": false
-    },
-    "@tanstack/react-form": {
-      "optional": false
-    },
     "react": {
       "optional": false
     }

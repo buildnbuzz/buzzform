@@ -17,9 +17,15 @@ The `select` field renders a dropdown select with optional search and multi-sele
 |--------|------|---------|-------------|
 | `isSearchable` | `boolean` | `true` | Enable search input inside the dropdown |
 | `isClearable` | `boolean` | `true` (when not required) | Show a clear button when a value is selected |
-| `emptyMessage` | `string` | `"No results found."` | Message shown when no options match |
+| `labels` | `object` | - | Text and label overrides |
+| `labels.empty` | `ReactNode` | `"No results found."` | Message shown when no options match |
+| `labels.searchPlaceholder` | `string` | `"Search..."` | Placeholder for the search input |
 | `className` | `string` | - | CSS class applied to the field container |
 | `width` | `string \| number` | - | Inline width applied to the field |
+
+<Callout type="info">
+  **React Overrides:** The `label`, `description`, and `ui.labels.empty` properties all support `ReactNode` (JSX) when importing `defineSchema` from `@buildnbuzz/form-react`.
+</Callout>
 
 ## Basic Usage
 
@@ -70,7 +76,9 @@ const schema = defineSchema({
   ui: {
     isSearchable: true,
     isClearable: true,
-    emptyMessage: "No country found",
+    labels: {
+      empty: "No country found",
+    },
   },
 }
 ```

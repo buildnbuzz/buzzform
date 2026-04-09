@@ -23,15 +23,31 @@ export type DataPath = string;
 export type ContextPath = string;
 
 /**
- * A literal value or a dynamic reference to form data or external context.
+ * Empty interface for framework adapters to augment globally.
+ * @example
+ * declare module "@buildnbuzz/form-core" {
+ *   interface FrameworkOverrides { react: ReactNode; }
+ * }
  */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface FrameworkOverrides {}
+
+/** Type derived from global augmentations. */
+export type FrameworkText = keyof FrameworkOverrides extends never
+  ? never
+  : FrameworkOverrides[keyof FrameworkOverrides];
+
+/** A literal value or a dynamic reference to form data or external context. */
 export type DynamicValue<T = unknown> =
   | T
   | { $data: DataPath }
   | { $context: ContextPath };
 
-/** A dynamic string value. */
+/** A dynamic string value (used for placeholders, etc). */
 export type DynamicString = DynamicValue<string>;
+
+/** A dynamic text value (used for labels and descriptions). Frameworks can augment this. */
+export type DynamicText = DynamicValue<string | FrameworkText>;
 
 /** A dynamic number value. */
 export type DynamicNumber = DynamicValue<number>;
@@ -186,9 +202,9 @@ export interface BaseField<TValue = unknown> {
 
   // --- Display ---
   /** Display label. */
-  label?: DynamicString;
+  label?: DynamicText;
   /** Help text shown below the field. */
-  description?: DynamicString;
+  description?: DynamicText;
   /** Placeholder text. */
   placeholder?: DynamicString;
 
@@ -389,7 +405,7 @@ export interface RadioField extends BaseField<string> {
 export interface GroupField extends BaseField<UnknownData> {
   type: "group";
   /** Nested fields. */
-  fields: Field[];
+  fields: readonly Field[];
 }
 
 /**
@@ -400,7 +416,7 @@ export interface ArrayField extends BaseField<unknown[]> {
   /** Must be absent or `false` for standard (nested-object) arrays. */
   primitive?: false;
   /** Fields for each array item. */
-  fields: Field[];
+  fields: readonly Field[];
   /**
    * Minimum number of items. Disables remove at minimum and blocks submit via validation.
    */
@@ -440,7 +456,7 @@ export interface PrimitiveArrayField extends BaseField<unknown[]> {
   /** Must be `true` for primitive (flat-value) arrays. */
   primitive: true;
   /** Exactly one primitive data field for each array item. */
-  fields: [PrimitiveArrayItemField];
+  fields: readonly [PrimitiveArrayItemField];
   /**
    * Minimum number of items. Disables remove at minimum and blocks submit via validation.
    */
@@ -462,7 +478,7 @@ export type ArrayFieldDef = ArrayField | PrimitiveArrayField;
 /** Option for select and radio fields. */
 export interface FieldOption<TValue = string> {
   /** Option label. */
-  label: DynamicString;
+  label: DynamicText;
   /** Option value. */
   value: TValue;
   /** Option disabled state. */
@@ -510,7 +526,7 @@ export interface BaseLayoutField {
 export interface RowField extends BaseLayoutField {
   type: "row";
   /** Fields to display in a row. */
-  fields: Field[];
+  fields: readonly Field[];
 }
 
 /** Tab configuration for a tabs layout. */
@@ -518,9 +534,9 @@ export interface Tab {
   /** Optional tab name (does not affect data shape in v0.1). */
   name?: string;
   /** Tab label. */
-  label: DynamicString;
+  label: DynamicText;
   /** Fields in this tab. */
-  fields: Field[];
+  fields: readonly Field[];
   /** Whether this tab is disabled. */
   disabled?: DynamicBoolean;
 }
@@ -529,16 +545,16 @@ export interface Tab {
 export interface TabsField extends BaseLayoutField {
   type: "tabs";
   /** Tab definitions. */
-  tabs: Tab[];
+  tabs: readonly Tab[];
 }
 
 /** Collapsible layout - expandable container. */
 export interface CollapsibleField extends BaseLayoutField {
   type: "collapsible";
   /** Collapsible label. */
-  label: DynamicString;
+  label: DynamicText;
   /** Nested fields. */
-  fields: Field[];
+  fields: readonly Field[];
   /** Start collapsed. */
   collapsed?: DynamicBoolean;
 }
@@ -581,7 +597,7 @@ export interface FormSchema {
   /** Human-readable schema description. */
   description?: string;
   /** Field list. */
-  fields: Field[];
+  fields: readonly Field[];
   /** Form-level validation rules. */
   validate?: ValidationConfig;
   /** Optional schema metadata. */

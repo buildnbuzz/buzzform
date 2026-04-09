@@ -2,7 +2,7 @@
 
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
 
-const codeExample = `import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+const codeExample = `import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { Form, FormContent, FormFields, FormSubmit } from "@/components/buzzform/form";
 import { toast } from "sonner";
 

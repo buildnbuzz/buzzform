@@ -63,7 +63,7 @@ BuzzForm exports helpers for manual transformation:
 Convert nested object to flat path keys:
 
 ```tsx
-import { flattenToPathKeys } from "@buildnbuzz/form-core";
+import { flattenToPathKeys } from "@buildnbuzz/form-react";
 
 const nested = {
   name: "John",
@@ -86,7 +86,7 @@ const flatSlash = flattenToPathKeys(nested, "/");
 Convert flat path keys back to nested object:
 
 ```tsx
-import { expandPathKeys } from "@buildnbuzz/form-core";
+import { expandPathKeys } from "@buildnbuzz/form-react";
 
 const flat = {
   name: "John",
@@ -106,7 +106,7 @@ const nestedSlash = expandPathKeys(flat, "/");
 Full transformation with config:
 
 ```tsx
-import { transformFormOutput } from "@buildnbuzz/form-core";
+import { transformFormOutput } from "@buildnbuzz/form-react";
 
 const data = {
   user: {

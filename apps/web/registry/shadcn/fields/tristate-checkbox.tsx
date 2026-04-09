@@ -1,6 +1,6 @@
 "use client";
 
-import type { TristateCheckboxField as TristateCheckboxFieldDef } from "@buildnbuzz/form-core";
+import type { TristateCheckboxField as TristateCheckboxFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Checkbox } from "../components/checkbox";
 import {

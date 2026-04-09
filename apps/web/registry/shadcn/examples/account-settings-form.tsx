@@ -1,6 +1,6 @@
 "use client";
 
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import { toast } from "sonner";
 import {
   Card,

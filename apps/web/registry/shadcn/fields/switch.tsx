@@ -1,6 +1,6 @@
 "use client";
 
-import type { SwitchField as SwitchFieldDef } from "@buildnbuzz/form-core";
+import type { SwitchField as SwitchFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { Switch } from "@/components/ui/switch";
 import {

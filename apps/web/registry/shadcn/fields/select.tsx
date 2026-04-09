@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
-import type { NormalizedOption } from "@buildnbuzz/form-core";
+import type { NormalizedOption } from "@buildnbuzz/form-react";
+import { Combobox as ComboboxPrimitive } from "@base-ui/react";
 import {
   Combobox,
   ComboboxContent,
@@ -16,6 +17,7 @@ import {
   ComboboxChipsInput,
   ComboboxValue,
 } from "@/components/ui/combobox";
+import { InputGroupInput } from "@/components/ui/input-group";
 import {
   Field,
   FieldContent,
@@ -35,12 +37,17 @@ interface SelectUi {
   isSearchable?: boolean;
   /** Show a clear button when a value is selected. Defaults to `true` when not required. */
   isClearable?: boolean;
-  /** Message shown when no options match the search query. */
-  emptyMessage?: string;
   /** className applied to `<FieldGroup>`. */
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Text and label overrides. */
+  labels?: {
+    /** Message shown when no options match the search query. */
+    empty?: React.ReactNode;
+    /** Placeholder for the search input. */
+    searchPlaceholder?: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -54,7 +61,7 @@ function OptionContent({
   opt: NormalizedOption;
   hideDescription?: boolean;
 }) {
-  const optDescription = opt.ui?.description as string | undefined;
+  const optDescription = opt.ui?.description as React.ReactNode;
   const showDescription = optDescription && !hideDescription;
 
   return (
@@ -160,7 +167,9 @@ export function SelectField() {
             value={selectedValues}
             onValueChange={handleValueChange}
             disabled={isDisabled || isReadOnly}
-            itemToStringValue={(opt) => opt.label}
+            itemToStringValue={(opt) =>
+              typeof opt.label === "string" ? opt.label : opt.value
+            }
           >
             {hasMany ? (
               <ComboboxChips
@@ -192,8 +201,14 @@ export function SelectField() {
             )}
 
             <ComboboxContent>
+              {ui?.isSearchable !== false && (
+                <ComboboxPrimitive.Input
+                  render={<InputGroupInput />}
+                  placeholder={ui?.labels?.searchPlaceholder ?? "Search..."}
+                />
+              )}
               <ComboboxEmpty>
-                {ui?.emptyMessage ?? "No results found."}
+                {ui?.labels?.empty ?? "No results found."}
               </ComboboxEmpty>
               <ComboboxList>
                 {(opt: NormalizedOption) => (

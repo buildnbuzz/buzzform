@@ -1,16 +1,24 @@
 import type { Field as CoreField } from "@buildnbuzz/form-core";
 import { resolveDynamicValue } from "@buildnbuzz/form-core";
+import { isValidElement, type ReactNode } from "react";
 import type { UnknownData } from "../../types";
 import { useFieldContext } from "../field-context";
 
 /** Options for resolving dynamic field text. */
 export interface ResolvedFieldTextOptions {
   /** Fallback used when a label is missing or resolves to null. */
-  labelFallback?: string;
+  labelFallback?: ReactNode;
   /** Fallback used when a placeholder is missing or resolves to null. */
   placeholderFallback?: string;
   /** Fallback used when a description is missing or resolves to null. */
-  descriptionFallback?: string;
+  descriptionFallback?: ReactNode;
+}
+
+function isDynamicReference(
+  value: unknown,
+): value is { $data: string } | { $context: string } {
+  if (!value || typeof value !== "object") return false;
+  return "$data" in value || "$context" in value;
 }
 
 /**
@@ -27,18 +35,39 @@ export function useResolvedFieldText<
   const placeholderValue = "placeholder" in field ? field.placeholder : undefined;
   const descriptionValue = "description" in field ? field.description : undefined;
 
-  const resolveText = (value: unknown, fallback: string) => {
-    const resolved = resolveDynamicValue(
-      value as never,
-      formData,
-      contextData,
-    );
-    return resolved ?? fallback;
+  const resolveText = (value: unknown, fallback: ReactNode): ReactNode => {
+    if (isDynamicReference(value)) {
+      const resolved = resolveDynamicValue(
+        value as never,
+        formData,
+        contextData,
+      );
+      return (resolved as ReactNode | undefined) ?? fallback;
+    }
+    if (isValidElement(value)) return value;
+    if (typeof value === "string" || typeof value === "number") return value;
+    if (typeof value === "boolean") return value;
+    if (value == null) return fallback;
+    // Guard against unresolved dynamic references (plain objects)
+    return fallback;
+  };
+
+  const resolvePlaceholder = (value: unknown, fallback: string): string => {
+    if (isDynamicReference(value)) {
+      const resolved = resolveDynamicValue(
+        value as never,
+        formData,
+        contextData,
+      );
+      return (resolved as string | undefined) ?? fallback;
+    }
+    if (typeof value === "string") return value;
+    return value == null ? fallback : String(value);
   };
 
   return {
     label: resolveText(labelValue, options.labelFallback ?? nameFallback),
-    placeholder: resolveText(
+    placeholder: resolvePlaceholder(
       placeholderValue,
       options.placeholderFallback ?? "",
     ),

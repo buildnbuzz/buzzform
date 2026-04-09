@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { DateField as DateFieldDef } from "@buildnbuzz/form-core";
+import type { DateField as DateFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import {
   format,

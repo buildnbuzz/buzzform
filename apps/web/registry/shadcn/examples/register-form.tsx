@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
 import {
   Form,
   FormContent,
@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // Registration form with password strength
 const registerSchema = defineSchema({
@@ -61,7 +62,12 @@ const registerSchema = defineSchema({
     {
       type: "checkbox",
       name: "terms",
-      label: "I agree to the Terms of Service and Privacy Policy",
+      label: (
+        <span className="text-xs">
+          I agree to the <Link href="/terms">Terms of Service</Link> and{" "}
+          <Link href="/privacy">Privacy Policy</Link>
+        </span>
+      ),
       required: true,
     },
   ],

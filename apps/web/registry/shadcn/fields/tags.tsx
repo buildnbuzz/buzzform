@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { TagsField as TagsFieldDef } from "@buildnbuzz/form-core";
+import type { TagsField as TagsFieldDef } from "@buildnbuzz/form-react";
 import { useDataField } from "@buildnbuzz/form-react";
 import { CopyButton } from "../components/copy-button";
 import {
@@ -36,6 +36,11 @@ interface TagsUi {
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Text and label overrides. */
+  labels?: {
+    /** Custom text for tag count. Defaults to `"{count} / {max} tags"`. */
+    count?: React.ReactNode;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -134,7 +139,7 @@ export function TagsField() {
 
           {field.maxTags !== undefined && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {value.length} / {field.maxTags} tags
+              {ui?.labels?.count ?? `${value.length} / ${field.maxTags} tags`}
             </p>
           )}
         </FieldContent>

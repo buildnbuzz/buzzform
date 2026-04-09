@@ -260,7 +260,9 @@ export function extractDependencies(field: Field): Set<string> {
 /**
  * Extract `$data` dependencies for all fields in a schema.
  */
-export function extractDependenciesFromFields(fields: Field[]): Set<string> {
+export function extractDependenciesFromFields(
+  fields: readonly Field[],
+): Set<string> {
   const deps = new Set<string>();
 
   for (const field of fields) {
@@ -277,7 +279,7 @@ export function extractDependenciesFromFields(fields: Field[]): Set<string> {
     }
 
     if (field.type === "group" || field.type === "array") {
-      extractDependenciesFromFields(field.fields as Field[]).forEach((dep) => deps.add(dep));
+      extractDependenciesFromFields(field.fields as readonly Field[]).forEach((dep) => deps.add(dep));
     }
   }
 

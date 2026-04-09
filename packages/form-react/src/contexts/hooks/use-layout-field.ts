@@ -1,4 +1,5 @@
 import type { Field as CoreField } from "@buildnbuzz/form-core";
+import type { ReactNode } from "react";
 import type { UnknownData } from "../../types";
 import type { FieldContextValue } from "../field-context";
 import { useFieldContext } from "../field-context";
@@ -11,9 +12,9 @@ export interface LayoutFieldState<
   TFormData extends UnknownData = UnknownData,
 > extends FieldContextValue<TField, TFormData> {
   /** Resolved field label (if the layout field defines one). */
-  label: string;
+  label: ReactNode;
   /** Resolved field description (if the layout field defines one). */
-  description: string;
+  description: ReactNode;
 }
 
 /** Options for `useLayoutField`. */

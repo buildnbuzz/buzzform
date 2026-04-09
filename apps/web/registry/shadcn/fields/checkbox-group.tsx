@@ -1,6 +1,6 @@
 "use client";
 
-import type { CheckboxGroupField as CheckboxGroupFieldDef } from "@buildnbuzz/form-core";
+import type { CheckboxGroupField as CheckboxGroupFieldDef } from "@buildnbuzz/form-react";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {

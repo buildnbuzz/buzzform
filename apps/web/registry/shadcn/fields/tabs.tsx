@@ -1,6 +1,6 @@
 "use client";
 
-import type { TabsField as TabsFieldDef, Tab } from "@buildnbuzz/form-core";
+import type { TabsField as TabsFieldDef, Tab } from "@buildnbuzz/form-react";
 import { useLayoutField, RenderFields, useNestedErrorCount } from "@buildnbuzz/form-react";
 import {
   Tabs,
@@ -9,7 +9,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { toDotNotation, resolveDynamicValue } from "@buildnbuzz/form-core";
+import { toDotNotation, resolveDynamicValue } from "@buildnbuzz/form-react";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------

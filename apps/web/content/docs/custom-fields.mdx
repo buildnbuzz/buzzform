@@ -8,7 +8,7 @@ description: Build your own field component UI using any UI library and wire it 
 BuzzForm's registry pattern lets you provide your own component for any supported field type. The built-in shadcn components are just one implementation — you can build your own using any UI library (Radix, Mantine, Chakra, plain HTML, etc.) and register them in the field registry.
 
 <Callout type="info">
-  This guide covers building **custom UI components** for BuzzForm's existing field types (text, email, select, etc.). The set of supported field types is defined by `@buildnbuzz/form-core` and cannot be extended at this time.
+  This guide covers building **custom UI components** for BuzzForm's existing field types (text, email, select, etc.). The set of supported field types is defined by `@buildnbuzz/form-react` and cannot be extended at this time.
 </Callout>
 
 ## How It Works
@@ -30,7 +30,7 @@ Use `useDataField` to get all the state and handlers you need:
 "use client";
 
 import { useDataField } from "@buildnbuzz/form-react";
-import type { TextField as TextFieldDef } from "@buildnbuzz/form-core";
+import type { TextField as TextFieldDef } from "@buildnbuzz/form-react";
 
 export function MyTextField() {
   const {
@@ -143,8 +143,8 @@ The primary hook for data field components. Returns everything you need:
 | `formData` | `object` | Current form values |
 | `handleChange` | `(value) => void` | Change handler (includes trim, transforms) |
 | `handleBlur` | `() => void` | Blur handler (triggers validation) |
-| `label` | `string \| undefined` | Resolved label (supports `$data`/`$context`) |
-| `description` | `string \| undefined` | Resolved description |
+| `label` | `ReactNode \| undefined` | Resolved label (supports `$data`/`$context`) |
+| `description` | `ReactNode \| undefined` | Resolved description |
 | `placeholder` | `string \| undefined` | Resolved placeholder |
 | `isDisabled` | `boolean` | Whether field is disabled |
 | `isReadOnly` | `boolean` | Whether field is read-only |
@@ -165,8 +165,8 @@ For layout/container components (row, group, tabs, collapsible):
 |----------|------|-------------|
 | `field` | `Field` | The raw field schema definition |
 | `form` | `FormApi` | TanStack form instance |
-| `label` | `string \| undefined` | Resolved label |
-| `description` | `string \| undefined` | Resolved description |
+| `label` | `ReactNode \| undefined` | Resolved label |
+| `description` | `ReactNode \| undefined` | Resolved description |
 | `isHidden` | `boolean` | Whether field is hidden |
 | `isDisabled` | `boolean` | Whether field is disabled |
 | `isConditionMet` | `boolean` | Whether visibility condition is met |
@@ -245,7 +245,7 @@ const { fieldApi } = useDataField();
 Import the specific field type for better autocomplete:
 
 ```tsx
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 
 function MySelectField() {
   const { field } = useDataField<SelectFieldDef>();
@@ -292,7 +292,7 @@ function MyTextField() {
 
 import * as Select from "@radix-ui/react-select";
 import { useDataField, useFieldOptions } from "@buildnbuzz/form-react";
-import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-core";
+import type { SelectField as SelectFieldDef } from "@buildnbuzz/form-react";
 
 export function RadixSelectField() {
   const {
