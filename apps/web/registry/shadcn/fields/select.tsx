@@ -37,14 +37,17 @@ interface SelectUi {
   isSearchable?: boolean;
   /** Show a clear button when a value is selected. Defaults to `true` when not required. */
   isClearable?: boolean;
-  /** Message shown when no options match the search query. */
-  emptyMessage?: React.ReactNode;
-  /** Placeholder for the search input. */
-  searchPlaceholder?: string;
   /** className applied to `<FieldGroup>`. */
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Text and label overrides. */
+  labels?: {
+    /** Message shown when no options match the search query. */
+    empty?: React.ReactNode;
+    /** Placeholder for the search input. */
+    searchPlaceholder?: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -201,11 +204,11 @@ export function SelectField() {
               {ui?.isSearchable !== false && (
                 <ComboboxPrimitive.Input
                   render={<InputGroupInput />}
-                  placeholder={ui?.searchPlaceholder ?? "Search..."}
+                  placeholder={ui?.labels?.searchPlaceholder ?? "Search..."}
                 />
               )}
               <ComboboxEmpty>
-                {ui?.emptyMessage ?? "No results found."}
+                {ui?.labels?.empty ?? "No results found."}
               </ComboboxEmpty>
               <ComboboxList>
                 {(opt: NormalizedOption) => (

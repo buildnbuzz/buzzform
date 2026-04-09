@@ -36,8 +36,11 @@ interface TagsUi {
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
-  /** Custom text for tag count. Defaults to `"{count} / {max} tags"`. */
-  countText?: React.ReactNode;
+  /** Text and label overrides. */
+  labels?: {
+    /** Custom text for tag count. Defaults to `"{count} / {max} tags"`. */
+    count?: React.ReactNode;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -136,7 +139,7 @@ export function TagsField() {
 
           {field.maxTags !== undefined && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {ui?.countText ?? `${value.length} / ${field.maxTags} tags`}
+              {ui?.labels?.count ?? `${value.length} / ${field.maxTags} tags`}
             </p>
           )}
         </FieldContent>
