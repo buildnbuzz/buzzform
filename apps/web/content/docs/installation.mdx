@@ -38,7 +38,7 @@ npx shadcn@latest add @buzzform/all
 
 This installs:
 
-- Core packages (`@buildnbuzz/form-react`, `@buildnbuzz/form-react`, TanStack Form)
+- **@buildnbuzz/form-react** (includes core logic and TanStack Form)
 - All field components (text, email, select, checkbox, etc.)
 - Form components (`Form`, `FormContent`, `FormFields`, etc.)
 - Complete registry at `components/buzzform/registry.ts`
@@ -67,11 +67,15 @@ Use this path if you want to build your own field components with a custom UI li
 
 ## Install Packages
 
-Install the core packages:
+Install the React package:
 
 ```bash
-pnpm add @buildnbuzz/form-react @buildnbuzz/form-react @tanstack/react-form @tanstack/form-core
+pnpm add @buildnbuzz/form-react
 ```
+
+<Callout type="info">
+  **@buildnbuzz/form-react** includes all necessary dependencies, including the framework-agnostic core and TanStack Form. You don't need to install them manually.
+</Callout>
 
 ## Build Custom Components
 

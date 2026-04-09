@@ -311,6 +311,12 @@ importers:
       '@buildnbuzz/form-core':
         specifier: workspace:^
         version: link:../form-core
+      '@tanstack/form-core':
+        specifier: ^1.28.5
+        version: 1.28.6
+      '@tanstack/react-form':
+        specifier: ^1.28.5
+        version: 1.28.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
     devDependencies:
       '@repo/eslint-config':
         specifier: workspace:^
@@ -318,12 +324,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:^
         version: link:../typescript-config
-      '@tanstack/form-core':
-        specifier: ^1.28.5
-        version: 1.28.6
-      '@tanstack/react-form':
-        specifier: ^1.28.5
-        version: 1.28.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@testing-library/react':
         specifier: ^16.3.0
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

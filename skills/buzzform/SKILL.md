@@ -5,13 +5,13 @@ description: Use when working with BuzzForm schema-driven forms, `@buildnbuzz/fo
 
 # BuzzForm
 
-Use `@buildnbuzz/form-core` and `@buildnbuzz/form-react`. The old `@buildnbuzz/buzzform` package is deprecated.
+Use `@buildnbuzz/form-react`. The old `@buildnbuzz/buzzform` package is deprecated.
 
 ## Quick Start
 
 **Install**
 ```bash
-pnpm add @buildnbuzz/form-core @buildnbuzz/form-react
+pnpm add @buildnbuzz/form-react
 npx shadcn@latest add @buzzform/all
 ```
 

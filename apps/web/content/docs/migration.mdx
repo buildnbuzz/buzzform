@@ -13,9 +13,9 @@ This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package t
 
 ## Overview of Changes
 
-| Old (`buzzform`) | New (`form-core` + `form-react`) |
+| Old (`buzzform`) | New (`form-react`) |
 |------------------|----------------------------------|
-| Single package | Two packages: core + React adapter |
+| Single package | Single package: `@buildnbuzz/form-react` |
 | `createSchema()` | Plain `FormSchema` object or `defineSchema()` |
 | `InferType<typeof schema>` | `InferType<typeof schema.fields>` |
 | `useRhf()` / `zodResolver` | `useForm()` with built-in validation |
@@ -27,18 +27,19 @@ This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package t
 
 ## Step 1: Update Dependencies
 
-Uninstall the old package and install the new ones:
+Uninstall the old package and install the new one:
 
 ```bash
 # Remove old package
 pnpm remove @buildnbuzz/buzzform
 
-# Install new packages
-pnpm add @buildnbuzz/form-react @buildnbuzz/form-react
-
-# Peer dependencies (if not already installed)
-pnpm add @tanstack/react-form @tanstack/form-core
+# Install the React package
+pnpm add @buildnbuzz/form-react
 ```
+
+<Callout type="info">
+  You no longer need to install `@buildnbuzz/form-core` or `@tanstack/react-form` manually. They are now included as direct dependencies of `@buildnbuzz/form-react`.
+</Callout>
 
 ## Step 2: Replace Schema Creation
 
@@ -404,7 +405,7 @@ export function ContactForm() {
 
 ## Breaking Changes Summary
 
-1. **Package split** — `buzzform` → `form-core` + `form-react`
+1. **Package merge** — `buzzform` replaced by `@buildnbuzz/form-react` (includes core)
 2. **Schema creation** — `createSchema()` removed, use `defineSchema()` or plain object
 3. **Type inference** — `InferType<typeof schema>` → `InferType<typeof schema.fields>`
 4. **Form hook** — `useRhf()` → `useForm()` with built-in validation
