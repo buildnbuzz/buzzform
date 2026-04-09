@@ -189,6 +189,13 @@ export const exampleCategories: ExampleCategory[] = [
         description: "Sleek inline lists using the minimal variant.",
         file: "minimal-array-form.tsx",
       },
+      {
+        slug: "country-state-form",
+        id: "CountryStateForm",
+        name: "Country + State",
+        description: "Cascading dropdowns with real REST API data.",
+        file: "country-state-form.tsx",
+      },
     ],
   },
 ];
