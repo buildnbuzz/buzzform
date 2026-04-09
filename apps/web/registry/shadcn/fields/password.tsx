@@ -29,6 +29,27 @@ interface PasswordUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  /** Text and label overrides. */
+  labels?: {
+    /** Labels for different strength levels. */
+    strength?: Partial<Record<StrengthResult["label"], React.ReactNode>>;
+    /** Labels for individual requirements. */
+    requirements?: {
+      minLength?: React.ReactNode | ((min: number) => React.ReactNode);
+      maxLength?: React.ReactNode | ((max: number) => React.ReactNode);
+      uppercase?: React.ReactNode;
+      lowercase?: React.ReactNode;
+      number?: React.ReactNode;
+      special?: React.ReactNode;
+    };
+    /** A11y and tooltip strings (must be strings for HTML attributes). */
+    aria?: {
+      generate?: string;
+      showPassword?: string;
+      hidePassword?: string;
+      requirementsList?: string;
+    };
+  };
 }
 
 interface StrengthResult {
@@ -171,25 +192,99 @@ export function PasswordField() {
   const [visible, setVisible] = useState(false);
   const value = (fieldApi.state.value as string) ?? "";
   const ui = field.ui as PasswordUi | undefined;
+  const labels = ui?.labels;
   const criteria = field.criteria;
 
   const width = ui?.width;
   const widthStyle = width
-    ? { width: typeof width === "number" ? `${width}px` : width, flex: "0 1 auto" }
+    ? {
+        width: typeof width === "number" ? `${width}px` : width,
+        flex: "0 1 auto",
+      }
     : undefined;
 
-  const strength = (ui?.strengthIndicator || ui?.showRequirements)
-    ? calculateStrength(value, field)
-    : null;
+  const strength =
+    ui?.strengthIndicator || ui?.showRequirements
+      ? calculateStrength(value, field)
+      : null;
+
+  const resolveRequirementLabel = <
+    K extends keyof NonNullable<
+      NonNullable<PasswordUi["labels"]>["requirements"]
+    >,
+  >(
+    key: K,
+    defaultLabel: React.ReactNode,
+    arg?: number,
+  ): React.ReactNode => {
+    const override = labels?.requirements?.[key];
+    if (typeof override === "function" && arg !== undefined) {
+      // We know arg is a number and the only functions here take a number
+      return (override as (v: number) => React.ReactNode)(arg);
+    }
+    return (override as React.ReactNode) ?? defaultLabel;
+  };
 
   const requirements = ui?.showRequirements
     ? [
-        { key: "minLength", label: `At least ${field.minLength ?? 8} characters`, met: strength?.checks.minLength ?? false },
-        ...(field.maxLength ? [{ key: "maxLength", label: `At most ${field.maxLength} characters`, met: strength?.checks.maxLength ?? false }] : []),
-        ...(criteria?.requireUppercase ? [{ key: "uppercase", label: "One uppercase letter", met: strength?.checks.hasUppercase ?? false }] : []),
-        ...(criteria?.requireLowercase ? [{ key: "lowercase", label: "One lowercase letter", met: strength?.checks.hasLowercase ?? false }] : []),
-        ...(criteria?.requireNumber ? [{ key: "number", label: "One number", met: strength?.checks.hasNumber ?? false }] : []),
-        ...(criteria?.requireSpecial ? [{ key: "special", label: "One special character", met: strength?.checks.hasSpecial ?? false }] : []),
+        {
+          key: "minLength",
+          label: resolveRequirementLabel(
+            "minLength",
+            `At least ${field.minLength ?? 8} characters`,
+            field.minLength ?? 8,
+          ),
+          met: strength?.checks.minLength ?? false,
+        },
+        ...(field.maxLength
+          ? [
+              {
+                key: "maxLength",
+                label: resolveRequirementLabel(
+                  "maxLength",
+                  `At most ${field.maxLength} characters`,
+                  field.maxLength,
+                ),
+                met: strength?.checks.maxLength ?? false,
+              },
+            ]
+          : []),
+        ...(criteria?.requireUppercase
+          ? [
+              {
+                key: "uppercase",
+                label: resolveRequirementLabel("uppercase", "One uppercase letter"),
+                met: strength?.checks.hasUppercase ?? false,
+              },
+            ]
+          : []),
+        ...(criteria?.requireLowercase
+          ? [
+              {
+                key: "lowercase",
+                label: resolveRequirementLabel("lowercase", "One lowercase letter"),
+                met: strength?.checks.hasLowercase ?? false,
+              },
+            ]
+          : []),
+        ...(criteria?.requireNumber
+          ? [
+              {
+                key: "number",
+                label: resolveRequirementLabel("number", "One number"),
+                met: strength?.checks.hasNumber ?? false,
+              },
+            ]
+          : []),
+        ...(criteria?.requireSpecial
+          ? [
+              {
+                key: "special",
+                label: resolveRequirementLabel("special", "One special character"),
+                met: strength?.checks.hasSpecial ?? false,
+              },
+            ]
+          : []),
       ]
     : [];
 
@@ -197,7 +292,7 @@ export function PasswordField() {
   const inputPrClass = cn(
     "pr-9",
     ui?.allowGenerate && "pr-16",
-    (ui?.allowGenerate && ui?.copyable) && "pr-24",
+    ui?.allowGenerate && ui?.copyable && "pr-24",
   );
 
   return (
@@ -253,7 +348,7 @@ export function PasswordField() {
                       handleChange(generatePassword(field));
                     }}
                     disabled={isDisabled || isReadOnly}
-                    aria-label="Generate password"
+                    aria-label={labels?.aria?.generate ?? "Generate password"}
                     tabIndex={-1}
                   >
                     <IconPlaceholder
@@ -273,13 +368,31 @@ export function PasswordField() {
                   className="text-muted-foreground hover:text-foreground"
                   onClick={() => setVisible((v) => !v)}
                   disabled={isDisabled}
-                  aria-label={visible ? "Hide password" : "Show password"}
+                  aria-label={
+                    visible
+                      ? (labels?.aria?.hidePassword ?? "Hide password")
+                      : (labels?.aria?.showPassword ?? "Show password")
+                  }
                   tabIndex={-1}
                 >
                   {visible ? (
-                    <IconPlaceholder hugeicons="ViewOffIcon" lucide="EyeOff" tabler="IconEyeOff" phosphor="EyeSlash" remixicon="RiEyeOffLine" className="size-4" />
+                    <IconPlaceholder
+                      hugeicons="ViewOffIcon"
+                      lucide="EyeOff"
+                      tabler="IconEyeOff"
+                      phosphor="EyeSlash"
+                      remixicon="RiEyeOffLine"
+                      className="size-4"
+                    />
                   ) : (
-                    <IconPlaceholder hugeicons="ViewIcon" lucide="Eye" tabler="IconEye" phosphor="Eye" remixicon="RiEyeLine" className="size-4" />
+                    <IconPlaceholder
+                      hugeicons="ViewIcon"
+                      lucide="Eye"
+                      tabler="IconEye"
+                      phosphor="Eye"
+                      remixicon="RiEyeLine"
+                      className="size-4"
+                    />
                   )}
                 </Button>
               </div>
@@ -301,8 +414,14 @@ export function PasswordField() {
                   ))}
                 </div>
                 {strength.label !== "none" && (
-                  <span className={cn("text-xs font-medium transition-colors", getStrengthTextColor(strength.score, strength.allMet))}>
-                    {STRENGTH_LABELS[strength.label]}
+                  <span
+                    className={cn(
+                      "text-xs font-medium transition-colors",
+                      getStrengthTextColor(strength.score, strength.allMet),
+                    )}
+                  >
+                    {labels?.strength?.[strength.label] ??
+                      STRENGTH_LABELS[strength.label]}
                   </span>
                 )}
               </div>
@@ -313,7 +432,9 @@ export function PasswordField() {
                 id={`${fieldApi.name}-requirements`}
                 className="text-xs space-y-1"
                 role="list"
-                aria-label="Password requirements"
+                aria-label={
+                  labels?.aria?.requirementsList ?? "Password requirements"
+                }
               >
                 {requirements.map((req) => (
                   <div
@@ -330,9 +451,23 @@ export function PasswordField() {
                   >
                     {value ? (
                       req.met ? (
-                        <IconPlaceholder hugeicons="Tick02Icon" lucide="Check" tabler="IconCheck" phosphor="Check" remixicon="RiCheckLine" className="size-3 shrink-0 text-green-500" />
+                        <IconPlaceholder
+                          hugeicons="Tick02Icon"
+                          lucide="Check"
+                          tabler="IconCheck"
+                          phosphor="Check"
+                          remixicon="RiCheckLine"
+                          className="size-3 shrink-0 text-green-500"
+                        />
                       ) : (
-                        <IconPlaceholder hugeicons="Cancel01Icon" lucide="X" tabler="IconX" phosphor="X" remixicon="RiCloseLine" className="size-3 shrink-0" />
+                        <IconPlaceholder
+                          hugeicons="Cancel01Icon"
+                          lucide="X"
+                          tabler="IconX"
+                          phosphor="X"
+                          remixicon="RiCloseLine"
+                          className="size-3 shrink-0"
+                        />
                       )
                     ) : (
                       <span className="size-3 rounded-full border border-muted-foreground/50 shrink-0" />
