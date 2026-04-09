@@ -13,7 +13,19 @@ The `tags` field renders a tag/chip input for entering multiple string values.
 
 ## UI Options
 
-Same as [Text Field](/docs/fields/data/text#ui-options).
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `delimiters` | `array` | `["enter"]` | Keys that create a new tag |
+| `variant` | `"chips" \| "pills" \| "inline"` | `"chips"` | Visual variant for tag chips |
+| `copyable` | `boolean` | `false` | Show a copy all button |
+| `labels` | `object` | - | Text and label overrides |
+| `labels.count` | `ReactNode` | `"{count} / {max} tags"` | Custom text for tag count |
+| `className` | `string` | - | CSS class applied to the container |
+| `width` | `string \| number` | - | Inline width applied to the field |
+
+<Callout type="info">
+  **React Overrides:** The `label`, `description`, and `ui.labels.count` properties all support `ReactNode` (JSX) when importing `defineSchema` from `@buildnbuzz/form-react`.
+</Callout>
 
 ## Basic Usage
 
