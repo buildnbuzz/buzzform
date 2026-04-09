@@ -1,5 +1,17 @@
 # @buildnbuzz/form-react
 
+## 0.1.3
+
+### Patch Changes
+
+- [#118](https://github.com/buildnbuzz/buzzform/pull/118) [`bdcbbd8`](https://github.com/buildnbuzz/buzzform/commit/bdcbbd80ed39a0b8b09f115f6dc22daf607a0402) Thanks [@ladparth](https://github.com/ladparth)! - - Implemented global module augmentation for `@buildnbuzz/form-core` to natively support `ReactNode` in schema labels and descriptions.
+  - Re-exported core schema utilities (`defineSchema`, `InferType`), types, and common helpers to provide a seamless single-import DX.
+  - Updated `useResolvedFieldText` and `useDataField` hooks to safely handle and render `ReactNode` elements.
+  - Fixed an infinite recursion bug in `resolveDynamicPaths` when encountering React elements or internal objects.
+  - Moved `@buildnbuzz/form-core` and `@tanstack` dependencies to direct `dependencies` for a "one-line install" experience.
+- Updated dependencies [[`bdcbbd8`](https://github.com/buildnbuzz/buzzform/commit/bdcbbd80ed39a0b8b09f115f6dc22daf607a0402)]:
+  - @buildnbuzz/form-core@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
