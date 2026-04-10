@@ -292,6 +292,43 @@ const settingsSchema = defineSchema({
 - ✅ In boolean props (disabled, required, collapsed)
 - ✅ In validator args
 
+## Dynamic Options
+
+For **static option lists** with dynamic `disabled` values, use `VisibilityCondition`:
+
+```tsx
+{
+  type: "select",
+  name: "state",
+  options: [
+    { label: "California", value: "CA" },
+    { label: "Texas", value: "TX", disabled: { $data: "/country", neq: "US" } },
+  ],
+}
+```
+
+For **async option loading** (REST APIs, GraphQL, etc.), use the option resolver registry instead. This provides automatic dependency tracking, request deduplication, and cascading dropdown support:
+
+```tsx
+const resolvers = defineOptionResolvers({
+  listStates: async ({ data }) => {
+    const res = await fetch(`/api/states?country=${data.country}`);
+    const json = await res.json();
+    return json.states.map((s: State) => ({ label: s.name, value: s.code }));
+  },
+});
+
+// Schema
+{
+  type: "select",
+  name: "state",
+  options: { resolver: "listStates" },
+  dependencies: ["/country"],  // auto re-fetches when country changes
+}
+```
+
+See [Option Resolvers](/docs/option-resolvers) for the full guide.
+
 ## Related
 
 - [Conditional Logic](/docs/conditional-logic) — Use `$data` in conditions

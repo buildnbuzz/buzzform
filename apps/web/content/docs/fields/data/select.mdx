@@ -124,6 +124,61 @@ const schema = defineSchema({
 }
 ```
 
+## Async Options with Resolvers
+
+For options loaded from APIs, use the **option resolver registry**. This enables cascading dropdowns, loading states, and automatic dependency tracking:
+
+```tsx
+const resolvers = defineOptionResolvers({
+  listCountries: async () => {
+    const res = await fetch("https://countriesnow.space/api/v0.1/countries");
+    const json = await res.json();
+    return json.data.map((c: { country: string }) => ({
+      label: c.country,
+      value: c.country,
+    }));
+  },
+});
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "country",
+      label: "Country",
+      options: { resolver: "listCountries" },
+    },
+  ],
+});
+
+// In your form:
+<Form schema={schema} optionResolvers={resolvers}>
+  <FormContent><FormFields /><FormSubmit /></FormContent>
+</Form>
+```
+
+### Cascading Dropdowns
+
+Declare `dependencies` to re-fetch options when a parent field changes:
+
+```tsx
+{
+  type: "select",
+  name: "state",
+  label: "State",
+  options: { resolver: "listStates" },
+  dependencies: ["/country"],       // re-fetch when country changes
+  disabled: { $data: "/country", not: true },  // disable until country selected
+}
+```
+
+When a dependency changes, the system automatically:
+1. **Clears the field value** — prevents stale selections
+2. **Re-fetches options** — calls the resolver with latest values
+3. **Updates loading state** — shows loading indicator
+
+See [Option Resolvers](/docs/option-resolvers) for the full guide.
+
 ## Auto-Derived Validators
 
 | Property | Validator |

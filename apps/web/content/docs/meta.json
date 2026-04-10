@@ -11,6 +11,7 @@
     "conditional-logic",
     "validation",
     "dynamic-values",
+    "option-resolvers",
     "output-transformation",
     "---Fields---",
     "...fields",
