@@ -2,6 +2,7 @@ import type { FormEvent, FormHTMLAttributes, ReactNode } from "react";
 import type {
   Field as CoreField,
   ValidationRegistry,
+  OptionResolverRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "./types";
@@ -19,6 +20,8 @@ export interface FormProps<TFormData extends UnknownData = UnknownData>
   contextData?: UnknownData;
   /** Optional custom validator registry passed through to `RenderFields`. */
   customValidators?: ValidationRegistry;
+  /** Optional custom option resolvers passed through to `RenderFields`. */
+  optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
   /** Optional registry override for this render call. */
@@ -39,6 +42,7 @@ export function Form<TFormData extends UnknownData = UnknownData>({
   fields,
   contextData,
   customValidators,
+  optionResolvers,
   derivedValidationMode,
   registry,
   renderFallback,
@@ -66,6 +70,7 @@ export function Form<TFormData extends UnknownData = UnknownData>({
             form={form}
             contextData={contextData}
             customValidators={customValidators}
+            optionResolvers={optionResolvers}
             derivedValidationMode={derivedValidationMode}
             registry={registry}
             renderFallback={renderFallback}

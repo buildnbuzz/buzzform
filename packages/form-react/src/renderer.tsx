@@ -4,6 +4,7 @@ import type {
   Field as CoreField,
   DataField,
   ValidationRegistry,
+  OptionResolverRegistry,
   ValidationRun,
 } from "@buildnbuzz/form-core";
 import { fromDotNotation, joinPointer, toDotNotation, isDataField } from "@buildnbuzz/form-core";
@@ -25,6 +26,8 @@ export interface FieldRendererProps<
   contextData?: UnknownData;
   /** Optional custom validator registry passed through to `Field`. */
   customValidators?: ValidationRegistry;
+  /** Optional custom option resolvers passed through to hooks. */
+  optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
   /** Optional registry override for this render call. */
@@ -41,6 +44,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   form,
   contextData,
   customValidators,
+  optionResolvers,
   derivedValidationMode,
   registry,
   renderFallback,
@@ -60,6 +64,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
     form,
     contextData,
     customValidators,
+    optionResolvers,
     derivedValidationMode: resolvedDerivedValidationMode,
     registry: resolvedRegistry,
     renderFallback,
@@ -100,6 +105,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
       form={form}
       contextData={contextData}
       customValidators={customValidators}
+      optionResolvers={optionResolvers}
       derivedValidationMode={resolvedDerivedValidationMode}
     >
       <Component>{nestedContent}</Component>
@@ -119,6 +125,8 @@ export interface RenderFieldsProps<
   contextData?: UnknownData;
   /** Optional custom validator registry passed through to each field. */
   customValidators?: ValidationRegistry;
+  /** Optional custom option resolvers passed through to hooks. */
+  optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
   /** Optional registry override for this render call. */
@@ -135,6 +143,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   form,
   contextData,
   customValidators,
+  optionResolvers,
   derivedValidationMode,
   registry,
   renderFallback,
@@ -159,6 +168,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
             form={form}
             contextData={contextData}
             customValidators={customValidators}
+            optionResolvers={optionResolvers}
             derivedValidationMode={resolvedDerivedValidationMode}
             registry={resolvedRegistry}
             renderFallback={renderFallback}
@@ -186,6 +196,7 @@ function renderNestedFields<TFormData extends UnknownData>({
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
   customValidators?: ValidationRegistry;
+  optionResolvers?: OptionResolverRegistry;
   derivedValidationMode?: ValidationRun;
   registry?: FieldRegistry;
   renderFallback?: FallbackRenderer;

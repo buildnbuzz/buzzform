@@ -8,12 +8,12 @@ import {
   escapePointer,
   extractDependencies,
   fromDotNotation,
-  getByPath,
   getValidationGroup,
   runChecks,
   splitPointer,
   toDotNotation,
   type ValidationCheck,
+  type OptionResolverRegistry,
   type ValidationRegistry,
 } from "@buildnbuzz/form-core";
 import type {
@@ -23,6 +23,7 @@ import type {
   UnknownData,
 } from "./types";
 import { FieldContext } from "./contexts";
+import { useDependenciesSelector } from "./contexts/hooks/use-dependencies-selector";
 
 function mergeListenTo(
   generated?: string[],
@@ -81,6 +82,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   form,
   contextData,
   customValidators,
+  optionResolvers,
   validators,
   derivedValidationMode,
   children,
@@ -191,32 +193,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     return next;
   }, [generatedValidators, validators]);
 
-  const depsSelector = useMemo(() => {
-    let prev: unknown[] | undefined;
-
-    return (state: { values: UnknownData }) => {
-      if (deps.length === 0) return [];
-      if (!prev || prev.length !== deps.length) {
-        const next = deps.map((path) => getByPath(state.values, path));
-        prev = next;
-        return next;
-      }
-
-      let next: unknown[] | undefined;
-      for (let i = 0; i < deps.length; i += 1) {
-        const value = getByPath(state.values, deps[i]!);
-        if (!next) {
-          if (Object.is(value, prev[i])) continue;
-          next = prev.slice();
-        }
-        next[i] = value;
-      }
-
-      if (!next) return prev;
-      prev = next;
-      return next;
-    };
-  }, [deps]);
+  const depsSelector = useDependenciesSelector(deps);
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
@@ -260,6 +237,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
               fieldPath: pointer,
               formData,
               contextData,
+              optionResolvers,
               isHidden,
               isConditionMet,
               isDisabled,
@@ -289,6 +267,7 @@ export interface LayoutFieldProps<TFormData extends UnknownData = UnknownData> {
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
+  optionResolvers?: OptionResolverRegistry;
   basePath?: string;
   children: React.ReactNode;
 }
@@ -297,6 +276,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
+  optionResolvers,
   basePath,
   children,
 }: LayoutFieldProps<TFormData>) {
@@ -315,32 +295,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
     [resolvedField],
   );
 
-  const depsSelector = useMemo(() => {
-    let prev: unknown[] | undefined;
-
-    return (state: { values: UnknownData }) => {
-      if (deps.length === 0) return [];
-      if (!prev || prev.length !== deps.length) {
-        const next = deps.map((path) => getByPath(state.values, path));
-        prev = next;
-        return next;
-      }
-
-      let next: unknown[] | undefined;
-      for (let i = 0; i < deps.length; i += 1) {
-        const value = getByPath(state.values, deps[i]!);
-        if (!next) {
-          if (Object.is(value, prev[i])) continue;
-          next = prev.slice();
-        }
-        next[i] = value;
-      }
-
-      if (!next) return prev;
-      prev = next;
-      return next;
-    };
-  }, [deps]);
+  const depsSelector = useDependenciesSelector(deps);
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
@@ -363,6 +318,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
           fieldPath: pointer,
           formData,
           contextData,
+          optionResolvers,
           isHidden,
           isConditionMet,
           isDisabled: false,

@@ -76,13 +76,16 @@ export function ContactForm() {
 - `$context` uses JSON Pointer paths into external context data passed via `contextData` prop. Think of `$context` as "who is filling out this form" (role, permissions) vs `$data` as "what they chose in the form".
 - `ui` property is opaque to core — cast to your own type in renderers (e.g., `field.ui as TextUi`). This design keeps `form-core` UI-agnostic, so the same schema works with shadcn, MUI, Chakra, or any component library.
 - `condition` **unmounts** the field (removed from data + validation). `hidden` keeps it in data/validation but hides the UI. Choose `condition` when the field shouldn't exist in the submitted data; choose `hidden` when you need the value to persist but just not be visible.
+- **Option Resolvers** enable async option loading for `select`/`radio`/`checkbox` fields. Use `defineOptionResolvers` to create a registry of async fetchers, reference them with `{ resolver: "key" }`, and declare `dependencies` for cascading dropdowns. The system handles dependency tracking, request deduplication, stale value clearing, and loading states automatically.
+- Inline async functions can be passed directly to `options` but make the schema non-JSON-serializable. Use the resolver registry when serialization is needed.
 
 ## Imports
 
 ```ts
 // React package (Preferred import for all user-facing APIs)
-import { 
+import {
   defineSchema, type InferType, type FormSchema,
+  defineOptionResolvers, type OptionResolverRegistry,
   useForm, FormProvider, useDataField, useLayoutField, useFieldOptions,
   RenderFields, Field, Form,
   walkFields, isDataField, toDotNotation, fromDotNotation
@@ -96,8 +99,46 @@ import { registry } from "@/components/buzzform/registry";
 ## Read These When Needed
 
 - Complete example with every feature: `examples/onboarding.ts` (tested in `examples/onboarding.test.ts`)
+- Cascading dropdowns with async options: `registry/shadcn/examples/country-state-form.tsx`
 - Schema & field types: `rules/schema.md`
 - Validation: `rules/validation.md`
 - Dynamic behavior ($data, $context, conditions): `rules/dynamic.md`
 - Rendering & custom fields: `rules/rendering.md`
 - Migration from deprecated package: `references/migration.md`
+
+## Option Resolver Quick Example
+
+```tsx
+const resolvers = defineOptionResolvers({
+  listCountries: async () => {
+    const res = await fetch("https://countriesnow.space/api/v0.1/countries");
+    const json = await res.json();
+    return json.data.map((c: { country: string }) => ({
+      label: c.country, value: c.country,
+    }));
+  },
+  listStates: async ({ data }) => {
+    if (!data.country) return [];
+    const res = await fetch(`/api/states?country=${data.country}`);
+    const json = await res.json();
+    return json.states.map((s: { name: string }) => ({
+      label: s.name, value: s.name,
+    }));
+  },
+});
+
+const schema = defineSchema({
+  fields: [
+    { type: "select", name: "country", options: { resolver: "listCountries" } },
+    {
+      type: "select", name: "state",
+      options: { resolver: "listStates" },
+      dependencies: ["/country"],  // auto re-fetches + clears value
+    },
+  ],
+});
+
+<Form schema={schema} optionResolvers={resolvers}>
+  <FormContent><FormFields /><FormSubmit /></FormContent>
+</Form>
+```

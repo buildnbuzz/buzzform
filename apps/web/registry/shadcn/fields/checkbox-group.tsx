@@ -86,7 +86,7 @@ export function CheckboxGroupField() {
     handleBlur,
   } = useDataField<CheckboxGroupFieldDef>();
 
-  const { options } = useFieldOptions(field.options);
+  const { options, isLoading } = useFieldOptions(field.options);
   const ui = field.ui as CheckboxGroupUi | undefined;
 
   const selected = Array.isArray(fieldApi.state.value)
@@ -153,7 +153,12 @@ export function CheckboxGroupField() {
           role="group"
           aria-describedby={ariaDescribedBy}
         >
-          {options.map((opt, i) => {
+          {isLoading ? (
+            <div className="py-2 text-sm text-muted-foreground animate-pulse">
+              Loading options...
+            </div>
+          ) : (
+            options.map((opt, i) => {
             const {
               value: val,
               label: optLabel,
@@ -254,7 +259,13 @@ export function CheckboxGroupField() {
                 </FieldLabel>
               </Field>
             );
-          })}
+            })
+          )}
+          {options.length === 0 && !isLoading && (
+            <div className="py-2 text-sm text-muted-foreground italic">
+              No options available
+            </div>
+          )}
         </div>
 
         {isInvalid && <FieldError id={errorId} errors={errors} />}

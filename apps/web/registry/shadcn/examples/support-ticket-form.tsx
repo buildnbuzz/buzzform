@@ -45,6 +45,28 @@ const priorityOptions = [
   { value: "high", label: "High", description: "Major functionality impacted" },
   { value: "urgent", label: "Urgent", description: "Complete blocker" },
 ];
+const subcategories: Record<string, Array<{ value: string; label: string }>> = {
+  technical: [
+    { value: "bug", label: "Software Bug" },
+    { value: "crash", label: "System Crash" },
+    { value: "performance", label: "Performance Issue" },
+  ],
+  billing: [
+    { value: "refund", label: "Refund Request" },
+    { value: "subscription", label: "Subscription Issue" },
+    { value: "invoice", label: "Invoice Query" },
+  ],
+  account: [
+    { value: "password", label: "Password Reset" },
+    { value: "security", label: "Security Breach" },
+    { value: "profile", label: "Profile Update" },
+  ],
+  feature: [
+    { value: "ui", label: "UI Improvement" },
+    { value: "new-feature", label: "New Functionality" },
+    { value: "api", label: "API Integration" },
+  ],
+};
 
 const teamMembers = [
   { value: "alice", label: "Alice Johnson" },
@@ -70,9 +92,14 @@ const ticketSchema = defineSchema({
       name: "subcategory",
       label: "Subcategory",
       required: true,
-      options: [], // Dynamic options not directly supported via function
-      description:
-        "Options update based on selected category (not implemented yet)",
+      options: async ({ data }) => {
+        const cat = data.category as string;
+        // Simulate network latency
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        return subcategories[cat] || [];
+      },
+      dependencies: ["/category"],
+      description: "Available subcategories based on your chosen category",
       disabled: { $data: "/category", not: true },
       ui: {
         emptyMessage: "Select a category first",

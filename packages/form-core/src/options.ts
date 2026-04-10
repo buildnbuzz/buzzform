@@ -1,14 +1,16 @@
-import type { DynamicBoolean, FieldOption } from "./types";
-import { resolveDynamicValue } from "./dynamic";
+import type {
+  FieldOption,
+  OptionResolverRegistry,
+  OptionsConfig,
+} from "./types";
+import { evaluateVisibility } from "./conditions";
 
-/**
- * Static options config — an array of FieldOption objects and/or plain strings.
- *
- * @remarks [type]
- * Designed as a type alias so it can become a union (e.g. `StaticOptions | AsyncOptionsSource`)
- * when async/cascading options are introduced, without changing call sites.
- */
-export type OptionsConfig = Array<FieldOption | string>;
+/** Preserve resolver map literal types. */
+export function defineOptionResolvers<const T extends OptionResolverRegistry>(
+  resolvers: T,
+): T {
+  return resolvers;
+}
 
 /**
  * A normalized, fully-resolved option ready for rendering.
@@ -32,7 +34,7 @@ export interface NormalizedOption {
  *
  * @param option - A FieldOption object or a plain string shorthand.
  */
-export function normalizeSelectOption(option: FieldOption | string): Omit<FieldOption, "disabled"> & { disabled?: DynamicBoolean } {
+export function normalizeSelectOption(option: FieldOption | string): FieldOption {
   if (typeof option === "string") {
     return { value: option, label: option };
   }
@@ -81,14 +83,19 @@ export function resolveOption(
     label: getSelectOptionLabel(option),
     value: getSelectOptionValue(option),
     disabled:
-      resolveDynamicValue<boolean>(option.disabled, formData, contextData) ??
-      false,
+      option.disabled === undefined
+        ? false
+        : evaluateVisibility(option.disabled, {
+            formData,
+            contextData,
+          }),
     ui: option.ui,
   };
 }
 
 /**
- * Resolve all options in an OptionsConfig into NormalizedOption array.
+ * Resolve all options in an OptionsConfig array into NormalizedOption array.
+ * Note: Only processes static arrays. For dynamic resolutions, use `useFieldOptions`.
  *
  * @param options - Static options array.
  * @param formData - Current form data for resolving dynamic values.
@@ -99,5 +106,8 @@ export function resolveOptions(
   formData: Record<string, unknown>,
   contextData?: Record<string, unknown>,
 ): NormalizedOption[] {
+  if (!Array.isArray(options)) {
+    return [];
+  }
   return options.map((opt) => resolveOption(opt, formData, contextData));
 }

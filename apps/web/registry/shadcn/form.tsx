@@ -15,6 +15,7 @@ import type {
   CoreField,
   FormSchema,
   ValidationRun,
+  OptionResolverRegistry,
 } from "@buildnbuzz/form-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ interface FormContextValue {
   schema?: FormSchema;
   formId: string;
   derivedValidationMode?: ValidationRun;
+  optionResolvers?: OptionResolverRegistry;
 }
 
 const FormContext = React.createContext<FormContextValue | null>(null);
@@ -58,6 +60,7 @@ type FormOwnProps = {
   registry?: FieldRegistry;
   children?: React.ReactNode;
   actions?: FormActionsConfig;
+  optionResolvers?: OptionResolverRegistry;
 };
 
 type FormWithInstance = FormOwnProps & {
@@ -103,6 +106,7 @@ function Form<TSchema extends FormSchema = FormSchema>(
           schema: props.schema,
           formId,
           derivedValidationMode,
+          optionResolvers: props.optionResolvers,
         }}
       >
         <FormProvider
@@ -136,11 +140,13 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   customValidators,
   contextData,
   derivedValidationMode,
+  optionResolvers,
   ...tanstackOpts
 }: FormWithSchema<TSchema> & {
   registry: FieldRegistry;
   formId: string;
   derivedValidationMode?: ValidationRun;
+  optionResolvers?: OptionResolverRegistry;
 }) {
   if (process.env.NODE_ENV === "development" && children && actions) {
     console.warn(
@@ -169,7 +175,7 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
 
   return (
     <FormContext.Provider
-      value={{ form, registry, schema, formId, derivedValidationMode }}
+      value={{ form, registry, schema, formId, derivedValidationMode, optionResolvers }}
     >
       <FormProvider
         registry={registry}
@@ -201,7 +207,7 @@ function FormContent({
   children,
   ...props
 }: FormContentProps) {
-  const { form, registry, formId, derivedValidationMode } = useFormContext();
+  const { form, registry, formId, derivedValidationMode, optionResolvers } = useFormContext();
 
   return (
     <HeadlessForm
@@ -209,6 +215,7 @@ function FormContent({
       form={form}
       registry={registry}
       derivedValidationMode={derivedValidationMode}
+      optionResolvers={optionResolvers}
       className={cn("flex flex-col gap-4", className)}
       {...props}
     >
@@ -231,7 +238,7 @@ type FormFieldsProps = {
 };
 
 function FormFields({ className }: FormFieldsProps) {
-  const { form, registry, schema, derivedValidationMode } = useFormContext();
+  const { form, registry, schema, derivedValidationMode, optionResolvers } = useFormContext();
   const fields = (schema?.fields ?? []) as readonly CoreField[];
 
   return (
@@ -241,6 +248,7 @@ function FormFields({ className }: FormFieldsProps) {
         form={form}
         registry={registry}
         derivedValidationMode={derivedValidationMode}
+        optionResolvers={optionResolvers}
       />
     </div>
   );

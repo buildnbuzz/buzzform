@@ -18,3 +18,4 @@ export { default as ArrayFieldExample } from "../../registry/shadcn/examples/arr
 export { default as GroupFieldExample } from "../../registry/shadcn/examples/group-field-form";
 export { default as CollapsibleSettingsForm } from "../../registry/shadcn/examples/collapsible-settings-form";
 export { default as MinimalArrayForm } from "../../registry/shadcn/examples/minimal-array-form";
+export { default as CountryStateForm } from "../../registry/shadcn/examples/country-state-form";

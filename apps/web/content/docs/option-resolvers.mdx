@@ -1,0 +1,308 @@
+---
+title: Option Resolvers
+description: Load select field options dynamically from async sources with automatic dependency tracking and cascading dropdown support.
+---
+
+# Option Resolvers
+
+Option resolvers let you load options for `select`, `radio`, and `checkbox` fields from async sources — REST APIs, GraphQL, databases, or any async function. The system automatically tracks field dependencies, deduplicates concurrent requests, and clears stale values in cascading dropdowns.
+
+## Quick Start
+
+### 1. Define Option Resolvers
+
+Use `defineOptionResolvers` to create a registry of async option fetchers:
+
+```tsx
+import { defineOptionResolvers } from "@buildnbuzz/form-react";
+
+const apiResolvers = defineOptionResolvers({
+  listCountries: async () => {
+    const res = await fetch("https://countriesnow.space/api/v0.1/countries");
+    const json = await res.json();
+    return json.data.map((c: { country: string }) => ({
+      label: c.country,
+      value: c.country,
+    }));
+  },
+
+  listStates: async ({ data }) => {
+    const country = data.country as string;
+    if (!country) return [];
+
+    const res = await fetch(
+      `https://countriesnow.space/api/v0.1/countries/states/q?country=${encodeURIComponent(country)}`,
+    );
+    const json = await res.json();
+    return json.data.states.map((s: { name: string }) => ({
+      label: s.name,
+      value: s.name,
+    }));
+  },
+});
+```
+
+### 2. Reference Resolvers in Your Schema
+
+Use `{ resolver: "key" }` to reference a resolver by name:
+
+```tsx
+const locationSchema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "country",
+      label: "Country",
+      options: { resolver: "listCountries" },
+    },
+    {
+      type: "select",
+      name: "state",
+      label: "State",
+      options: { resolver: "listStates" },
+      dependencies: ["/country"],
+    },
+  ],
+});
+```
+
+### 3. Pass Resolvers to the Form
+
+```tsx
+<Form
+  schema={locationSchema}
+  optionResolvers={apiResolvers}
+  onSubmit={({ value }) => console.log(value)}
+>
+  <FormContent>
+    <FormFields />
+    <FormSubmit>Submit</FormSubmit>
+  </FormContent>
+</Form>
+```
+
+## Resolver Function Signature
+
+Each resolver receives a context object:
+
+```ts
+interface OptionResolverContext {
+  /** Current form values */
+  data: Record<string, unknown>;
+  /** External context passed via contextData */
+  context: Record<string, unknown> | undefined;
+}
+
+type OptionResolverFn = (
+  ctx: OptionResolverContext,
+  args?: Record<string, unknown>,
+) => Promise<Array<{ label: string; value: string; disabled?: boolean }>>;
+```
+
+### Using `data` (Current Form Values)
+
+Access any field's current value from the `data` object. This is how cascading dropdowns work — a child resolver reads its parent's value:
+
+```tsx
+listCities: async ({ data }) => {
+  const country = data.country as string;
+  const state = data.state as string;
+
+  if (!country || !state) return [];
+
+  const res = await fetch(`/api/cities?country=${country}&state=${state}`);
+  const json = await res.json();
+  return json.cities.map((city: string) => ({ label: city, value: city }));
+},
+```
+
+### Using `context` (External Data)
+
+Access external data passed via `contextData` on `useForm` or `<Form>`:
+
+```tsx
+const form = useForm({
+  schema: mySchema,
+  contextData: { tenantId: "acme", apiUrl: "https://api.example.com" },
+});
+
+// In resolver:
+listProjects: async ({ context }) => {
+  const tenantId = context?.tenantId as string;
+  const res = await fetch(`${context?.apiUrl}/tenants/${tenantId}/projects`);
+  // ...
+},
+```
+
+### Using `args` (Static Configuration)
+
+Pass static configuration to a resolver via the `args` property in the schema:
+
+```tsx
+// Schema
+{
+  type: "select",
+  name: "category",
+  options: { resolver: "listItems", args: { limit: 50, sort: "name" } },
+}
+
+// Resolver
+listItems: async ({ data }, args) => {
+  const limit = args?.limit as number ?? 20;
+  const sort = args?.sort as string ?? "id";
+  const res = await fetch(`/api/items?limit=${limit}&sort=${sort}`);
+  // ...
+},
+```
+
+## Dependencies
+
+Declare which fields trigger a re-fetch using the `dependencies` array:
+
+```tsx
+{
+  type: "select",
+  name: "city",
+  label: "City",
+  options: { resolver: "listCities" },
+  dependencies: ["/country", "/state"],  // re-fetch when either changes
+}
+```
+
+When a dependency changes, the system:
+
+1. **Clears the field value** — prevents stale selections from invalid options
+2. **Re-fetches options** — calls the resolver with the latest form values
+3. **Updates loading state** — `isLoading` becomes `true` during fetch
+
+## Inline Async Option Fetchers
+
+For simple cases, you can pass an async function directly as `options`:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "tags",
+      label: "Tags",
+      options: async ({ data }) => {
+        const category = data.category as string;
+        const res = await fetch(`/api/tags?category=${category}`);
+        const json = await res.json();
+        return json.tags.map((tag: string) => ({ label: tag, value: tag }));
+      },
+      dependencies: ["/category"],
+    },
+  ],
+});
+```
+
+<Callout type="warn">
+  **Note:** Inline async functions make the schema non-JSON-serializable. Use the resolver registry (`{ resolver: "key" }`) if you need to serialize the schema (e.g., for a form builder).
+</Callout>
+
+## Request Deduplication
+
+Concurrent calls to the same resolver with identical parameters are automatically deduplicated. If two fields resolve options at the same time with the same config, only one API request is made.
+
+## Disabled Options
+
+Options can be statically or dynamically disabled:
+
+```tsx
+// Static disabled
+{ label: "Legacy", value: "legacy", disabled: true }
+
+// Dynamic — disabled when /country is not "US"
+{ label: "Texas", value: "TX", disabled: { $data: "/country", neq: "US" } }
+```
+
+When `disabled` is not specified, it defaults to `false` (all options enabled).
+
+## Cascading Dropdown Pattern
+
+The most common use case is cascading dropdowns — where each field's options depend on the previous field's selection:
+
+```tsx
+const resolvers = defineOptionResolvers({
+  countries: async () => { /* ... */ },
+  states: async ({ data }) => { /* uses data.country */ },
+  cities: async ({ data }) => { /* uses data.country + data.state */ },
+});
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "select",
+      name: "country",
+      label: "Country",
+      options: { resolver: "countries" },
+    },
+    {
+      type: "select",
+      name: "state",
+      label: "State",
+      options: { resolver: "states" },
+      dependencies: ["/country"],
+      disabled: { $data: "/country", not: true },
+    },
+    {
+      type: "select",
+      name: "city",
+      label: "City",
+      options: { resolver: "cities" },
+      dependencies: ["/country", "/state"],
+      disabled: { $data: "/state", not: true },
+    },
+  ],
+});
+```
+
+Key patterns in this example:
+
+- **`dependencies`** — tells the system when to re-fetch options
+- **`disabled: { $data: "/parent", not: true }`** — disables the field until the parent is selected
+- **Automatic value clearing** — changing country clears state; changing state clears city
+
+## Loading States
+
+The `useFieldOptions` hook returns an `isLoading` flag you can use in custom field components:
+
+```tsx
+const { options, isLoading, error } = useFieldOptions(field.options);
+
+if (isLoading) return <Spinner />;
+if (error) return <ErrorMessage>{error.message}</ErrorMessage>;
+return <Select options={options} />;
+```
+
+The built-in `SelectField` automatically shows a loading indicator and disables interaction while options are loading.
+
+## Error Handling
+
+When a resolver throws an error:
+
+1. The error is caught and surfaced via the hook's `error` property
+2. The field value is cleared (since options failed to load)
+3. A toast notification can be shown by the resolver itself
+
+```tsx
+listStates: async ({ data }) => {
+  try {
+    const res = await fetch(`/api/states?country=${data.country}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    return json.states.map((s: State) => ({ label: s.name, value: s.code }));
+  } catch {
+    toast.error("Could not fetch states. Check your network connection.");
+    return [];
+  }
+},
+```
+
+## Related
+
+- [Select Field](/docs/fields/data/select) — Select field properties and UI options
+- [Dynamic Values](/docs/dynamic-values) — Using `$data` and `$context` in other properties
+- [Conditional Logic](/docs/conditional-logic) — Show/hide fields based on conditions
