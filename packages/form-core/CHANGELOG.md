@@ -1,5 +1,14 @@
 # @buildnbuzz/form-core
 
+## 0.1.4
+
+### Patch Changes
+
+- [#121](https://github.com/buildnbuzz/buzzform/pull/121) [`fdbaf50`](https://github.com/buildnbuzz/buzzform/commit/fdbaf50c1909ab2011f9cf814a3b564fb1430a5f) Thanks [@ladparth](https://github.com/ladparth)! - Introduce async option resolvers and enhanced dependency tracking.
+  - Add `OptionResolverRegistry` and `OptionResolver` types for async data fetching.
+  - Implement `defineOptionResolvers` helper for type-safe resolver registration.
+  - Update `resolveOptions` to support dynamic option sources.
+
 ## 0.1.3
 
 ### Patch Changes

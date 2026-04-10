@@ -1,5 +1,18 @@
 # @buildnbuzz/form-react
 
+## 0.1.4
+
+### Patch Changes
+
+- [#121](https://github.com/buildnbuzz/buzzform/pull/121) [`fdbaf50`](https://github.com/buildnbuzz/buzzform/commit/fdbaf50c1909ab2011f9cf814a3b564fb1430a5f) Thanks [@ladparth](https://github.com/ladparth)! - Add support for async field options and cascading dropdowns.
+  - Enhance `useFieldOptions` hook with async loading state and error handling.
+  - Implement automatic value clearing when field dependencies change or options become invalid.
+  - Add `optionResolvers` support to `Form`, `Field`, and `FieldRenderer` components.
+  - Implement request deduplication for concurrent option fetches.
+
+- Updated dependencies [[`fdbaf50`](https://github.com/buildnbuzz/buzzform/commit/fdbaf50c1909ab2011f9cf814a3b564fb1430a5f)]:
+  - @buildnbuzz/form-core@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
