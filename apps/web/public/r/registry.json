@@ -612,6 +612,20 @@
       ]
     },
     {
+      "name": "country-state-form",
+      "type": "registry:block",
+      "title": "Country + State Form",
+      "description": "Cascading Country and State dropdowns using registry-based loaders.",
+      "registryDependencies": ["@buzzform/select", "card", "sonner"],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/country-state-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/country-state-form.tsx"
+        }
+      ]
+    },
+    {
       "name": "contact-layout-form",
       "type": "registry:block",
       "title": "Contact Layout Form",
