@@ -1,5 +1,16 @@
 # @buildnbuzz/form-react
 
+## 0.1.5
+
+### Patch Changes
+
+- [#124](https://github.com/buildnbuzz/buzzform/pull/124) [`0c2937c`](https://github.com/buildnbuzz/buzzform/commit/0c2937ca5a1357920b20a90b28f2056621f08a14) Thanks [@ladparth](https://github.com/ladparth)! - Implement cascading validation logic for derived checks.
+  - Updated derived validation to be cumulative: `"blur"` mode now includes `"submit"` checks, and `"change"` mode includes both `"blur"` and `"submit"` checks.
+  - Synchronized default `derivedValidationMode` to `"submit"` to match documentation and planned behavior.
+
+- Updated dependencies [[`0c2937c`](https://github.com/buildnbuzz/buzzform/commit/0c2937ca5a1357920b20a90b28f2056621f08a14)]:
+  - @buildnbuzz/form-core@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes

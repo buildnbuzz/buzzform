@@ -1,5 +1,12 @@
 # @buildnbuzz/form-core
 
+## 0.1.5
+
+### Patch Changes
+
+- [#124](https://github.com/buildnbuzz/buzzform/pull/124) [`0c2937c`](https://github.com/buildnbuzz/buzzform/commit/0c2937ca5a1357920b20a90b28f2056621f08a14) Thanks [@ladparth](https://github.com/ladparth)! - Correct primitive array type inference for named child fields.
+  - Ensure that child fields with explicitly defined names are correctly inferred as wrapped objects (`{ name: value }[]`) rather than flat values.
+
 ## 0.1.4
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@buildnbuzz/form-react",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "React primitives for BuzzForm.",
   "author": "Parth Lad <parth@buildnbuzz.com>",
   "license": "MIT",
