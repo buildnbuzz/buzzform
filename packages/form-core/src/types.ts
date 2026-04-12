@@ -719,7 +719,9 @@ interface FieldValueMap<TField extends AnyDataField> {
   radio: string;
   group: TField extends GroupField ? InferType<TField["fields"]> : never;
   array: TField extends PrimitiveArrayField
-    ? FieldValue<TField["fields"][0]>[]
+    ? (TField["fields"][0] extends { name: string }
+        ? { [K in TField["fields"][0]["name"]]: FieldValue<TField["fields"][0]> }[]
+        : FieldValue<TField["fields"][0]>[])
     : TField extends ArrayField
       ? InferType<TField["fields"]>[]
       : never;
