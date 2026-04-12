@@ -55,7 +55,7 @@ You don't need to manually specify these in `validate` — they're derived autom
 | `password` | `passwordCriteria` (if `criteria` set) |
 | `number` | `min`, `max`, `precision`, `step` |
 | `date` | `minDate`, `maxDate` |
-| `tags` | `minTags`, `maxTags`, `maxTagLength` |
+| `tags` | `minTags`, `maxTags` |
 | `array` | `minItems`, `maxItems` |
 | `select` (hasMany) | `minSelected`, `maxSelected` |
 
@@ -221,13 +221,13 @@ const customValidators = defineValidators({
     if (typeof value !== "string") return false;
     
     const available = await checkUsernameAvailable(value);
-    return available ? true : "Username is already taken";
+    return available;
   },
   validatePromoCode: async (value: unknown) => {
     if (typeof value !== "string") return false;
     
     const valid = await validatePromo(value);
-    return valid ? true : "Invalid promo code";
+    return valid;
   },
 });
 

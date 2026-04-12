@@ -17,7 +17,7 @@ Install the core packages and set up your field registry.
 
 ```bash
 # Install core packages
-pnpm add @buildnbuzz/form-react @buildnbuzz/form-react
+pnpm add @buildnbuzz/form-react
 
 # Install all BuzzForm field components via shadcn registry
 npx shadcn@latest add @buzzform/all
@@ -1355,28 +1355,28 @@ const schema = defineSchema({
 
 #### Default Behavior
 
-**Default `derivedValidationMode` is `"blur"`**
+**Default `derivedValidationMode` is `"submit"`**
 
 ```tsx
 <Form
   schema={schema}
-  // derivedValidationMode="blur" ← default, can omit
+  // derivedValidationMode="submit" ← default, can omit
   onSubmit={handleSubmit}
 >
 ```
 
 This means:
 
-- Derived checks (`required`, `minLength`) run on **blur**
+- Derived checks (`required`, `minLength`) run on **submit**
 - User-defined checks run on their configured trigger (`onBlur` in this case)
 
 #### Available Options
 
-| Mode               | When Derived Checks Run | Use Case                                             |
-| ------------------ | ----------------------- | ---------------------------------------------------- |
-| `"blur"` (default) | On blur                 | Good balance — validates after user finishes editing |
-| `"change"`         | On every change         | Real-time validation feedback                        |
-| `"submit"`         | Only on submit          | Minimal validation noise, only show errors on submit |
+| Mode                 | When Derived Checks Run | Use Case                                             |
+| -------------------- | ----------------------- | ---------------------------------------------------- |
+| `"submit"` (default) | On submit               | Minimal validation noise, only show errors on submit |
+| `"blur"`             | On blur & submit        | Good balance — validates after user finishes editing |
+| `"change"`           | On change, blur & submit | Real-time validation feedback                        |
 
 #### Example: Real-Time Validation
 
@@ -1387,7 +1387,7 @@ This means:
   onSubmit={handleSubmit}
 >
   {/* 
-    - required, minLength run on change (real-time)
+    - required, minLength run on every change, blur, and submit
     - User-defined onBlur checks still run on blur
     - User-defined onChange checks run on change
   */}
@@ -1406,7 +1406,7 @@ This means:
     - required, minLength ONLY run on submit
     - User-defined onBlur checks run on blur
     - User-defined onChange checks run on change
-    - No validation feedback until submit (except user-defined)
+    - No derived validation feedback until submit
   */}
 </Form>
 ```

@@ -20,7 +20,7 @@ description: Complete API reference for the useForm hook — options, context da
 | `customValidators` | `ValidationRegistry` | - | Custom validator functions |
 | `contextData` | `object` | - | External data for validators and conditions |
 | `enableSchemaSubmitValidation` | `boolean` | `true` | Enable schema-based submit validation |
-| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | `"blur"` | When to run derived validators |
+| `derivedValidationMode` | `"submit" \| "blur" \| "change"` | `"submit"` | When to run derived validators |
 | `output` | `OutputConfig` | - | Transform form output (e.g., flatten to path keys) |
 
 All standard TanStack Form options are also supported (`form`, `id`, etc.).
@@ -121,13 +121,13 @@ const customValidators = defineValidators({
     if (typeof value !== "string") return false;
     
     const available = await checkUsername(value);
-    return available ? true : "Username is taken";
+    return available;
   },
   validatePromoCode: async (value: unknown) => {
     if (typeof value !== "string") return false;
     
     const valid = await validatePromo(value);
-    return valid ? true : "Invalid promo code";
+    return valid;
   },
 });
 
@@ -203,9 +203,9 @@ const form = useForm({
 });
 ```
 
-- `"blur"` (default) — derived validators run on blur and submit
+- `"submit"` (default) — derived validators only run on submit
+- `"blur"` — derived validators run on blur and submit
 - `"change"` — derived validators run on change, blur, and submit
-- `"submit"` — derived validators only run on submit
 
 ## Output Transformation
 
