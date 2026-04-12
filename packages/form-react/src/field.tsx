@@ -124,10 +124,10 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       includeDerived: derivedRun === "change",
     });
     const blurChecks = collectFieldValidationChecks(resolvedField, "blur", {
-      includeDerived: derivedRun === "blur",
+      includeDerived: derivedRun === "blur" || derivedRun === "change",
     });
     const submitChecks = collectFieldValidationChecks(resolvedField, "submit", {
-      includeDerived: derivedRun === "submit",
+      includeDerived: true, // "change", "blur", and "submit" modes all trigger on submit
     });
 
     if (changeChecks.length + blurChecks.length + submitChecks.length === 0) {

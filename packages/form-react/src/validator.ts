@@ -42,7 +42,6 @@ export function buildStandardSchemaValidator<TFormData>(
   options: StandardValidatorOptions = {},
 ): StandardSchemaV1<TFormData, unknown> {
   const { customValidators, contextData } = options;
-  const derivedValidationMode = options.derivedValidationMode ?? "submit";
   const fieldEntries: Array<{
     pointer: string;
     field: DataField;
@@ -52,7 +51,7 @@ export function buildStandardSchemaValidator<TFormData>(
   walkFields(schema.fields, (field, ctx) => {
     if (!isDataField(field)) return;
     const checks = collectFieldValidationChecks(field, "submit", {
-      includeDerived: derivedValidationMode === "submit",
+      includeDerived: true, // "change", "blur", and "submit" all require derived checks to pass on submit
     });
     if (checks.length === 0) return;
     fieldEntries.push({

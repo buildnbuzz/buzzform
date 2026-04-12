@@ -1,15 +1,15 @@
 ---
 title: Migration Guide
-description: Upgrading from @buildnbuzz/buzzform to @buildnbuzz/form-react + @buildnbuzz/form-react.
+description: Upgrading from @buildnbuzz/buzzform to @buildnbuzz/form-react.
 ---
 
 # Migration Guide
 
 <Callout type="warning">
-  `@buildnbuzz/buzzform` is deprecated. All new development should use `@buildnbuzz/form-react` and `@buildnbuzz/form-react`.
+  `@buildnbuzz/buzzform` is deprecated. All new development should use `@buildnbuzz/form-react`.
 </Callout>
 
-This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package to the new two-package architecture.
+This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package to the `@buildnbuzz/form-react` package.
 
 ## Overview of Changes
 
@@ -184,7 +184,7 @@ The new provider requires an explicit `FieldRegistry`. If you installed with `@b
 ```tsx
 validate: async (value) => {
   const available = await checkUsername(value);
-  return available ? true : "Username is taken";
+  return available;
 }
 ```
 
@@ -198,7 +198,7 @@ const customValidators = defineValidators({
     if (typeof value !== "string") return false;
     
     const available = await checkUsername(value);
-    return available ? true : "Username is taken";
+    return available;
   },
 });
 

@@ -174,17 +174,25 @@ Use `primitive: true` for arrays of single values. Omit the item `name` to map t
 // Result type: { tags: string[] }
 ```
 
-If you provide a `name` for a field inside a primitive array, each item will still be wrapped in an object:
+Use `primitive: true` for arrays of single values. By default, this creates a flat array (e.g., `string[]`). However, if you provide a `name` for the item field, each item will be wrapped in an object:
 
 ```ts
-// Schema
+// Choice 1: Flat Array (no item name)
+{
+  type: "array",
+  name: "tags",
+  primitive: true,
+  fields: [{ type: "text" }],
+}
+// Result type: { tags: string[] }
+
+// Choice 2: Object Array (with item name)
 {
   type: "array",
   name: "socials",
   primitive: true,
   fields: [{ type: "text", name: "url" }],
 }
-
 // Result type: { socials: Array<{ url: string }> }
 ```
 
