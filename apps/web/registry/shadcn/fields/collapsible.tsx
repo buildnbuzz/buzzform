@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { CollapsibleField as CollapsibleFieldDef } from "@buildnbuzz/form-react";
 import { useLayoutField, useNestedErrorCount } from "@buildnbuzz/form-react";
-import { resolveDynamicValue, toDotNotation } from "@buildnbuzz/form-react";
+import { resolveExpr, toDotNotation } from "@buildnbuzz/form-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -111,10 +111,9 @@ export function CollapsibleField({ children }: { children?: React.ReactNode }) {
   const description = ui?.description;
   const icon = ui?.icon;
 
-  const resolvedCollapsed = resolveDynamicValue(
+  const resolvedCollapsed = resolveExpr(
     field.collapsed,
-    formData,
-    contextData,
+    { data: formData, context: contextData },
   );
   const [isOpen, setIsOpen] = React.useState(resolvedCollapsed !== true);
 

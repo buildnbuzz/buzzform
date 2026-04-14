@@ -1,5 +1,5 @@
 import type { Field as CoreField } from "@buildnbuzz/form-core";
-import { resolveDynamicValue } from "@buildnbuzz/form-core";
+import { resolveExpr } from "@buildnbuzz/form-core";
 import { isValidElement, type ReactNode } from "react";
 import type { UnknownData } from "../../types";
 import { useFieldContext } from "../field-context";
@@ -12,13 +12,6 @@ export interface ResolvedFieldTextOptions {
   placeholderFallback?: string;
   /** Fallback used when a description is missing or resolves to null. */
   descriptionFallback?: ReactNode;
-}
-
-function isDynamicReference(
-  value: unknown,
-): value is { $data: string } | { $context: string } {
-  if (!value || typeof value !== "object") return false;
-  return "$data" in value || "$context" in value;
 }
 
 /**
@@ -36,33 +29,25 @@ export function useResolvedFieldText<
   const descriptionValue = "description" in field ? field.description : undefined;
 
   const resolveText = (value: unknown, fallback: ReactNode): ReactNode => {
-    if (isDynamicReference(value)) {
-      const resolved = resolveDynamicValue(
-        value as never,
-        formData,
-        contextData,
-      );
+    if (value == null) return fallback;
+    if (typeof value === "object") {
+      const resolved = resolveExpr(value as never, { data: formData, context: contextData });
       return (resolved as ReactNode | undefined) ?? fallback;
     }
     if (isValidElement(value)) return value;
     if (typeof value === "string" || typeof value === "number") return value;
     if (typeof value === "boolean") return value;
-    if (value == null) return fallback;
-    // Guard against unresolved dynamic references (plain objects)
     return fallback;
   };
 
   const resolvePlaceholder = (value: unknown, fallback: string): string => {
-    if (isDynamicReference(value)) {
-      const resolved = resolveDynamicValue(
-        value as never,
-        formData,
-        contextData,
-      );
+    if (value == null) return fallback;
+    if (typeof value === "object") {
+      const resolved = resolveExpr(value as never, { data: formData, context: contextData });
       return (resolved as string | undefined) ?? fallback;
     }
     if (typeof value === "string") return value;
-    return value == null ? fallback : String(value);
+    return String(value);
   };
 
   return {

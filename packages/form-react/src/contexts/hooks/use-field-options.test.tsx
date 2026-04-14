@@ -6,7 +6,6 @@ import { useFieldOptions } from "./use-field-options";
 import { FieldContext } from "../field-context";
 import type {
   OptionResolverRegistry,
-  NormalizedOption,
 } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "../../types";
 

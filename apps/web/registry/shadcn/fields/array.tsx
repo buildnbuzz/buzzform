@@ -7,7 +7,7 @@ import {
   RenderFields,
   useNestedErrorCount,
 } from "@buildnbuzz/form-react";
-import { resolveDynamicValue } from "@buildnbuzz/form-react";
+import { resolveExpr } from "@buildnbuzz/form-react";
 import {
   DndContext,
   closestCenter,
@@ -147,10 +147,9 @@ function ArrayItem({
 
   const resolvedLabel = rowLabel
     ? String(
-        resolveDynamicValue(
+        resolveExpr(
           rowLabel as string,
-          rowFormData,
-          (contextData ?? {}) as Record<string, unknown>,
+          { data: rowFormData, context: (contextData ?? {}) as Record<string, unknown> },
         ) ?? "",
       ).trim() || defaultRowLabel
     : field.primitive === true && rowData !== undefined && rowData !== null
@@ -315,10 +314,9 @@ function MinimalArrayItem({
 
   const resolvedLabel = rowLabel
     ? String(
-        resolveDynamicValue(
+        resolveExpr(
           rowLabel as string,
-          rowFormData,
-          (contextData ?? {}) as Record<string, unknown>,
+          { data: rowFormData, context: (contextData ?? {}) as Record<string, unknown> },
         ) ?? "",
       ).trim() || defaultRowLabel
     : "";

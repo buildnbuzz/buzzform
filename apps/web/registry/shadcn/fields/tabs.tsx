@@ -9,7 +9,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { toDotNotation, resolveDynamicValue } from "@buildnbuzz/form-react";
+import { toDotNotation, resolveExpr } from "@buildnbuzz/form-react";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -97,7 +97,7 @@ export function TabsField() {
   const showErrorBadge = ui?.showErrorBadge !== false;
 
   const resolveLabel = (label: unknown): string =>
-    (resolveDynamicValue(label as string, formData, contextData) as string) || "Tab";
+    (resolveExpr(label as string, { data: formData, context: contextData }) as string) || "Tab";
 
   // Resolve tab labels (used as Tabs `value` keys)
   const tabLabels = tabs.map((tab) => resolveLabel(tab.label));
