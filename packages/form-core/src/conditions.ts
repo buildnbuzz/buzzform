@@ -4,7 +4,7 @@
 // @deprecated Use `resolveExpr` from `expr.ts` with `ExprContext` instead.
 
 import { resolveExpr } from "./expr";
-import type { AtomicCondition, Condition, ConditionGroup, ExprContext } from "./types";
+import type { Condition, ConditionGroup, Expr, ExprContext } from "./types";
 
 /**
  * @deprecated Use `ExprContext` instead.
@@ -19,7 +19,7 @@ function toExprContext(ctx: EvaluationContext): ExprContext {
 }
 
 function isAndCondition(
-  condition: Condition,
+  condition: Expr<boolean>,
 ): condition is ConditionGroup & { $and: Condition[] } {
   return (
     typeof condition === "object" &&
@@ -30,7 +30,7 @@ function isAndCondition(
 }
 
 function isOrCondition(
-  condition: Condition,
+  condition: Expr<boolean>,
 ): condition is ConditionGroup & { $or: Condition[] } {
   return (
     typeof condition === "object" &&
@@ -40,43 +40,35 @@ function isOrCondition(
   );
 }
 
-function isAtomicCondition(
-  condition: Condition,
-): condition is AtomicCondition {
-  return (
-    typeof condition === "object" &&
-    condition !== null &&
-    !("$and" in condition) &&
-    !("$or" in condition)
-  );
-}
-
 /**
  * @deprecated Use `resolveExpr(condition, ctx)` instead.
  */
 export function evaluateVisibility(
-  condition: Condition | undefined,
+  condition: Expr<boolean> | undefined,
   ctx: EvaluationContext,
 ): boolean {
   if (condition === undefined) return true;
+  if (typeof condition === "function") return condition(toExprContext(ctx));
   if (typeof condition === "boolean") return condition;
 
   if (Array.isArray(condition)) {
-    return condition.every((c) => evaluateVisibility(c, ctx));
+    return condition.every((c) =>
+      resolveExpr<boolean>(c, toExprContext(ctx)),
+    );
   }
 
   if (isAndCondition(condition)) {
     return condition.$and.every((child) =>
-      evaluateVisibility(child, ctx),
+      resolveExpr<boolean>(child, toExprContext(ctx)),
     );
   }
 
   if (isOrCondition(condition)) {
     return condition.$or.some((child) =>
-      evaluateVisibility(child, ctx),
+      resolveExpr<boolean>(child, toExprContext(ctx)),
     );
   }
 
-  // AtomicCondition — resolveExpr handles all comparison ops including `not`
+  // Everything else ($when, $fn, $text, AtomicCondition) → delegate to resolveExpr
   return resolveExpr<boolean>(condition, toExprContext(ctx)) ?? true;
 }

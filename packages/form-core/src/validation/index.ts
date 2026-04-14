@@ -1,4 +1,6 @@
 import type {
+  Expr,
+  ExprContext,
   Field,
   FormSchema,
   ValidationCheck,
@@ -7,7 +9,7 @@ import type {
   ValidatorArgsMap,
 } from "../types";
 import { isDataField } from "../types";
-import { resolveDynamicValue } from "../dynamic";
+import { resolveExpr } from "../expr";
 import { evaluateVisibility } from "../conditions";
 import { getByPath, joinPointer, splitPointer } from "../utils/path";
 import { walkFields } from "../utils/walk";
@@ -625,12 +627,9 @@ export function runValidationCheck(
 
   const resolvedArgs: Record<string, unknown> = {};
   if (check.args) {
+    const exprCtx: ExprContext = { data: ctx.formData, context: ctx.contextData };
     for (const [key, argValue] of Object.entries(check.args)) {
-      resolvedArgs[key] = resolveDynamicValue(
-        argValue,
-        ctx.formData,
-        ctx.contextData,
-      );
+      resolvedArgs[key] = resolveExpr(argValue as Expr<unknown>, exprCtx);
     }
   }
 
