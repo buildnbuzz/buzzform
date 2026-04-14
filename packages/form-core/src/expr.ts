@@ -185,35 +185,35 @@ function evaluateCondition(
     ? getByPath(ctx.data, base)
     : getByPath(ctx.context ?? {}, base);
 
+  const applyNot = (result: boolean) => cond.not === true ? !result : result;
+
   if ("eq" in cond && cond.eq !== undefined) {
     const eq = resolveExpr(cond.eq, ctx, fns);
-    const result = value === eq;
-    return cond.not === true ? !result : result;
+    return applyNot(value === eq);
   }
   if ("neq" in cond && cond.neq !== undefined) {
     const neq = resolveExpr(cond.neq, ctx, fns);
-    const result = value !== neq;
-    return cond.not === true ? !result : result;
+    return applyNot(value !== neq);
   }
   if ("gt" in cond && cond.gt !== undefined) {
     const gt = resolveExpr(cond.gt, ctx, fns);
-    return typeof value === "number" && typeof gt === "number" && value > gt;
+    return applyNot(typeof value === "number" && typeof gt === "number" && value > gt);
   }
   if ("gte" in cond && cond.gte !== undefined) {
     const gte = resolveExpr(cond.gte, ctx, fns);
-    return typeof value === "number" && typeof gte === "number" && value >= gte;
+    return applyNot(typeof value === "number" && typeof gte === "number" && value >= gte);
   }
   if ("lt" in cond && cond.lt !== undefined) {
     const lt = resolveExpr(cond.lt, ctx, fns);
-    return typeof value === "number" && typeof lt === "number" && value < lt;
+    return applyNot(typeof value === "number" && typeof lt === "number" && value < lt);
   }
   if ("lte" in cond && cond.lte !== undefined) {
     const lte = resolveExpr(cond.lte, ctx, fns);
-    return typeof value === "number" && typeof lte === "number" && value <= lte;
+    return applyNot(typeof value === "number" && typeof lte === "number" && value <= lte);
   }
   if ("contains" in cond && cond.contains !== undefined) {
     const contains = resolveExpr(cond.contains, ctx, fns);
-    return (
+    return applyNot(
       typeof value === "string" &&
       typeof contains === "string" &&
       value.includes(contains)
@@ -221,7 +221,7 @@ function evaluateCondition(
   }
   if ("startsWith" in cond && cond.startsWith !== undefined) {
     const startsWith = resolveExpr(cond.startsWith, ctx, fns);
-    return (
+    return applyNot(
       typeof value === "string" &&
       typeof startsWith === "string" &&
       value.startsWith(startsWith)
@@ -229,7 +229,7 @@ function evaluateCondition(
   }
   if ("endsWith" in cond && cond.endsWith !== undefined) {
     const endsWith = resolveExpr(cond.endsWith, ctx, fns);
-    return (
+    return applyNot(
       typeof value === "string" &&
       typeof endsWith === "string" &&
       value.endsWith(endsWith)
@@ -237,8 +237,7 @@ function evaluateCondition(
   }
 
   // Plain truthiness (no comparison operator)
-  const result = Boolean(value);
-  return cond.not === true ? !result : result;
+  return applyNot(Boolean(value));
 }
 
 /** Evaluate a Condition value (any shape: atomic, array, $and, $or). */
