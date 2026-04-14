@@ -8,6 +8,7 @@ import {
   walkFields,
   toDotNotation,
   fromDotNotation,
+  resolveDynamicValue,
   resolveExpr,
   evaluateVisibility,
   defineValidators,
@@ -31,6 +32,8 @@ export {
   walkFields,
   toDotNotation,
   fromDotNotation,
+  /** @deprecated Use `resolveExpr` instead. */
+  resolveDynamicValue,
   resolveExpr,
   evaluateVisibility,
   defineValidators,

@@ -1,6 +1,7 @@
 export * from "./types";
 export * from "./options";
 export * from "./conditions";
+export * from "./dynamic";
 export * from "./expr";
 export * from "./utils/path";
 export * from "./utils/walk";
