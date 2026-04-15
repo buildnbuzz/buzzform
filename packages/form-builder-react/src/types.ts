@@ -128,4 +128,7 @@ export interface BuilderStoreInterface {
   setViewport: (viewport: Viewport) => void;
   /** Updates the zoom level. */
   setZoom: (zoom: number) => void;
+
+  /** Access to temporal (undo/redo) state. Only available if using the default store. */
+  temporal?: unknown;
 }
