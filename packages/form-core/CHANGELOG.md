@@ -1,5 +1,18 @@
 # @buildnbuzz/form-core
 
+## 0.1.6
+
+### Patch Changes
+
+- [#127](https://github.com/buildnbuzz/buzzform/pull/127) [`d4302d9`](https://github.com/buildnbuzz/buzzform/commit/d4302d99280100cf3a2dcf64bd332cd850f9f3dc) Thanks [@ladparth](https://github.com/ladparth)! - Unify dynamic expression APIs and logic under Expr<T>.
+  - Introduce `Expr<T>` unified expression system replacing DynamicValue and VisibilityCondition.
+  - Add `$text` node for string interpolation.
+  - Add `$when` node for conditional branching (ternary).
+  - Add `$fn` node for calling custom registry functions.
+  - Introduce `ExprContext` with `data` and `context` properties.
+  - Fix `InferType` for empty-name primitive arrays to produce flat arrays.
+  - Deprecate `evaluateVisibility`, `resolveDynamicValue`, and old context types.
+
 ## 0.1.5
 
 ### Patch Changes

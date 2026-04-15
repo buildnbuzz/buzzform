@@ -1,5 +1,20 @@
 # @buildnbuzz/form-react
 
+## 0.1.6
+
+### Patch Changes
+
+- [#127](https://github.com/buildnbuzz/buzzform/pull/127) [`d4302d9`](https://github.com/buildnbuzz/buzzform/commit/d4302d99280100cf3a2dcf64bd332cd850f9f3dc) Thanks [@ladparth](https://github.com/ladparth)! - Unify runtime registries under FormRegistries and migrate to Expr<T>.
+  - Introduce `FormRegistries` container for fields, validators, resolvers, and fns.
+  - Add `registries` prop to `FormProvider`, `Form`, and `useForm`.
+  - Deprecate `registry`, `customValidators`, and `optionResolvers` top-level props in favor of the unified `registries` object.
+  - Update `Field` and `LayoutField` to use unified expression evaluator.
+  - Support inline functions as expressions for all dynamic field properties.
+  - Update documentation and canonical examples to modern expression syntax.
+
+- Updated dependencies [[`d4302d9`](https://github.com/buildnbuzz/buzzform/commit/d4302d99280100cf3a2dcf64bd332cd850f9f3dc)]:
+  - @buildnbuzz/form-core@0.1.6
+
 ## 0.1.5
 
 ### Patch Changes
