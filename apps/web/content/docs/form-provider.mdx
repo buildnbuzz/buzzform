@@ -1,11 +1,11 @@
 ---
 title: FormProvider
-description: Set up the global field registry for your app.
+description: Configure unified runtime registries and the global field component registry.
 ---
 
 # FormProvider
 
-`<FormProvider>` makes your field renderer registry available throughout your app.
+`<FormProvider>` provides the unified **FormRegistries** object to your entire application. This includes the field component registry, custom validators, option resolvers, and expression functions.
 
 ## API Reference
 
@@ -13,25 +13,37 @@ description: Set up the global field registry for your app.
 
 | Prop | Type | Description |
 |------|------|-------------|
-| `registry` | `FieldRegistry` | Field type to component mapping |
+| `registries` | `FormRegistries` | Unified runtime registries (fields, validators, etc.) |
+| `registry` | `FieldRegistry` | @deprecated Use `registries.fields` instead. |
+| `derivedValidationMode` | `ValidationRun` | Default trigger for derived validators |
 | `children` | `ReactNode` | Child components |
 
-### FieldRegistry
+### FormRegistries
 
-Plain object mapping field type strings to React components:
+The unified container for all named runtime functions and components:
 
 ```ts
-{
-  text: TextFieldComponent,
-  email: EmailFieldComponent,
-  select: SelectFieldComponent,
-  // ... more field types
+interface FormRegistries {
+  /** 
+   * Field component registry. Maps field type strings to renderer components.
+   * (e.g., `{ text: MyTextField, select: MySelect }`)
+   */
+  fields?: Record<string, ComponentType<any>>;
+  
+  /** Custom validators for validation checks with `type: "name"`. */
+  validators?: Record<string, ValidatorFn>;
+  
+  /** Async option resolvers for `{ resolver: "name" }` configs. */
+  resolvers?: Record<string, OptionResolverFn>;
+  
+  /** Expression functions for `{ $fn: "name" }` in any Expr position. */
+  fns?: Record<string, ExprFn>;
 }
 ```
 
 ## Basic Setup
 
-Wrap your app root with the provider:
+Wrap your app root with the provider. Pass your field components via `registries.fields`:
 
 ```tsx title="app/layout.tsx"
 import { FormProvider } from "@buildnbuzz/form-react";
@@ -41,60 +53,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider>
+        <FormProvider 
+          registries={{ 
+            fields: registry,
+            validators: { /* global validators */ },
+            resolvers: { /* global resolvers */ }
+          }}
+        >
+          {children}
+        </FormProvider>
       </body>
     </html>
   );
 }
 ```
 
-## FieldRegistry
-
-The registry maps field type strings to React components:
-
-<auto-type-table path="../../../../packages/form-react/src/contexts/registry-context.tsx" name="FieldRegistry" />
-
-### Building a Registry
-
-If you installed with `@buzzform/all`, the registry is pre-built at `components/buzzform/registry.ts`:
-
-```tsx title="components/buzzform/registry.ts"
-"use client";
-
-import type { FieldRegistry } from "@buildnbuzz/form-react";
-
-import { TextField } from "./fields/text";
-import { EmailField } from "./fields/email";
-import { SelectField } from "./fields/select";
-// ... all field imports
-
-export const registry: FieldRegistry = {
-  text: TextField,
-  email: EmailField,
-  select: SelectField,
-  // ... all field mappings
-};
-```
-
-### Minimal Registry
-
-Only include field types you use:
-
-```tsx
-const minimalRegistry = {
-  text: TextField,
-  email: EmailField,
-  checkbox: CheckboxField,
-};
-
-<FormProvider registry={minimalRegistry}>
-  {/* Only text, email, and checkbox fields will render */}
-</FormProvider>
-```
-
 ## useRegistry Hook
 
-Access the registry in your components:
+Access the field component registry in your components. This hook automatically falls back from `registries.fields` to the deprecated `registry` prop:
 
 ```tsx
 import { useRegistry } from "@buildnbuzz/form-react";
@@ -105,110 +81,54 @@ function CustomFormRenderer() {
   // Use registry to look up field components
   const TextComponent = registry.text;
 
-  return <TextComponent />;
+  return TextComponent ? <TextComponent /> : null;
 }
 ```
 
-## Registry Override
+## Registry Merge Behavior
 
-Override the global registry for a specific form:
+Registries defined at the form level (via `useForm` or `<Form>`) are **shallow-merged** over the global registries from `FormProvider`. This allows you to provide a core set of reusable validators and resolvers globally while overriding them for specific forms.
 
 ```tsx
-import { customRegistry } from "@/my-custom-registry";
-
 // Global provider
-<FormProvider registry={registry}>
-  <App />
+<FormProvider registries={{ validators: { unique: globalUnique } }}>
+  {/* Form override */}
+  <Form registries={{ validators: { unique: localUnique } }}>
+    {/* Uses localUnique */}
+  </Form>
 </FormProvider>
-
-// Override for specific form
-<Form
-  schema={contactSchema}
-  registry={customRegistry} // Uses custom registry instead
-  onSubmit={handleSubmit}
->
-  <FormContent>
-    <FormFields />
-    <FormSubmit>Submit</FormSubmit>
-  </FormContent>
-</Form>
 ```
 
-## FieldRenderer
+## Example: Complete Registry
 
-The registry is used by `FieldRenderer` to look up components:
-
-```tsx
-// Inside RenderFields
-registry[field.type] // Looks up component by type string
-```
-
-If a field type isn't in the registry, it won't render (unless you provide a `renderFallback`).
-
-## Example: Complete Setup
-
-```tsx title="app/layout.tsx"
-import { FormProvider } from "@buildnbuzz/form-react";
-import { registry } from "@/components/buzzform/registry";
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body>
-        <FormProvider registry={registry}>
-          {children}
-        </FormProvider>
-      </body>
-    </html>
-  );
-}
-```
+If you installed with `@buzzform/all`, the field component registry is pre-built at `components/buzzform/registry.ts`:
 
 ```tsx title="components/buzzform/registry.ts"
 "use client";
 
 import type { FieldRegistry } from "@buildnbuzz/form-react";
-
 import { TextField } from "./fields/text";
 import { EmailField } from "./fields/email";
-import { PasswordField } from "./fields/password";
-import { TextareaField } from "./fields/textarea";
-import { NumberField } from "./fields/number";
-import { SelectField } from "./fields/select";
-import { CheckboxField } from "./fields/checkbox";
-import { SwitchField } from "./fields/switch";
-import { RadioField } from "./fields/radio";
-import { DateField } from "./fields/date";
-import { TagsField } from "./fields/tags";
-import { GroupField } from "./fields/group";
-import { ArrayField } from "./fields/array";
-import { RowField } from "./fields/row";
-import { TabsField } from "./fields/tabs";
-import { CollapsibleField } from "./fields/collapsible";
+// ... all field imports
 
 export const registry: FieldRegistry = {
   text: TextField,
   email: EmailField,
-  password: PasswordField,
-  textarea: TextareaField,
-  number: NumberField,
-  select: SelectField,
-  checkbox: CheckboxField,
-  switch: SwitchField,
-  radio: RadioField,
-  date: DateField,
-  tags: TagsField,
-  group: GroupField,
-  array: ArrayField,
-  row: RowField,
-  tabs: TabsField,
-  collapsible: CollapsibleField,
+  // ... all field mappings
 };
+```
+
+Set it up globally:
+
+```tsx
+<FormProvider registries={{ fields: registry }}>
+  <App />
+</FormProvider>
 ```
 
 ## Related
 
-- [`RenderFields`](/docs/render-fields)
 - [Custom Fields](/docs/custom-fields)
-- [Installation](/docs/installation)
+- [Validation](/docs/validation)
+- [Option Resolvers](/docs/option-resolvers)
 - [Quick Start](/docs/quick-start)

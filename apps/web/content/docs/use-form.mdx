@@ -17,7 +17,9 @@ description: Complete API reference for the useForm hook — options, context da
 |------|------|---------|-------------|
 | `schema` | `FormSchema` | - | Form schema for defaults and validation |
 | `defaultValues` | `Partial<TFormData>` | - | Override schema-derived defaults |
-| `customValidators` | `ValidationRegistry` | - | Custom validator functions |
+| `registries` | `FormRegistries` | - | Unified runtime registries (validators, resolvers, fns, fields) |
+| `customValidators` | `ValidationRegistry` | - | @deprecated Use `registries.validators` instead. |
+| `optionResolvers` | `OptionResolverRegistry` | - | @deprecated Use `registries.resolvers` instead. |
 | `contextData` | `object` | - | External data for validators and conditions |
 | `enableSchemaSubmitValidation` | `boolean` | `true` | Enable schema-based submit validation |
 | `derivedValidationMode` | `"submit" \| "blur" \| "change"` | `"submit"` | When to run derived validators |
@@ -133,7 +135,7 @@ const customValidators = defineValidators({
 
 const form = useForm({
   schema: registerSchema,
-  customValidators,
+  registries: { validators: customValidators },
 });
 ```
 

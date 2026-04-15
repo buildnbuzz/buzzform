@@ -42,8 +42,8 @@ Set up once at your app root, then use forms anywhere without passing `registry`
 Import the `FormProvider` and your installed `registry`, then wrap your root layout:
 
 ```tsx title="app/layout.tsx"
-import { FormProvider } from "@buildnbuzz/form-react"; // [!code highlight]
-import { registry } from "@/components/buzzform/registry"; // [!code highlight]
+import { FormProvider } from "@buildnbuzz/form-react";
+import { registry } from "@/components/buzzform/registry";
 
 export default function RootLayout({
   children,
@@ -53,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider> {/* [!code highlight] */}
+        <FormProvider registries={{ fields: registry }}>{children}</FormProvider>
       </body>
     </html>
   );
@@ -73,7 +73,7 @@ Pass `registry` explicitly to each form (useful for isolated components or testi
 ```tsx
 import { registry } from "@/components/buzzform/registry";
 
-<Form schema={schema} registry={registry} onSubmit={handleSubmit}>
+<Form schema={schema} registries={{ fields: registry }} onSubmit={handleSubmit}>
   <FormContent>
     <FormFields />
   </FormContent>
@@ -3539,20 +3539,20 @@ Pass external data for dynamic behavior.
 
 ### Common Issues
 
-#### "No field registry found"
+#### "No form configuration found"
 
-**Problem:** Form can't find the registry.
+**Problem:** Form can't find the configuration or registry.
 
-**Solution:** Either wrap with `FormProvider` or pass `registry` explicitly.
+**Solution:** Either wrap with `FormProvider` or pass `registries.fields` explicitly.
 
 ```tsx
 // Option A: Wrap with provider (recommended)
-<FormProvider registry={registry}>
+<FormProvider registries={{ fields: registry }}>
   <App />
 </FormProvider>
 
-// Option B: Pass registry to each form
-<Form schema={schema} registry={registry} onSubmit={handleSubmit} />
+// Option B: Pass registries to each form
+<Form schema={schema} registries={{ fields: registry }} onSubmit={handleSubmit} />
 ```
 
 #### Type errors with `InferType`

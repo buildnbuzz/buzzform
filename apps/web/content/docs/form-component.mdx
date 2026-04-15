@@ -15,11 +15,13 @@ This page documents the headless `<Form>` from `@buildnbuzz/form-react`. For mos
 |------|------|-------------|
 | `form` | `FieldFormApi` | TanStack form instance from `useForm` |
 | `fields` | `Field[]` | Schema fields to auto-render |
-| `registry` | `FieldRegistry` | Optional registry override |
+| `registries` | `FormRegistries` | Unified runtime registries (fields, validators, resolvers, fns) |
+| `registry` | `FieldRegistry` | @deprecated Use `registries.fields` instead. |
+| `customValidators` | `ValidationRegistry` | @deprecated Use `registries.validators` instead. |
+| `optionResolvers` | `OptionResolverRegistry` | @deprecated Use `registries.resolvers` instead. |
 | `renderFallback` | `(field) => ReactNode` | Fallback for unregistered field types |
 | `basePath` | `string` | Parent path for nested fields |
 | `contextData` | `object` | External data for dynamic values |
-| `customValidators` | `ValidationRegistry` | Custom validator registry |
 | `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
 | `onSubmit` | `(e) => void` | Custom submit handler |
 | `children` | `ReactNode` | Custom content to render |
@@ -81,7 +83,7 @@ export function ContactForm() {
   <Form
     form={form}
     fields={contactSchema.fields}
-    registry={customRegistry} // Override global registry
+    registries={{ fields: customRegistry }} // Override global registry
   >
     <button type="submit">Send Message</button>
   </Form>;

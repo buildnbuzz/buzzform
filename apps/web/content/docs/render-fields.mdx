@@ -19,12 +19,15 @@ description: Render fields from schema — auto-rendering and custom layouts.
 |------|------|-------------|
 | `fields` | `Field[]` | Fields to render |
 | `form` | `FieldFormApi` | TanStack form instance |
-| `registry` | `FieldRegistry` | Optional registry override |
+| `registries` | `FormRegistries` | Unified runtime registries (fields, validators, resolvers, fns) |
+| `registry` | `FieldRegistry` | @deprecated Use `registries.fields` instead. |
+| `customValidators` | `ValidationRegistry` | @deprecated Use `registries.validators` instead. |
+| `optionResolvers` | `OptionResolverRegistry` | @deprecated Use `registries.resolvers` instead. |
 | `renderFallback` | `(field) => ReactNode` | Fallback for unregistered types |
 | `basePath` | `string` | Parent path for nested fields |
 | `contextData` | `object` | External data for dynamic values |
-| `customValidators` | `ValidationRegistry` | Custom validator registry |
 | `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
+
 
 ### FieldRendererProps
 
@@ -141,7 +144,7 @@ export function ContactForm() {
   <RenderFields
     fields={contactSchema.fields}
     form={form}
-    registry={customRegistry}
+    registries={{ fields: customRegistry }}
   />;
 }
 ```

@@ -163,7 +163,7 @@ const customValidators = defineValidators({
 
 const form = useForm({
   schema: registerSchema,
-  customValidators,
+  registries: { validators: customValidators },
 });
 ```
 
@@ -234,7 +234,7 @@ const customValidators = defineValidators({
 // Pass to useForm
 const form = useForm({
   schema: contactSchema,
-  customValidators,
+  registries: { validators: customValidators },
 });
 ```
 
