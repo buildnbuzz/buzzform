@@ -38,8 +38,8 @@ describe("generateComponentCode", () => {
     };
     const code = generateComponentCode(nodes, ["a"], "Contact");
     expect(code).toContain(`"use client"`);
-    expect(code).toContain(`import { defineSchema, type InferType } from "@buildnbuzz/form-core"`);
-    expect(code).toContain(`import { Form } from "@buildnbuzz/form-react"`);
+    expect(code).toContain(`import { defineSchema, type InferType } from "@buildnbuzz/form-react"`);
+    expect(code).toContain(`import { Form } from "@/components/buzzform/form"`);
     expect(code).toContain(`export default function ContactForm()`);
     expect(code).toContain(`"name"`);
   });

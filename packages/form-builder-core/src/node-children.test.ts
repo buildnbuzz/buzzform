@@ -143,21 +143,22 @@ describe("ensureChildList", () => {
   it("returns rootIds with default slot when parentId is null", () => {
     const rootIds = ["a", "b"];
     const result = ensureChildList({}, rootIds, null);
-    expect(result.list).toBe(rootIds);
+    expect(result.list).toEqual(rootIds);
+    expect(result.list).not.toBe(rootIds); // newly cloned array
     expect(result.resolvedSlot).toBe(DEFAULT_SLOT);
   });
 
-  it("initializes missing default slot for non-tab containers", () => {
+  it("returns empty array for missing default slot for non-tab containers without mutation", () => {
     const nodes: Record<string, Node> = {
       a: createNode("a", { type: "group" as const, name: "g", fields: [] }, null, {}),
     };
     const result = ensureChildList(nodes, [], "a");
     expect(result.resolvedSlot).toBe(DEFAULT_SLOT);
     expect(result.list).toEqual([]);
-    expect(nodes["a"]!.children[DEFAULT_SLOT]).toBe(result.list);
+    expect(nodes["a"]!.children[DEFAULT_SLOT]).toBeUndefined(); // No mutation
   });
 
-  it("initializes missing tab slot and returns resolved slot key", () => {
+  it("returns cloned array for missing tab slot and returns resolved slot key without mutation", () => {
     const nodes: Record<string, Node> = {
       a: createNode("a", { type: "tabs" as const, tabs: [
         { name: "t1", label: "Tab 1", fields: [] },
@@ -166,6 +167,6 @@ describe("ensureChildList", () => {
     const result = ensureChildList(nodes, [], "a", "t1");
     expect(result.resolvedSlot).toBe("t1");
     expect(result.list).toEqual([]);
-    expect(nodes["a"]!.children["t1"]).toBe(result.list);
+    expect(nodes["a"]!.children["t1"]).toBeUndefined(); // No mutation
   });
 });

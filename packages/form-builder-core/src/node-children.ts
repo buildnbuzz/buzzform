@@ -89,11 +89,10 @@ export function getChildList(
 }
 
 /**
- * Returns the mutable child list for a given parent node and slot,
- * initializing the slot if it doesn't exist yet.
+ * Returns a new child list for a given parent node and slot,
+ * and the resolved slot key.
  *
- * Returns the resolved slot key alongside the list so callers know
- * which slot was used (important for tabs).
+ * *Does not mutate the node.* Callers must update the node's `children` dictionary.
  */
 export function ensureChildList(
   nodes: Record<string, Node>,
@@ -102,7 +101,7 @@ export function ensureChildList(
   parentSlot: string | null = null,
 ): { list: string[]; resolvedSlot: string } {
   if (parentId === null) {
-    return { list: rootIds, resolvedSlot: DEFAULT_SLOT };
+    return { list: [...rootIds], resolvedSlot: DEFAULT_SLOT };
   }
 
   const parentNode = nodes[parentId];
@@ -111,13 +110,10 @@ export function ensureChildList(
   }
 
   const resolvedSlot = resolveSlotKey(parentNode, parentSlot);
-
-  if (!parentNode.children[resolvedSlot]) {
-    parentNode.children[resolvedSlot] = [];
-  }
+  const existingList = parentNode.children[resolvedSlot];
 
   return {
-    list: parentNode.children[resolvedSlot],
+    list: existingList ? [...existingList] : [],
     resolvedSlot,
   };
 }

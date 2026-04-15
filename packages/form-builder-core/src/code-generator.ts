@@ -15,31 +15,21 @@ import type { Node } from "./types";
  * @param formName — human-readable name used for component generation
  * @param outputConfig — optional output transform configuration
  */
-export function generateComponentCode(
-  nodes: Record<string, Node>,
-  rootIds: string[],
-  formName: string,
-  outputConfig?: OutputConfig,
-): string {
-  const componentName = toComponentName(formName);
-  const fields = nodesToFields(nodes, rootIds);
-  const schemaString = JSON.stringify(fields, null, 2);
+export interface CodeGenerationTemplate {
+  /**
+   * Function that takes the stringified JSON schema, component name, and optional output prop string,
+   * and returns the full component code string.
+   */
+  (schemaString: string, componentName: string, outputProp: string): string;
+}
 
-  const outputProp = outputConfig
-    ? (() => {
-        const props = [`type: "${outputConfig.type}"`];
-        if (outputConfig.delimiter && outputConfig.delimiter !== ".") {
-          props.push(`delimiter: "${outputConfig.delimiter}"`);
-        }
-        const inner = props.join(", ");
-        return `\n        output={{ ${inner} }}`;
-      })()
-    : "";
+/**
+ * Default React template that generates a Next.js component using Tailwind and Sonner.
+ */
+export const defaultReactTemplate: CodeGenerationTemplate = (schemaString, componentName, outputProp) => `"use client";
 
-  return `"use client";
-
-import { defineSchema, type InferType } from "@buildnbuzz/form-core";
-import { Form } from "@buildnbuzz/form-react";
+import { defineSchema, type InferType } from "@buildnbuzz/form-react";
+import { Form } from "@/components/buzzform/form";
 import { toast } from "sonner";
 
 const formSchema = defineSchema(${schemaString});
@@ -68,6 +58,39 @@ export default function ${componentName}() {
   );
 }
 `;
+
+/**
+ * Generates external source code from a builder node tree.
+ *
+ * @param nodes — flat adjacency list of all nodes
+ * @param rootIds — top-level node IDs
+ * @param formName — human-readable name used for component generation
+ * @param outputConfig — optional output transform configuration
+ * @param template — optional template generator function (defaults to React template)
+ */
+export function generateComponentCode(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+  formName: string,
+  outputConfig?: OutputConfig,
+  template: CodeGenerationTemplate = defaultReactTemplate,
+): string {
+  const componentName = toComponentName(formName);
+  const fields = nodesToFields(nodes, rootIds);
+  const schemaString = JSON.stringify(fields, null, 2);
+
+  const outputProp = outputConfig
+    ? (() => {
+        const props = [`type: "${outputConfig.type}"`];
+        if (outputConfig.delimiter && outputConfig.delimiter !== ".") {
+          props.push(`delimiter: "${outputConfig.delimiter}"`);
+        }
+        const inner = props.join(", ");
+        return `\n        output={{ ${inner} }}`;
+      })()
+    : "";
+
+  return template(schemaString, componentName, outputProp);
 }
 
 /**

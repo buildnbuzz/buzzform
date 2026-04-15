@@ -11,6 +11,9 @@ export { isDataField } from "./types";
 
 export { DEFAULT_SLOT, getTabSlotKeys, getNodeChildren, getSlotKeys, getChildList, ensureChildList } from "./node-children";
 
+export type { TreeState } from "./tree";
+export { insertNode, moveNode, removeNodeTree as removeNode, duplicateNode, updateNode } from "./tree";
+
 export { nodesToFields, nodeToField, getAllFieldNames } from "./schema-builder";
 
 export { CURRENT_SCHEMA_VERSION, BUILDER_VERSION } from "./persistence";

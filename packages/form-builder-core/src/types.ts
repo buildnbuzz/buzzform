@@ -2,7 +2,6 @@ import type {
   DataField,
   Field,
   FieldType,
-  UnknownData,
 } from "@buildnbuzz/form-core";
 
 // ---------------------------------------------------------------------------
@@ -67,7 +66,7 @@ export type SaveStatus = "idle" | "saving" | "saved";
  * The React adapter extends this with `sidebar` (label + icon),
  * `renderer` (ComponentType), and other UI-specific metadata.
  */
-export interface FieldDefinition {
+export interface FieldDefinition<TField extends Field = Field> {
   /**
    * Default property values for new instances of this field type.
    *
@@ -75,7 +74,7 @@ export interface FieldDefinition {
    * generated values (e.g. `name`, `label`) into these defaults before
    * creating the `Node`.
    */
-  defaultProps: UnknownData;
+  defaultProps: Omit<TField, "name"> & { name?: string };
   /**
    * Field types that are allowed to be dropped inside this container.
    *
