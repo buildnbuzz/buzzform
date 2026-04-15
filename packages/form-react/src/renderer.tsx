@@ -12,6 +12,7 @@ import { fromDotNotation, joinPointer, toDotNotation, isDataField } from "@build
 import { Field, LayoutField } from "./field";
 import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
+import { mergeRegistries } from "./utils/merge-registries";
 
 type FallbackRenderer = (field: CoreField) => ReactNode;
 
@@ -55,10 +56,11 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   basePath,
 }: FieldRendererProps<TFormData>) {
   const config = useContext(FormConfigContext);
+
+  const mergedRegistries = mergeRegistries(config?.registries, registries);
   const resolvedRegistry =
-    (registries?.fields as FieldRegistry | undefined) ??
+    mergedRegistries?.fields ??
     registry ??
-    (config?.registries?.fields as FieldRegistry | undefined) ??
     config?.registry;
   const resolvedDerivedValidationMode =
     derivedValidationMode ?? config?.derivedValidationMode;
@@ -71,7 +73,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
     field,
     form,
     contextData,
-    registries,
+    registries: mergedRegistries,
     customValidators,
     optionResolvers,
     derivedValidationMode: resolvedDerivedValidationMode,
@@ -113,7 +115,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
       field={resolvedField}
       form={form}
       contextData={contextData}
-      registries={registries}
+      registries={mergedRegistries}
       customValidators={customValidators}
       optionResolvers={optionResolvers}
       derivedValidationMode={resolvedDerivedValidationMode}
@@ -163,10 +165,10 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   basePath,
 }: RenderFieldsProps<TFormData>) {
   const config = useContext(FormConfigContext);
+  const mergedRegistries = mergeRegistries(config?.registries, registries);
   const resolvedRegistry =
-    (registries?.fields as FieldRegistry | undefined) ??
+    mergedRegistries?.fields ??
     registry ??
-    (config?.registries?.fields as FieldRegistry | undefined) ??
     config?.registry;
   const resolvedDerivedValidationMode =
     derivedValidationMode ?? config?.derivedValidationMode;
@@ -184,7 +186,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
             field={field}
             form={form}
             contextData={contextData}
-            registries={registries}
+            registries={mergedRegistries}
             customValidators={customValidators}
             optionResolvers={optionResolvers}
             derivedValidationMode={resolvedDerivedValidationMode}

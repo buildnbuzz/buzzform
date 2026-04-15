@@ -8,7 +8,6 @@ import {
   FormConfigContext,
   useForm,
   type FieldFormApi,
-  type FieldRegistry,
   type UseFormOptionsWithSchema,
   type FormRegistries,
 } from "@buildnbuzz/form-react";
@@ -16,7 +15,6 @@ import type {
   CoreField,
   FormSchema,
   ValidationRun,
-  OptionResolverRegistry,
 } from "@buildnbuzz/form-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -84,8 +82,11 @@ function Form<TSchema extends FormSchema = FormSchema>(
   props: FormProps<TSchema>,
 ) {
   const config = React.useContext(FormConfigContext);
-  const registries = props.registries ?? config?.registries;
-  const registry = registries?.fields as FieldRegistry | undefined;
+  const globalRegistries = config?.registries;
+  // Check fields registry exists either on the prop or globally.
+  // Merging happens inside the headless layer (renderer / field / use-form).
+  const hasFieldRegistry =
+    (props.registries?.fields ?? globalRegistries?.fields) !== undefined;
 
   const derivedValidationMode =
     (props as FormWithInstance).derivedValidationMode ??
@@ -93,7 +94,7 @@ function Form<TSchema extends FormSchema = FormSchema>(
     config?.derivedValidationMode;
   const formId = React.useId();
 
-  if (!registry) {
+  if (!hasFieldRegistry) {
     throw new Error(
       "No field component registry found. Pass `registries.fields` to <Form> or wrap with <FormProvider>.",
     );
@@ -110,12 +111,7 @@ function Form<TSchema extends FormSchema = FormSchema>(
           registries: props.registries,
         }}
       >
-        <FormProvider
-          registries={{ ...config?.registries, ...props.registries }}
-          derivedValidationMode={derivedValidationMode}
-        >
-          {props.children}
-        </FormProvider>
+        {props.children}
       </FormContext.Provider>
     );
   }
@@ -143,7 +139,6 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   formId: string;
   derivedValidationMode?: ValidationRun;
 }) {
-
   if (process.env.NODE_ENV === "development" && children && actions) {
     console.warn(
       "<Form>: `actions` prop is ignored when children are provided.",

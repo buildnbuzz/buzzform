@@ -25,6 +25,7 @@ import type {
 } from "./types";
 import { FieldContext, useFormConfig } from "./contexts";
 import { useDependenciesSelector } from "./contexts/hooks/use-dependencies-selector";
+import { mergeRegistries } from "./utils/merge-registries";
 
 function mergeListenTo(
   generated?: string[],
@@ -91,11 +92,14 @@ export function Field<TFormData extends UnknownData = UnknownData>({
 }: FieldProps<TFormData>) {
   const { registries: globalRegistries, derivedValidationMode: globalMode } = useFormConfig();
 
-  const mergedRegistries = useMemo(() => {
+  // registries prop is already merged with global by the renderer.
+  // Here we only fold in the deprecated per-field shims.
+  const mergedRegistries = useMemo<FormRegistries>(() => {
+    const base = mergeRegistries(globalRegistries, registries) ?? {};
     return {
-      validators: { ...globalRegistries?.validators, ...registries?.validators, ...customValidators },
-      resolvers: { ...globalRegistries?.resolvers, ...registries?.resolvers, ...optionResolvers },
-      fns: { ...globalRegistries?.fns, ...registries?.fns },
+      ...base,
+      validators: { ...base.validators, ...customValidators } as FormRegistries["validators"],
+      resolvers: { ...base.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
     };
   }, [globalRegistries, registries, customValidators, optionResolvers]);
   const pointer = useMemo(() => {
@@ -151,7 +155,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         changeChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
       next.onChangeAsyncDebounceMs = changeGroup?.debounceMs;
       if (validationListenTo) next.onChangeListenTo = validationListenTo;
@@ -161,7 +165,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         blurChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
       next.onBlurAsyncDebounceMs = blurGroup?.debounceMs;
       if (validationListenTo) next.onBlurListenTo = validationListenTo;
@@ -171,7 +175,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         submitChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
     }
     return next;
@@ -179,7 +183,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     resolvedField,
     form,
     contextData,
-    customValidators,
+    mergedRegistries.validators,
     derivedValidationMode,
     validationListenTo,
   ]);
@@ -297,11 +301,11 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
 }: LayoutFieldProps<TFormData>) {
   const { registries: globalRegistries } = useFormConfig();
 
-  const mergedRegistries = useMemo(() => {
+  const mergedRegistries = useMemo<FormRegistries>(() => {
+    const base = mergeRegistries(globalRegistries, registries) ?? {};
     return {
-      validators: { ...globalRegistries?.validators, ...registries?.validators },
-      resolvers: { ...globalRegistries?.resolvers, ...registries?.resolvers, ...optionResolvers },
-      fns: { ...globalRegistries?.fns, ...registries?.fns },
+      ...base,
+      resolvers: { ...base.resolvers, ...optionResolvers },
     };
   }, [globalRegistries, registries, optionResolvers]);
   const pointer = useMemo(() => {

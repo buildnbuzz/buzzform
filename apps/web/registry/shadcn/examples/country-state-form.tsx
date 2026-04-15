@@ -191,7 +191,7 @@ export default function CountryStateForm() {
       <CardContent>
         <Form
           schema={locationSchema}
-          optionResolvers={locationResolvers}
+          registries={{ resolvers: locationResolvers }}
           onSubmit={async ({ value }) => {
             const data = value as LocationData;
             await new Promise((resolve) => setTimeout(resolve, 800));

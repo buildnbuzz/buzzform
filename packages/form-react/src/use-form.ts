@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import { buildStandardSchemaValidator } from "./validator";
 import { FormConfigContext } from "./contexts";
+import { mergeRegistries } from "./utils/merge-registries";
 
 /**
  * Wraps TanStack `useForm` with schema defaults, runtime submit validation, and optional output transform.
@@ -48,9 +49,10 @@ export function useForm<TFormData extends UnknownData>(
 
   const schemaSubmitValidator = useMemo(() => {
     if (!enableSchemaSubmitValidation) return undefined;
+    // Merge global + form-level registries, then fold in deprecated shim
+    const merged = mergeRegistries(config?.registries, registries);
     const mergedValidators = {
-      ...config?.registries?.validators,
-      ...registries?.validators,
+      ...merged?.validators,
       ...customValidators,
     };
     return buildStandardSchemaValidator<TFormData>(schema, {
@@ -60,8 +62,8 @@ export function useForm<TFormData extends UnknownData>(
     }) as StandardSchemaV1<TFormData, unknown>;
   }, [
     schema,
-    config?.registries?.validators,
-    registries?.validators,
+    config?.registries,
+    registries,
     customValidators,
     contextData,
     derivedValidationMode,
