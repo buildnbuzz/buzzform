@@ -16,12 +16,15 @@ export function getRegistryEntry(
   return registry[type];
 }
 
+/** Grouped sidebar item data. */
+export type SidebarGroups = Record<string, SidebarItem[]>;
+
 /**
  * Groups registry entries by their sidebar category for the field palette.
  */
 export function getSidebarGroups(
   registry: BuilderFieldRegistry,
-): Record<string, SidebarItem[]> {
+): SidebarGroups {
   const groups: Record<string, SidebarItem[]> = {};
 
   // Iterate over all keys in the registry
