@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type {
   Field as CoreField,
   DataField,
+  FormRegistries,
   ValidationRegistry,
   OptionResolverRegistry,
   ValidationRun,
@@ -24,13 +25,15 @@ export interface FieldRendererProps<
   form: FieldFormApi<TFormData>;
   /** External context data used by dynamic runtime checks. */
   contextData?: UnknownData;
-  /** Optional custom validator registry passed through to `Field`. */
+  /** Optional runtime registries (validators, resolvers, fns). */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;
-  /** Optional custom option resolvers passed through to hooks. */
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
-  /** Optional registry override for this render call. */
+  /** @deprecated Use `registries.fields` instead. */
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
   renderFallback?: FallbackRenderer;
@@ -43,6 +46,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
+  registries,
   customValidators,
   optionResolvers,
   derivedValidationMode,
@@ -51,7 +55,11 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   basePath,
 }: FieldRendererProps<TFormData>) {
   const config = useContext(FormConfigContext);
-  const resolvedRegistry = registry ?? config?.registry;
+  const resolvedRegistry =
+    (registries?.fields as FieldRegistry | undefined) ??
+    registry ??
+    (config?.registries?.fields as FieldRegistry | undefined) ??
+    config?.registry;
   const resolvedDerivedValidationMode =
     derivedValidationMode ?? config?.derivedValidationMode;
   const Component = resolvedRegistry?.[field.type];
@@ -63,6 +71,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
     field,
     form,
     contextData,
+    registries,
     customValidators,
     optionResolvers,
     derivedValidationMode: resolvedDerivedValidationMode,
@@ -104,6 +113,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
       field={resolvedField}
       form={form}
       contextData={contextData}
+      registries={registries}
       customValidators={customValidators}
       optionResolvers={optionResolvers}
       derivedValidationMode={resolvedDerivedValidationMode}
@@ -123,13 +133,15 @@ export interface RenderFieldsProps<
   form: FieldFormApi<TFormData>;
   /** External context data used by dynamic runtime checks. */
   contextData?: UnknownData;
-  /** Optional custom validator registry passed through to each field. */
+  /** Optional runtime registries (validators, resolvers, fns). */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;
-  /** Optional custom option resolvers passed through to hooks. */
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
-  /** Optional registry override for this render call. */
+  /** @deprecated Use `registries.fields` instead. */
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
   renderFallback?: FallbackRenderer;
@@ -142,6 +154,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   fields,
   form,
   contextData,
+  registries,
   customValidators,
   optionResolvers,
   derivedValidationMode,
@@ -150,7 +163,11 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
   basePath,
 }: RenderFieldsProps<TFormData>) {
   const config = useContext(FormConfigContext);
-  const resolvedRegistry = registry ?? config?.registry;
+  const resolvedRegistry =
+    (registries?.fields as FieldRegistry | undefined) ??
+    registry ??
+    (config?.registries?.fields as FieldRegistry | undefined) ??
+    config?.registry;
   const resolvedDerivedValidationMode =
     derivedValidationMode ?? config?.derivedValidationMode;
 
@@ -167,6 +184,7 @@ export function RenderFields<TFormData extends UnknownData = UnknownData>({
             field={field}
             form={form}
             contextData={contextData}
+            registries={registries}
             customValidators={customValidators}
             optionResolvers={optionResolvers}
             derivedValidationMode={resolvedDerivedValidationMode}
@@ -186,6 +204,7 @@ function renderNestedFields<TFormData extends UnknownData>({
   field,
   form,
   contextData,
+  registries,
   customValidators,
   derivedValidationMode,
   registry,
@@ -195,6 +214,7 @@ function renderNestedFields<TFormData extends UnknownData>({
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
+  registries?: FormRegistries;
   customValidators?: ValidationRegistry;
   optionResolvers?: OptionResolverRegistry;
   derivedValidationMode?: ValidationRun;
@@ -215,6 +235,7 @@ function renderNestedFields<TFormData extends UnknownData>({
         fields={field.fields}
         form={form}
         contextData={contextData}
+        registries={registries}
         customValidators={customValidators}
         derivedValidationMode={derivedValidationMode}
         registry={registry}
@@ -231,6 +252,7 @@ function renderNestedFields<TFormData extends UnknownData>({
         fields={field.fields}
         form={form}
         contextData={contextData}
+        registries={registries}
         customValidators={customValidators}
         derivedValidationMode={derivedValidationMode}
         registry={registry}

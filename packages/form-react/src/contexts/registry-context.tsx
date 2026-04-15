@@ -1,5 +1,9 @@
 import { createContext, useContext } from "react";
-import type { Field as CoreField, ValidationRun } from "@buildnbuzz/form-core";
+import type {
+  Field as CoreField,
+  ValidationRun,
+  FormRegistries,
+} from "@buildnbuzz/form-core";
 import type { ComponentType, ReactNode } from "react";
 
 /** Registry mapping field type strings to renderer components. */
@@ -9,8 +13,10 @@ export type FieldRegistry = {
 
 /** Global form configuration context value. */
 export interface FormConfig {
-  /** Default registry used by `FieldRenderer` and `RenderFields`. */
+  /** @deprecated Use `registries.fields` instead. */
   registry: FieldRegistry;
+  /** Global runtime registries (validators, resolvers, fns, fields). */
+  registries?: FormRegistries;
   /** Default validation run for derived field checks. Defaults to `submit`. */
   derivedValidationMode?: ValidationRun;
 }
@@ -18,40 +24,48 @@ export interface FormConfig {
 /** React context for globally configured form settings. */
 export const FormConfigContext = createContext<FormConfig | null>(null);
 
+/** Default configuration used when no FormProvider is present. */
+export const defaultFormConfig: FormConfig = {
+  registry: {},
+};
+
 /** @deprecated Use useFormConfig().registry or wrap with <FormProvider> */
 export const RegistryContext = FormConfigContext;
 
 /** Reads global form configuration from the nearest `FormProvider`. */
 export function useFormConfig(): FormConfig {
   const config = useContext(FormConfigContext);
-  if (!config) {
-    throw new Error(
-      "No form configuration found. Wrap with <FormProvider> or pass `registry` directly.",
-    );
-  }
-  return config;
+  return config ?? defaultFormConfig;
 }
 
 /** Reads field renderer registry from the nearest `FormProvider`. */
 export function useRegistry(): FieldRegistry {
-  return useFormConfig().registry;
+  const config = useFormConfig();
+  return (config.registries?.fields as FieldRegistry | undefined) ?? config.registry;
 }
 
 /** Props for global form-react provider configuration. */
 export interface FormProviderProps extends Partial<FormConfig> {
-  /** Registry is required unless provided via another FormProvider. */
-  registry: FieldRegistry;
+  /** @deprecated Use `registries.fields` instead. */
+  registry?: FieldRegistry;
   children: ReactNode;
 }
 
 /** Provides default form configuration to descendants. */
 export function FormProvider({
   registry,
+  registries,
   derivedValidationMode,
   children,
 }: FormProviderProps) {
   return (
-    <FormConfigContext.Provider value={{ registry, derivedValidationMode }}>
+    <FormConfigContext.Provider
+      value={{
+        registry: registry ?? {},
+        registries,
+        derivedValidationMode,
+      }}
+    >
       {children}
     </FormConfigContext.Provider>
   );

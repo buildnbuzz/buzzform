@@ -576,6 +576,11 @@ export type FnRegistry = Record<string, ExprFn>;
  * Per-form registries are shallow-merged over FormProvider registries.
  */
 export interface FormRegistries {
+  /**
+   * Field component registry. Maps field type strings to renderer components.
+   * (e.g., `{ text: MyTextInput, select: MySelect }`)
+   */
+  fields?: Record<string, any>;
   /** Custom validators for validation checks with `type: "name"`. */
   validators?: Record<string, (...args: unknown[]) => boolean | Promise<boolean>>;
   /** Async option resolvers for `{ resolver: "name" }` in OptionsConfig. */

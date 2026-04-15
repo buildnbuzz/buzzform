@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useFieldOptions } from "./use-field-options";
 import { FieldContext } from "../field-context";
-import type { OptionResolverRegistry } from "@buildnbuzz/form-core";
+import type { FormRegistries } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "../../types";
 
 describe("useFieldOptions - cascading dropdown integration", () => {
@@ -47,7 +47,9 @@ describe("useFieldOptions - cascading dropdown integration", () => {
       isDisabled: false,
       isReadOnly: false,
       isRequired: false,
-      optionResolvers,
+      registries: {
+        resolvers: optionResolvers,
+      },
       fieldApi: {
         state: { value: initialValue },
         handleChange,

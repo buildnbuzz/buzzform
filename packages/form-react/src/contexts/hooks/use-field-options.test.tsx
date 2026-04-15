@@ -5,7 +5,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useFieldOptions } from "./use-field-options";
 import { FieldContext } from "../field-context";
 import type {
-  OptionResolverRegistry,
+  FormRegistries,
 } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "../../types";
 
@@ -41,7 +41,7 @@ const baseFieldContext = {
   isDisabled: false,
   isReadOnly: false,
   isRequired: false,
-  optionResolvers: undefined as OptionResolverRegistry | undefined,
+  registries: undefined as FormRegistries | undefined,
   fieldApi: mockFieldApi,
 };
 
@@ -96,8 +96,10 @@ describe("useFieldOptions", () => {
     
     const contextValue = {
       ...baseFieldContext,
-      optionResolvers: {
-        fetchByCategory: categoryOptionsResolver,
+      registries: {
+        resolvers: {
+          fetchByCategory: categoryOptionsResolver,
+        },
       },
     };
 
@@ -123,7 +125,9 @@ describe("useFieldOptions", () => {
   it("errors gracefully if registry resolver is missing", async () => {
     const contextValue = {
       ...baseFieldContext,
-      optionResolvers: {}, // Missing our resolver
+      registries: {
+        resolvers: {}, // Missing our resolver
+      },
     };
 
     const resolverConfig = { resolver: "missingResolver" };

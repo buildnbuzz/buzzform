@@ -35,7 +35,9 @@ export function useForm<TFormData extends UnknownData>(
     schema,
     defaultValues,
     validators,
+    registries,
     customValidators,
+    optionResolvers,
     contextData,
     enableSchemaSubmitValidation = true,
     derivedValidationMode = config?.derivedValidationMode,
@@ -46,13 +48,20 @@ export function useForm<TFormData extends UnknownData>(
 
   const schemaSubmitValidator = useMemo(() => {
     if (!enableSchemaSubmitValidation) return undefined;
+    const mergedValidators = {
+      ...config?.registries?.validators,
+      ...registries?.validators,
+      ...customValidators,
+    };
     return buildStandardSchemaValidator<TFormData>(schema, {
-      customValidators,
+      customValidators: mergedValidators,
       contextData,
       derivedValidationMode,
     }) as StandardSchemaV1<TFormData, unknown>;
   }, [
     schema,
+    config?.registries?.validators,
+    registries?.validators,
     customValidators,
     contextData,
     derivedValidationMode,

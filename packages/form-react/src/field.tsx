@@ -3,6 +3,7 @@ import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   type DataField,
   type Field as CoreField,
+  type FormRegistries,
   collectFieldValidationChecks,
   resolveExpr,
   escapePointer,
@@ -22,7 +23,7 @@ import type {
   FieldProps,
   UnknownData,
 } from "./types";
-import { FieldContext } from "./contexts";
+import { FieldContext, useFormConfig } from "./contexts";
 import { useDependenciesSelector } from "./contexts/hooks/use-dependencies-selector";
 
 function mergeListenTo(
@@ -81,12 +82,22 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
+  registries,
   customValidators,
   optionResolvers,
   validators,
   derivedValidationMode,
   children,
 }: FieldProps<TFormData>) {
+  const { registries: globalRegistries, derivedValidationMode: globalMode } = useFormConfig();
+
+  const mergedRegistries = useMemo(() => {
+    return {
+      validators: { ...globalRegistries?.validators, ...registries?.validators, ...customValidators },
+      resolvers: { ...globalRegistries?.resolvers, ...registries?.resolvers, ...optionResolvers },
+      fns: { ...globalRegistries?.fns, ...registries?.fns },
+    };
+  }, [globalRegistries, registries, customValidators, optionResolvers]);
   const pointer = useMemo(() => {
     if (field.name.startsWith("/")) return field.name;
     if (field.name.includes(".")) return fromDotNotation(field.name);
@@ -200,19 +211,19 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      (resolveExpr<boolean>(resolvedField.condition, ctx) ?? true);
+      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      (resolveExpr<boolean>(resolvedField.hidden, ctx) ?? false);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
     const isDisabled =
       resolvedField.disabled !== undefined &&
-      (resolveExpr<boolean>(resolvedField.disabled, ctx) ?? false);
+      (resolveExpr<boolean>(resolvedField.disabled, ctx, mergedRegistries.fns) ?? false);
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
-      (resolveExpr<boolean>(resolvedField.readOnly, ctx) ?? false);
+      (resolveExpr<boolean>(resolvedField.readOnly, ctx, mergedRegistries.fns) ?? false);
     const isRequired =
       resolvedField.required !== undefined &&
-      (resolveExpr<boolean>(resolvedField.required, ctx) ?? false);
+      (resolveExpr<boolean>(resolvedField.required, ctx, mergedRegistries.fns) ?? false);
 
     if (!isConditionMet) {
       return <ConditionalFieldRemover form={form} name={field.name} />;
@@ -237,7 +248,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
               fieldPath: pointer,
               formData,
               contextData,
-              optionResolvers,
+              registries: mergedRegistries,
               isHidden,
               isConditionMet,
               isDisabled,
@@ -267,6 +278,9 @@ export interface LayoutFieldProps<TFormData extends UnknownData = UnknownData> {
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
+  /** Runtime registries (validators, resolvers, fns). Merged over global config. */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   basePath?: string;
   children: React.ReactNode;
@@ -276,10 +290,20 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
+  registries,
   optionResolvers,
   basePath,
   children,
 }: LayoutFieldProps<TFormData>) {
+  const { registries: globalRegistries } = useFormConfig();
+
+  const mergedRegistries = useMemo(() => {
+    return {
+      validators: { ...globalRegistries?.validators, ...registries?.validators },
+      resolvers: { ...globalRegistries?.resolvers, ...registries?.resolvers, ...optionResolvers },
+      fns: { ...globalRegistries?.fns, ...registries?.fns },
+    };
+  }, [globalRegistries, registries, optionResolvers]);
   const pointer = useMemo(() => {
     if (!basePath) return "";
     return basePath.startsWith("/") ? basePath : fromDotNotation(basePath);
@@ -302,10 +326,10 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      (resolveExpr<boolean>(resolvedField.condition, ctx) ?? true);
+      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      (resolveExpr<boolean>(resolvedField.hidden, ctx) ?? false);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
 
     if (!isConditionMet) return null;
     if (isHidden) return null;
@@ -318,7 +342,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
           fieldPath: pointer,
           formData,
           contextData,
-          optionResolvers,
+          registries: mergedRegistries,
           isHidden,
           isConditionMet,
           isDisabled: false,

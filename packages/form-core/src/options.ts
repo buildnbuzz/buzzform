@@ -2,6 +2,7 @@ import type {
   FieldOption,
   OptionResolverRegistry,
   OptionsConfig,
+  FnRegistry,
 } from "./types";
 import { resolveExpr } from "./expr";
 
@@ -75,6 +76,7 @@ export function resolveOption(
   option: FieldOption | string,
   formData: Record<string, unknown>,
   contextData?: Record<string, unknown>,
+  fns?: FnRegistry,
 ): NormalizedOption {
   if (typeof option === "string") {
     return { label: option, value: option, disabled: false };
@@ -85,7 +87,11 @@ export function resolveOption(
     disabled:
       option.disabled === undefined
         ? false
-        : resolveExpr<boolean>(option.disabled, { data: formData, context: contextData }) ?? false,
+        : resolveExpr<boolean>(
+            option.disabled,
+            { data: formData, context: contextData },
+            fns,
+          ) ?? false,
     ui: option.ui,
   };
 }
@@ -102,9 +108,10 @@ export function resolveOptions(
   options: OptionsConfig,
   formData: Record<string, unknown>,
   contextData?: Record<string, unknown>,
+  fns?: FnRegistry,
 ): NormalizedOption[] {
   if (!Array.isArray(options)) {
     return [];
   }
-  return options.map((opt) => resolveOption(opt, formData, contextData));
+  return options.map((opt) => resolveOption(opt, formData, contextData, fns));
 }
