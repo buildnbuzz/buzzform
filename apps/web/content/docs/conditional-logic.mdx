@@ -79,6 +79,47 @@ Invert a condition with `not: true`:
 }
 ```
 
+## Inline Functions (Escape Hatch)
+
+If your schema is defined in code (not JSON), you can use a JavaScript function for any condition. This receives the unified `ExprContext`:
+
+```tsx
+{
+  type: "text",
+  name: "managerName",
+  // Simple JS logic instead of AST
+  condition: ({ data, context }) => data.role === "Manager" && context.isEnterprise,
+}
+```
+
+## Custom Functions ($fn)
+
+For complex logic that you want to keep serializable, register functions via `registries.fns`. You can provide these globally via `<FormProvider>` or directly to a specific form:
+
+```tsx
+const myRegistries = { 
+  fns: {
+    isEligible: ({ data }) => data.age >= 18 && data.status === "active",
+  }
+};
+
+// Global registration
+<FormProvider registries={myRegistries}>...</FormProvider>
+
+// OR: Per-form registration
+<Form registries={myRegistries} ... />
+```
+
+Once registered, reference the function via `$fn` in your schema:
+
+```tsx
+{
+  type: "text",
+  name: "license",
+  condition: { $fn: "isEligible" },
+}
+```
+
 ## Comparison Operators
 
 Atomic conditions support these operators:

@@ -10,6 +10,7 @@ import {
   type FieldFormApi,
   type FieldRegistry,
   type UseFormOptionsWithSchema,
+  type FormRegistries,
 } from "@buildnbuzz/form-react";
 import type {
   CoreField,
@@ -24,10 +25,13 @@ import { cn } from "@/lib/utils";
 
 interface FormContextValue {
   form: FieldFormApi;
+  /** @deprecated Use registries.fields */
   registry: FieldRegistry;
   schema?: FormSchema;
   formId: string;
   derivedValidationMode?: ValidationRun;
+  registries?: FormRegistries;
+  /** @deprecated Use registries.resolvers */
   optionResolvers?: OptionResolverRegistry;
 }
 
@@ -57,9 +61,13 @@ type FormActionsConfig = {
 };
 
 type FormOwnProps = {
+  /** Unified runtime registries (fields, validators, resolvers, fns). */
+  registries?: FormRegistries;
+  /** @deprecated Use registries.fields */
   registry?: FieldRegistry;
   children?: React.ReactNode;
   actions?: FormActionsConfig;
+  /** @deprecated Use registries.resolvers */
   optionResolvers?: OptionResolverRegistry;
 };
 
@@ -84,7 +92,11 @@ function Form<TSchema extends FormSchema = FormSchema>(
   props: FormProps<TSchema>,
 ) {
   const config = React.useContext(FormConfigContext);
-  const registry = props.registry ?? config?.registry;
+  const registry =
+    (props.registries?.fields as FieldRegistry | undefined) ??
+    props.registry ??
+    (config?.registries?.fields as FieldRegistry | undefined) ??
+    config?.registry;
   const derivedValidationMode =
     (props as FormWithInstance).derivedValidationMode ??
     (props as FormWithSchema<TSchema>).derivedValidationMode ??
@@ -93,7 +105,7 @@ function Form<TSchema extends FormSchema = FormSchema>(
 
   if (!registry) {
     throw new Error(
-      "No field registry found. Pass `registry` to <Form> or wrap with <FormProvider>.",
+      "No field registry found. Pass registries.fields to <Form> or wrap with <FormProvider>.",
     );
   }
 
@@ -106,11 +118,13 @@ function Form<TSchema extends FormSchema = FormSchema>(
           schema: props.schema,
           formId,
           derivedValidationMode,
+          registries: props.registries,
           optionResolvers: props.optionResolvers,
         }}
       >
         <FormProvider
           registry={registry}
+          registries={props.registries}
           derivedValidationMode={derivedValidationMode}
         >
           {props.children}
@@ -137,6 +151,7 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   actions,
   defaultValues,
   onSubmit,
+  registries,
   customValidators,
   contextData,
   derivedValidationMode,
@@ -146,7 +161,6 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   registry: FieldRegistry;
   formId: string;
   derivedValidationMode?: ValidationRun;
-  optionResolvers?: OptionResolverRegistry;
 }) {
   if (process.env.NODE_ENV === "development" && children && actions) {
     console.warn(
@@ -167,18 +181,29 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
     schema: schema as TSchema,
     defaultValues,
     onSubmit,
+    registries,
     customValidators,
     contextData,
     derivedValidationMode,
+    optionResolvers,
     ...tanstackOpts,
   } as UseFormOptionsWithSchema<TSchema>);
 
   return (
     <FormContext.Provider
-      value={{ form, registry, schema, formId, derivedValidationMode, optionResolvers }}
+      value={{
+        form,
+        registry,
+        schema,
+        formId,
+        derivedValidationMode,
+        registries,
+        optionResolvers,
+      }}
     >
       <FormProvider
         registry={registry}
+        registries={registries}
         derivedValidationMode={derivedValidationMode}
       >
         {children ?? (
@@ -207,13 +232,21 @@ function FormContent({
   children,
   ...props
 }: FormContentProps) {
-  const { form, registry, formId, derivedValidationMode, optionResolvers } = useFormContext();
+  const {
+    form,
+    registry,
+    formId,
+    derivedValidationMode,
+    registries,
+    optionResolvers,
+  } = useFormContext();
 
   return (
     <HeadlessForm
       id={formId}
       form={form}
       registry={registry}
+      registries={registries}
       derivedValidationMode={derivedValidationMode}
       optionResolvers={optionResolvers}
       className={cn("flex flex-col gap-4", className)}
@@ -238,7 +271,14 @@ type FormFieldsProps = {
 };
 
 function FormFields({ className }: FormFieldsProps) {
-  const { form, registry, schema, derivedValidationMode, optionResolvers } = useFormContext();
+  const {
+    form,
+    registry,
+    schema,
+    derivedValidationMode,
+    registries,
+    optionResolvers,
+  } = useFormContext();
   const fields = (schema?.fields ?? []) as readonly CoreField[];
 
   return (
@@ -247,6 +287,7 @@ function FormFields({ className }: FormFieldsProps) {
         fields={fields}
         form={form}
         registry={registry}
+        registries={registries}
         derivedValidationMode={derivedValidationMode}
         optionResolvers={optionResolvers}
       />
@@ -362,7 +403,10 @@ function FormMessage({
       {(errors) => {
         const rootError = errors[0];
         const message =
-          children ?? (typeof rootError === "string" || React.isValidElement(rootError) ? (rootError as React.ReactNode) : null);
+          children ??
+          (typeof rootError === "string" || React.isValidElement(rootError)
+            ? (rootError as React.ReactNode)
+            : null);
         if (!message) return null;
         return (
           <div

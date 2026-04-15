@@ -83,6 +83,10 @@ export type {
   ExprText,
   ExprString,
   ExprBoolean,
+  Condition,
+  FormRegistries,
+  FnRegistry,
+  ExprFn,
   /** @deprecated Use `Condition` instead. */
   VisibilityCondition,
   ValidationRegistry,

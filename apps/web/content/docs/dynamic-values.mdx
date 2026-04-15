@@ -9,16 +9,95 @@ BuzzForm supports dynamic references in field properties using `{ $data: path }`
 
 ## Expression Types
 
-An expression can be a literal value or a reference:
+An expression can be a literal value, a reference, or complex logic:
 
 ```ts
-type Expr<T> = T | { $data: string } | { $context: string };
+type Expr<T> = 
+  | T                                     // Literal (string, number, boolean)
+  | { $data: string }                     // Reference form data
+  | { $context: string }                  // Reference external context
+  | { $text: string }                     // Template interpolation
+  | { $when: Condition; $then: Expr<T>; $else: Expr<T> } // Ternary logic
+  | { $fn: string; args?: Record<string, Expr<any>> }    // Registry function
+  | ((ctx: ExprContext) => T);            // Inline JS function
 ```
 
 This works for:
 - `ExprString` — labels, descriptions, placeholders
 - `ExprNumber` — validator args, min/max values
 - `ExprBoolean` — `disabled`, `required`, `condition`
+
+## Advanced Expressions
+
+Unified expressions support powerful logic nodes that minimize the need for custom code.
+
+### Template Interpolation ($text)
+
+Build dynamic strings using `${/path}` syntax. References are resolved from form data:
+
+```tsx
+{
+  type: "text",
+  name: "confirmation",
+  // "Hello John, please confirm your email."
+  label: { $text: "Hello ${/firstName}, please confirm your email." },
+}
+```
+
+### Conditional Branching ($when)
+
+Return different values based on a boolean condition:
+
+```tsx
+{
+  type: "text",
+  name: "discountCode",
+  // Label changes based on membership status
+  label: {
+    $when: { $data: "/isVip", eq: true },
+    $then: "Enter VIP Code",
+    $else: "Enter Promo Code"
+  }
+}
+```
+
+### Registry Functions ($fn)
+
+Call custom functions registered in `registries.fns`. Arguments themselves can be expressions:
+
+```tsx
+// 1. Register function
+<FormProvider registries={{ 
+  fns: { 
+    calculateTotal: ({ args }) => (args.price as number) * 1.1 
+  } 
+}}>
+
+// 2. Call in schema
+{
+  type: "number",
+  name: "totalPrice",
+  defaultValue: { 
+    $fn: "calculateTotal", 
+    args: { price: { $data: "/basePrice" } } 
+  }
+}
+```
+
+### Inline Functions
+
+For schemas defined in JavaScript (not JSON), you can use standard functions. This is the ultimate escape hatch:
+
+```tsx
+{
+  type: "text",
+  name: "manager",
+  // JS logic with full context access
+  condition: ({ data, context }) => {
+    return data.role === "Manager" && context.isEnterprise;
+  }
+}
+```
 
 
 ## Using $data
