@@ -69,9 +69,10 @@ const locationSchema = defineSchema({
 ### 3. Pass Resolvers to the Form
 
 ```tsx
+// In your form:
 <Form
   schema={locationSchema}
-  optionResolvers={apiResolvers}
+  registries={{ resolvers: apiResolvers }}
   onSubmit={({ value }) => console.log(value)}
 >
   <FormContent>
@@ -79,14 +80,13 @@ const locationSchema = defineSchema({
     <FormSubmit>Submit</FormSubmit>
   </FormContent>
 </Form>
-```
 
 ## Resolver Function Signature
 
 Each resolver receives a context object:
 
 ```ts
-interface OptionResolverContext {
+interface ExprContext {
   /** Current form values */
   data: Record<string, unknown>;
   /** External context passed via contextData */
@@ -94,10 +94,11 @@ interface OptionResolverContext {
 }
 
 type OptionResolverFn = (
-  ctx: OptionResolverContext,
+  ctx: ExprContext,
   args?: Record<string, unknown>,
 ) => Promise<Array<{ label: string; value: string; disabled?: boolean }>>;
 ```
+
 
 ### Using `data` (Current Form Values)
 

@@ -65,8 +65,14 @@ describe("Documentation Correctness", () => {
     const pattern = /\b(condition|hidden|disabled|readOnly|required)\s*:\s*(\(|[a-z]\w*\s*=>)/;
     
     for (const file of files) {
-      // Skip migration guide - it intentionally shows old function syntax for comparison
-      if (file.endsWith("migration.mdx")) continue;
+      // Skip migration guide and advanced logic guides that intentionally show escape hatches
+      if (
+        file.endsWith("migration.mdx") ||
+        file.endsWith("conditional-logic.mdx") ||
+        file.endsWith("dynamic-values.mdx")
+      ) {
+        continue;
+      }
       
       const content = fs.readFileSync(path.join(process.cwd(), file), "utf8");
       expect(content).not.toMatch(pattern);
@@ -87,8 +93,14 @@ describe("Documentation Correctness", () => {
     const pattern = /\bvalidate\s*:\s*(\(|async\s*\(|[a-z]\w*\s*=>)/;
     
     for (const file of files) {
-      // Skip migration guide - it intentionally shows old function syntax for comparison
-      if (file.endsWith("migration.mdx")) continue;
+      // Skip migration guide and advanced logic guides that intentionally show escape hatches
+      if (
+        file.endsWith("migration.mdx") ||
+        file.endsWith("conditional-logic.mdx") ||
+        file.endsWith("dynamic-values.mdx")
+      ) {
+        continue;
+      }
       
       const content = fs.readFileSync(path.join(process.cwd(), file), "utf8");
       expect(content).not.toMatch(pattern);

@@ -1,6 +1,7 @@
 import type { FormEvent, FormHTMLAttributes, ReactNode } from "react";
 import type {
   Field as CoreField,
+  FormRegistries,
   ValidationRegistry,
   OptionResolverRegistry,
   ValidationRun,
@@ -18,13 +19,15 @@ export interface FormProps<TFormData extends UnknownData = UnknownData>
   fields?: readonly CoreField[];
   /** External context data used by dynamic runtime checks. */
   contextData?: UnknownData;
-  /** Optional custom validator registry passed through to `RenderFields`. */
+  /** Optional runtime registries (fields, validators, resolvers, fns). */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;
-  /** Optional custom option resolvers passed through to `RenderFields`. */
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   /** Which run includes derived checks for generated field validators. */
   derivedValidationMode?: ValidationRun;
-  /** Optional registry override for this render call. */
+  /** @deprecated Use `registries.fields` instead. */
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
   renderFallback?: (field: CoreField) => ReactNode;
@@ -41,6 +44,7 @@ export function Form<TFormData extends UnknownData = UnknownData>({
   form,
   fields,
   contextData,
+  registries,
   customValidators,
   optionResolvers,
   derivedValidationMode,
@@ -58,6 +62,17 @@ export function Form<TFormData extends UnknownData = UnknownData>({
     void form.handleSubmit();
   };
 
+  // Normalize deprecated shims — RenderFields will handle the rest.
+  const normalizedRegistries: FormRegistries | undefined =
+    registry || registries || customValidators || optionResolvers
+      ? {
+          ...registries,
+          fields: (registries?.fields ?? registry) as FormRegistries["fields"],
+          validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
+          resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+        }
+      : undefined;
+
   return (
     <form
       {...rest}
@@ -69,10 +84,8 @@ export function Form<TFormData extends UnknownData = UnknownData>({
             fields={fields}
             form={form}
             contextData={contextData}
-            customValidators={customValidators}
-            optionResolvers={optionResolvers}
+            registries={normalizedRegistries}
             derivedValidationMode={derivedValidationMode}
-            registry={registry}
             renderFallback={renderFallback}
             basePath={basePath}
           />

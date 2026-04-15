@@ -121,7 +121,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider>
+        <FormProvider registries={{ fields: registry }}>{children}</FormProvider>
       </body>
     </html>
   );

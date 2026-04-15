@@ -7,7 +7,9 @@ import type { FieldValidators } from "@tanstack/form-core";
 import type { ReactNode } from "react";
 import type {
   DataField,
+  Field as CoreField,
   FormSchema,
+  FormRegistries,
   OutputConfig,
   OptionResolverRegistry,
   ValidationRegistry,
@@ -71,9 +73,11 @@ export interface UseFormOptionsWithSchema<
   schema: TSchema;
   /** Optional overrides merged over schema-derived defaults. */
   defaultValues?: Partial<TFormData>;
-  /** Optional custom validation registry. */
+  /** Optional runtime registries (validators, resolvers, fns). */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;
-  /** Optional custom option resolver registry. */
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   /** Optional context data used by dynamic validators. */
   contextData?: UnknownData;
@@ -119,9 +123,11 @@ export interface FieldProps<TFormData extends UnknownData = UnknownData> {
   form: FieldFormApi<TFormData>;
   /** External data available to dynamic validation conditions and checks. */
   contextData?: UnknownData;
-  /** Custom validators registry passed to `form-core` checks. */
+  /** Runtime registries (validators, resolvers, fns, fields). Merged over global config. */
+  registries?: FormRegistries;
+  /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;
-  /** Custom option resolvers registry passed to option resolving hooks. */
+  /** @deprecated Use `registries.resolvers` instead. */
   optionResolvers?: OptionResolverRegistry;
   /** Explicit TanStack validators merged with generated schema validators. */
   validators?: AnyFieldValidators;

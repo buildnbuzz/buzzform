@@ -145,7 +145,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <FormProvider registry={registry}>{children}</FormProvider>
+        <FormProvider registries={{ fields: registry }}>{children}</FormProvider>
       </body>
     </html>
   );
@@ -153,7 +153,8 @@ export default function RootLayout({
 ```
 
 <Callout type="tip">
-  Alternatively, pass `registry` directly to each `<Form>` component instead of using the provider. See [Form Component](/docs/form-component) for details.
+  Alternatively, pass `registries.fields` directly to each `<Form>` component instead of using the provider.
+ See [Form Component](/docs/form-component) for details.
 </Callout>
 
 ## Verification

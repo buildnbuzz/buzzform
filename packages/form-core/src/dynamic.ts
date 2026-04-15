@@ -1,24 +1,23 @@
-import type { DynamicValue } from "./types";
-import { getByPath } from "./utils/path";
+// =============================================================================
+// dynamic.ts — deprecated wrapper over resolveExpr
+// =============================================================================
+
+import { resolveExpr } from "./expr";
+import type { DataPath, ContextPath, Expr, ExprContext } from "./types";
+
+/** @deprecated Use `Expr<T>` instead. */
+export type DynamicValue<T = unknown> = T | { $data: DataPath } | { $context: ContextPath };
 
 /**
- * Resolve a DynamicValue using form data and optional context.
+ * @deprecated Use `resolveExpr(value, ctx)` instead.
  */
 export function resolveDynamicValue<T>(
   value: DynamicValue<T> | undefined,
   formData: Record<string, unknown>,
   contextData?: Record<string, unknown>,
 ): T | undefined {
-  if (value === undefined) return undefined;
-
-  if (typeof value === "object" && value !== null) {
-    if ("$data" in value) {
-      return getByPath(formData, value.$data) as T | undefined;
-    }
-    if ("$context" in value) {
-      return getByPath(contextData ?? {}, value.$context) as T | undefined;
-    }
-  }
-
-  return value as T;
+  return resolveExpr<T>(
+    value as Expr<T> | undefined,
+    { data: formData, context: contextData },
+  );
 }

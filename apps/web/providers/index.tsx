@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <TooltipProvider>
           <BuzzFormProvider>
-            <FormProvider registry={registry} derivedValidationMode="blur">
+            <FormProvider registries={{ fields: registry }} derivedValidationMode="blur">
               {children}
             </FormProvider>
           </BuzzFormProvider>

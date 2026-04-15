@@ -1,106 +1,26 @@
-import type {
-  AtomicCondition,
-  ContextCondition,
-  DataCondition,
-  ConditionGroup,
-  VisibilityCondition,
-} from "./types";
-import { getByPath } from "./utils/path";
-import { resolveDynamicValue } from "./dynamic";
+// =============================================================================
+// conditions.ts — deprecated wrapper over resolveExpr
+// =============================================================================
+// @deprecated Use `resolveExpr` from `expr.ts` with `ExprContext` instead.
 
-/** Runtime data used for evaluating conditions. */
+import { resolveExpr } from "./expr";
+import type { Condition, ConditionGroup, Expr, ExprContext } from "./types";
+
+/**
+ * @deprecated Use `ExprContext` instead.
+ */
 export interface EvaluationContext {
   formData: Record<string, unknown>;
   contextData?: Record<string, unknown>;
 }
 
-function evaluateCondition(
-  cond: DataCondition | ContextCondition,
-  ctx: EvaluationContext,
-): boolean {
-  let value: unknown;
-
-  if ("$data" in cond) {
-    value = getByPath(ctx.formData, cond.$data);
-  } else {
-    value = getByPath(ctx.contextData ?? {}, cond.$context);
-  }
-
-  if (cond.eq !== undefined) {
-    const eq = resolveDynamicValue(cond.eq, ctx.formData, ctx.contextData);
-    return value === eq;
-  }
-
-  if (cond.neq !== undefined) {
-    const neq = resolveDynamicValue(cond.neq, ctx.formData, ctx.contextData);
-    return value !== neq;
-  }
-
-  if (cond.gt !== undefined) {
-    const gt = resolveDynamicValue(cond.gt, ctx.formData, ctx.contextData);
-    return typeof value === "number" && typeof gt === "number" && value > gt;
-  }
-
-  if (cond.gte !== undefined) {
-    const gte = resolveDynamicValue(cond.gte, ctx.formData, ctx.contextData);
-    return typeof value === "number" && typeof gte === "number" && value >= gte;
-  }
-
-  if (cond.lt !== undefined) {
-    const lt = resolveDynamicValue(cond.lt, ctx.formData, ctx.contextData);
-    return typeof value === "number" && typeof lt === "number" && value < lt;
-  }
-
-  if (cond.lte !== undefined) {
-    const lte = resolveDynamicValue(cond.lte, ctx.formData, ctx.contextData);
-    return typeof value === "number" && typeof lte === "number" && value <= lte;
-  }
-
-  if (cond.contains !== undefined) {
-    const contains = resolveDynamicValue(
-      cond.contains,
-      ctx.formData,
-      ctx.contextData,
-    );
-    return (
-      typeof value === "string" &&
-      typeof contains === "string" &&
-      value.includes(contains)
-    );
-  }
-
-  if (cond.startsWith !== undefined) {
-    const startsWith = resolveDynamicValue(
-      cond.startsWith,
-      ctx.formData,
-      ctx.contextData,
-    );
-    return (
-      typeof value === "string" &&
-      typeof startsWith === "string" &&
-      value.startsWith(startsWith)
-    );
-  }
-
-  if (cond.endsWith !== undefined) {
-    const endsWith = resolveDynamicValue(
-      cond.endsWith,
-      ctx.formData,
-      ctx.contextData,
-    );
-    return (
-      typeof value === "string" &&
-      typeof endsWith === "string" &&
-      value.endsWith(endsWith)
-    );
-  }
-
-  return Boolean(value);
+function toExprContext(ctx: EvaluationContext): ExprContext {
+  return { data: ctx.formData, context: ctx.contextData };
 }
 
 function isAndCondition(
-  condition: VisibilityCondition,
-): condition is ConditionGroup & { $and: VisibilityCondition[] } {
+  condition: Expr<boolean>,
+): condition is ConditionGroup & { $and: Condition[] } {
   return (
     typeof condition === "object" &&
     condition !== null &&
@@ -110,8 +30,8 @@ function isAndCondition(
 }
 
 function isOrCondition(
-  condition: VisibilityCondition,
-): condition is ConditionGroup & { $or: VisibilityCondition[] } {
+  condition: Expr<boolean>,
+): condition is ConditionGroup & { $or: Condition[] } {
   return (
     typeof condition === "object" &&
     condition !== null &&
@@ -120,46 +40,35 @@ function isOrCondition(
   );
 }
 
-function isAtomicCondition(
-  condition: VisibilityCondition,
-): condition is AtomicCondition {
-  return (
-    typeof condition === "object" &&
-    condition !== null &&
-    !Array.isArray(condition) &&
-    !("$and" in condition) &&
-    !("$or" in condition)
-  );
-}
-
 /**
- * Evaluate a visibility condition AST against form + context data.
+ * @deprecated Use `resolveExpr(condition, ctx)` instead.
  */
 export function evaluateVisibility(
-  condition: VisibilityCondition | undefined,
+  condition: Expr<boolean> | undefined,
   ctx: EvaluationContext,
 ): boolean {
   if (condition === undefined) return true;
+  if (typeof condition === "function") return condition(toExprContext(ctx));
   if (typeof condition === "boolean") return condition;
 
   if (Array.isArray(condition)) {
-    return condition.every((c) => evaluateCondition(c, ctx));
+    return condition.every((c) =>
+      resolveExpr<boolean>(c, toExprContext(ctx)),
+    );
   }
 
   if (isAndCondition(condition)) {
     return condition.$and.every((child) =>
-      evaluateVisibility(child, ctx),
+      resolveExpr<boolean>(child, toExprContext(ctx)),
     );
   }
 
   if (isOrCondition(condition)) {
     return condition.$or.some((child) =>
-      evaluateVisibility(child, ctx),
+      resolveExpr<boolean>(child, toExprContext(ctx)),
     );
   }
 
-  if (!isAtomicCondition(condition)) return true;
-
-  const result = evaluateCondition(condition, ctx);
-  return condition.not === true ? !result : result;
+  // Everything else ($when, $fn, $text, AtomicCondition) → delegate to resolveExpr
+  return resolveExpr<boolean>(condition, toExprContext(ctx)) ?? true;
 }

@@ -61,7 +61,7 @@ const customValidators = defineValidators({
 ```
 
 ```tsx
-<Form schema={schema} customValidators={customValidators} onSubmit={handleSubmit}>
+<Form schema={schema} registries={{ validators: customValidators }} onSubmit={handleSubmit}>
   <FormContent><FormFields /><FormSubmit>Submit</FormSubmit></FormContent>
 </Form>
 ```

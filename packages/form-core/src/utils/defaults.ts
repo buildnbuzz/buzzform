@@ -14,10 +14,18 @@ const ZERO_VALUES: Record<string, unknown> = {
   array: [],
 };
 
-/** Returns true if a value is a static literal (not a $data/$context ref). */
+/** Returns true if a value is a static literal (not an Expr reference). */
 function isStaticValue(value: unknown): boolean {
   if (typeof value !== "object" || value === null) return true;
-  return !("$data" in value || "$context" in value);
+  return !(
+    "$data" in value ||
+    "$context" in value ||
+    "$fn" in value ||
+    "$text" in value ||
+    "$when" in value ||
+    "$and" in value ||
+    "$or" in value
+  );
 }
 
 /**

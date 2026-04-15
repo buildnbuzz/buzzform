@@ -41,7 +41,7 @@ const fields: Field[] = [
 describe("getVisibleFields", () => {
   it("filters fields by condition and preserves hidden fields", () => {
     const visible = getVisibleFields(fields, {
-      formData: { showSecret: false, showProfile: true },
+      data: { showSecret: false, showProfile: true },
     });
 
     expect(visible.map((f) => ("name" in f ? f.name : f.type))).toEqual([
@@ -58,7 +58,8 @@ describe("getVisibleFields", () => {
 
   it("removes fields when condition is false", () => {
     const visible = getVisibleFields(fields, {
-      formData: { showSecret: true, showProfile: false },
+      data: {
+ showSecret: true, showProfile: false },
     });
 
     expect(visible.map((f) => ("name" in f ? f.name : f.type))).toEqual([
@@ -71,7 +72,8 @@ describe("getVisibleFields", () => {
 
   it("keeps primitive array fields unchanged after filtering", () => {
     const visible = getVisibleFields(fields, {
-      formData: { showSecret: true, showProfile: true },
+      data: {
+ showSecret: true, showProfile: true },
     });
 
     const socials = visible
@@ -85,7 +87,8 @@ describe("getVisibleFields", () => {
 
   it("filters nested array fields based on child conditions", () => {
     const visible = getVisibleFields(fields, {
-      formData: { showSecret: true, showProfile: true, showContactValue: false },
+      data: {
+ showSecret: true, showProfile: true, showContactValue: false },
     });
 
     const contacts = visible

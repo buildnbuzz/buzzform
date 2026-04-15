@@ -8,7 +8,10 @@ import {
   walkFields,
   toDotNotation,
   fromDotNotation,
+  /** @deprecated Use `resolveExpr` instead. */
   resolveDynamicValue,
+  resolveExpr,
+  /** @deprecated Use `resolveExpr` instead. */
   evaluateVisibility,
   defineValidators,
   builtInValidators,
@@ -31,7 +34,10 @@ export {
   walkFields,
   toDotNotation,
   fromDotNotation,
+  /** @deprecated Use `resolveExpr` instead. */
   resolveDynamicValue,
+  resolveExpr,
+  /** @deprecated Use `resolveExpr` instead. */
   evaluateVisibility,
   defineValidators,
   builtInValidators,
@@ -74,9 +80,14 @@ export type {
   TextareaField,
   TristateCheckboxField,
   CollapsibleField,
-  DynamicText,
-  DynamicString,
-  DynamicBoolean,
+  ExprText,
+  ExprString,
+  ExprBoolean,
+  Condition,
+  FormRegistries,
+  FnRegistry,
+  ExprFn,
+  /** @deprecated Use `Condition` instead. */
   VisibilityCondition,
   ValidationRegistry,
   ValidationFunction,

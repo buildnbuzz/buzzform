@@ -4,7 +4,7 @@ import {
   collectFieldValidationChecks,
   collectValidationChecks,
   escapePointer,
-  evaluateVisibility,
+  resolveExpr,
   fromDotNotation,
   getByPath,
   joinPointer,
@@ -78,12 +78,17 @@ export function buildStandardSchemaValidator<TFormData>(
               entry.field,
               basePointer,
             );
-            const ctx = { formData: data, contextData };
+            const exprCtx = { data: data, context: contextData };
 
-            if (!evaluateVisibility(resolvedField.condition, ctx)) continue;
+            if (
+              resolvedField.condition !== undefined &&
+              (resolveExpr<boolean>(resolvedField.condition, exprCtx) ?? true) === false
+            ) {
+              continue;
+            }
             if (
               resolvedField.disabled !== undefined &&
-              evaluateVisibility(resolvedField.disabled, ctx)
+              (resolveExpr<boolean>(resolvedField.disabled, exprCtx) ?? false) === true
             ) {
               continue;
             }

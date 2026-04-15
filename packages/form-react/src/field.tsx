@@ -3,8 +3,9 @@ import type { AnyFieldApi } from "@tanstack/form-core";
 import {
   type DataField,
   type Field as CoreField,
+  type FormRegistries,
   collectFieldValidationChecks,
-  evaluateVisibility,
+  resolveExpr,
   escapePointer,
   extractDependencies,
   fromDotNotation,
@@ -22,8 +23,9 @@ import type {
   FieldProps,
   UnknownData,
 } from "./types";
-import { FieldContext } from "./contexts";
+import { FieldContext, useFormConfig } from "./contexts";
 import { useDependenciesSelector } from "./contexts/hooks/use-dependencies-selector";
+import { mergeRegistries } from "./utils/merge-registries";
 
 function mergeListenTo(
   generated?: string[],
@@ -81,12 +83,26 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
+  registries,
   customValidators,
   optionResolvers,
   validators,
   derivedValidationMode,
   children,
 }: FieldProps<TFormData>) {
+  const { registries: globalRegistries } = useFormConfig();
+
+  // Normalize deprecated shims into registries, then merge with global.
+  // When called via renderer, customValidators/optionResolvers will be undefined
+  // (already normalized upstream). When called directly, they're folded in here.
+  const mergedRegistries = useMemo<FormRegistries>(() => {
+    const normalized = {
+      ...registries,
+      validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
+      resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+    };
+    return mergeRegistries(globalRegistries, normalized) ?? {};
+  }, [globalRegistries, registries, customValidators, optionResolvers]);
   const pointer = useMemo(() => {
     if (field.name.startsWith("/")) return field.name;
     if (field.name.includes(".")) return fromDotNotation(field.name);
@@ -140,7 +156,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         changeChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
       next.onChangeAsyncDebounceMs = changeGroup?.debounceMs;
       if (validationListenTo) next.onChangeListenTo = validationListenTo;
@@ -150,7 +166,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         blurChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
       next.onBlurAsyncDebounceMs = blurGroup?.debounceMs;
       if (validationListenTo) next.onBlurListenTo = validationListenTo;
@@ -160,7 +176,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
         submitChecks,
         form,
         contextData,
-        customValidators,
+        mergedRegistries.validators,
       );
     }
     return next;
@@ -168,7 +184,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     resolvedField,
     form,
     contextData,
-    customValidators,
+    mergedRegistries.validators,
     derivedValidationMode,
     validationListenTo,
   ]);
@@ -197,22 +213,22 @@ export function Field<TFormData extends UnknownData = UnknownData>({
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
-    const ctx = { formData, contextData };
+    const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      evaluateVisibility(resolvedField.condition, ctx);
+      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      evaluateVisibility(resolvedField.hidden, ctx);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
     const isDisabled =
       resolvedField.disabled !== undefined &&
-      evaluateVisibility(resolvedField.disabled, ctx);
+      (resolveExpr<boolean>(resolvedField.disabled, ctx, mergedRegistries.fns) ?? false);
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
-      evaluateVisibility(resolvedField.readOnly, ctx);
+      (resolveExpr<boolean>(resolvedField.readOnly, ctx, mergedRegistries.fns) ?? false);
     const isRequired =
       resolvedField.required !== undefined &&
-      evaluateVisibility(resolvedField.required, ctx);
+      (resolveExpr<boolean>(resolvedField.required, ctx, mergedRegistries.fns) ?? false);
 
     if (!isConditionMet) {
       return <ConditionalFieldRemover form={form} name={field.name} />;
@@ -237,7 +253,7 @@ export function Field<TFormData extends UnknownData = UnknownData>({
               fieldPath: pointer,
               formData,
               contextData,
-              optionResolvers,
+              registries: mergedRegistries,
               isHidden,
               isConditionMet,
               isDisabled,
@@ -267,7 +283,8 @@ export interface LayoutFieldProps<TFormData extends UnknownData = UnknownData> {
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
-  optionResolvers?: OptionResolverRegistry;
+  /** Runtime registries (validators, resolvers, fns, fields). Merged over global config. */
+  registries?: FormRegistries;
   basePath?: string;
   children: React.ReactNode;
 }
@@ -276,10 +293,16 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
   field,
   form,
   contextData,
-  optionResolvers,
+  registries,
   basePath,
   children,
 }: LayoutFieldProps<TFormData>) {
+  const { registries: globalRegistries } = useFormConfig();
+
+  const mergedRegistries = useMemo<FormRegistries>(
+    () => mergeRegistries(globalRegistries, registries) ?? {},
+    [globalRegistries, registries],
+  );
   const pointer = useMemo(() => {
     if (!basePath) return "";
     return basePath.startsWith("/") ? basePath : fromDotNotation(basePath);
@@ -299,13 +322,13 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
-    const ctx = { formData, contextData };
+    const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      evaluateVisibility(resolvedField.condition, ctx);
+      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      evaluateVisibility(resolvedField.hidden, ctx);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
 
     if (!isConditionMet) return null;
     if (isHidden) return null;
@@ -318,7 +341,7 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
           fieldPath: pointer,
           formData,
           contextData,
-          optionResolvers,
+          registries: mergedRegistries,
           isHidden,
           isConditionMet,
           isDisabled: false,

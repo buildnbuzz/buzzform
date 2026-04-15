@@ -42,7 +42,7 @@ export interface FieldOptionsState {
 export function useFieldOptions(
   rawOptions: OptionsConfig = [],
 ): FieldOptionsState {
-  const { form, field, fieldApi, formData, contextData, optionResolvers } =
+  const { form, field, fieldApi, formData, contextData, registries } =
     useDataFieldContext();
 
   const isStatic = Array.isArray(rawOptions);
@@ -92,8 +92,8 @@ export function useFieldOptions(
     const source = isStatic
       ? (stableRawOptions as Array<FieldOption | string>)
       : dynamicState.options;
-    return resolveOptions(source, formData, stableContextData ?? {});
-  }, [isStatic, stableRawOptions, dynamicState.options, formData, stableContextData]);
+    return resolveOptions(source, formData, stableContextData ?? {}, registries?.fns);
+  }, [isStatic, stableRawOptions, dynamicState.options, formData, stableContextData, registries?.fns]);
 
   // 2.5. Effect: Clear field value when dependencies change
   // This prevents stale values from being used when parent fields change
@@ -163,7 +163,7 @@ export function useFieldOptions(
               "resolver" in stableRawOptions
             ) {
               const resolverKey = stableRawOptions.resolver;
-              const resolverFn = optionResolvers?.[resolverKey];
+              const resolverFn = registries?.resolvers?.[resolverKey];
 
               if (!resolverFn) {
                 throw new Error(
@@ -211,7 +211,7 @@ export function useFieldOptions(
       isCancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isStatic, stableRawOptions, optionResolvers, stableContextData, stableDepValues]);
+  }, [isStatic, stableRawOptions, registries?.resolvers, stableContextData, stableDepValues]);
 
   // 4. Effect: Clear invalid value when current value is not in enabled options
   const lastResolvedOptionsRef = useRef<NormalizedOption[]>([]);

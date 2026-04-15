@@ -19,7 +19,7 @@ This guide covers migrating from the deprecated `@buildnbuzz/buzzform` package t
 | `createSchema()` | Plain `FormSchema` object or `defineSchema()` |
 | `InferType<typeof schema>` | `InferType<typeof schema.fields>` |
 | `useRhf()` / `zodResolver` | `useForm()` with built-in validation |
-| `BuzzFormProvider` | `<FormProvider registry={...}>` |
+| `BuzzFormProvider` | `<FormProvider registries={{ fields: ... }}>` |
 | `validate: (value) => string` | `validate: { onBlur: { checks: [...] } }` |
 | `disabled: (data) => boolean` | `disabled: { $data: "/field", eq: value }` |
 | `minRows` / `maxRows` | `minItems` / `maxItems` |
@@ -134,7 +134,7 @@ import { BuzzFormProvider } from "@buildnbuzz/buzzform";
 import { FormProvider } from "@buildnbuzz/form-react";
 import { registry } from "@/components/buzzform/registry";
 
-<FormProvider registry={registry}>
+<FormProvider registries={{ fields: registry }}>
   <App />
 </FormProvider>
 ```
@@ -409,11 +409,13 @@ export function ContactForm() {
 2. **Schema creation** — `createSchema()` removed, use `defineSchema()` or plain object
 3. **Type inference** — `InferType<typeof schema>` → `InferType<typeof schema.fields>`
 4. **Form hook** — `useRhf()` → `useForm()` with built-in validation
-5. **Provider** — `BuzzFormProvider` → `<FormProvider registry={...}>`
-6. **Validation** — Function-based → `ValidationConfig` with `checks` arrays
-7. **Conditions** — Function-based → `VisibilityCondition` AST
-8. **Array props** — `minRows`/`maxRows` → `minItems`/`maxItems`
-9. **Dependencies** — `dependencies` array removed, automatic via `$data`
+5. **Provider** — `BuzzFormProvider` → `<FormProvider registries={{ fields: ... }}>`
+6. **Registries** — `registry`, `customValidators`, and `optionResolvers` unified into a single `registries` object
+7. **Validation** — Function-based → `ValidationConfig` with `checks` arrays
+8. **Conditions** — Function-based → `Condition` AST
+9. **Terminology** — `DynamicValue` → `Expr<T>`, `VisibilityCondition` → `Condition`
+10. **Array props** — `minRows`/`maxRows` → `minItems`/`maxItems`
+11. **Dependencies** — `dependencies` array removed, automatic via `$data`
 
 ## Related
 

@@ -50,10 +50,12 @@ Alternative: `const schema = { fields: [...] } as const satisfies FormSchema;` â
 | No `required` or dynamic `required` | Optional key (`?`) |
 | `type: "group"` | Nested object |
 | `type: "array"` | Array of nested objects |
-| `type: "array"` + `primitive: true` | `string[]`, `number[]`, etc. |
+| `type: "array"` + `primitive: true` (empty item `name`) | Flat array (e.g., `string[]`) |
+| `type: "array"` + `primitive: true` (non-empty item `name`) | Object array (e.g., `{ url: string }[]`) |
 | `type: "select"` + `hasMany: true` | `string[]` |
 | `type: "checkbox"` + `tristate: true` | `boolean \| null` |
 | `type: "checkbox"` + `hasMany: true` | `string[]` |
+
 
 ## All Field Types
 

@@ -19,9 +19,11 @@ description: Headless wrappers for custom field components — Field and LayoutF
 |------|------|-------------|
 | `field` | `DataField` | Field schema node |
 | `form` | `FieldFormApi` | TanStack form instance |
+| `registries` | `FormRegistries` | Unified runtime registries |
 | `validators` | `FieldValidators` | TanStack validators |
 | `contextData` | `object` | External data for dynamic values |
-| `customValidators` | `ValidationRegistry` | Custom validator registry |
+| `customValidators` | `ValidationRegistry` | @deprecated Use `registries.validators` instead. |
+| `optionResolvers` | `OptionResolverRegistry` | @deprecated Use `registries.resolvers` instead. |
 | `derivedValidationMode` | `"submit" \| "blur" \| "change"` | When to run derived validators |
 | `children` | `ReactNode` | Field UI content |
 
