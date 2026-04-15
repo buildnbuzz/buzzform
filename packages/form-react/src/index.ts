@@ -8,8 +8,10 @@ import {
   walkFields,
   toDotNotation,
   fromDotNotation,
+  /** @deprecated Use `resolveExpr` instead. */
   resolveDynamicValue,
   resolveExpr,
+  /** @deprecated Use `resolveExpr` instead. */
   evaluateVisibility,
   defineValidators,
   builtInValidators,
@@ -35,6 +37,7 @@ export {
   /** @deprecated Use `resolveExpr` instead. */
   resolveDynamicValue,
   resolveExpr,
+  /** @deprecated Use `resolveExpr` instead. */
   evaluateVisibility,
   defineValidators,
   builtInValidators,
@@ -80,6 +83,7 @@ export type {
   ExprText,
   ExprString,
   ExprBoolean,
+  /** @deprecated Use `Condition` instead. */
   VisibilityCondition,
   ValidationRegistry,
   ValidationFunction,

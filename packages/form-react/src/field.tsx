@@ -4,7 +4,7 @@ import {
   type DataField,
   type Field as CoreField,
   collectFieldValidationChecks,
-  evaluateVisibility,
+  resolveExpr,
   escapePointer,
   extractDependencies,
   fromDotNotation,
@@ -197,22 +197,22 @@ export function Field<TFormData extends UnknownData = UnknownData>({
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
-    const ctx = { formData, contextData };
+    const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      evaluateVisibility(resolvedField.condition, ctx);
+      resolveExpr<boolean>(resolvedField.condition, ctx);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      evaluateVisibility(resolvedField.hidden, ctx);
+      resolveExpr<boolean>(resolvedField.hidden, ctx);
     const isDisabled =
       resolvedField.disabled !== undefined &&
-      evaluateVisibility(resolvedField.disabled, ctx);
+      resolveExpr<boolean>(resolvedField.disabled, ctx);
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
-      evaluateVisibility(resolvedField.readOnly, ctx);
+      resolveExpr<boolean>(resolvedField.readOnly, ctx);
     const isRequired =
       resolvedField.required !== undefined &&
-      evaluateVisibility(resolvedField.required, ctx);
+      resolveExpr<boolean>(resolvedField.required, ctx);
 
     if (!isConditionMet) {
       return <ConditionalFieldRemover form={form} name={field.name} />;
@@ -299,13 +299,13 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
 
   const renderField = () => {
     const formData = form.store.state.values as UnknownData;
-    const ctx = { formData, contextData };
+    const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      evaluateVisibility(resolvedField.condition, ctx);
+      resolveExpr<boolean>(resolvedField.condition, ctx);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      evaluateVisibility(resolvedField.hidden, ctx);
+      resolveExpr<boolean>(resolvedField.hidden, ctx);
 
     if (!isConditionMet) return null;
     if (isHidden) return null;
