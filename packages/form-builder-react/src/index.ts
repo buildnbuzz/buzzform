@@ -6,3 +6,6 @@ export * from "./components/BuilderCanvas";
 export * from "./components/BuilderNode";
 export * from "./components/BuilderSidebar";
 export * from "./components/BuilderProperties";
+export * from "./components/BuilderDndProvider";
+export * from "./components/SortableNode";
+export * from "./components/DraggableSidebarItem";
