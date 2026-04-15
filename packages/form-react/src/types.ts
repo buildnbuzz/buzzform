@@ -123,7 +123,7 @@ export interface FieldProps<TFormData extends UnknownData = UnknownData> {
   form: FieldFormApi<TFormData>;
   /** External data available to dynamic validation conditions and checks. */
   contextData?: UnknownData;
-  /** Runtime registries (validators, resolvers, fns). Merged over global config. */
+  /** Runtime registries (validators, resolvers, fns, fields). Merged over global config. */
   registries?: FormRegistries;
   /** @deprecated Use `registries.validators` instead. */
   customValidators?: ValidationRegistry;

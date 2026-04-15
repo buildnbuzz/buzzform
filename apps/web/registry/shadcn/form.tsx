@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
   Form as HeadlessForm,
-  FormProvider,
   RenderFields,
   FormConfigContext,
   useForm,
@@ -174,20 +173,15 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
         registries,
       }}
     >
-      <FormProvider
-        registries={registries}
-        derivedValidationMode={derivedValidationMode}
-      >
-        {children ?? (
-          <FormContent>
-            <FormFields />
-            <FormActions align={align}>
-              {showReset && <FormReset {...resetProps}>{resetLabel}</FormReset>}
-              <FormSubmit {...submitProps}>{submitLabel}</FormSubmit>
-            </FormActions>
-          </FormContent>
-        )}
-      </FormProvider>
+      {children ?? (
+        <FormContent>
+          <FormFields />
+          <FormActions align={align}>
+            {showReset && <FormReset {...resetProps}>{resetLabel}</FormReset>}
+            <FormSubmit {...submitProps}>{submitLabel}</FormSubmit>
+          </FormActions>
+        </FormContent>
+      )}
     </FormContext.Provider>
   );
 }

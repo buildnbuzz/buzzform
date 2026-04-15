@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-form";
 import type { FormSchema } from "@buildnbuzz/form-core";
 import { extractDefaults, transformFormOutput } from "@buildnbuzz/form-core";
+import type { FormRegistries } from "@buildnbuzz/form-core";
 import type {
   AnyReactFormExtendedApi,
   AnyTanstackFormOptions,
@@ -49,14 +50,14 @@ export function useForm<TFormData extends UnknownData>(
 
   const schemaSubmitValidator = useMemo(() => {
     if (!enableSchemaSubmitValidation) return undefined;
-    // Merge global + form-level registries, then fold in deprecated shim
-    const merged = mergeRegistries(config?.registries, registries);
-    const mergedValidators = {
-      ...merged?.validators,
-      ...customValidators,
-    };
+    // Normalize deprecated shims into registries, then merge with global.
+    const normalized = mergeRegistries(config?.registries, {
+      ...registries,
+      validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
+      resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+    });
     return buildStandardSchemaValidator<TFormData>(schema, {
-      customValidators: mergedValidators,
+      customValidators: normalized?.validators,
       contextData,
       derivedValidationMode,
     }) as StandardSchemaV1<TFormData, unknown>;
@@ -65,6 +66,7 @@ export function useForm<TFormData extends UnknownData>(
     config?.registries,
     registries,
     customValidators,
+    optionResolvers,
     contextData,
     derivedValidationMode,
     enableSchemaSubmitValidation,

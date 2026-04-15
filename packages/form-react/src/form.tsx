@@ -62,6 +62,17 @@ export function Form<TFormData extends UnknownData = UnknownData>({
     void form.handleSubmit();
   };
 
+  // Normalize deprecated shims — RenderFields will handle the rest.
+  const normalizedRegistries: FormRegistries | undefined =
+    registry || registries || customValidators || optionResolvers
+      ? {
+          ...registries,
+          fields: (registries?.fields ?? registry) as FormRegistries["fields"],
+          validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
+          resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+        }
+      : undefined;
+
   return (
     <form
       {...rest}
@@ -73,11 +84,8 @@ export function Form<TFormData extends UnknownData = UnknownData>({
             fields={fields}
             form={form}
             contextData={contextData}
-            registries={registries}
-            customValidators={customValidators}
-            optionResolvers={optionResolvers}
+            registries={normalizedRegistries}
             derivedValidationMode={derivedValidationMode}
-            registry={registry}
             renderFallback={renderFallback}
             basePath={basePath}
           />

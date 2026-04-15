@@ -30,7 +30,7 @@ export type ContextPath = string;
  * }
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface FrameworkOverrides {}
+export interface FrameworkOverrides { }
 
 /** Type derived from global augmentations. */
 export type FrameworkText = keyof FrameworkOverrides extends never
@@ -580,7 +580,7 @@ export interface FormRegistries {
    * Field component registry. Maps field type strings to renderer components.
    * (e.g., `{ text: MyTextInput, select: MySelect }`)
    */
-  fields?: Record<string, any>;
+  fields?: Record<string, unknown>;
   /** Custom validators for validation checks with `type: "name"`. */
   validators?: Record<string, (...args: unknown[]) => boolean | Promise<boolean>>;
   /** Async option resolvers for `{ resolver: "name" }` in OptionsConfig. */
@@ -785,48 +785,48 @@ interface FieldValueMap<TField extends AnyDataField> {
   textarea: string;
   number: number;
   select: TField extends SelectField
-    ? TField["hasMany"] extends true
-      ? string[]
-      : string
-    : never;
+  ? TField["hasMany"] extends true
+  ? string[]
+  : string
+  : never;
   date: string;
   tags: string[];
   checkbox: TField extends CheckboxGroupField
-    ? string[]
-    : TField extends TristateCheckboxField
-      ? boolean | null
-      : boolean;
+  ? string[]
+  : TField extends TristateCheckboxField
+  ? boolean | null
+  : boolean;
   switch: boolean;
   radio: string;
   group: TField extends GroupField ? InferType<TField["fields"]> : never;
   array: TField extends PrimitiveArrayField
-    ? (TField["fields"][0]["name"] extends "" | undefined
-      ? FieldValue<TField["fields"][0]>[]
-      : { [K in Extract<TField["fields"][0]["name"], string>]: FieldValue<TField["fields"][0]> }[])
-    : TField extends ArrayField
-      ? InferType<TField["fields"]>[]
-      : never;
+  ? (TField["fields"][0]["name"] extends "" | undefined
+    ? FieldValue<TField["fields"][0]>[]
+    : { [K in Extract<TField["fields"][0]["name"], string>]: FieldValue<TField["fields"][0]> }[])
+  : TField extends ArrayField
+  ? InferType<TField["fields"]>[]
+  : never;
 }
 
 /** Resolve the inferred value type for a data field. */
 type FieldValue<TField extends AnyDataField> =
   TField["type"] extends keyof FieldValueMap<TField>
-    ? FieldValueMap<TField>[TField["type"]]
-    : never;
+  ? FieldValueMap<TField>[TField["type"]]
+  : never;
 
 /** Resolve the data shape contribution of a single field (data or layout). */
 type FieldDataShape<TField extends Field> = TField extends DataField
   ? TField["required"] extends true
-    ? { [K in TField["name"]]: FieldValue<TField> }
-    : { [K in TField["name"]]?: FieldValue<TField> }
+  ? { [K in TField["name"]]: FieldValue<TField> }
+  : { [K in TField["name"]]?: FieldValue<TField> }
   : TField extends RowField
-    ? InferType<TField["fields"]>
-    : TField extends TabsField
-      ? Simplify<UnionToIntersection<InferType<TField["tabs"][number]["fields"]>>>
-      : TField extends CollapsibleField
-        ? InferType<TField["fields"]>
-        // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
-        : {};
+  ? InferType<TField["fields"]>
+  : TField extends TabsField
+  ? Simplify<UnionToIntersection<InferType<TField["tabs"][number]["fields"]>>>
+  : TField extends CollapsibleField
+  ? InferType<TField["fields"]>
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
+  : {};
 
 /**
  * Infer the data shape for a list of fields.
@@ -837,14 +837,14 @@ type FieldDataShape<TField extends Field> = TField extends DataField
  */
 export type InferType<TFields extends readonly Field[]> =
   TFields extends readonly [infer Head, ...infer Tail]
-    ? Simplify<
-        FieldDataShape<Extract<Head, Field>> &
-          InferType<Tail extends readonly Field[] ? Tail : []>
-      >
-    : [TFields[number]] extends [never]
-      // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
-      ? {}
-      : UnknownData;
+  ? Simplify<
+    FieldDataShape<Extract<Head, Field>> &
+    InferType<Tail extends readonly Field[] ? Tail : []>
+  >
+  : [TFields[number]] extends [never]
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
+  ? {}
+  : UnknownData;
 
 /**
  * Identity function that narrows a schema to its literal type.

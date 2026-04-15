@@ -58,11 +58,21 @@ export function FormProvider({
   derivedValidationMode,
   children,
 }: FormProviderProps) {
+  // Normalize deprecated `registry` into `registries.fields`.
+  // Prop-level `registries.fields` takes precedence over `registry`.
+  const normalizedRegistries: FormRegistries | undefined =
+    registry || registries
+      ? {
+          ...registries,
+          fields: (registries?.fields ?? registry) as FormRegistries["fields"],
+        }
+      : undefined;
+
   return (
     <FormConfigContext.Provider
       value={{
         registry: registry ?? {},
-        registries,
+        registries: normalizedRegistries,
         derivedValidationMode,
       }}
     >

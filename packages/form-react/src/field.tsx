@@ -90,17 +90,18 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   derivedValidationMode,
   children,
 }: FieldProps<TFormData>) {
-  const { registries: globalRegistries, derivedValidationMode: globalMode } = useFormConfig();
+  const { registries: globalRegistries } = useFormConfig();
 
-  // registries prop is already merged with global by the renderer.
-  // Here we only fold in the deprecated per-field shims.
+  // Normalize deprecated shims into registries, then merge with global.
+  // When called via renderer, customValidators/optionResolvers will be undefined
+  // (already normalized upstream). When called directly, they're folded in here.
   const mergedRegistries = useMemo<FormRegistries>(() => {
-    const base = mergeRegistries(globalRegistries, registries) ?? {};
-    return {
-      ...base,
-      validators: { ...base.validators, ...customValidators } as FormRegistries["validators"],
-      resolvers: { ...base.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+    const normalized = {
+      ...registries,
+      validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
+      resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
     };
+    return mergeRegistries(globalRegistries, normalized) ?? {};
   }, [globalRegistries, registries, customValidators, optionResolvers]);
   const pointer = useMemo(() => {
     if (field.name.startsWith("/")) return field.name;
@@ -282,10 +283,8 @@ export interface LayoutFieldProps<TFormData extends UnknownData = UnknownData> {
   field: CoreField;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
-  /** Runtime registries (validators, resolvers, fns). Merged over global config. */
+  /** Runtime registries (validators, resolvers, fns, fields). Merged over global config. */
   registries?: FormRegistries;
-  /** @deprecated Use `registries.resolvers` instead. */
-  optionResolvers?: OptionResolverRegistry;
   basePath?: string;
   children: React.ReactNode;
 }
@@ -295,19 +294,15 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
   form,
   contextData,
   registries,
-  optionResolvers,
   basePath,
   children,
 }: LayoutFieldProps<TFormData>) {
   const { registries: globalRegistries } = useFormConfig();
 
-  const mergedRegistries = useMemo<FormRegistries>(() => {
-    const base = mergeRegistries(globalRegistries, registries) ?? {};
-    return {
-      ...base,
-      resolvers: { ...base.resolvers, ...optionResolvers },
-    };
-  }, [globalRegistries, registries, optionResolvers]);
+  const mergedRegistries = useMemo<FormRegistries>(
+    () => mergeRegistries(globalRegistries, registries) ?? {},
+    [globalRegistries, registries],
+  );
   const pointer = useMemo(() => {
     if (!basePath) return "";
     return basePath.startsWith("/") ? basePath : fromDotNotation(basePath);
