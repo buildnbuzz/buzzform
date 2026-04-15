@@ -3,7 +3,7 @@
  *
  * Demonstrates: every field type, $data conditions, $context role-based access,
  * layout fields (tabs, row, collapsible), groups, arrays, validation (derived +
- * custom + form-level), default values, and dynamic props.
+ * custom + form-level), default values, and dynamic props ($text, $when).
  *
  * Context shape:
  * ```ts
@@ -74,7 +74,7 @@ export const onboardingSchema = defineSchema({
             {
               type: "email",
               name: "email",
-              label: "Work Email",
+              label: { $text: "Work Email for ${/firstName}" }, // $text interpolation
               required: true,
               validate: {
                 onBlur: {
@@ -203,7 +203,11 @@ export const onboardingSchema = defineSchema({
             {
               type: "text",
               name: "timezone",
-              label: "Timezone",
+              label: {
+                $when: { $data: "/workLocation", eq: "remote" },
+                $then: "Required Timezone",
+                $else: "Optional Timezone",
+              }, // $when branching
               placeholder: "e.g. America/New_York",
               required: { $data: "/workLocation", eq: "remote" },
               condition: {

@@ -38,20 +38,32 @@ The distinction between `condition` and `hidden` is important for data integrity
 
 ## Dynamic `required`, `disabled`, `readOnly`
 
-These accept `VisibilityCondition` — same syntax as `condition`/`hidden`:
+These accept `Condition` — same syntax as `condition`/`hidden`.
+
+## Advanced Logic ($text, $when, $fn)
+
+Unified expressions (`Expr<T>`) support complex logic directly in the schema:
 
 ```ts
-// Required only when remote
-{ type: "text", name: "timezone",
-  required: { $data: "/workLocation", eq: "remote" } }
+// $text: String interpolation
+{ type: "text", name: "field", label: { $text: "Total: $${/price}" } }
 
-// Disabled based on context
-{ type: "text", name: "role",
-  disabled: { $context: "/userRole", neq: "admin" } }
+// $when: Conditional branching (Ternary)
+{ type: "text", name: "field", 
+  label: { $when: { $data: "/isNew" }, $then: "Welcome!", $else: "Welcome back!" } }
 
-// Read-only based on data
+// $fn: Call custom logic from fns registry
 { type: "number", name: "total",
-  readOnly: true }
+  defaultValue: { $fn: "calculateTax", args: { subtotal: { $data: "/subtotal" } } } }
+```
+
+## Inline Function Escape Hatch
+
+When schemas aren't JSON-serialized, use standard JS functions. These receive `ExprContext` (`data`, `context`):
+
+```ts
+{ type: "text", name: "field",
+  condition: ({ data, context }) => data.role === "admin" && context.isInternal }
 ```
 
 ## Comparison Operators

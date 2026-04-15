@@ -55,15 +55,19 @@ Use for: controlled dialogs, multi-step wizards, external reset logic.
 
 ## Registry
 
-The registry maps field types to React components:
+The unified `registries` object container maps field types to components and functions:
 
 ```ts
 import { registry } from "@/components/buzzform/registry";
-// Contains: text, email, password, textarea, number, select, checkbox,
-// switch, radio, group, array, date, tags, row, tabs, collapsible
+
+// App-wide configuration
+<FormProvider registries={{ fields: registry }}>...</FormProvider>
+
+// Per-form override
+<Form registries={{ fields: registry }}>...</Form>
 ```
 
-The registry must include entries for all field types used in schemas.
+The `registries.fields` map contains: `text`, `email`, `password`, `textarea`, `number`, `select`, `checkbox`, `switch`, `radio`, `group`, `array`, `date`, `tags`, `row`, `tabs`, `collapsible`.
 
 ## Custom Field Renderers
 

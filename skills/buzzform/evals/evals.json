@@ -4,7 +4,7 @@
     {
       "id": 1,
       "prompt": "I just set up BuzzForm in my Next.js app with the shadcn registry. Can you create a contact form with name, email, and a message field? Name and email should be required. I want it in a card layout with a submit button.",
-      "expected_output": "A schema using defineSchema with 3 fields (text, email, textarea), correct InferType usage, correct imports from @/components/buzzform/form, and Form wrapped in a Card component with FormContent/FormFields/FormSubmit.",
+      "expected_output": "A schema using defineSchema with 3 fields (text, email, textarea), correct InferType usage, correct imports from @/components/buzzform/form, and Form wrapped in a Card component with FormContent/FormFields/FormSubmit. FormProvider should use registries: { fields: registry }.",
       "files": []
     },
     {
@@ -16,7 +16,7 @@
     {
       "id": 3,
       "prompt": "We have an internal tool where admins can create user accounts. The form should have username, email, and role (select: admin, editor, viewer). Only admins should see a 'permissions' checkbox group with Read, Write, Delete options. Email needs to be validated against allowed company domains passed in via context data. Wire up the custom validator too.",
-      "expected_output": "Schema with select field for role, checkbox group (hasMany: true, options array) with condition: { $context: '/userRole', eq: 'admin' }. Email field with validate.onBlur containing a custom check referencing { $context: '/allowedDomains' } in args. A defineValidators call for the domain validator. contextData prop on Form component.",
+      "expected_output": "Schema with select field for role, checkbox group (hasMany: true, options array) with condition: { $context: '/userRole', eq: 'admin' }. Email field with validate.onBlur containing a custom check referencing { $context: '/allowedDomains' } in args. A defineValidators call for the domain validator. registries: { validators } prop on Form component.",
       "files": []
     },
     {
@@ -28,7 +28,7 @@
     {
       "id": 5,
       "prompt": "We have this old form using createSchema from @buildnbuzz/buzzform. Can you migrate it to the new API? Here's the schema: createSchema({ fields: [{ type: 'text', name: 'company', label: 'Company', required: true }, { type: 'select', name: 'size', options: ['1-10', '11-50', '50+'] }] })",
-      "expected_output": "Replace createSchema with defineSchema from @buildnbuzz/form-core. Add InferType. Update imports: Form/FormContent/FormFields/FormSubmit from @/components/buzzform/form, registry from @/components/buzzform/registry. FormProvider setup or per-form registry. Mention removing @buildnbuzz/buzzform from package.json.",
+      "expected_output": "Replace createSchema with defineSchema from @buildnbuzz/form-react. Add InferType. Update imports: Form/FormContent/FormFields/FormSubmit from @/components/buzzform/form, registry from @/components/buzzform/registry. FormProvider setup with registries: { fields: registry }. Mention removing @buildnbuzz/buzzform from package.json.",
       "files": []
     }
   ]
