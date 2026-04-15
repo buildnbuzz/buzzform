@@ -200,19 +200,19 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      resolveExpr<boolean>(resolvedField.condition, ctx);
+      (resolveExpr<boolean>(resolvedField.condition, ctx) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      resolveExpr<boolean>(resolvedField.hidden, ctx);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx) ?? false);
     const isDisabled =
       resolvedField.disabled !== undefined &&
-      resolveExpr<boolean>(resolvedField.disabled, ctx);
+      (resolveExpr<boolean>(resolvedField.disabled, ctx) ?? false);
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
-      resolveExpr<boolean>(resolvedField.readOnly, ctx);
+      (resolveExpr<boolean>(resolvedField.readOnly, ctx) ?? false);
     const isRequired =
       resolvedField.required !== undefined &&
-      resolveExpr<boolean>(resolvedField.required, ctx);
+      (resolveExpr<boolean>(resolvedField.required, ctx) ?? false);
 
     if (!isConditionMet) {
       return <ConditionalFieldRemover form={form} name={field.name} />;
@@ -302,10 +302,10 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      resolveExpr<boolean>(resolvedField.condition, ctx);
+      (resolveExpr<boolean>(resolvedField.condition, ctx) ?? true);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      resolveExpr<boolean>(resolvedField.hidden, ctx);
+      (resolveExpr<boolean>(resolvedField.hidden, ctx) ?? false);
 
     if (!isConditionMet) return null;
     if (isHidden) return null;

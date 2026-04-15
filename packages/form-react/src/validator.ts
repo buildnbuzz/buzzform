@@ -82,13 +82,13 @@ export function buildStandardSchemaValidator<TFormData>(
 
             if (
               resolvedField.condition !== undefined &&
-              !resolveExpr<boolean>(resolvedField.condition, exprCtx)
+              (resolveExpr<boolean>(resolvedField.condition, exprCtx) ?? true) === false
             ) {
               continue;
             }
             if (
               resolvedField.disabled !== undefined &&
-              resolveExpr<boolean>(resolvedField.disabled, exprCtx)
+              (resolveExpr<boolean>(resolvedField.disabled, exprCtx) ?? false) === true
             ) {
               continue;
             }
