@@ -366,17 +366,17 @@ const contactSchema = defineSchema({
 }
 ```
 
-## evaluateVisibility Helper
+## resolveExpr Helper
 
 Test conditions outside of forms:
 
 ```tsx
-import { evaluateVisibility } from "@buildnbuzz/form-react";
+import { resolveExpr } from "@buildnbuzz/form-react";
 
 const condition = { $data: "/role", eq: "admin" };
-const formData = { role: "admin" };
+const ctx = { data: { role: "admin" } };
 
-const isVisible = evaluateVisibility(condition, { formData });
+const isVisible = resolveExpr<boolean>(condition, ctx);
 // true
 ```
 
