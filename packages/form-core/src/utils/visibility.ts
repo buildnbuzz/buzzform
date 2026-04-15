@@ -1,5 +1,5 @@
-import type { Field } from "../types";
-import { evaluateVisibility, type EvaluationContext } from "../conditions";
+import type { ExprContext, Field } from "../types";
+import { resolveExpr } from "../expr";
 
 /**
  * Filter fields based on `condition` and `hidden` flags.
@@ -9,15 +9,15 @@ import { evaluateVisibility, type EvaluationContext } from "../conditions";
  */
 export function getVisibleFields(
   fields: readonly Field[],
-  ctx: EvaluationContext,
+  ctx: ExprContext,
 ): Field[] {
   const result: Field[] = [];
 
   for (const field of fields) {
-    const isMounted = evaluateVisibility(field.condition, ctx);
+    const isMounted = resolveExpr<boolean>(field.condition, ctx) ?? true;
     if (!isMounted) continue;
 
-    const isHidden = !evaluateVisibility(field.hidden, ctx);
+    const isHidden = !resolveExpr<boolean>(field.hidden, ctx);
 
     switch (field.type) {
       case "row":

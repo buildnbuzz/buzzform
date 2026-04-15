@@ -184,7 +184,7 @@ describe("form-core types", () => {
     });
 
     type Shape = InferType<typeof schema.fields>;
-    expectTypeOf<Shape["socials"]>().toEqualTypeOf<string[] | undefined>();
+    expectTypeOf<Shape["socials"]>().toEqualTypeOf<{ url: string }[] | undefined>();
     void schema;
   });
 

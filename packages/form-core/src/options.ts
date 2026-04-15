@@ -3,7 +3,7 @@ import type {
   OptionResolverRegistry,
   OptionsConfig,
 } from "./types";
-import { evaluateVisibility } from "./conditions";
+import { resolveExpr } from "./expr";
 
 /** Preserve resolver map literal types. */
 export function defineOptionResolvers<const T extends OptionResolverRegistry>(
@@ -85,10 +85,7 @@ export function resolveOption(
     disabled:
       option.disabled === undefined
         ? false
-        : evaluateVisibility(option.disabled, {
-            formData,
-            contextData,
-          }),
+        : resolveExpr<boolean>(option.disabled, { data: formData, context: contextData }) ?? false,
     ui: option.ui,
   };
 }

@@ -10,7 +10,6 @@ import type {
 } from "../types";
 import { isDataField } from "../types";
 import { resolveExpr } from "../expr";
-import { evaluateVisibility } from "../conditions";
 import { getByPath, joinPointer, splitPointer } from "../utils/path";
 import { walkFields } from "../utils/walk";
 
@@ -376,7 +375,7 @@ export async function validateField(
     contextData: options?.contextData,
   };
 
-  if (!evaluateVisibility(field.condition, ctx)) {
+  if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }) === false) {
     return { valid: true };
   }
 
@@ -428,7 +427,7 @@ function findFieldByPath(
     if (match || !isDataField(field)) return;
 
     const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
-      evaluateVisibility(candidate.condition, ctx),
+      resolveExpr<boolean>(candidate.condition, { data: ctx.formData, context: ctx.contextData }) !== false,
     );
     if (!allConditionsPass) return;
 
@@ -508,7 +507,7 @@ export async function validateFields(
   };
 
   const visit = async (field: Field, basePath: string): Promise<void> => {
-    if (!evaluateVisibility(field.condition, ctx)) return;
+    if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }) === false) return;
 
     if (isDataField(field)) {
       const fieldPath = joinPointer(basePath, field.name);

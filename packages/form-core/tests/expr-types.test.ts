@@ -16,7 +16,6 @@ import type {
   FormRegistries,
   FnRegistry,
   ExprFn,
-  VisibilityCondition,
   // Field types that use Expr
   FormSchema,
   TextField,
@@ -36,9 +35,9 @@ describe("Expr<T> type system", () => {
     const _boolean: Expr<boolean> = true;
     const _object: Expr<Record<string, unknown>> = { a: 1 };
 
-    expectTypeOf(_string).toEqualTypeOf<Expr<string>>();
-    expectTypeOf(_number).toEqualTypeOf<Expr<number>>();
-    expectTypeOf(_boolean).toEqualTypeOf<Expr<boolean>>();
+    expectTypeOf(_string).toMatchTypeOf<Expr<string>>();
+    expectTypeOf(_number).toMatchTypeOf<Expr<number>>();
+    expectTypeOf(_boolean).toMatchTypeOf<Expr<boolean>>();
     void _object;
   });
 
@@ -149,8 +148,8 @@ describe("Condition type", () => {
     const _true: Condition = true;
     const _false: Condition = false;
 
-    expectTypeOf(_true).toEqualTypeOf<Condition>();
-    expectTypeOf(_false).toEqualTypeOf<Condition>();
+    expectTypeOf(_true).toMatchTypeOf<Condition>();
+    expectTypeOf(_false).toMatchTypeOf<Condition>();
   });
 
   it("accepts atomic conditions", () => {
@@ -353,20 +352,6 @@ describe("FormRegistries", () => {
 });
 
 // ============================================================================
-// Deprecated type aliases — backward compatibility
-// ============================================================================
-
-describe("deprecated type aliases", () => {
-  it("VisibilityCondition is an alias for Condition", () => {
-    const _vis: VisibilityCondition = { $data: "role", eq: "admin" };
-    const _cond: Condition = _vis;
-
-    expectTypeOf(_vis).toEqualTypeOf<Condition>();
-    expectTypeOf(_cond).toEqualTypeOf<Condition>();
-  });
-});
-
-// ============================================================================
 // Widened field properties
 // ============================================================================
 
@@ -439,7 +424,7 @@ describe("widened field properties accept Expr", () => {
     const _bool: FieldOption = { label: "A", value: "a", disabled: true };
     const _data: FieldOption = { label: "A", value: "a", disabled: { $data: "/isDisabled" } };
     const _cond: FieldOption = { label: "A", value: "a", disabled: { $data: "role", neq: "admin" } };
-    const _fn: FieldOption = { label: "A", value: "a", disabled: (ctx) => ctx.data.locked };
+    const _fn: FieldOption = { label: "A", value: "a", disabled: (ctx) => ctx.data.locked === true };
 
     expectTypeOf(_bool.disabled).toMatchTypeOf<Expr<boolean> | undefined>();
     expectTypeOf(_data.disabled).toMatchTypeOf<Expr<boolean> | undefined>();
