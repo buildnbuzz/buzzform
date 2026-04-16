@@ -147,8 +147,12 @@ const locationSchema = defineSchema({
     {
       type: "select",
       name: "state",
-      label: "State / Province",
-      placeholder: "Select a state...",
+      label: ({ data }) =>
+        data.country
+          ? ` State / Province in ${data.country}`
+          : "State / Province",
+      placeholder: ({ data }) =>
+        (data.country as string) || "Choose country first",
       required: true,
       options: { resolver: "listStates" },
       dependencies: ["/country"],
@@ -160,8 +164,16 @@ const locationSchema = defineSchema({
     {
       type: "select",
       name: "city",
-      label: "City",
-      placeholder: "Select a city...",
+      label: {
+        $when: { $data: "/state" },
+        $then: { $text: "City in ${/state}" },
+        $else: "City",
+      },
+      placeholder: {
+        $when: { $data: "/state" },
+        $then: { $text: "Choose city in ${/state}..." },
+        $else: "Choose state first",
+      },
       required: true,
       options: { resolver: "listCities" },
       dependencies: ["/country", "/state"],
