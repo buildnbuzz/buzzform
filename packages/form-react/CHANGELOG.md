@@ -1,5 +1,14 @@
 # @buildnbuzz/form-react
 
+## 0.1.7
+
+### Patch Changes
+
+- [#130](https://github.com/buildnbuzz/buzzform/pull/130) [`dc9fd2e`](https://github.com/buildnbuzz/buzzform/commit/dc9fd2e0e65cc8028fd15db71baad12509176236) Thanks [@ladparth](https://github.com/ladparth)! - Resolve dynamic expression values (inline functions and AST objects) for field display text.
+  - Updated `useResolvedFieldText` to support `label`, `placeholder`, and `description` as dynamic `Expr` values.
+  - Added unit tests for dynamic text resolution in React components.
+  - Updated documentation examples to showcase dynamic display text.
+
 ## 0.1.6
 
 ### Patch Changes
