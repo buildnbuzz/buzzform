@@ -1,6 +1,7 @@
-import type { Field as CoreField } from "@buildnbuzz/form-core";
+import type { ReactNode } from "react";
+import { isValidElement } from "react";
 import { resolveExpr } from "@buildnbuzz/form-core";
-import { isValidElement, type ReactNode } from "react";
+import type { Expr, Field as CoreField, ExprText } from "@buildnbuzz/form-core";
 import type { UnknownData } from "../../types";
 import { useFieldContext } from "../field-context";
 
@@ -15,49 +16,88 @@ export interface ResolvedFieldTextOptions {
 }
 
 /**
- * Resolves dynamic label/placeholder/description values for the active field.
+ * Convert a resolved value into a React node.
+ */
+function toReactNode(value: unknown, fallback: ReactNode): ReactNode {
+  if (value == null) return fallback;
+  if (isValidElement(value)) return value;
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return fallback;
+}
+
+/**
+ * Convert a resolved value into a string.
+ */
+function toStringValue(value: unknown, fallback: string): string {
+  if (value == null) return fallback;
+  if (typeof value === "string") return value;
+  if (typeof value === "number" || typeof value === "boolean") {
+    return String(value);
+  }
+  return fallback;
+}
+
+/**
+ * Resolve an expression against the current form and context data.
+ */
+function resolveTextExpr<T>(
+  value: Expr<T> | undefined,
+  formData: UnknownData,
+  contextData: UnknownData | undefined,
+): T | undefined {
+  if (value === undefined) return undefined;
+
+  return resolveExpr<T>(value, {
+    data: formData,
+    context: contextData,
+  });
+}
+
+/**
+ * Resolves dynamic label, placeholder, and description values for the active field.
  */
 export function useResolvedFieldText<
   TField extends CoreField = CoreField,
   TFormData extends UnknownData = UnknownData,
 >(options: ResolvedFieldTextOptions = {}) {
   const { field, formData, contextData } = useFieldContext<TField, TFormData>();
+
   const nameFallback =
     "name" in field && typeof field.name === "string" ? field.name : "";
+
   const labelValue = "label" in field ? field.label : undefined;
-  const placeholderValue = "placeholder" in field ? field.placeholder : undefined;
-  const descriptionValue = "description" in field ? field.description : undefined;
+  const placeholderValue =
+    "placeholder" in field ? field.placeholder : undefined;
+  const descriptionValue =
+    "description" in field ? field.description : undefined;
 
-  const resolveText = (value: unknown, fallback: ReactNode): ReactNode => {
-    if (value == null) return fallback;
-    if (typeof value === "object") {
-      const resolved = resolveExpr(value as never, { data: formData, context: contextData });
-      return (resolved as ReactNode | undefined) ?? fallback;
-    }
-    if (isValidElement(value)) return value;
-    if (typeof value === "string" || typeof value === "number") return value;
-    if (typeof value === "boolean") return value;
-    return fallback;
-  };
+  const resolvedLabel = resolveTextExpr<ExprText | ReactNode>(
+    labelValue,
+    formData,
+    contextData,
+  );
 
-  const resolvePlaceholder = (value: unknown, fallback: string): string => {
-    if (value == null) return fallback;
-    if (typeof value === "object") {
-      const resolved = resolveExpr(value as never, { data: formData, context: contextData });
-      return (resolved as string | undefined) ?? fallback;
-    }
-    if (typeof value === "string") return value;
-    return String(value);
-  };
+  const resolvedPlaceholder = resolveTextExpr<string>(
+    placeholderValue,
+    formData,
+    contextData,
+  );
+
+  const resolvedDescription = resolveTextExpr<ExprText | ReactNode>(
+    descriptionValue,
+    formData,
+    contextData,
+  );
 
   return {
-    label: resolveText(labelValue, options.labelFallback ?? nameFallback),
-    placeholder: resolvePlaceholder(
-      placeholderValue,
+    label: toReactNode(resolvedLabel, options.labelFallback ?? nameFallback),
+    placeholder: toStringValue(
+      resolvedPlaceholder,
       options.placeholderFallback ?? "",
     ),
-    description: resolveText(
-      descriptionValue,
+    description: toReactNode(
+      resolvedDescription,
       options.descriptionFallback ?? "",
     ),
   };
