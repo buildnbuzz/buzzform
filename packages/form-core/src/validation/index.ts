@@ -94,7 +94,11 @@ const numberRange = (
   return key === "min" ? value >= bound : value <= bound;
 };
 
-const requiredValidator: ValidationFunction = (value: unknown) => {
+const requiredValidator: ValidationFunction<unknown, { isRequired?: boolean }> = (
+  value,
+  args,
+) => {
+  if (args?.isRequired === false) return true;
   if (value === null || value === undefined || value === false) return false;
   if (typeof value === "string") return value.length > 0;
   if (Array.isArray(value)) return value.length > 0;
@@ -655,10 +659,11 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
   if (!isDataField(field)) return [];
   const checks: ValidationCheck[] = [];
 
-  if (field.required === true) {
+  if (field.required !== undefined) {
     checks.push({
       type: "required",
       message: "This field is required.",
+      args: { isRequired: field.required },
     });
   }
 

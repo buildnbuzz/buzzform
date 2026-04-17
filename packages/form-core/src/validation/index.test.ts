@@ -811,3 +811,101 @@ describe("validateSchema", () => {
     expect(result.errorsByPath[FORM_ERROR_PATH]).toBe("Form invalid");
   });
 });
+
+describe("Dynamic Required Validation", () => {
+  it("validates when required is a literal true", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: true,
+      },
+    ];
+
+    const invalid = await validateFields(fields, { test: "" }, { includeDerived: true });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    const valid = await validateFields(fields, { test: "ok" }, { includeDerived: true });
+    expect(valid.valid).toBe(true);
+  });
+
+  it("skips validation when required is a literal false", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: false,
+      },
+    ];
+
+    const valid = await validateFields(fields, { test: "" }, { includeDerived: true });
+    expect(valid.valid).toBe(true);
+  });
+
+  it("validates when required is an inline function returning true", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: ({ data }: { data: Record<string, unknown> }) => data.must === true,
+      },
+    ];
+
+    // Case 1: Dynamic required is ON, value is empty -> Fail
+    const invalid = await validateFields(fields, { test: "", must: true }, { includeDerived: true });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    // Case 2: Dynamic required is OFF, value is empty -> Pass
+    const valid = await validateFields(fields, { test: "", must: false }, { includeDerived: true });
+    expect(valid.valid).toBe(true);
+  });
+
+  it("validates when required is an AST expression ($data)", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: { $data: "/isNeeded", eq: true },
+      },
+    ];
+
+    // Case 1: Expression resolves to true, value empty -> Fail
+    const invalid = await validateFields(fields, { test: "", isNeeded: true }, { includeDerived: true });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    // Case 2: Expression resolves to false, value empty -> Pass
+    const valid = await validateFields(fields, { test: "", isNeeded: false }, { includeDerived: true });
+    expect(valid.valid).toBe(true);
+  });
+
+  it("respects complex condition groups ($and/$or) as required property", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: {
+          $or: [
+            { $data: "/a", eq: 1 },
+            { $data: "/b", eq: 1 },
+          ],
+        },
+      },
+    ];
+
+    // a=1, b=0 -> Required
+    const invalid1 = await validateFields(fields, { test: "", a: 1, b: 0 }, { includeDerived: true });
+    expect(invalid1.valid).toBe(false);
+
+    // a=0, b=1 -> Required
+    const invalid2 = await validateFields(fields, { test: "", a: 0, b: 1 }, { includeDerived: true });
+    expect(invalid2.valid).toBe(false);
+
+    // a=0, b=0 -> Not required
+    const valid = await validateFields(fields, { test: "", a: 0, b: 0 }, { includeDerived: true });
+    expect(valid.valid).toBe(true);
+  });
+});
+

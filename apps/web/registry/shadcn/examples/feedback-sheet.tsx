@@ -35,6 +35,25 @@ const feedbackSchema = defineSchema({
       },
     },
     {
+      type: "select",
+      name: "category",
+      label: "Category",
+      options: ["Bug", "Improvement", "Question"],
+      required: true,
+    },
+    {
+      type: "textarea",
+      name: "stepsToReproduce",
+      label: "Steps to Reproduce",
+      placeholder: "1. Click on... 2. Observe...",
+      // Showcases condition property - field unmounts if not a Bug
+      condition: { $data: "/category", eq: "Bug" },
+      required: true,
+      ui: {
+        autoResize: true,
+      },
+    },
+    {
       type: "textarea",
       name: "feedback",
       label: "Your Feedback",
@@ -57,9 +76,12 @@ const feedbackSchema = defineSchema({
     {
       type: "email",
       name: "email",
-      label: "Email (optional)",
+      label: ({ data }) =>
+        data.canContact ? "Email (Required)" : "Email (Optional)",
       placeholder: "your@email.com",
-      condition: { $data: "/canContact", eq: true },
+      // Showcases dynamic required property with inline function
+      required: ({ data }) => data.canContact === true,
+      dependencies: ["/canContact"],
     },
   ],
 });

@@ -161,7 +161,7 @@ export type VisibilityCondition = Condition;
 
 /** Built-in validator argument map for v0.1. */
 export interface ValidatorArgsMap {
-  required: Record<string, never>;
+  required: { isRequired?: boolean | ExprBoolean };
   email: Record<string, never>;
   minLength: { min?: number | ExprNumber };
   maxLength: { max?: number | ExprNumber };
