@@ -133,13 +133,14 @@ const locationResolvers = defineOptionResolvers({
   },
 });
 
-// 2. Define the Schema using registry keys
+// 2. Define the Schema with various defaultValue patterns
 const locationSchema = defineSchema({
   fields: [
     {
       type: "select",
       name: "country",
       label: "Country",
+      defaultValue: "United States", // 1. Static literal default
       placeholder: "Search and select a country...",
       required: true,
       options: { resolver: "listCountries" },
@@ -151,6 +152,8 @@ const locationSchema = defineSchema({
         data.country
           ? ` State / Province in ${data.country}`
           : "State / Province",
+      // 2. Inline function resolving from context
+      defaultValue: (ctx) => (ctx.context?.defaultState ? "Florida" : ""),
       placeholder: ({ data }) =>
         (data.country as string) || "Choose country first",
       required: true,
@@ -182,6 +185,14 @@ const locationSchema = defineSchema({
         emptyMessage: "No cities found for this state",
       },
     },
+    {
+      type: "text",
+      name: "address_label",
+      label: "Mailing Label",
+      // 4. Interpolated template string as default
+      defaultValue: { $text: "Ship to ${/country}" },
+      description: "Auto-generated from your initial country selection.",
+    },
   ],
 });
 
@@ -204,6 +215,7 @@ export default function CountryStateForm() {
         <Form
           schema={locationSchema}
           registries={{ resolvers: locationResolvers }}
+          contextData={{ defaultState: "California" }}
           onSubmit={async ({ value }) => {
             const data = value as LocationData;
             await new Promise((resolve) => setTimeout(resolve, 800));

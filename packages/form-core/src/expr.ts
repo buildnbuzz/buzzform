@@ -32,11 +32,9 @@ export function resolveExpr<T>(
     return (value as (c: ExprContext) => T)(ctx);
   }
 
-  // Array → implicit AND
+  // Array → Recursive resolve (treat as data array)
   if (Array.isArray(value)) {
-    return value.every((item) =>
-      Boolean(resolveExpr(item, ctx, fns)),
-    ) as T;
+    return value.map((item) => resolveExpr(item, ctx, fns)) as T;
   }
 
   if (typeof value === "object" && value !== null) {
@@ -106,6 +104,36 @@ export function resolveExpr<T>(
 
   // Primitive literal
   return value as T;
+}
+
+/**
+ * Resolve an Expr<boolean> to a boolean result.
+ *
+ * Special-cases AtomicCondition arrays (implicit AND) and Condition groups,
+ * falling back to general resolveExpr for primitives and ExprBase nodes.
+ */
+export function resolveBooleanExpr(
+  value: Expr<boolean> | undefined,
+  ctx: ExprContext,
+  fns?: FnRegistry,
+): boolean {
+  if (value === undefined) return true;
+
+  // Condition arrays or objects ($and, $or, $data, $context)
+  if (
+    Array.isArray(value) ||
+    (typeof value === "object" &&
+      value !== null &&
+      ("$and" in value ||
+        "$or" in value ||
+        "$data" in value ||
+        "$context" in value) &&
+      !("$when" in value || "$fn" in value || "$text" in value))
+  ) {
+    return evaluateConditionValue(value as Condition, ctx, fns);
+  }
+
+  return Boolean(resolveExpr(value, ctx, fns));
 }
 
 /**

@@ -5,7 +5,7 @@ import {
   type Field as CoreField,
   type FormRegistries,
   collectFieldValidationChecks,
-  resolveExpr,
+  resolveBooleanExpr,
   escapePointer,
   extractDependencies,
   fromDotNotation,
@@ -14,7 +14,6 @@ import {
   splitPointer,
   toDotNotation,
   type ValidationCheck,
-  type OptionResolverRegistry,
   type ValidationRegistry,
 } from "@buildnbuzz/form-core";
 import type {
@@ -98,8 +97,14 @@ export function Field<TFormData extends UnknownData = UnknownData>({
   const mergedRegistries = useMemo<FormRegistries>(() => {
     const normalized = {
       ...registries,
-      validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
-      resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+      validators: {
+        ...registries?.validators,
+        ...customValidators,
+      } as FormRegistries["validators"],
+      resolvers: {
+        ...registries?.resolvers,
+        ...optionResolvers,
+      } as FormRegistries["resolvers"],
     };
     return mergeRegistries(globalRegistries, normalized) ?? {};
   }, [globalRegistries, registries, customValidators, optionResolvers]);
@@ -216,19 +221,19 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
+      resolveBooleanExpr(resolvedField.condition, ctx, mergedRegistries.fns);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
+      resolveBooleanExpr(resolvedField.hidden, ctx, mergedRegistries.fns);
     const isDisabled =
       resolvedField.disabled !== undefined &&
-      (resolveExpr<boolean>(resolvedField.disabled, ctx, mergedRegistries.fns) ?? false);
+      resolveBooleanExpr(resolvedField.disabled, ctx, mergedRegistries.fns);
     const isReadOnly =
       resolvedField.readOnly !== undefined &&
-      (resolveExpr<boolean>(resolvedField.readOnly, ctx, mergedRegistries.fns) ?? false);
+      resolveBooleanExpr(resolvedField.readOnly, ctx, mergedRegistries.fns);
     const isRequired =
       resolvedField.required !== undefined &&
-      (resolveExpr<boolean>(resolvedField.required, ctx, mergedRegistries.fns) ?? false);
+      resolveBooleanExpr(resolvedField.required, ctx, mergedRegistries.fns);
 
     if (!isConditionMet) {
       return <ConditionalFieldRemover form={form} name={field.name} />;
@@ -325,10 +330,10 @@ export function LayoutField<TFormData extends UnknownData = UnknownData>({
     const ctx = { data: formData, context: contextData };
     const isConditionMet =
       resolvedField.condition === undefined ||
-      (resolveExpr<boolean>(resolvedField.condition, ctx, mergedRegistries.fns) ?? true);
+      resolveBooleanExpr(resolvedField.condition, ctx, mergedRegistries.fns);
     const isHidden =
       resolvedField.hidden !== undefined &&
-      (resolveExpr<boolean>(resolvedField.hidden, ctx, mergedRegistries.fns) ?? false);
+      resolveBooleanExpr(resolvedField.hidden, ctx, mergedRegistries.fns);
 
     if (!isConditionMet) return null;
     if (isHidden) return null;
