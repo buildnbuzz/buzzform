@@ -909,3 +909,118 @@ describe("Dynamic Required Validation", () => {
   });
 });
 
+// ============================================================================
+// Argument Resolution
+// ============================================================================
+
+describe("Validation Argument Resolution", () => {
+  it("resolves all Expr variants in validator args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "minLength",
+                message: "Too short (data)",
+                args: { min: { $data: "/minLen" } },
+              },
+              {
+                type: "maxLength",
+                message: "Too long (context)",
+                args: { max: { $context: "/maxLen" } },
+              },
+              {
+                type: "required",
+                message: "Required (fn)",
+                args: { isRequired: { $fn: "checkRequired" } },
+              },
+              {
+                type: "pattern",
+                message: "Invalid (when)",
+                args: {
+                  pattern: {
+                    $when: { $data: "/mode", eq: "strict" },
+                    $then: "^strict$",
+                    $else: ".*",
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const ctx = {
+      minLen: 5,
+      mode: "strict",
+    };
+    const extCtx = {
+      maxLen: 10,
+    };
+    const validators = {
+      checkRequired: () => true,
+    };
+
+    // 1. All pass
+    const pass = await validateFields(fields, { ...ctx, test: "strict" }, {
+      contextData: extCtx,
+      validators,
+    });
+    expect(pass.valid).toBe(true);
+
+    // 2. Data ref fails (minLen=5, value="short" is 5, but wait... "short" is length 5. let's use "abc" length 3)
+    const dataFail = await validateFields(fields, { ...ctx, test: "abc" }, {
+      contextData: extCtx,
+      validators,
+    });
+    expect(dataFail.errorsByPath["/test"]).toBe("Too short (data)");
+
+    // 3. Context ref fails (maxLen=10, value="longerthan10" is 12)
+    const contextFail = await validateFields(fields, { ...ctx, test: "longerthan10" }, {
+      contextData: extCtx,
+      validators,
+    });
+    expect(contextFail.errorsByPath["/test"]).toBe("Too long (context)");
+
+    // 4. When ref fails (mode=strict, value="abc" fails ^strict$)
+    const whenFail = await validateFields(fields, { ...ctx, test: "abc", minLen: 1 }, {
+      contextData: extCtx,
+      validators,
+    });
+    expect(whenFail.errorsByPath["/test"]).toBe("Invalid (when)");
+  });
+
+  it("resolves logical groups in boolean validator args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "required",
+                message: "Conditionally Required",
+                args: {
+                  isRequired: { $and: [{ $data: "/a" }, { $data: "/b" }] }
+                }
+              }
+            ]
+          }
+        }
+      }
+    ];
+
+    // both true -> required -> empty value fails
+    const fail = await validateFields(fields, { a: true, b: true, test: "" });
+    expect(fail.valid).toBe(false);
+
+    // one false -> not required -> empty value passes
+    const pass = await validateFields(fields, { a: true, b: false, test: "" });
+    expect(pass.valid).toBe(true);
+  });
+});
