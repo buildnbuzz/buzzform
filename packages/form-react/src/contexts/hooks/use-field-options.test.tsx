@@ -3,9 +3,11 @@ import React from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useFieldOptions } from "./use-field-options";
-import { FieldContext } from "../field-context";
+import { FieldContext, type FieldContextValue } from "../field-context";
 import type {
-  FormRegistries,
+  FieldOption,
+  ExprContext,
+  DataField,
 } from "@buildnbuzz/form-core";
 import type { FieldFormApi, UnknownData } from "../../types";
 
@@ -26,13 +28,13 @@ const mockFieldApi = {
   name: "testField",
 };
 
-const baseFieldContext = {
+const baseFieldContext: FieldContextValue<DataField, UnknownData> = {
   form: mockForm,
   field: {
     type: "select" as const,
     name: "testField",
     dependencies: ["/categoryId"],
-  },
+  } as DataField,
   formData: { categoryId: "cat_1" },
   contextData: undefined,
   fieldPath: "/testField",
@@ -41,11 +43,11 @@ const baseFieldContext = {
   isDisabled: false,
   isReadOnly: false,
   isRequired: false,
-  registries: undefined as FormRegistries | undefined,
-  fieldApi: mockFieldApi,
+  registries: undefined,
+  fieldApi: mockFieldApi as unknown as FieldContextValue["fieldApi"],
 };
 
-function createWrapper(contextValue: typeof baseFieldContext = baseFieldContext) {
+function createWrapper(contextValue: FieldContextValue<DataField, UnknownData> = baseFieldContext) {
   function Wrapper({ children }: { children: React.ReactNode }) {
     return (
       <FieldContext.Provider value={contextValue}>
@@ -142,5 +144,88 @@ describe("useFieldOptions", () => {
 
     expect(result.current.error).toBeDefined();
     expect(result.current.error?.message).toContain("not found in registry");
+  });
+
+  describe("individual option properties", () => {
+    it("resolves per-option disabled Expr variants", () => {
+      const options: FieldOption[] = [
+        { label: "Literal", value: "literal", disabled: true },
+        { label: "Data Ref", value: "data", disabled: { $data: "/disableOption" } },
+        { label: "Context Ref", value: "context", disabled: { $context: "/lock" } },
+        { label: "Inline Fn", value: "fn", disabled: ({ data }: ExprContext) => data.isLock === true },
+        { label: "Registry Fn", value: "reg", disabled: { $fn: "checkLock" } },
+      ];
+
+      const contextValue = {
+        ...baseFieldContext,
+        formData: { disableOption: true, isLock: true },
+        contextData: { lock: true },
+        registries: {
+          fns: {
+            checkLock: () => true,
+          },
+        },
+      };
+
+      const { result } = renderHook(() => useFieldOptions(options), {
+        wrapper: createWrapper(contextValue),
+      });
+
+      expect(result.current.options[0]?.disabled).toBe(true);  // Literal
+      expect(result.current.options[1]?.disabled).toBe(true);  // $data
+      expect(result.current.options[2]?.disabled).toBe(true);  // $context
+      expect(result.current.options[3]?.disabled).toBe(true);  // Inline Fn
+      expect(result.current.options[4]?.disabled).toBe(true);  // $fn
+    });
+
+    it("resolves $when branching for option disabled", () => {
+      const options: FieldOption[] = [
+        {
+          label: "Branching",
+          value: "v",
+          disabled: {
+            $when: { $data: "/mode", eq: "admin" },
+            $then: false,
+            $else: true,
+          }
+        },
+      ];
+
+      // Admin mode -> not disabled
+      const { result: res1 } = renderHook(() => useFieldOptions(options), {
+        wrapper: createWrapper({
+          ...baseFieldContext,
+          formData: { mode: "admin" },
+        }),
+      });
+      expect(res1.current.options[0]?.disabled).toBe(false);
+
+      // Guest mode -> disabled
+      const { result: res2 } = renderHook(() => useFieldOptions(options), {
+        wrapper: createWrapper({
+          ...baseFieldContext,
+          formData: { mode: "guest" },
+        }),
+      });
+      expect(res2.current.options[0]?.disabled).toBe(true);
+    });
+
+    it("resolves logical groups for option disabled", () => {
+      const options: FieldOption[] = [
+        {
+          label: "Logical",
+          value: "v",
+          disabled: { $and: [{ $data: "/a" }, { $data: "/b" }] }
+        },
+      ];
+
+      const { result } = renderHook(() => useFieldOptions(options), {
+        wrapper: createWrapper({
+          ...baseFieldContext,
+          formData: { a: true, b: true },
+        }),
+      });
+      expect(result.current.options[0]?.disabled).toBe(true);
+    });
   });
 });

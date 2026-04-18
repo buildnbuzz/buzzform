@@ -156,4 +156,125 @@ describe("useResolvedFieldText", () => {
     expect(result.current.placeholder).toBe("Fallback Placeholder");
     expect(result.current.description).toBe("Fallback Description");
   });
+
+  it("resolves $data references from formData", () => {
+    // formData = { country: "USA" }
+    const contextValue: TestContextValue = {
+      ...baseFieldContext,
+      field: {
+        ...baseFieldContext.field,
+        label: { $data: "/country" },
+        placeholder: { $data: "/country" },
+        description: { $data: "/country" },
+      },
+    };
+
+    const { result } = renderHook(() => useResolvedFieldText(), {
+      wrapper: createWrapper(contextValue),
+    });
+
+    expect(result.current.label).toBe("USA");
+    expect(result.current.placeholder).toBe("USA");
+    expect(result.current.description).toBe("USA");
+  });
+
+  it("resolves $context references from contextData", () => {
+    // contextData = { theme: "dark" }
+    const contextValue: TestContextValue = {
+      ...baseFieldContext,
+      field: {
+        ...baseFieldContext.field,
+        label: { $context: "/theme" },
+        placeholder: { $context: "/theme" },
+        description: { $context: "/theme" },
+      },
+    };
+
+    const { result } = renderHook(() => useResolvedFieldText(), {
+      wrapper: createWrapper(contextValue),
+    });
+
+    expect(result.current.label).toBe("dark");
+    expect(result.current.placeholder).toBe("dark");
+    expect(result.current.description).toBe("dark");
+  });
+
+  it("resolves $when/$then/$else branching", () => {
+    const contextValue: TestContextValue = {
+      ...baseFieldContext,
+      field: {
+        ...baseFieldContext.field,
+        label: {
+          $when: { $data: "/country", eq: "USA" },
+          $then: "US Label",
+          $else: "Other Label",
+        },
+        placeholder: {
+          $when: { $data: "/country", eq: "USA" },
+          $then: "Enter US state",
+          $else: "Enter region",
+        },
+        description: {
+          $when: { $data: "/country", eq: "USA" },
+          $then: "US only field",
+          $else: "Other field",
+        },
+      },
+    };
+
+    const { result } = renderHook(() => useResolvedFieldText(), {
+      wrapper: createWrapper(contextValue),
+    });
+
+    expect(result.current.label).toBe("US Label");
+    expect(result.current.placeholder).toBe("Enter US state");
+    expect(result.current.description).toBe("US only field");
+  });
+
+  it("resolves $when false branch", () => {
+    const contextValue: TestContextValue = {
+      ...baseFieldContext,
+      field: {
+        ...baseFieldContext.field,
+        label: {
+          $when: { $data: "/country", eq: "UK" },
+          $then: "UK Label",
+          $else: "Non-UK Label",
+        },
+      },
+    };
+
+    const { result } = renderHook(() => useResolvedFieldText(), {
+      wrapper: createWrapper(contextValue),
+    });
+
+    expect(result.current.label).toBe("Non-UK Label");
+  });
+
+  it("$fn resolves via fns registry forwarded from context", () => {
+    const contextValue: TestContextValue = {
+      ...baseFieldContext,
+      field: {
+        ...baseFieldContext.field,
+        label: { $fn: "getLabel" },
+        placeholder: { $fn: "getPlaceholder" },
+        description: { $fn: "getDescription" },
+      },
+      registries: {
+        fns: {
+          getLabel: () => "Computed Label",
+          getPlaceholder: () => "Computed Placeholder",
+          getDescription: () => "Computed Description",
+        },
+      },
+    };
+
+    const { result } = renderHook(() => useResolvedFieldText(), {
+      wrapper: createWrapper(contextValue),
+    });
+
+    expect(result.current.label).toBe("Computed Label");
+    expect(result.current.placeholder).toBe("Computed Placeholder");
+    expect(result.current.description).toBe("Computed Description");
+  });
 });
