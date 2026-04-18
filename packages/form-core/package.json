@@ -1,6 +1,6 @@
 {
   "name": "@buildnbuzz/form-core",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Framework-agnostic core primitives for BuzzForm.",
   "author": "Parth Lad <parth@buildnbuzz.com>",
   "license": "MIT",

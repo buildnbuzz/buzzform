@@ -1,5 +1,17 @@
 # @buildnbuzz/form-core
 
+## 0.1.7
+
+### Patch Changes
+
+- [#132](https://github.com/buildnbuzz/buzzform/pull/132) [`d0e37c2`](https://github.com/buildnbuzz/buzzform/commit/d0e37c285059bda239b9f6c80303081a8335a922) Thanks [@ladparth](https://github.com/ladparth)! - Add support for dynamic validation messages, validator arguments ($args), and dynamic layout properties.
+  - Change validation `message` type from `string` to `ExprText` to enable dynamic error messages via `$text`, `$when`, and other expressions.
+  - Add `$args` expression node and `${/args/...}` template support for referencing resolved validator arguments (e.g., `min`, `max`).
+  - Enhance built-in `required` validator to support an optional `isRequired` argument for dynamic toggling.
+  - Introduce `resolveBooleanExpr` for optimized evaluation of boolean conditions like `$and` and `$or`.
+  - Add resolution helpers for layout fields (`tabs`, `collapsible`) to support dynamic labels and visibility states.
+  - Support dynamic `defaultValue` resolution in `extractDefaults`.
+
 ## 0.1.6
 
 ### Patch Changes
