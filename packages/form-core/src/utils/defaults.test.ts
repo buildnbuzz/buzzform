@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Field, ExprContext } from "../types";
+import type { Field, ExprContext, UnknownData } from "../types";
 import { extractDefaults } from "./defaults";
 
 const baseFields: Field[] = [
@@ -211,6 +211,35 @@ describe("extractDefaults", () => {
       normal: false,
       tri: null,
       triFixed: false,
+    });
+  });
+
+  it("resolves $fn and complex logic in defaultValue", () => {
+    const fields: Field[] = [
+      {
+        type: "checkbox",
+        name: "flag",
+        defaultValue: true,
+      },
+      {
+        type: "text",
+        name: "status",
+        defaultValue: {
+          $when: { $and: [{ $data: "/flag" }, { $context: "/ready" }] },
+          $then: { $fn: "greet", args: { name: "User" } },
+          $else: "OFFLINE",
+        },
+      },
+    ];
+
+    const context = { ready: true };
+    const fns = {
+      greet: (ctx: ExprContext & { args?: UnknownData }) => `Hello ${ctx.args?.name}`,
+    };
+
+    expect(extractDefaults(fields, context, fns)).toEqual({
+      flag: true,
+      status: "Hello User",
     });
   });
 });
