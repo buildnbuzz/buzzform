@@ -7,6 +7,7 @@ import type {
   ValidationConfig,
   ValidationGroup,
   ValidatorArgsMap,
+  FormRegistries,
 } from "../types";
 import { isDataField } from "../types";
 import { resolveExpr } from "../expr";
@@ -268,6 +269,8 @@ export const builtInValidators = {
 export interface ValidationContext {
   formData: Record<string, unknown>;
   contextData?: Record<string, unknown>;
+  /** Runtime registries for resolving dynamic expressions. */
+  registries?: FormRegistries;
 }
 
 /** Validation run trigger. */
@@ -302,6 +305,8 @@ export interface ValidateFieldsOptions {
   contextData?: Record<string, unknown>;
   /** Custom validators registry. */
   validators?: ValidationRegistry;
+  /** Runtime registries (fns, etc.) */
+  registries?: FormRegistries;
   /** Whether to include built-in derived checks. */
   includeDerived?: boolean;
 }
@@ -377,9 +382,10 @@ export async function validateField(
   const ctx: ValidationContext = {
     formData,
     contextData: options?.contextData,
+    registries: options?.registries,
   };
 
-  if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }) === false) {
+  if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) {
     return { valid: true };
   }
 
@@ -431,7 +437,7 @@ function findFieldByPath(
     if (match || !isDataField(field)) return;
 
     const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
-      resolveExpr<boolean>(candidate.condition, { data: ctx.formData, context: ctx.contextData }) !== false,
+      resolveExpr<boolean>(candidate.condition, { data: ctx.formData, context: ctx.contextData }, ctx.registries?.fns) !== false,
     );
     if (!allConditionsPass) return;
 
@@ -455,6 +461,7 @@ export async function validatePath(
   const ctx: ValidationContext = {
     formData,
     contextData: options?.contextData,
+    registries: options?.registries,
   };
   if (path === "" || !path.startsWith("/")) return { valid: true };
 
@@ -478,6 +485,7 @@ export async function validateSchema(
   const ctx: ValidationContext = {
     formData,
     contextData: options?.contextData,
+    registries: options?.registries,
   };
 
   const group = getValidationGroup(schema.validate, run);
@@ -508,10 +516,11 @@ export async function validateFields(
   const ctx: ValidationContext = {
     formData,
     contextData: options?.contextData,
+    registries: options?.registries,
   };
 
   const visit = async (field: Field, basePath: string): Promise<void> => {
-    if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }) === false) return;
+    if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) return;
 
     if (isDataField(field)) {
       const fieldPath = joinPointer(basePath, field.name);
@@ -636,17 +645,23 @@ export function runValidationCheck(
     }
   }
 
+  const context = { data: ctx.formData, context: ctx.contextData, args: resolvedArgs };
+  const resolveCheckMessage = (msg: string | Expr<string>): string => {
+    if (typeof msg === "string" && !msg.includes("${")) return msg;
+    return resolveExpr<string>(msg, context, ctx.registries?.fns) ?? "";
+  };
+
   const result = validatorFn(value, resolvedArgs, ctx);
   if (result instanceof Promise) {
     return result.then((isValid) => ({
       isValid,
-      message: isValid ? "" : check.message,
+      message: isValid ? "" : resolveCheckMessage(check.message),
     }));
   }
 
   return {
     isValid: result,
-    message: result ? "" : check.message,
+    message: result ? "" : resolveCheckMessage(check.message),
   };
 }
 
@@ -695,14 +710,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
   if ("minLength" in field && typeof field.minLength === "number") {
     checks.push({
       type: "minLength",
-      message: `Must be at least ${field.minLength} characters.`,
+      message: { $text: "Must be at least ${/args/min} characters." },
       args: { min: field.minLength },
     });
   }
   if ("maxLength" in field && typeof field.maxLength === "number") {
     checks.push({
       type: "maxLength",
-      message: `Must be at most ${field.maxLength} characters.`,
+      message: { $text: "Must be at most ${/args/max} characters." },
       args: { max: field.maxLength },
     });
   }
@@ -711,14 +726,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
     if (typeof field.min === "number") {
       checks.push({
         type: "min",
-        message: `Must be at least ${field.min}.`,
+        message: { $text: "Must be at least ${/args/min}." },
         args: { min: field.min },
       });
     }
     if (typeof field.max === "number") {
       checks.push({
         type: "max",
-        message: `Must be at most ${field.max}.`,
+        message: { $text: "Must be at most ${/args/max}." },
         args: { max: field.max },
       });
     }
@@ -728,14 +743,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         message:
           field.precision === 0
             ? "Must be an integer."
-            : `Must have at most ${field.precision} decimal places.`,
+            : { $text: "Must have at most ${/args/precision} decimal places." },
         args: { precision: field.precision },
       });
     }
     if (typeof field.step === "number") {
       checks.push({
         type: "step",
-        message: `Must be a multiple of ${field.step}.`,
+        message: { $text: "Must be a multiple of ${/args/step}." },
         args: { step: field.step },
       });
     }
@@ -745,14 +760,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
     if (typeof field.minTags === "number") {
       checks.push({
         type: "minTags",
-        message: `Add at least ${field.minTags} tag${field.minTags === 1 ? "" : "s"}.`,
+        message: { $text: "Add at least ${/args/min} tags." },
         args: { min: field.minTags },
       });
     }
     if (typeof field.maxTags === "number") {
       checks.push({
         type: "maxTags",
-        message: `Add at most ${field.maxTags} tag${field.maxTags === 1 ? "" : "s"}.`,
+        message: { $text: "Add at most ${/args/max} tags." },
         args: { max: field.maxTags },
       });
     }
@@ -762,14 +777,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
     if (field.minDate) {
       checks.push({
         type: "minDate",
-        message: `Date must be on or after ${field.minDate}.`,
+        message: { $text: "Date must be on or after ${/args/min}." },
         args: { min: field.minDate },
       });
     }
     if (field.maxDate) {
       checks.push({
         type: "maxDate",
-        message: `Date must be on or before ${field.maxDate}.`,
+        message: { $text: "Date must be on or before ${/args/max}." },
         args: { max: field.maxDate },
       });
     }
@@ -779,14 +794,14 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
     if (typeof field.minItems === "number") {
       checks.push({
         type: "minItems",
-        message: `Add at least ${field.minItems} ${field.minItems === 1 ? "item" : "items"}.`,
+        message: { $text: "Add at least ${/args/min} items." },
         args: { min: field.minItems },
       });
     }
     if (typeof field.maxItems === "number") {
       checks.push({
         type: "maxItems",
-        message: `Cannot exceed ${field.maxItems} ${field.maxItems === 1 ? "item" : "items"}.`,
+        message: { $text: "Cannot exceed ${/args/max} items." },
         args: { max: field.maxItems },
       });
     }

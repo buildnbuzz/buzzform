@@ -53,6 +53,8 @@ export interface ExprContext {
   data: Record<string, unknown>;
   /** External context data — resolved by `{ $context: path }` expressions. */
   context?: Record<string, unknown>;
+  /** Dynamic arguments (e.g. validator args) — resolved by `{ $args: path }` expressions. */
+  args?: Record<string, unknown>;
 }
 
 /**
@@ -63,6 +65,7 @@ type ExprBase<T> =
   | T
   | { $data: DataPath }
   | { $context: ContextPath }
+  | { $args: string }
   | { $when: Condition; $then: Expr<T>; $else: Expr<T> }
   | { $fn: string; args?: Record<string, Expr<unknown>> }
   | { $text: string }
@@ -195,8 +198,8 @@ export type BuiltInValidationCheck = {
   [Key in BuiltInValidatorName]: {
     /** Validator identifier. */
     type: Key;
-    /** Error message shown when the check fails. */
-    message: string;
+    /** Error message shown when the check fails. Supports dynamic text. */
+    message: ExprText;
     /** Optional arguments for the validator. */
     args?: ValidatorArgsMap[Key];
   };
@@ -206,8 +209,8 @@ export type BuiltInValidationCheck = {
 export type CustomValidationCheck = {
   /** Custom validator identifier. */
   type: Exclude<string, BuiltInValidatorName>;
-  /** Error message shown when the check fails. */
-  message: string;
+  /** Error message shown when the check fails. Supports dynamic text. */
+  message: ExprText;
   /** Extra arguments passed to the validator. */
   args?: UnknownData;
 };

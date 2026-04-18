@@ -52,6 +52,11 @@ export function resolveExpr<T>(
         : (getByPath(ctx.context ?? {}, (value as { $context: string }).$context) as T | undefined);
     }
 
+    // $args reference
+    if ("$args" in value) {
+      return getByPath(ctx.args ?? {}, (value as { $args: string }).$args) as T | undefined;
+    }
+
     // $when/$then/$else branching
     if ("$when" in value) {
       const cond = value as {
@@ -364,6 +369,10 @@ function resolveTextTemplate(
     /\$\{\/[^}]+\}/g,
     (match) => {
       const path = match.slice(2, -1); // strip "${" and "}"
+      if (path.startsWith("/args/")) {
+        const val = getByPath(ctx.args ?? {}, path.slice(5));
+        return val !== undefined ? String(val) : "";
+      }
       const val = getByPath(ctx.data, path);
       return val !== undefined ? String(val) : "";
     },
