@@ -171,6 +171,52 @@ const form = useForm({
   Use `defineValidators` to create type-safe custom validators. It provides proper typing for validator functions and ensures they return the correct format (`true` for valid, `string` for error message).
 </Callout>
 
+## Dynamic Validation
+
+BuzzForm supports full reactivity in validation. Both validator **arguments** and **error messages** can be dynamic expressions (`Expr<T>`).
+
+### Dynamic Validator Arguments
+
+You can pass form data or context directly into validator arguments:
+
+```tsx
+{
+  type: "minLength",
+  message: "Too short",
+  // Re-validates whenever "/minChars" changes
+  args: { 
+    min: { $data: "/minChars" } 
+  }
+}
+```
+
+### Dynamic Messages
+
+Error messages can use template interpolation and conditional logic. They have access to `data`, `context`, and the resolved `args` of the current validator:
+
+```tsx
+{
+  type: "minLength",
+  // Use resolved args in the message
+  message: { $text: "Must be at least ${/args/min} characters." },
+  args: { min: { $data: "/limit" } }
+}
+```
+
+You can even use branching logic for messages:
+
+```tsx
+{
+  type: "required",
+  message: {
+    $when: { $data: "/isUrgent", eq: true },
+    $then: "STOP! This is urgent and required.",
+    $else: "Please provide a value."
+  },
+  args: { isRequired: true }
+}
+```
+
 ## Cross-Field Validation
 
 Use `{ $data: "/path" }` to reference other fields:

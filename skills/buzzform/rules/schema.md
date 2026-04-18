@@ -106,7 +106,7 @@ Alternative: `const schema = { fields: [...] } as const satisfies FormSchema;` �
 
 ## Default Values (Two Levels)
 
-1. **Field-level** `defaultValue` in schema — extracted automatically by `extractDefaults()`.
+1. **Field-level** `defaultValue` in schema — extracted automatically by `extractDefaults()`. Supports dynamic expressions (`Expr<T>`) like `$data` or `$fn`.
 2. **Form-level** `defaultValues` prop — overrides schema defaults. Used for editing existing data.
 
 ```tsx

@@ -80,8 +80,8 @@ export function ContactForm() {
 
 - Use `defineSchema` from `@buildnbuzz/form-react` (NOT `@buildnbuzz/form-core`) to enable `ReactNode` (JSX) in labels/descriptions.
 - **Unified Expressions (`Expr<T>`):** Unified system for all dynamic field properties (`label`, `disabled`, `condition`, etc.).
-  - `$data` / `$context`: JSON Pointer paths (starts with `/`).
-  - `$text`: String interpolation (e.g., `{ $text: "Hello ${/name}" }`).
+  - `$data` / `$context` / `$args`: JSON Pointer paths (starts with `/`).
+  - `$text`: String interpolation (e.g., `{ $text: "Hello ${/name}" }`, supports `${/args/min}`).
   - `$when`: Ternary logic (e.g., `{ $when: condition, $then: a, $else: b }`).
   - `$fn`: Registry calls (e.g., `{ $fn: "calc", args: { x: 1 } }`).
 - **FormRegistries:** Unify components (`fields`), validators, and functions (`fns`) into one object on `FormProvider` or `Form`.
