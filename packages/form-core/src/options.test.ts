@@ -99,6 +99,21 @@ describe("resolveOption", () => {
     const opt: FieldOption = { value: "a", label: "Alpha", ui: { description: "desc" } };
     expect(resolveOption(opt, EMPTY).ui).toEqual({ description: "desc" });
   });
+
+  it("resolves dynamic label via $data", () => {
+    const opt: FieldOption = { value: "x", label: { $data: "/name" } };
+    expect(resolveOption(opt, { name: "Dynamic Name" }).label).toBe("Dynamic Name");
+  });
+
+  it("resolves dynamic label via $context", () => {
+    const opt: FieldOption = { value: "x", label: { $context: "/title" } };
+    expect(resolveOption(opt, EMPTY, { title: "Admin" }).label).toBe("Admin");
+  });
+
+  it("falls back to value string when dynamic label resolves to undefined", () => {
+    const opt: FieldOption = { value: "val1", label: { $data: "/missing" } };
+    expect(resolveOption(opt, EMPTY).label).toBe("val1");
+  });
 });
 
 describe("resolveOptions", () => {

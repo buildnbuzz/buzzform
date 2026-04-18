@@ -227,5 +227,23 @@ describe("useFieldOptions", () => {
       });
       expect(result.current.options[0]?.disabled).toBe(true);
     });
+
+    it("resolves per-option label Expr variants", () => {
+      const options: FieldOption[] = [
+        { label: { $data: "/name" }, value: "v1" },
+        { label: { $context: "/role" }, value: "v2" },
+      ];
+
+      const { result } = renderHook(() => useFieldOptions(options), {
+        wrapper: createWrapper({
+          ...baseFieldContext,
+          formData: { name: "John" },
+          contextData: { role: "Admin" },
+        }),
+      });
+
+      expect(result.current.options[0]?.label).toBe("John");
+      expect(result.current.options[1]?.label).toBe("Admin");
+    });
   });
 });

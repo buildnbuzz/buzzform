@@ -82,7 +82,14 @@ export function resolveOption(
     return { label: option, value: option, disabled: false };
   }
   return {
-    label: getSelectOptionLabel(option),
+    label:
+      typeof option.label === "string"
+        ? option.label
+        : resolveExpr<string>(
+            option.label,
+            { data: formData, context: contextData },
+            fns,
+          ) ?? String(option.value),
     value: getSelectOptionValue(option),
     disabled:
       option.disabled === undefined
