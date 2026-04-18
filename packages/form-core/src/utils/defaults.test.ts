@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { Field } from "../types";
+import type { Field, ExprContext, UnknownData } from "../types";
 import { extractDefaults } from "./defaults";
 
 const baseFields: Field[] = [
@@ -79,17 +79,167 @@ describe("extractDefaults", () => {
     });
   });
 
-  it("ignores dynamic defaultValue references", () => {
+  it("resolves dynamic defaultValue references via Expr", () => {
     const fields: Field[] = [
       {
         type: "text",
         name: "greeting",
-        defaultValue: { $data: "/user/name" },
+        defaultValue: { $data: "/other" },
+      },
+      {
+        type: "text",
+        name: "other",
+        defaultValue: "world",
       },
     ];
 
     expect(extractDefaults(fields)).toEqual({
       greeting: "",
+      other: "world",
+    });
+
+    const fieldsCorrectOrder: Field[] = [
+      {
+        type: "text",
+        name: "other",
+        defaultValue: "world",
+      },
+      {
+        type: "text",
+        name: "greeting",
+        defaultValue: { $data: "/other" },
+      },
+    ];
+
+    expect(extractDefaults(fieldsCorrectOrder)).toEqual({
+      other: "world",
+      greeting: "world",
+    });
+  });
+
+  it("resolves $context and $text expressions", () => {
+    const fields: Field[] = [
+      {
+        type: "text",
+        name: "user",
+        defaultValue: { $context: "/user/name" },
+      },
+      {
+        type: "text",
+        name: "msg",
+        defaultValue: { $text: "Hello ${/user}" },
+      },
+    ];
+
+    const context = { user: { name: "Alice" } };
+    expect(extractDefaults(fields, context)).toEqual({
+      user: "Alice",
+      msg: "Hello Alice",
+    });
+  });
+
+  it("resolves $fn expressions", () => {
+    const fields: Field[] = [
+      {
+        type: "number",
+        name: "val",
+        defaultValue: { $fn: "double", args: { num: 21 } },
+      },
+    ];
+
+    const fns = {
+      double: (ctx: ExprContext & { args?: Record<string, unknown> }) =>
+        (ctx.args?.num as number) * 2,
+    };
+
+    expect(extractDefaults(fields, {}, fns)).toEqual({
+      val: 42,
+    });
+  });
+
+  it("resolves inline functions", () => {
+    const fields: Field[] = [
+      {
+        type: "text",
+        name: "test",
+        defaultValue: (ctx: ExprContext) => `Hi ${ctx.context?.role}`,
+      },
+    ];
+
+    expect(extractDefaults(fields, { role: "Admin" })).toEqual({
+      test: "Hi Admin",
+    });
+  });
+
+  it("handles $when branching", () => {
+    const fields: Field[] = [
+      {
+        type: "text",
+        name: "mode",
+        defaultValue: "advanced",
+      },
+      {
+        type: "text",
+        name: "config",
+        defaultValue: {
+          $when: { $data: "/mode", eq: "advanced" },
+          $then: "FULL",
+          $else: "BASIC",
+        },
+      },
+    ];
+
+    expect(extractDefaults(fields)).toEqual({
+      mode: "advanced",
+      config: "FULL",
+    });
+  });
+
+  it("supports tri-state checkbox defaults", () => {
+    const fields: Field[] = [
+      { type: "checkbox", name: "normal" },
+      { type: "checkbox", name: "tri", tristate: true },
+      {
+        type: "checkbox",
+        name: "triFixed",
+        tristate: true,
+        defaultValue: false,
+      },
+    ];
+
+    expect(extractDefaults(fields)).toEqual({
+      normal: false,
+      tri: null,
+      triFixed: false,
+    });
+  });
+
+  it("resolves $fn and complex logic in defaultValue", () => {
+    const fields: Field[] = [
+      {
+        type: "checkbox",
+        name: "flag",
+        defaultValue: true,
+      },
+      {
+        type: "text",
+        name: "status",
+        defaultValue: {
+          $when: { $and: [{ $data: "/flag" }, { $context: "/ready" }] },
+          $then: { $fn: "greet", args: { name: "User" } },
+          $else: "OFFLINE",
+        },
+      },
+    ];
+
+    const context = { ready: true };
+    const fns = {
+      greet: (ctx: ExprContext & { args?: UnknownData }) => `Hello ${ctx.args?.name}`,
+    };
+
+    expect(extractDefaults(fields, context, fns)).toEqual({
+      flag: true,
+      status: "Hello User",
     });
   });
 });

@@ -16,6 +16,7 @@ type Expr<T> =
   | T                                     // Literal (string, number, boolean)
   | { $data: string }                     // Reference form data
   | { $context: string }                  // Reference external context
+  | { $args: string }                     // Reference dynamic arguments (e.g. validator args)
   | { $text: string }                     // Template interpolation
   | { $when: Condition; $then: Expr<T>; $else: Expr<T> } // Ternary logic
   | { $fn: string; args?: Record<string, Expr<any>> }    // Registry function
@@ -41,6 +42,29 @@ Build dynamic strings using `${/path}` syntax. References are resolved from form
   name: "confirmation",
   // "Hello John, please confirm your email."
   label: { $text: "Hello ${/firstName}, please confirm your email." },
+}
+```
+
+### Validator Argument Interpolation
+
+Inside validation messages, you can reference the **resolved arguments** of the validator using the `/args/` prefix:
+
+```tsx
+{
+  type: "text",
+  name: "username",
+  validate: {
+    onBlur: {
+      checks: [
+        {
+          type: "minLength",
+          // "Must be at least 10 characters (you have 5)."
+          message: { $text: "Must be at least ${/args/min} characters (you have ${/username})." },
+          args: { min: 10 },
+        },
+      ],
+    },
+  },
 }
 ```
 
@@ -363,11 +387,11 @@ const settingsSchema = defineSchema({
 ## Limitations
 
 **Not supported:**
-- ❌ Dynamic values in `message` strings (messages are static)
 - ❌ Relative paths like `../sibling` (use absolute `/sibling`)
 - ❌ Dot notation like `user.name` (use `/user/name`)
 
 **Supported:**
+- ✅ In `message` strings (Interpolation & logic)
 - ✅ In `args` object of validation checks
 - ✅ In labels, descriptions, placeholders
 - ✅ In defaultValue

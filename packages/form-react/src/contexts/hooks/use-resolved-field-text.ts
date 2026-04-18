@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { isValidElement } from "react";
 import { resolveExpr } from "@buildnbuzz/form-core";
-import type { Expr, Field as CoreField, ExprText } from "@buildnbuzz/form-core";
+import type { Expr, Field as CoreField, ExprText, FnRegistry } from "@buildnbuzz/form-core";
 import type { UnknownData } from "../../types";
 import { useFieldContext } from "../field-context";
 
@@ -45,13 +45,14 @@ function resolveTextExpr<T>(
   value: Expr<T> | undefined,
   formData: UnknownData,
   contextData: UnknownData | undefined,
+  fns?: FnRegistry,
 ): T | undefined {
   if (value === undefined) return undefined;
 
   return resolveExpr<T>(value, {
     data: formData,
     context: contextData,
-  });
+  }, fns);
 }
 
 /**
@@ -61,7 +62,8 @@ export function useResolvedFieldText<
   TField extends CoreField = CoreField,
   TFormData extends UnknownData = UnknownData,
 >(options: ResolvedFieldTextOptions = {}) {
-  const { field, formData, contextData } = useFieldContext<TField, TFormData>();
+  const { field, formData, contextData, registries } = useFieldContext<TField, TFormData>();
+  const fns = registries?.fns;
 
   const nameFallback =
     "name" in field && typeof field.name === "string" ? field.name : "";
@@ -76,18 +78,21 @@ export function useResolvedFieldText<
     labelValue,
     formData,
     contextData,
+    fns,
   );
 
   const resolvedPlaceholder = resolveTextExpr<string>(
     placeholderValue,
     formData,
     contextData,
+    fns,
   );
 
   const resolvedDescription = resolveTextExpr<ExprText | ReactNode>(
     descriptionValue,
     formData,
     contextData,
+    fns,
   );
 
   return {

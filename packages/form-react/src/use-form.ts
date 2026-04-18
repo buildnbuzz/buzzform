@@ -48,25 +48,33 @@ export function useForm<TFormData extends UnknownData>(
     ...tanstackOpts
   } = opts;
 
+  const mergedRegistries = useMemo<FormRegistries>(() => {
+    // Normalize deprecated shims into registries, then merge with global.
+    return (
+      mergeRegistries(config?.registries, {
+        ...registries,
+        validators: {
+          ...registries?.validators,
+          ...customValidators,
+        } as FormRegistries["validators"],
+        resolvers: {
+          ...registries?.resolvers,
+          ...optionResolvers,
+        } as FormRegistries["resolvers"],
+      }) ?? {}
+    );
+  }, [config?.registries, registries, customValidators, optionResolvers]);
+
   const schemaSubmitValidator = useMemo(() => {
     if (!enableSchemaSubmitValidation) return undefined;
-    // Normalize deprecated shims into registries, then merge with global.
-    const normalized = mergeRegistries(config?.registries, {
-      ...registries,
-      validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
-      resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
-    });
     return buildStandardSchemaValidator<TFormData>(schema, {
-      customValidators: normalized?.validators,
+      customValidators: mergedRegistries.validators,
       contextData,
       derivedValidationMode,
     }) as StandardSchemaV1<TFormData, unknown>;
   }, [
     schema,
-    config?.registries,
-    registries,
-    customValidators,
-    optionResolvers,
+    mergedRegistries.validators,
     contextData,
     derivedValidationMode,
     enableSchemaSubmitValidation,
@@ -74,8 +82,11 @@ export function useForm<TFormData extends UnknownData>(
 
   const mergedDefaultValues = useMemo(
     () =>
-      ({ ...extractDefaults(schema.fields), ...defaultValues }) as TFormData,
-    [schema, defaultValues],
+      ({
+        ...extractDefaults(schema.fields, contextData, mergedRegistries.fns),
+        ...defaultValues,
+      }) as TFormData,
+    [schema.fields, contextData, mergedRegistries.fns, defaultValues],
   );
 
   const mergedValidators = useMemo(() => {

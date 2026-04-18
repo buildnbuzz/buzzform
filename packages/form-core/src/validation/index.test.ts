@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { ValidationCheck } from "../types";
+import type { ExprContext, ValidationCheck } from "../types";
 import {
   builtInValidators,
   deriveFieldChecks,
@@ -809,5 +809,381 @@ describe("validateSchema", () => {
     expect(result.valid).toBe(false);
     expect(result.errorsByPath["/title"]).toBe("This field is required.");
     expect(result.errorsByPath[FORM_ERROR_PATH]).toBe("Form invalid");
+  });
+});
+
+describe("Dynamic Required Validation", () => {
+  it("validates when required is a literal true", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: true,
+      },
+    ];
+
+    const invalid = await validateFields(
+      fields,
+      { test: "" },
+      { includeDerived: true },
+    );
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    const valid = await validateFields(
+      fields,
+      { test: "ok" },
+      { includeDerived: true },
+    );
+    expect(valid.valid).toBe(true);
+  });
+
+  it("skips validation when required is a literal false", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: false,
+      },
+    ];
+
+    const valid = await validateFields(
+      fields,
+      { test: "" },
+      { includeDerived: true },
+    );
+    expect(valid.valid).toBe(true);
+  });
+
+  it("validates when required is an inline function returning true", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: ({ data }: { data: Record<string, unknown> }) =>
+          data.must === true,
+      },
+    ];
+
+    // Case 1: Dynamic required is ON, value is empty -> Fail
+    const invalid = await validateFields(
+      fields,
+      { test: "", must: true },
+      { includeDerived: true },
+    );
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    // Case 2: Dynamic required is OFF, value is empty -> Pass
+    const valid = await validateFields(
+      fields,
+      { test: "", must: false },
+      { includeDerived: true },
+    );
+    expect(valid.valid).toBe(true);
+  });
+
+  it("validates when required is an AST expression ($data)", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: { $data: "/isNeeded", eq: true },
+      },
+    ];
+
+    // Case 1: Expression resolves to true, value empty -> Fail
+    const invalid = await validateFields(
+      fields,
+      { test: "", isNeeded: true },
+      { includeDerived: true },
+    );
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errorsByPath["/test"]).toBe("This field is required.");
+
+    // Case 2: Expression resolves to false, value empty -> Pass
+    const valid = await validateFields(
+      fields,
+      { test: "", isNeeded: false },
+      { includeDerived: true },
+    );
+    expect(valid.valid).toBe(true);
+  });
+
+  it("respects complex condition groups ($and/$or) as required property", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        required: {
+          $or: [
+            { $data: "/a", eq: 1 },
+            { $data: "/b", eq: 1 },
+          ],
+        },
+      },
+    ];
+
+    // a=1, b=0 -> Required
+    const invalid1 = await validateFields(
+      fields,
+      { test: "", a: 1, b: 0 },
+      { includeDerived: true },
+    );
+    expect(invalid1.valid).toBe(false);
+
+    // a=0, b=1 -> Required
+    const invalid2 = await validateFields(
+      fields,
+      { test: "", a: 0, b: 1 },
+      { includeDerived: true },
+    );
+    expect(invalid2.valid).toBe(false);
+
+    // a=0, b=0 -> Not required
+    const valid = await validateFields(
+      fields,
+      { test: "", a: 0, b: 0 },
+      { includeDerived: true },
+    );
+    expect(valid.valid).toBe(true);
+  });
+});
+
+// ============================================================================
+// Argument Resolution
+// ============================================================================
+
+describe("Validation Argument Resolution", () => {
+  it("resolves all Expr variants in validator args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "minLength",
+                message: "Too short (data)",
+                args: { min: { $data: "/minLen" } },
+              },
+              {
+                type: "maxLength",
+                message: "Too long (context)",
+                args: { max: { $context: "/maxLen" } },
+              },
+              {
+                type: "required",
+                message: "Required (fn)",
+                args: { isRequired: { $fn: "checkRequired" } },
+              },
+              {
+                type: "pattern",
+                message: "Invalid (when)",
+                args: {
+                  pattern: {
+                    $when: { $data: "/mode", eq: "strict" },
+                    $then: "^strict$",
+                    $else: ".*",
+                  },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const ctx = {
+      minLen: 5,
+      mode: "strict",
+    };
+    const extCtx = {
+      maxLen: 10,
+    };
+    const validators = {
+      checkRequired: () => true,
+    };
+
+    // 1. All pass
+    const pass = await validateFields(
+      fields,
+      { ...ctx, test: "strict" },
+      {
+        contextData: extCtx,
+        validators,
+      },
+    );
+    expect(pass.valid).toBe(true);
+
+    // 2. Data ref fails (minLen=5, value="short" is 5, but wait... "short" is length 5. let's use "abc" length 3)
+    const dataFail = await validateFields(
+      fields,
+      { ...ctx, test: "abc" },
+      {
+        contextData: extCtx,
+        validators,
+      },
+    );
+    expect(dataFail.errorsByPath["/test"]).toBe("Too short (data)");
+
+    // 3. Context ref fails (maxLen=10, value="longerthan10" is 12)
+    const contextFail = await validateFields(
+      fields,
+      { ...ctx, test: "longerthan10" },
+      {
+        contextData: extCtx,
+        validators,
+      },
+    );
+    expect(contextFail.errorsByPath["/test"]).toBe("Too long (context)");
+
+    // 4. When ref fails (mode=strict, value="abc" fails ^strict$)
+    const whenFail = await validateFields(
+      fields,
+      { ...ctx, test: "abc", minLen: 1 },
+      {
+        contextData: extCtx,
+        validators,
+      },
+    );
+    expect(whenFail.errorsByPath["/test"]).toBe("Invalid (when)");
+  });
+
+  it("resolves logical groups in boolean validator args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "required",
+                message: "Conditionally Required",
+                args: {
+                  isRequired: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+                },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    // both true -> required -> empty value fails
+    const fail = await validateFields(fields, { a: true, b: true, test: "" });
+    expect(fail.valid).toBe(false);
+
+    // one false -> not required -> empty value passes
+    const pass = await validateFields(fields, { a: true, b: false, test: "" });
+    expect(pass.valid).toBe(true);
+  });
+
+  it("resolves inline functions in validator args", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "minLength",
+                message: "Too short (inline)",
+                args: {
+                  min: (ctx: ExprContext) =>
+                    (ctx.context?.minOverride as number) || 10,
+                },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const ctx = { test: "short" }; // len 5
+    const extCtx = { minOverride: 3 };
+
+    // 1. Pass with context override (len 5 >= 3)
+    const pass = await validateFields(fields, ctx, { contextData: extCtx });
+    expect(pass.valid).toBe(true);
+
+    // 2. Fail with default (len 5 < 10)
+    const fail = await validateFields(fields, ctx, { contextData: {} });
+    expect(fail.valid).toBe(false);
+  });
+});
+
+// ============================================================================
+// Dynamic Messages
+// ============================================================================
+
+describe("Dynamic Validation Messages", () => {
+  it("resolves $text interpolation in custom messages", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "minLength",
+                message: { $text: "Need ${/args/min} got ${/test}" },
+                args: { min: 10 },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const result = await validateFields(fields, { test: "short" });
+    expect(result.errorsByPath["/test"]).toBe("Need 10 got short");
+  });
+
+  it("resolves conditional messages based on form state", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        validate: {
+          onSubmit: {
+            checks: [
+              {
+                type: "required",
+                message: {
+                  $when: { $data: "/isUrgent", eq: true },
+                  $then: "URGENT: Required!",
+                  $else: "Please fill this.",
+                },
+                args: { isRequired: true },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const urgentFail = await validateFields(fields, { test: "", isUrgent: true });
+    expect(urgentFail.errorsByPath["/test"]).toBe("URGENT: Required!");
+
+    const normalFail = await validateFields(fields, { test: "", isUrgent: false });
+    expect(normalFail.errorsByPath["/test"]).toBe("Please fill this.");
+  });
+
+  it("resolves derived dynamic messages", async () => {
+    const fields = [
+      {
+        type: "text" as const,
+        name: "test",
+        minLength: 5,
+      },
+    ];
+
+    const result = await validateFields(fields, { test: "abc" }, { includeDerived: true });
+    expect(result.errorsByPath["/test"]).toBe("Must be at least 5 characters.");
   });
 });

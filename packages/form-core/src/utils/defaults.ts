@@ -1,6 +1,7 @@
-import type { Field } from "../types";
+import type { Field, ExprContext, FnRegistry } from "../types";
 import { walkFields } from "./walk";
 import { escapePointer, setByPath } from "./path";
+import { resolveExpr } from "../expr";
 
 /** Zero-values by field type — used when no explicit defaultValue is set. */
 const ZERO_VALUES: Record<string, unknown> = {
@@ -14,26 +15,16 @@ const ZERO_VALUES: Record<string, unknown> = {
   array: [],
 };
 
-/** Returns true if a value is a static literal (not an Expr reference). */
-function isStaticValue(value: unknown): boolean {
-  if (typeof value !== "object" || value === null) return true;
-  return !(
-    "$data" in value ||
-    "$context" in value ||
-    "$fn" in value ||
-    "$text" in value ||
-    "$when" in value ||
-    "$and" in value ||
-    "$or" in value
-  );
-}
-
 /**
  * Extract default values from a field array.
- * Uses explicit `field.defaultValue` when set, otherwise falls back to
- * a type-appropriate zero-value ("" for text, 0 for number, etc.).
+ * Uses explicit `field.defaultValue` when set (resolved via Expr system),
+ * otherwise falls back to a type-appropriate zero-value.
  */
-export function extractDefaults(fields: readonly Field[]): Record<string, unknown> {
+export function extractDefaults(
+  fields: readonly Field[],
+  context?: Record<string, unknown>,
+  fns?: FnRegistry,
+): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   walkFields(
@@ -47,27 +38,29 @@ export function extractDefaults(fields: readonly Field[]): Record<string, unknow
         : `/${escapePointer(field.name)}`;
 
       const f = field as Field & { defaultValue?: unknown };
+      const exprCtx: ExprContext = { data: result, context };
 
+      const resolved = resolveExpr(f.defaultValue, exprCtx, fns, {
+        resolveArrays: true,
+      });
+
+      if (resolved !== undefined) {
+        setByPath(result, fullPath, resolved);
+        return;
+      }
+
+      // Fallback to zero-values
       if (f.type === "array") {
-        let val: unknown = [];
-        if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
-          val = f.defaultValue;
-        }
-        setByPath(result, fullPath, val);
+        setByPath(result, fullPath, []);
         return;
       }
 
       if (f.type === "group") {
-        if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
-          setByPath(result, fullPath, f.defaultValue);
-        }
         return;
       }
 
       let val: unknown = ZERO_VALUES[f.type] ?? "";
-      if (f.defaultValue !== undefined && isStaticValue(f.defaultValue)) {
-        val = f.defaultValue;
-      } else if (f.type === "checkbox" && "tristate" in f && f.tristate === true) {
+      if (f.type === "checkbox" && "tristate" in f && f.tristate === true) {
         val = null;
       }
 

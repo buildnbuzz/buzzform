@@ -38,7 +38,9 @@ The distinction between `condition` and `hidden` is important for data integrity
 
 ## Dynamic `required`, `disabled`, `readOnly`
 
-These accept `Condition` — same syntax as `condition`/`hidden`.
+These accept `Condition` — same syntax as `condition`/`hidden`. 
+
+> **Note:** For the `required` property, you can also use `args: { isRequired: ... }` inside the validator check for more granular control within the validation logic.
 
 ## Advanced Logic ($text, $when, $fn)
 
@@ -125,11 +127,29 @@ condition: [
 { type: "text", name: "email", placeholder: { $context: "/emailHint" } }
 
 // Dynamic validator args
+// Dynamic validator args
 { validate: { onBlur: { checks: [{
   type: "companyEmail",
   args: { allowedDomains: { $context: "/companyDomains" } },
-  message: "Use a company email.",
+  message: { $text: "Please use ${/args/allowedDomains/0}." },
 }]}}}
+
+## Validator Arguments Reference ($args)
+
+Inside validator `message` strings, you can reference the **resolved arguments** of the validator using the `/args/` prefix in a `$text` template or `{ $args: path }` node.
+
+```ts
+{
+  type: "minLength",
+  message: { $text: "Must be at least ${/args/min} characters." },
+  args: { min: { $data: "/limit" } }
+}
 ```
 
-**Not supported in:** `message` strings (messages are static text only). This is because messages go directly to the UI as-is — they don't go through the dynamic value resolver. If you need a dynamic error message, construct it inside a custom validator that has access to the resolved args.
+**Supported in:**
+- ✅ Labels, descriptions, placeholders
+- ✅ `defaultValue`
+- ✅ Boolean props (`disabled`, `required`, `collapsed`, `readOnly`)
+- ✅ Validator `args`
+- ✅ Validation `message` strings (via `$text` or `$when`)
+

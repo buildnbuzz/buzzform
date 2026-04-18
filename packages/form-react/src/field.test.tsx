@@ -403,3 +403,841 @@ describe("Field", () => {
     expect(resolved.description).toBe("Static description");
   });
 });
+
+// ============================================================================
+// Expr<boolean> variants for condition / hidden / readOnly / disabled
+// ============================================================================
+
+function renderFieldWithRegistries({
+  field,
+  values = {},
+  contextData,
+  registries,
+  child,
+}: {
+  field: DataField;
+  values?: UnknownData;
+  contextData?: UnknownData;
+  registries?: import("@buildnbuzz/form-core").FormRegistries;
+  child?: ReactNode;
+}) {
+  const harness = createFormHarness(values);
+  render(
+    <Field
+      field={field}
+      form={harness.form}
+      contextData={contextData}
+      registries={registries}
+    >
+      {child ?? <div data-testid="field-child">child</div>}
+    </Field>,
+  );
+  return harness;
+}
+
+describe("Field — condition Expr<boolean> variants", () => {
+  it("literal true — renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", condition: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("field-child")).toBeTruthy();
+  });
+
+  it("literal false — removes field", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", condition: false },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$context path — false removes field", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", condition: { $context: "/show" } },
+      contextData: { show: false },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$context path — true renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", condition: { $context: "/show" } },
+      contextData: { show: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("inline fn — true renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: (ctx) => Boolean(ctx.data.flag),
+      },
+      values: { flag: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("inline fn — false removes field", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: (ctx) => Boolean(ctx.data.flag),
+      },
+      values: { flag: false },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("inline fn receives contextData", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: (ctx) => ctx.context?.["role"] === "admin",
+      },
+      contextData: { role: "guest" },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$fn — true renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: { $fn: "isActive", args: { key: "/flag" } },
+      },
+      values: { flag: true },
+      registries: {
+        fns: { isActive: ({ data }) => Boolean(data.flag) },
+      },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("$fn — false removes field", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: { $fn: "isActive" },
+      },
+      values: { flag: false },
+      registries: {
+        fns: { isActive: ({ data }) => Boolean(data.flag) },
+      },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$when/$then/$else — true branch renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $when: { $data: "/role", eq: "admin" },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { role: "admin" },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("$when/$then/$else — false branch removes field", async () => {
+    const { fieldSpy, deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $when: { $data: "/role", eq: "admin" },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { role: "guest" },
+    });
+    expect(fieldSpy).not.toHaveBeenCalled();
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$and — all true renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $and: [{ $data: "/active" }, { $data: "/role", eq: "admin" }],
+        },
+      },
+      values: { active: true, role: "admin" },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("$and — any false removes field", async () => {
+    const { deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $and: [{ $data: "/active" }, { $data: "/role", eq: "admin" }],
+        },
+      },
+      values: { active: true, role: "guest" },
+    });
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+
+  it("$or — any true renders field", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $or: [{ $data: "/inactive" }, { $data: "/role", eq: "admin" }],
+        },
+      },
+      values: { inactive: false, role: "admin" },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("$or — all false removes field", async () => {
+    const { deleteFieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        condition: {
+          $or: [{ $data: "/inactive" }, { $data: "/role", eq: "admin" }],
+        },
+      },
+      values: { inactive: false, role: "guest" },
+    });
+    await waitFor(() => expect(deleteFieldSpy).toHaveBeenCalledWith("x"));
+  });
+});
+
+describe("Field — hidden Expr<boolean> variants", () => {
+  it("literal true — registers but hides child", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", hidden: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("literal false — shows child", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", hidden: false },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("field-child")).toBeTruthy();
+  });
+
+  it("$context path — true hides child", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", hidden: { $context: "/isHidden" } },
+      contextData: { isHidden: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("inline fn — true hides child", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        hidden: (ctx) => ctx.data.hide === true,
+      },
+      values: { hide: true },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("inline fn — false shows child", () => {
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        hidden: (ctx) => ctx.data.hide === true,
+      },
+      values: { hide: false },
+    });
+    expect(screen.getByTestId("field-child")).toBeTruthy();
+  });
+
+  it("$fn — true hides child", () => {
+    const { fieldSpy } = renderFieldWithRegistries({
+      field: { type: "text", name: "x", hidden: { $fn: "shouldHide" } },
+      values: { hide: true },
+      registries: {
+        fns: { shouldHide: ({ data }) => Boolean(data.hide) },
+      },
+    });
+    expect(fieldSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("$when — true branch hides child", () => {
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        hidden: {
+          $when: { $data: "/mode", eq: "preview" },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { mode: "preview" },
+    });
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("$and — all true hides child", () => {
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        hidden: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: true, b: true },
+    });
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+
+  it("$or — any true hides child", () => {
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        hidden: { $or: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: false, b: true },
+    });
+    expect(screen.queryByTestId("field-child")).toBeNull();
+  });
+});
+
+describe("Field — disabled Expr<boolean> variants", () => {
+  function readCtx(spy: ReturnType<typeof vi.fn>): FieldContextValue {
+    return spy.mock.calls[0]?.[0] as FieldContextValue;
+  }
+
+  it("literal true — isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", disabled: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("literal false — isDisabled false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", disabled: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(false);
+  });
+
+  it("$data path — isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", disabled: { $data: "/lock" } },
+      values: { lock: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("$context path — isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", disabled: { $context: "/lock" } },
+      contextData: { lock: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("inline fn — isDisabled from data", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: (ctx) => ctx.data.lock === true,
+      },
+      values: { lock: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("inline fn — isDisabled false when condition fails", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: (ctx) => ctx.data.lock === true,
+      },
+      values: { lock: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(false);
+  });
+
+  it("inline fn receives contextData for disabled", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: (ctx) => ctx.context?.["perm"] === "readonly",
+      },
+      contextData: { perm: "readonly" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("$fn — isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", disabled: { $fn: "checkLock" } },
+      values: { lock: true },
+      registries: {
+        fns: { checkLock: ({ data }) => Boolean(data.lock) },
+      },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("$when — isDisabled from branch", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: {
+          $when: { $data: "/role", eq: "viewer" },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { role: "viewer" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("$and — all true → isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: true, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+
+  it("$or — any true → isDisabled true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        disabled: { $or: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: false, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isDisabled).toBe(true);
+  });
+});
+
+describe("Field — readOnly Expr<boolean> variants", () => {
+  function readCtx(spy: ReturnType<typeof vi.fn>): FieldContextValue {
+    return spy.mock.calls[0]?.[0] as FieldContextValue;
+  }
+
+  it("literal true — isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", readOnly: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("literal false — isReadOnly false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", readOnly: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(false);
+  });
+
+  it("$data path — isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", readOnly: { $data: "/ro" } },
+      values: { ro: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("$context path — isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", readOnly: { $context: "/ro" } },
+      contextData: { ro: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("inline fn — isReadOnly from data", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        readOnly: (ctx) => ctx.data.ro === true,
+      },
+      values: { ro: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("inline fn receives contextData for readOnly", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        readOnly: (ctx) => ctx.context?.["perm"] === "view",
+      },
+      contextData: { perm: "view" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("$fn — isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", readOnly: { $fn: "checkReadOnly" } },
+      values: { ro: true },
+      registries: {
+        fns: { checkReadOnly: ({ data }) => Boolean(data.ro) },
+      },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("$when — isReadOnly from branch", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        readOnly: {
+          $when: { $data: "/status", eq: "locked" },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { status: "locked" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("$and — all true → isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        readOnly: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: true, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+
+  it("$or — any true → isReadOnly true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        readOnly: { $or: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: false, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isReadOnly).toBe(true);
+  });
+});
+
+describe("Field — required Expr<boolean> variants", () => {
+  function readCtx(spy: ReturnType<typeof vi.fn>): FieldContextValue {
+    return spy.mock.calls[0]?.[0] as FieldContextValue;
+  }
+
+  it("literal true — isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("literal false — isRequired false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("$data path — isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $data: "/mustFill" } },
+      values: { mustFill: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$data path with eq — isRequired true when match", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $data: "/tier", eq: "pro" } },
+      values: { tier: "pro" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$data path with eq — isRequired false when no match", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $data: "/tier", eq: "pro" } },
+      values: { tier: "free" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("$context path — isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $context: "/enforce" } },
+      contextData: { enforce: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$context path — isRequired false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $context: "/enforce" } },
+      contextData: { enforce: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("inline fn — isRequired from data", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: (ctx) => ctx.data.plan === "enterprise",
+      },
+      values: { plan: "enterprise" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("inline fn — isRequired false when condition fails", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: (ctx) => ctx.data.plan === "enterprise",
+      },
+      values: { plan: "free" },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("inline fn receives contextData for required", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: (ctx) => ctx.context?.["strictMode"] === true,
+      },
+      contextData: { strictMode: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$fn — isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $fn: "isPremium" } },
+      values: { plan: "premium" },
+      registries: {
+        fns: { isPremium: ({ data }) => data.plan === "premium" },
+      },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$fn — isRequired false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: { type: "text", name: "x", required: { $fn: "isPremium" } },
+      values: { plan: "free" },
+      registries: {
+        fns: { isPremium: ({ data }) => data.plan === "premium" },
+      },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("$when — isRequired from true branch", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: {
+          $when: { $data: "/subscribed", eq: true },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { subscribed: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$when — isRequired from false branch", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: {
+          $when: { $data: "/subscribed", eq: true },
+          $then: true,
+          $else: false,
+        },
+      },
+      values: { subscribed: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("$and — all true → isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: true, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$and — any false → isRequired false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: { $and: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: true, b: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+
+  it("$or — any true → isRequired true", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: { $or: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: false, b: true },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(true);
+  });
+
+  it("$or — all false → isRequired false", () => {
+    const spy = vi.fn();
+    renderFieldWithRegistries({
+      field: {
+        type: "text",
+        name: "x",
+        required: { $or: [{ $data: "/a" }, { $data: "/b" }] },
+      },
+      values: { a: false, b: false },
+      child: <ContextReader spy={spy} />,
+    });
+    expect(readCtx(spy).isRequired).toBe(false);
+  });
+});

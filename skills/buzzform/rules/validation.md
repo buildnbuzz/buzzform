@@ -133,7 +133,8 @@ const schema = defineSchema({
 
 ## Key Rules
 
-- `message` is static text — dynamic values only work in `args` (via `$data`/`$context`). This is because messages are rendered directly as UI strings, while args go through runtime resolution before being passed to the validator function.
+- `message` supports dynamic expressions (`ExprText`). Use `$text` with `${/args/...}` to reference resolved validator arguments, or `${/data/...}` for form data.
+- The `required` validator supports an `isRequired` argument (e.g., `args: { isRequired: { $data: "/other" } }`).
 - Unknown validator types are skipped with a console warning — register custom validators via `defineValidators` and pass them through the `customValidators` prop so the runtime can find them.
 - Use `debounceMs` for async checks to avoid excessive API calls. Without debounce, every keystroke triggers a network request, which floods the server and creates a poor user experience.
 - Validators return `boolean | Promise<boolean>`. `true` = valid, `false` = error. This simple contract keeps validators composable and testable — the framework handles error message display, you just report pass/fail.

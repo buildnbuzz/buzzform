@@ -122,7 +122,7 @@ export function CustomRowField({ children }: { children: React.ReactNode }) {
 | `useFieldOptions(options)` | Normalizes `["a", "b"]` → `[{ label: "a", value: "a" }, ...]` for select/radio/checkbox groups |
 | `useNestedErrorCount(fields, basePath)` | Count errors in nested fields (for tabs/collapsible error badges) |
 | `useFieldA11yIds(opts)` | Generate accessible `id`, `descriptionId`, `errorId` |
-| `useResolvedFieldText(opts)` | Resolve dynamic `label`/`placeholder`/`description` from `$data`/`$context` |
+| `useResolvedFieldText(opts)` | Resolve dynamic `label`/`placeholder`/`description` from `$data`/`$context`/`$args` |
 
 ## `ui` Property Is Opaque
 
