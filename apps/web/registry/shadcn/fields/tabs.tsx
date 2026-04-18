@@ -1,15 +1,15 @@
 "use client";
 
-import type { TabsField as TabsFieldDef, Tab } from "@buildnbuzz/form-react";
-import { useLayoutField, RenderFields, useNestedErrorCount } from "@buildnbuzz/form-react";
+import type { TabsField as TabsFieldDef } from "@buildnbuzz/form-react";
 import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+  useLayoutField,
+  RenderFields,
+  useNestedErrorCount,
+  toDotNotation,
+  type CoreField,
+} from "@buildnbuzz/form-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { toDotNotation, resolveExpr } from "@buildnbuzz/form-react";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -17,24 +17,13 @@ import { cn } from "@/lib/utils";
 // ---------------------------------------------------------------------------
 
 interface TabsUi {
-  /**
-   * Default active tab — zero-based index or tab label string.
-   * Defaults to the first non-disabled tab.
-   */
+  /** Default active tab (index or label). Defaults to first enabled tab. */
   defaultTab?: number | string;
-  /** Visual variant for the tab list. Defaults to `"default"`. */
+  /** Visual variant. Default: "default". */
   variant?: "default" | "line";
-  /** Vertical spacing between fields inside each tab. Defaults to `"md"`. */
+  /** Content spacing. Default: "md". */
   spacing?: "sm" | "md" | "lg";
-  /**
-   * Show an error-count badge on tabs that contain invalid fields.
-   * Defaults to `true`.
-   *
-   * > **Note:** Tabs are purely layout — they do not create a data namespace.
-   * > All fields across all tabs share the same flat data scope.
-   * > If you need tab-namespaced data (e.g. `{ profile: {}, settings: {} }`),
-   * > wrap each tab's fields in a `group` field with the desired `name`.
-   */
+  /** Show error badge on tabs. Default: true. */
   showErrorBadge?: boolean;
 }
 
@@ -53,23 +42,25 @@ const spacingClass: Record<NonNullable<TabsUi["spacing"]>, string> = {
 // ---------------------------------------------------------------------------
 
 function TabTriggerWithBadge({
-  tab,
+  label,
   value,
-  showErrorBadge,
+  disabled,
+  fields,
   basePath,
+  showErrorBadge,
 }: {
-  tab: Tab;
+  label: string;
   value: string;
-  showErrorBadge: boolean;
+  disabled: boolean;
+  fields: readonly CoreField[];
   basePath: string;
+  showErrorBadge: boolean;
 }) {
-  const errorCount = useNestedErrorCount(tab.fields, basePath);
-  const isDisabled = tab.disabled === true;
-
+  const errorCount = useNestedErrorCount(fields, basePath);
   return (
-    <TabsTrigger value={value} disabled={isDisabled}>
+    <TabsTrigger value={value} disabled={disabled}>
       <span className="flex items-center gap-1.5">
-        <span>{value}</span>
+        <span>{label}</span>
         {showErrorBadge && errorCount > 0 && (
           <Badge variant="destructive" className="h-5 px-1.5 text-xs">
             {errorCount}
@@ -85,35 +76,32 @@ function TabTriggerWithBadge({
 // ---------------------------------------------------------------------------
 
 export function TabsField() {
-  const { field, form, fieldPath, formData, contextData } =
+  const { form, fieldPath, resolvedTabs, field } =
     useLayoutField<TabsFieldDef>();
 
-  const tabs = field.tabs ?? [];
-  if (tabs.length === 0) return null;
+  if (resolvedTabs.length === 0) return null;
 
   const ui = field.ui as TabsUi | undefined;
   const variant = ui?.variant ?? "default";
   const spacing = ui?.spacing ?? "md";
   const showErrorBadge = ui?.showErrorBadge !== false;
 
-  const resolveLabel = (label: unknown): string =>
-    (resolveExpr(label as string, { data: formData, context: contextData }) as string) || "Tab";
-
-  // Resolve tab labels (used as Tabs `value` keys)
-  const tabLabels = tabs.map((tab) => resolveLabel(tab.label));
-
   // Resolve defaultTab
   const rawDefault = ui?.defaultTab;
   let defaultValue: string;
   if (typeof rawDefault === "string") {
     // Match by label
-    defaultValue = tabLabels.includes(rawDefault) ? rawDefault : (tabLabels[0] ?? "");
+    defaultValue = resolvedTabs.some((t) => t.label === rawDefault)
+      ? rawDefault
+      : (resolvedTabs[0]?.label ?? "");
   } else if (typeof rawDefault === "number") {
-    defaultValue = tabLabels[rawDefault] ?? tabLabels[0] ?? "";
+    defaultValue =
+      resolvedTabs[rawDefault]?.label ?? resolvedTabs[0]?.label ?? "";
   } else {
     // First non-disabled tab
-    const firstEnabled = tabs.findIndex((t) => t.disabled !== true);
-    defaultValue = tabLabels[firstEnabled >= 0 ? firstEnabled : 0] ?? "";
+    const firstEnabled = resolvedTabs.findIndex((t) => !t.disabled);
+    defaultValue =
+      resolvedTabs[firstEnabled >= 0 ? firstEnabled : 0]?.label ?? "";
   }
 
   const basePath = toDotNotation(fieldPath);
@@ -121,30 +109,38 @@ export function TabsField() {
   return (
     <Tabs defaultValue={defaultValue} className="w-full">
       <TabsList variant={variant} className="w-full justify-start">
-        {tabs.map((tab, i) => (
-          <TabTriggerWithBadge
-            key={i}
-            tab={tab}
-            value={tabLabels[i] ?? String(i)}
-            showErrorBadge={showErrorBadge}
-            basePath={basePath}
-          />
-        ))}
+        {resolvedTabs.map((tab, i) => {
+          const rawTab = (field as TabsFieldDef).tabs[i];
+          return (
+            <TabTriggerWithBadge
+              key={i}
+              label={tab.label}
+              value={tab.label}
+              disabled={tab.disabled}
+              showErrorBadge={showErrorBadge}
+              fields={rawTab?.fields ?? []}
+              basePath={basePath}
+            />
+          );
+        })}
       </TabsList>
 
-      {tabs.map((tab, i) => (
-        <TabsContent
-          key={i}
-          value={tabLabels[i] ?? String(i)}
-          className={cn("mt-4", spacingClass[spacing])}
-        >
-          <RenderFields
-            fields={tab.fields}
-            form={form}
-            basePath={basePath}
-          />
-        </TabsContent>
-      ))}
+      {resolvedTabs.map((tab, i) => {
+        const rawTab = (field as TabsFieldDef).tabs[i];
+        return (
+          <TabsContent
+            key={i}
+            value={tab.label}
+            className={cn("mt-4", spacingClass[spacing])}
+          >
+            <RenderFields
+              fields={rawTab?.fields ?? []}
+              form={form}
+              basePath={basePath}
+            />
+          </TabsContent>
+        );
+      })}
     </Tabs>
   );
 }
