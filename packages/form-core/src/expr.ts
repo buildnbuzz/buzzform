@@ -24,6 +24,7 @@ export function resolveExpr<T>(
   value: Expr<T> | undefined,
   ctx: ExprContext,
   fns?: FnRegistry,
+  options?: { resolveArrays?: boolean },
 ): T | undefined {
   if (value === undefined) return undefined;
 
@@ -32,9 +33,16 @@ export function resolveExpr<T>(
     return (value as (c: ExprContext) => T)(ctx);
   }
 
-  // Array → Recursive resolve (treat as data array)
+  // Array → implicit AND (default) or Recursive resolve (if requested)
   if (Array.isArray(value)) {
-    return value.map((item) => resolveExpr(item, ctx, fns)) as T;
+    if (options?.resolveArrays) {
+      return value.map((item) =>
+        resolveExpr(item, ctx, fns, options),
+      ) as unknown as T;
+    }
+    return value.every((item) =>
+      Boolean(resolveExpr(item, ctx, fns, options)),
+    ) as unknown as T;
   }
 
   if (typeof value === "object" && value !== null) {
@@ -64,10 +72,10 @@ export function resolveExpr<T>(
         $then: Expr<T>;
         $else: Expr<T>;
       };
-      const pred = evaluateConditionValue(cond.$when, ctx, fns);
+      const pred = evaluateConditionValue(cond.$when, ctx, fns, options);
       return pred
-        ? resolveExpr(cond.$then, ctx, fns)
-        : resolveExpr(cond.$else, ctx, fns);
+        ? resolveExpr(cond.$then, ctx, fns, options)
+        : resolveExpr(cond.$else, ctx, fns, options);
     }
 
     // $fn registry call
@@ -78,7 +86,7 @@ export function resolveExpr<T>(
       };
       const fn = fns?.[fnNode.$fn];
       if (!fn) return undefined;
-      const resolvedArgs = resolveArgs(fnNode.args, ctx, fns);
+      const resolvedArgs = resolveArgs(fnNode.args, ctx, fns, options);
       return fn({ ...ctx, args: resolvedArgs }) as T;
     }
 
@@ -212,6 +220,7 @@ function evaluateCondition(
   cond: AtomicCondition,
   ctx: ExprContext,
   fns?: FnRegistry,
+  options?: { resolveArrays?: boolean },
 ): boolean {
   const base = "$data" in cond ? cond.$data : cond.$context;
   const value = "$data" in cond
@@ -221,31 +230,31 @@ function evaluateCondition(
   const applyNot = (result: boolean) => cond.not === true ? !result : result;
 
   if ("eq" in cond && cond.eq !== undefined) {
-    const eq = resolveExpr(cond.eq, ctx, fns);
+    const eq = resolveExpr(cond.eq, ctx, fns, options);
     return applyNot(value === eq);
   }
   if ("neq" in cond && cond.neq !== undefined) {
-    const neq = resolveExpr(cond.neq, ctx, fns);
+    const neq = resolveExpr(cond.neq, ctx, fns, options);
     return applyNot(value !== neq);
   }
   if ("gt" in cond && cond.gt !== undefined) {
-    const gt = resolveExpr(cond.gt, ctx, fns);
+    const gt = resolveExpr(cond.gt, ctx, fns, options);
     return applyNot(typeof value === "number" && typeof gt === "number" && value > gt);
   }
   if ("gte" in cond && cond.gte !== undefined) {
-    const gte = resolveExpr(cond.gte, ctx, fns);
+    const gte = resolveExpr(cond.gte, ctx, fns, options);
     return applyNot(typeof value === "number" && typeof gte === "number" && value >= gte);
   }
   if ("lt" in cond && cond.lt !== undefined) {
-    const lt = resolveExpr(cond.lt, ctx, fns);
+    const lt = resolveExpr(cond.lt, ctx, fns, options);
     return applyNot(typeof value === "number" && typeof lt === "number" && value < lt);
   }
   if ("lte" in cond && cond.lte !== undefined) {
-    const lte = resolveExpr(cond.lte, ctx, fns);
+    const lte = resolveExpr(cond.lte, ctx, fns, options);
     return applyNot(typeof value === "number" && typeof lte === "number" && value <= lte);
   }
   if ("contains" in cond && cond.contains !== undefined) {
-    const contains = resolveExpr(cond.contains, ctx, fns);
+    const contains = resolveExpr(cond.contains, ctx, fns, options);
     return applyNot(
       typeof value === "string" &&
       typeof contains === "string" &&
@@ -253,7 +262,7 @@ function evaluateCondition(
     );
   }
   if ("startsWith" in cond && cond.startsWith !== undefined) {
-    const startsWith = resolveExpr(cond.startsWith, ctx, fns);
+    const startsWith = resolveExpr(cond.startsWith, ctx, fns, options);
     return applyNot(
       typeof value === "string" &&
       typeof startsWith === "string" &&
@@ -261,7 +270,7 @@ function evaluateCondition(
     );
   }
   if ("endsWith" in cond && cond.endsWith !== undefined) {
-    const endsWith = resolveExpr(cond.endsWith, ctx, fns);
+    const endsWith = resolveExpr(cond.endsWith, ctx, fns, options);
     return applyNot(
       typeof value === "string" &&
       typeof endsWith === "string" &&
@@ -278,21 +287,22 @@ function evaluateConditionValue(
   cond: Condition,
   ctx: ExprContext,
   fns?: FnRegistry,
+  options?: { resolveArrays?: boolean },
 ): boolean {
   if (typeof cond === "boolean") return cond;
 
   if (Array.isArray(cond)) {
-    return cond.every((c) => evaluateCondition(c, ctx, fns));
+    return cond.every((c) => evaluateCondition(c, ctx, fns, options));
   }
 
   if (typeof cond === "object" && cond !== null) {
     if ("$and" in cond) {
-      return cond.$and.every((c) => evaluateConditionValue(c, ctx, fns));
+      return cond.$and.every((c) => evaluateConditionValue(c, ctx, fns, options));
     }
     if ("$or" in cond) {
-      return cond.$or.some((c) => evaluateConditionValue(c, ctx, fns));
+      return cond.$or.some((c) => evaluateConditionValue(c, ctx, fns, options));
     }
-    return evaluateCondition(cond as AtomicCondition, ctx, fns);
+    return evaluateCondition(cond as AtomicCondition, ctx, fns, options);
   }
 
   return true;
@@ -351,11 +361,12 @@ function resolveArgs(
   args: Record<string, Expr<unknown>> | undefined,
   ctx: ExprContext,
   fns?: FnRegistry,
+  options?: { resolveArrays?: boolean },
 ): Record<string, unknown> | undefined {
   if (!args) return undefined;
   const result: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(args)) {
-    result[key] = resolveExpr(val, ctx, fns);
+    result[key] = resolveExpr(val, ctx, fns, options);
   }
   return result;
 }

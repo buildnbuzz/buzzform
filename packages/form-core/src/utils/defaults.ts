@@ -40,7 +40,9 @@ export function extractDefaults(
       const f = field as Field & { defaultValue?: unknown };
       const exprCtx: ExprContext = { data: result, context };
 
-      const resolved = resolveExpr(f.defaultValue, exprCtx, fns);
+      const resolved = resolveExpr(f.defaultValue, exprCtx, fns, {
+        resolveArrays: true,
+      });
 
       if (resolved !== undefined) {
         setByPath(result, fullPath, resolved);
