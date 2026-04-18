@@ -1,5 +1,18 @@
 # @buildnbuzz/form-react
 
+## 0.1.8
+
+### Patch Changes
+
+- [#132](https://github.com/buildnbuzz/buzzform/pull/132) [`d0e37c2`](https://github.com/buildnbuzz/buzzform/commit/d0e37c285059bda239b9f6c80303081a8335a922) Thanks [@ladparth](https://github.com/ladparth)! - Implement dynamic validation message resolution and enhanced expression support in hooks and components.
+  - Update `Field` and `LayoutField` components to use `resolveBooleanExpr` for robust evaluation of visibility and state properties (`condition`, `hidden`, `disabled`, etc.).
+  - Enhance `useResolvedFieldText` to support `$fn` registry calls in dynamic labels, placeholders, and descriptions.
+  - Support dynamic `defaultValue` resolution in `useForm` during initialization.
+  - Improve registry merging logic to ensure consistent access to custom validators and functions across all resolution contexts.
+
+- Updated dependencies [[`d0e37c2`](https://github.com/buildnbuzz/buzzform/commit/d0e37c285059bda239b9f6c80303081a8335a922)]:
+  - @buildnbuzz/form-core@0.1.7
+
 ## 0.1.7
 
 ### Patch Changes
