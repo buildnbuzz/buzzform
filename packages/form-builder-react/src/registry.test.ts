@@ -2,14 +2,14 @@ import { describe, it, expect } from "vitest";
 import { getRegistryEntry, getSidebarGroups, isContainer } from "./registry";
 import type { BuilderFieldRegistry } from "./types";
 
-const MockIcon = () => null;
+
 
 const mockRegistry: BuilderFieldRegistry = {
   text: {
     kind: "data",
     sidebar: {
       label: "Text Input",
-      icon: MockIcon,
+      icon: { lucide: "TextCursorInput" },
       category: "inputs",
     },
     defaultProps: {
@@ -21,7 +21,7 @@ const mockRegistry: BuilderFieldRegistry = {
     kind: "layout",
     sidebar: {
       label: "Group",
-      icon: MockIcon,
+      icon: { lucide: "Layout" },
       category: "layout",
     },
     defaultProps: {

@@ -2,7 +2,7 @@ import type { FieldType } from "@buildnbuzz/form-core";
 import { isContainerType } from "@buildnbuzz/form-core";
 import type {
   BuilderFieldRegistry,
-  BuilderFieldRegistryEntry,
+  BuilderFieldRegistryItem,
   SidebarItem,
 } from "./types";
 
@@ -12,7 +12,7 @@ import type {
 export function getRegistryEntry(
   registry: BuilderFieldRegistry,
   type: FieldType,
-): BuilderFieldRegistryEntry | undefined {
+): BuilderFieldRegistryItem | undefined {
   return registry[type];
 }
 

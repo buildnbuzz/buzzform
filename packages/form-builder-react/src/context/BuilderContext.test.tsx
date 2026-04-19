@@ -12,7 +12,7 @@ import type { BuilderFieldRegistry } from "../types";
 const mockRegistry: BuilderFieldRegistry = {
   text: {
     kind: "data",
-    sidebar: { label: "Text", icon: () => null, category: "inputs" },
+    sidebar: { label: "Text", icon: { lucide: "TextCursorInput" }, category: "inputs" },
     defaultProps: { type: "text", label: "New Field" },
   },
 };

@@ -1,5 +1,8 @@
 import type { Field, FieldType, OutputConfig } from "@buildnbuzz/form-core";
-import type {
+import type { 
+  FieldRegistry, 
+  FieldRegistryItem, 
+  IconMetadata,
   Node,
   Viewport,
   BuilderMode,
@@ -12,21 +15,6 @@ import type { ComponentType } from "react";
 // Registry Types — React-specific extensions
 // ---------------------------------------------------------------------------
 
-/** Category for grouping fields in the sidebar palette. */
-export type SidebarCategory = "inputs" | "selection" | "layout" | (string & {});
-
-/** Sidebar visual data for a field type. */
-export interface BuilderFieldSidebar {
-  /** Human-readable label (e.g. "Text Input"). */
-  label: string;
-  /** Icon component (e.g. from HugeIcons or Lucide). */
-  icon: ComponentType<{ className?: string }>;
-  /** Category for structural grouping. */
-  category: SidebarCategory;
-  /** Whether this field is currently unavailable in the builder. */
-  disabled?: boolean;
-}
-
 /** Props passed to a custom builder node renderer. */
 export interface BuilderNodeRendererProps {
   /** Unique node ID. */
@@ -38,35 +26,25 @@ export interface BuilderNodeRendererProps {
 }
 
 /**
- * A React-specific definition of a field type for the builder.
- *
- * Extends the framework-agnostic `FieldDefinition` with UI metadata.
+ * A React-specific entry in the field registry.
+ * Maps Core metadata to React components.
  */
-export interface BuilderFieldRegistryEntry<TField extends Field = Field> {
-  /** Whether this is a 'data' field (has a name) or 'layout' field. */
-  kind: "data" | "layout";
-  /** Sidebar palette configuration. */
-  sidebar: BuilderFieldSidebar;
-  /** Default property values for new nodes. */
-  defaultProps: Omit<TField, "name"> & { name?: string };
-  /** Optional custom renderer for container layouts. */
-  renderer?: ComponentType<BuilderNodeRendererProps>;
-  /** Property editor configuration (array of BuzzForm fields). */
-  properties?: Field[];
-  /** Accepted child field types (if a container). */
-  accepts?: FieldType[];
-}
+export type BuilderFieldRegistryItem = FieldRegistryItem<
+  IconMetadata,
+  ComponentType<BuilderNodeRendererProps>
+>;
 
 /** The complete registry of available field types in the builder. */
-export type BuilderFieldRegistry = Partial<{
-  [K in FieldType]: BuilderFieldRegistryEntry<Extract<Field, { type: K }>>;
-}>;
+export type BuilderFieldRegistry = FieldRegistry<
+  IconMetadata,
+  ComponentType<BuilderNodeRendererProps>
+>;
 
 /** Normalized sidebar item for rendering. */
 export interface SidebarItem {
   type: string;
   label: string;
-  icon: ComponentType<{ className?: string }>;
+  icon: IconMetadata;
   disabled?: boolean;
 }
 

@@ -10,7 +10,7 @@ const mockRegistry: BuilderFieldRegistry = {
     kind: "data",
     sidebar: {
       label: "Text",
-      icon: () => null,
+      icon: { lucide: "TextCursorInput" },
       category: "inputs",
     },
     defaultProps: {
@@ -22,7 +22,7 @@ const mockRegistry: BuilderFieldRegistry = {
     kind: "layout",
     sidebar: {
       label: "Row",
-      icon: () => null,
+      icon: { lucide: "Columns" },
       category: "layout",
     },
     defaultProps: {
