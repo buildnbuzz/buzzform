@@ -81,4 +81,21 @@ describe("Headless Components Smoke Tests", () => {
 
     expect(screen.getByTestId("properties").textContent).toContain("None");
   });
+
+  it("BuilderProperties provides form settings when no node is selected", () => {
+    render(
+      <DefaultBuilderProvider registry={mockRegistry}>
+        <BuilderProperties 
+          render={({ node, schema }) => (
+            <div data-testid="properties">
+              {!node && <div data-testid="is-form-settings">{schema.length > 0 ? "Has Settings" : "Empty"}</div>}
+            </div>
+          )}
+        />
+      </DefaultBuilderProvider>
+    );
+
+    // Should detect that schema is non-empty (formSettingsProperties has fields)
+    expect(screen.getByTestId("is-form-settings").textContent).toBe("Has Settings");
+  });
 });
