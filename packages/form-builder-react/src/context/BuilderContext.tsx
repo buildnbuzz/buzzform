@@ -4,7 +4,7 @@ import React, { createContext, useContext, useMemo, type ReactNode } from "react
 import type { UseBoundStore, StoreApi } from "zustand";
 import { useStore } from "zustand";
 import type { TemporalState } from "zundo";
-import type { BuilderStoreInterface, BuilderFieldRegistry } from "../types";
+import type { BuilderStoreInterface, BuilderFieldRegistry, IconMetadata } from "../types";
 import { createBuilderStore } from "../state/store";
 
 // ---------------------------------------------------------------------------
@@ -16,6 +16,8 @@ export interface BuilderContextValue {
   store: UseBoundStore<StoreApi<BuilderStoreInterface>>;
   /** The field registry for looking up visual metadata. */
   registry: BuilderFieldRegistry;
+  /** Optional function to render icons from metadata. */
+  renderIcon?: (metadata: IconMetadata) => React.ReactNode;
 }
 
 const BuilderContext = createContext<BuilderContextValue | null>(null);
@@ -29,6 +31,8 @@ export interface BuilderProviderProps {
   store: UseBoundStore<StoreApi<BuilderStoreInterface>>;
   /** The field registry. */
   registry: BuilderFieldRegistry;
+  /** Optional function to render icons from metadata. */
+  renderIcon?: (metadata: IconMetadata) => React.ReactNode;
   children: ReactNode;
 }
 
@@ -37,14 +41,21 @@ export interface BuilderProviderProps {
  * 
  * Use this if you want to manage the store instance externally.
  */
-export const BuilderProvider = ({ store, registry, children }: BuilderProviderProps) => {
-  const value = useMemo(() => ({ store, registry }), [store, registry]);
+export const BuilderProvider = ({ 
+  store, 
+  registry, 
+  renderIcon,
+  children 
+}: BuilderProviderProps) => {
+  const value = useMemo(() => ({ store, registry, renderIcon }), [store, registry, renderIcon]);
   return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>;
 };
 
 export interface DefaultBuilderProviderProps {
   /** The field registry. */
   registry: BuilderFieldRegistry;
+  /** Optional function to render icons from metadata. */
+  renderIcon?: (metadata: IconMetadata) => React.ReactNode;
   /** Optional custom name for persistence. */
   persistenceName?: string;
   children: ReactNode;
@@ -57,6 +68,7 @@ export interface DefaultBuilderProviderProps {
  */
 export const DefaultBuilderProvider = ({ 
   registry, 
+  renderIcon,
   persistenceName, 
   children 
 }: DefaultBuilderProviderProps) => {
@@ -66,7 +78,7 @@ export const DefaultBuilderProvider = ({
   }), [registry, persistenceName]);
 
   return (
-    <BuilderProvider store={store} registry={registry}>
+    <BuilderProvider store={store} registry={registry} renderIcon={renderIcon}>
       {children}
     </BuilderProvider>
   );

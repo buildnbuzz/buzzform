@@ -2,6 +2,7 @@ import type { Field, FieldType, OutputConfig } from "@buildnbuzz/form-core";
 import type { 
   FieldRegistry, 
   FieldRegistryItem, 
+  FieldRegistrySidebar,
   IconMetadata,
   Node,
   Viewport,
@@ -10,6 +11,18 @@ import type {
   SaveStatus,
 } from "@buildnbuzz/form-builder-core";
 import type { ComponentType } from "react";
+
+export type { 
+  FieldRegistry, 
+  FieldRegistryItem, 
+  FieldRegistrySidebar,
+  IconMetadata,
+  Node,
+  Viewport,
+  BuilderMode,
+  DropLocation,
+  SaveStatus,
+};
 
 // ---------------------------------------------------------------------------
 // Registry Types — React-specific extensions

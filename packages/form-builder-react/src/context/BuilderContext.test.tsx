@@ -35,6 +35,22 @@ describe("Builder Context", () => {
     expect(result.current.store).toBeDefined();
   });
 
+  it("provides renderIcon to children", () => {
+    const renderIcon = vi.fn();
+    const wrapper = ({ children }: { children: React.ReactNode }) => (
+      <DefaultBuilderProvider 
+        registry={mockRegistry} 
+        renderIcon={renderIcon} 
+        persistenceName="test-icon"
+      >
+        {children}
+      </DefaultBuilderProvider>
+    );
+
+    const { result } = renderHook(() => useBuilderContext(), { wrapper });
+    expect(result.current.renderIcon).toBe(renderIcon);
+  });
+
   it("throws error when used outside provider", () => {
     // Suppress console.error for expected error
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
