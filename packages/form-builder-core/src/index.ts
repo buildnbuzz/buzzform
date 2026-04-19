@@ -66,6 +66,12 @@ export * from "./field-properties/email";
 export * from "./field-properties/password";
 export * from "./field-properties/textarea";
 export * from "./field-properties/number";
+export * from "./field-properties/checkbox";
+export * from "./field-properties/switch";
+export * from "./field-properties/select";
+export * from "./field-properties/radio";
+export * from "./field-properties/date";
+export * from "./field-properties/tags";
 export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";
