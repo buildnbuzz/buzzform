@@ -106,3 +106,39 @@ export function isDataField(field: Field): field is DataField {
 }
 
 // ---------------------------------------------------------------------------
+
+/** 
+ * Operators supported by the builder's Expression UI.
+ */
+export type ExpressionOperator =
+  | "equals"
+  | "not_equals"
+  | "contains"
+  | "not_contains"
+  | "greater_than"
+  | "less_than"
+  | "is_empty"
+  | "is_not_empty";
+
+/**
+ * A single rule within an expression group.
+ * Targets a specific field ID and compares its value.
+ */
+export interface ExpressionRule {
+  id: string;
+  type: "rule";
+  fieldId: string;
+  operator: ExpressionOperator;
+  value: string;
+}
+
+/**
+ * A recursive group of expression rules and sub-groups.
+ * Supports logical AND/OR operations.
+ */
+export interface ExpressionGroup {
+  id: string;
+  type: "group";
+  logicalOperator: "AND" | "OR";
+  children: (ExpressionRule | ExpressionGroup)[];
+}
