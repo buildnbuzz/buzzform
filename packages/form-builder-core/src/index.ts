@@ -59,3 +59,6 @@ export {
 export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/dnd";
 
 export { generateComponentCode } from "./code-generator";
+
+export { builderStore, setupBuilderAutoSave } from "./store";
+export type { Store } from "./store";
