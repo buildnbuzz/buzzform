@@ -72,6 +72,11 @@ export * from "./field-properties/select";
 export * from "./field-properties/radio";
 export * from "./field-properties/date";
 export * from "./field-properties/tags";
+export * from "./field-properties/group";
+export * from "./field-properties/array";
+export * from "./field-properties/row";
+export * from "./field-properties/tabs";
+export * from "./field-properties/collapsible";
 export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";

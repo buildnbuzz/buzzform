@@ -1,6 +1,10 @@
 import type { Field } from "@buildnbuzz/form-core";
+import { baseDataProperties, baseStateProperties, baseLayoutProperties } from "./base";
 
-/** Property editor config for `array` fields. */
+/**
+ * Property editor schema for Array fields.
+ * Supports both standard (nested) and primitive (flat) modes.
+ */
 export const arrayFieldProperties: Field[] = [
   {
     type: "tabs",
@@ -9,21 +13,37 @@ export const arrayFieldProperties: Field[] = [
       {
         label: "General",
         fields: [
-          { type: "text", name: "name", label: "Name", description: "Used as the key in form data (no spaces)", required: true },
-          { type: "text", name: "label", label: "Label", description: "Display label shown above the array" },
-          { type: "textarea", name: "description", label: "Description", description: "Help text shown below the array"},
-          { type: "switch", name: "hidden", label: "Hidden", description: "Hide this array from the form", ui: { alignment: "between" } },
-          { type: "switch", name: "disabled", label: "Disabled", description: "Prevent adding/removing items", ui: { alignment: "between" } },
-          { type: "switch", name: "readOnly", label: "Read Only", description: "Display items but prevent editing", ui: { alignment: "between" } },
+          ...baseDataProperties,
+          {
+            type: "checkbox",
+            name: "primitive",
+            label: "Primitive Mode",
+            description: "Store items as flat values (e.g. strings) instead of objects",
+            ui: { alignment: "between" },
+          },
+          ...baseStateProperties,
         ],
       },
       {
         label: "Validation",
         fields: [
-          { type: "switch", name: "required", label: "Required", description: "At least one item must exist", ui: { alignment: "between" } },
-          { type: "number", name: "minItems", label: "Min Items", description: "Minimum number of items", min: 0 },
-          { type: "number", name: "maxItems", label: "Max Items", description: "Maximum number of items", min: 1 },
+          {
+            type: "number",
+            name: "minItems",
+            label: "Min Items",
+            min: 0,
+          },
+          {
+            type: "number",
+            name: "maxItems",
+            label: "Max Items",
+            min: 1,
+          },
         ],
+      },
+      {
+        label: "Style",
+        fields: [...baseLayoutProperties],
       },
     ],
   },
