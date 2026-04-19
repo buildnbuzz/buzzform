@@ -40,9 +40,5 @@ export const BuilderCanvas = ({ render, nodeRenderer }: BuilderCanvasProps) => {
     return render({ rootIds, renderRoots });
   }
 
-  return (
-    <div className="buzzform-canvas">
-      {renderRoots()}
-    </div>
-  );
+  return <>{renderRoots()}</>;
 };

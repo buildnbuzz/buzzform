@@ -2,6 +2,7 @@
 
 import React, { ReactNode } from "react";
 import { useBuilderStore, useBuilderContext } from "../context/BuilderContext";
+import { getRegistryEntry } from "../registry";
 import type { Node } from "@buildnbuzz/form-builder-core";
 import { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";
 
@@ -23,12 +24,6 @@ export interface BuilderNodeProps {
 
 /**
  * Headless recursive component that orchestrates node rendering.
- * 
- * It handles:
- * 1. Store lookup.
- * 2. Slot discovery.
- * 3. Recursive child rendering.
- * 4. Registry-based renderer dispatch.
  */
 export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
   const node = useBuilderStore((state) => state.nodes[id]);
@@ -36,17 +31,17 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
 
   if (!node) return null;
 
-  const entry = registry[node.field.type];
+  const entry = getRegistryEntry(registry, node.field.type);
   
   /** Renders all children in a specific slot. */
   const renderSlot = (slotKey: string): ReactNode => {
     const childrenIds = node.children[slotKey] || [];
     return (
-      <>
+      <React.Fragment>
         {childrenIds.map((childId) => (
           <BuilderNode key={childId} id={childId} render={render} />
         ))}
-      </>
+      </React.Fragment>
     );
   };
 
@@ -54,10 +49,12 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
   let content: ReactNode = null;
 
   if (entry?.renderer) {
-    // Layout/Container components use their own renderer (e.g. Row, Tabs)
     const Renderer = entry.renderer;
-    // Flatten children for simple renderers, but provide renderSlot for complex ones
-    const allChildrenIds = Object.values(node.children).flat();
+    // Safely flatten children IDs
+    const allChildrenIds: string[] = Object.values(node.children).reduce<string[]>(
+      (acc, list) => [...acc, ...list], 
+      []
+    );
     
     content = (
       <Renderer 
@@ -66,15 +63,8 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
         childrenIds={allChildrenIds}
       />
     );
-  } else {
-    // Data fields or fields without a special builder renderer.
-    // In a real implementation, this might render a 'FieldRenderer' or similar.
-    // Since this package is headless, we leave the "how it looks" to the consumer
-    // or provide a default placeholder.
-    content = null; 
   }
 
-  // If a renderer is provided, use it. Otherwise, return the content directly.
   if (render) {
     return render({ 
       node, 
@@ -83,6 +73,5 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
     });
   }
 
-  // Default behavior: render the entry renderer or the default slot children
   return content || renderSlot(DEFAULT_SLOT);
 };
