@@ -97,6 +97,47 @@ describe("nodeToField", () => {
       }],
     });
   });
+
+  it("sanitizes empty values from fields", () => {
+    const nodes: Record<string, Node> = {
+      a: createNode("a", { 
+        type: "text" as const, 
+        name: "test", 
+        label: "My Label",
+        description: "", // Should be removed
+        placeholder: null as unknown as string, // Should be removed
+        required: false, // Should be kept
+      }, null, { __default__: [] }),
+    };
+    const field = nodeToField(nodes, "a");
+    expect(field).toEqual({
+      type: "text",
+      name: "test",
+      label: "My Label",
+      required: false,
+    });
+  });
+
+  it("recursively sanitizes nested objects", () => {
+    const nodes: Record<string, Node> = {
+      a: createNode("a", { 
+        type: "text" as const, 
+        name: "test",
+        validate: {
+          pattern: "",
+          message: "err",
+        }
+      } as unknown as Node["field"], null, { __default__: [] }),
+    };
+    const field = nodeToField(nodes, "a");
+    expect(field).toEqual({
+      type: "text",
+      name: "test",
+      validate: {
+        message: "err",
+      },
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

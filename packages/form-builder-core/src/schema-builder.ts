@@ -31,13 +31,14 @@ export function nodeToField(
   if (!node) return null;
 
   const fieldType = node.field.type;
+  let result: Field;
 
   // Tabs — populate each tab's fields from the corresponding slot.
   if (fieldType === "tabs") {
     const tabs = (node.field as Extract<Field, { type: "tabs" }>).tabs;
     const slots = getTabSlotKeys(tabs);
 
-    return {
+    result = {
       ...node.field,
       tabs: tabs.map((tab, index) => {
         const slotKey = slots[index];
@@ -52,20 +53,72 @@ export function nodeToField(
         };
       }),
     };
-  }
-
-  // Container (group, array, row, collapsible) — populate fields from
-  // the default slot.
-  if (isContainerType(fieldType) && "fields" in node.field) {
+  } else if (isContainerType(fieldType) && "fields" in node.field) {
+    // Container (group, array, row, collapsible) — populate fields from
+    // the default slot.
     const childIds = node.children[DEFAULT_SLOT] ?? [];
     const nestedFields = childIds
       .map((childId) => nodeToField(nodes, childId))
       .filter(Boolean) as Field[];
-    return { ...node.field, fields: nestedFields } as Field;
+    result = { ...node.field, fields: nestedFields } as Field;
+  } else {
+    // Leaf data field — return as-is.
+    result = node.field;
   }
 
-  // Leaf data field — return as-is.
-  return node.field;
+  return sanitizeField(result) as Field;
+}
+
+/**
+ * Removes empty values (null, undefined, "") from a field object.
+ * Recursively cleans nested objects and arrays.
+ */
+function sanitizeField(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "object" ? sanitizeField(item) : item))
+      .filter((item) => item !== null && item !== undefined && item !== "");
+  }
+
+  if (value !== null && typeof value === "object") {
+    const cleaned: Record<string, unknown> = {};
+    const obj = value as Record<string, unknown>;
+
+    for (const key in obj) {
+      const val = obj[key];
+
+      // Skip empty strings, null, undefined
+      if (val === "" || val === null || val === undefined) {
+        continue;
+      }
+
+      // Preserve fields and tabs structure (already sanitized via recursion)
+      if (key === "fields" || key === "tabs") {
+        cleaned[key] = val;
+        continue;
+      }
+
+      // Recursively clean objects and arrays
+      if (typeof val === "object") {
+        const recursive = sanitizeField(val);
+        // Only add if not empty object or array (special cases like empty expressions might need care)
+        if (
+          recursive !== null &&
+          typeof recursive === "object" &&
+          Object.keys(recursive).length === 0 &&
+          !Array.isArray(recursive)
+        ) {
+          continue;
+        }
+        cleaned[key] = recursive;
+      } else {
+        cleaned[key] = val;
+      }
+    }
+    return cleaned;
+  }
+
+  return value;
 }
 
 /**
