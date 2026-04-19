@@ -60,5 +60,5 @@ export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/
 
 export { generateComponentCode } from "./code-generator";
 
-export { builderStore, setupBuilderAutoSave } from "./store";
-export type { Store } from "./store";
+export { createBuilderStore, setupBuilderAutoSave } from "./store";
+export type { Store, BuilderStoreOptions } from "./store";

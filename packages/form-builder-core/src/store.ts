@@ -115,8 +115,16 @@ const INITIAL_STATE: BuilderState = {
 let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingState: TrackedState | null = null;
 
-export const builderStore: StoreApi<Store> = createStore<Store>()(
-  persist(
+export interface BuilderStoreOptions {
+  /** Optional persist name for localStorage */
+  name?: string;
+}
+
+export const createBuilderStore = (
+  options?: BuilderStoreOptions,
+): StoreApi<Store> =>
+  createStore<Store>()(
+    persist(
     temporal(
       immer((set) => ({
         ...INITIAL_STATE,
@@ -346,7 +354,7 @@ export const builderStore: StoreApi<Store> = createStore<Store>()(
       },
     ),
     {
-      name: "buzzform-builder",
+      name: options?.name ?? "buzzform-builder",
       storage:
         typeof window !== "undefined"
           ? createJSONStorage(() => localStorage)
@@ -401,8 +409,11 @@ function shouldSkipAutosave(
 /**
  * Configure auto-save hook manually in core.
  */
-export function setupBuilderAutoSave(provider: BuilderStorageProvider | null) {
-  return builderStore.subscribe((state, prevState) => {
+export function setupBuilderAutoSave(
+  store: StoreApi<Store>,
+  provider: BuilderStorageProvider | null,
+) {
+  return store.subscribe((state, prevState) => {
     if (!provider) return;
 
     if (
@@ -429,11 +440,11 @@ export function setupBuilderAutoSave(provider: BuilderStorageProvider | null) {
         saveTimeout = null;
       }
       saveRevision += 1;
-      builderStore.getState().setSaveStatus("idle");
+      store.getState().setSaveStatus("idle");
       return;
     }
 
-    builderStore.getState().setSaveStatus("saving");
+    store.getState().setSaveStatus("saving");
     saveRevision += 1;
     const currentRevision = saveRevision;
 
@@ -454,11 +465,11 @@ export function setupBuilderAutoSave(provider: BuilderStorageProvider | null) {
         await provider.save(snapshot.formId, document);
 
         if (currentRevision === saveRevision) {
-          builderStore.getState().setSaveStatus("saved", Date.now());
+          store.getState().setSaveStatus("saved", Date.now());
         }
       } catch {
         if (currentRevision === saveRevision) {
-          builderStore.getState().setSaveStatus("idle");
+          store.getState().setSaveStatus("idle");
         }
       }
     }, SAVE_DEBOUNCE_MS);
