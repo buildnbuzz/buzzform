@@ -60,6 +60,7 @@ export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/
 export * from "./utils/objects";
 export * from "./utils/expressions";
 export * from "./registry";
+export * from "./field-properties/base";
 export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";
