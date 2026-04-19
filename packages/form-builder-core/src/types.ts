@@ -142,3 +142,36 @@ export interface ExpressionGroup {
   logicalOperator: "AND" | "OR";
   children: (ExpressionRule | ExpressionGroup)[];
 }
+
+// ---------------------------------------------------------------------------
+
+/**
+ * Metadata for displaying a field in the builder sidebar.
+ */
+export interface FieldRegistrySidebar<TIcon = unknown> {
+  label: string;
+  icon: TIcon;
+  category: string;
+  disabled?: boolean;
+}
+
+/**
+ * A single entry in the builder's field registry.
+ * 
+ * @template TIcon - The type used for icons (e.g. React component).
+ * @template TRenderer - The type used for custom renderers.
+ */
+export interface FieldRegistryItem<TIcon = unknown, TRenderer = unknown> {
+  kind: "data" | "layout";
+  sidebar: FieldRegistrySidebar<TIcon>;
+  defaultProps: Partial<Field>;
+  properties?: Field[];
+  renderer?: TRenderer;
+}
+
+/**
+ * A collection of field definitions indexed by field type.
+ */
+export type FieldRegistry<TIcon = unknown, TRenderer = unknown> = Partial<
+  Record<string, FieldRegistryItem<TIcon, TRenderer>>
+>;
