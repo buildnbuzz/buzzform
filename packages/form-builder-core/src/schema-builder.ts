@@ -3,7 +3,8 @@ import { isContainerType } from "@buildnbuzz/form-core";
 
 import { DEFAULT_SLOT, getTabSlotKeys, getNodeChildren } from "./node-children";
 import { isDataField } from "./types";
-import type { Node } from "./types";
+import type { Node, ExpressionGroup } from "./types";
+import { compileToExpression } from "./utils/expressions";
 
 /**
  * Converts the entire builder node tree into a `Field[]` schema for
@@ -66,7 +67,34 @@ export function nodeToField(
     result = node.field;
   }
 
-  return sanitizeField(result) as Field;
+  return sanitizeField(compileExpressions(result)) as Field;
+}
+
+/**
+ * Recursively scans a field object for ExpressionGroup structures and
+ * compiles them into form-core Expr ASTs.
+ */
+function compileExpressions(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(compileExpressions);
+  }
+
+  if (value !== null && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    // Identify an ExpressionGroup by its specific keys
+    if (obj.type === "group" && "logicalOperator" in obj && Array.isArray(obj.children)) {
+      return compileToExpression(obj as unknown as ExpressionGroup);
+    }
+
+    const compiled: Record<string, unknown> = {};
+    for (const key in obj) {
+      compiled[key] = compileExpressions(obj[key]);
+    }
+    return compiled;
+  }
+
+  return value;
 }
 
 /**

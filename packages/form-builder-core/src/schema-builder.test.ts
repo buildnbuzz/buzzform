@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import type { Field } from "@buildnbuzz/form-core";
 
 import type { Node } from "./types";
 import { nodesToFields, nodeToField, getAllFieldNames } from "./schema-builder";
@@ -163,6 +164,35 @@ describe("nodesToFields", () => {
     };
     const fields = nodesToFields(nodes, ["a", "nonexistent"]);
     expect(fields).toEqual([{ type: "text", name: "x" }]);
+  });
+
+  it("compiles ExpressionGroup into Expr AST on export", () => {
+    const nodes: Record<string, Node> = {
+      a: createNode(
+        "a",
+        {
+          type: "text" as const,
+          name: "target",
+          visibility: {
+            id: "g1",
+            type: "group",
+            logicalOperator: "AND",
+            children: [
+              { id: "r1", type: "rule", fieldId: "role", operator: "equals", value: "admin" },
+            ],
+          },
+        } as unknown as Field,
+        null,
+        { __default__: [] }
+      ),
+    };
+
+    const fields = nodesToFields(nodes, ["a"]);
+    const field = fields[0] as Field & { visibility?: unknown };
+    expect(field?.visibility).toEqual({
+      $data: "/role",
+      eq: "admin",
+    });
   });
 });
 
