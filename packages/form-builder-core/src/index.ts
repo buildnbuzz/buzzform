@@ -61,6 +61,7 @@ export * from "./utils/objects";
 export * from "./utils/expressions";
 export * from "./registry";
 export * from "./field-properties/base";
+export * from "./field-properties/text";
 export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";
