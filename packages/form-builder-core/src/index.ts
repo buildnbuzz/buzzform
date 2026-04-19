@@ -5,6 +5,10 @@ export type {
   DropLocation,
   SaveStatus,
   FieldDefinition,
+  FieldRegistry,
+  FieldRegistryItem,
+  FieldRegistrySidebar,
+  IconMetadata,
 } from "./types";
 
 export { isDataField } from "./types";

@@ -143,12 +143,25 @@ export interface ExpressionGroup {
   children: (ExpressionRule | ExpressionGroup)[];
 }
 
+/**
+ * Multi-library icon metadata.
+ * Maps library names (lucide, hugeicons, etc.) to icon identifiers.
+ */
+export interface IconMetadata {
+  lucide?: string;
+  tabler?: string;
+  hugeicons?: string;
+  phosphor?: string;
+  remixicon?: string;
+  [custom: string]: string | undefined;
+}
+
 // ---------------------------------------------------------------------------
 
 /**
  * Metadata for displaying a field in the builder sidebar.
  */
-export interface FieldRegistrySidebar<TIcon = unknown> {
+export interface FieldRegistrySidebar<TIcon = IconMetadata> {
   label: string;
   icon: TIcon;
   category: string;
@@ -158,10 +171,10 @@ export interface FieldRegistrySidebar<TIcon = unknown> {
 /**
  * A single entry in the builder's field registry.
  * 
- * @template TIcon - The type used for icons (e.g. React component).
+ * @template TIcon - The type used for icons (e.g. metadata or React component).
  * @template TRenderer - The type used for custom renderers.
  */
-export interface FieldRegistryItem<TIcon = unknown, TRenderer = unknown> {
+export interface FieldRegistryItem<TIcon = IconMetadata, TRenderer = unknown> {
   kind: "data" | "layout";
   sidebar: FieldRegistrySidebar<TIcon>;
   defaultProps: Partial<Field>;
@@ -172,6 +185,6 @@ export interface FieldRegistryItem<TIcon = unknown, TRenderer = unknown> {
 /**
  * A collection of field definitions indexed by field type.
  */
-export type FieldRegistry<TIcon = unknown, TRenderer = unknown> = Partial<
+export type FieldRegistry<TIcon = IconMetadata, TRenderer = unknown> = Partial<
   Record<string, FieldRegistryItem<TIcon, TRenderer>>
 >;
