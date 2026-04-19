@@ -1,4 +1,4 @@
-import type { Field, FieldType } from "@buildnbuzz/form-core";
+import type { Field, FieldType, OutputConfig } from "@buildnbuzz/form-core";
 import type {
   Node,
   Viewport,
@@ -100,6 +100,14 @@ export interface BuilderStoreInterface {
   dropIndicator: DropLocation | null;
   /** Persistence status. */
   saveStatus: SaveStatus;
+  /** Timestamp of the last successful save. */
+  lastSavedAt: number | null;
+  /** Unique ID of the form being built. */
+  formId: string;
+  /** Name of the form being built. */
+  formName: string;
+  /** Output configuration for the form. */
+  outputConfig?: OutputConfig;
 
   // --- Actions ---
   /** Selects a node by ID. */
@@ -128,7 +136,31 @@ export interface BuilderStoreInterface {
   setViewport: (viewport: Viewport) => void;
   /** Updates the zoom level. */
   setZoom: (zoom: number) => void;
+  /** Updates form-level settings. */
+  updateFormSettings: (updates: Partial<{ outputConfig: OutputConfig }>) => void;
+  /** Clears the builder state. */
+  clearState: () => void;
+  /** Loads an existing form document into the builder. */
+  loadDocumentState: (state: {
+    nodes: Record<string, Node>;
+    rootIds: string[];
+    formId: string;
+    formName: string;
+    outputConfig?: OutputConfig;
+  }) => void;
+  /** Sets the save status manually. */
+  setSaveStatus: (status: SaveStatus, timestamp?: number) => void;
+  /** Updates the form name. */
+  setFormName: (name: string) => void;
+  /** Updates the form ID. */
+  setFormId: (id: string) => void;
 
   /** Access to temporal (undo/redo) state. Only available if using the default store. */
   temporal?: unknown;
+}
+
+export interface BuilderStoreOptions {
+  registry: BuilderFieldRegistry;
+  name?: string;
+  storage?: Storage;
 }

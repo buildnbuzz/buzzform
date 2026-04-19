@@ -1,155 +1,84 @@
 import { create, type UseBoundStore, type StoreApi } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { immer } from "zustand/middleware/immer";
-import { temporal } from "zundo";
-import { nanoid } from "nanoid";
-import type { WritableDraft } from "immer";
-import type { Field } from "@buildnbuzz/form-core";
 import {
-  insertNode,
-  moveNode,
-  removeNode,
-  duplicateNode,
-  updateNode,
-  type Node,
+  createBuilderStore as createCoreStore,
 } from "@buildnbuzz/form-builder-core";
-import type { BuilderStoreInterface, BuilderFieldRegistry } from "../types";
-
-export interface BuilderStoreOptions {
-  registry: BuilderFieldRegistry;
-  name?: string;
-  storage?: Storage;
-}
-
-const DEFAULT_INITIAL_STATE = {
-  nodes: {},
-  rootIds: [],
-  selectedId: null,
-  activeTabs: {},
-  collapsedNodes: {},
-  mode: "edit" as const,
-  viewport: "desktop" as const,
-  zoom: 1.0,
-  dropIndicator: null,
-  saveStatus: "idle" as const,
-};
+import type { BuilderStoreInterface, BuilderStoreOptions } from "../types";
+import type { Field, FieldType } from "@buildnbuzz/form-core";
 
 /**
- * Creates a fully-featured Zustand store for the form builder.
- * 
- * This store implements the `BuilderStoreInterface` and uses the pure 
- * tree reducers from `@buildnbuzz/form-builder-core`.
+ * Creates a React-ready Zustand store by wrapping the framework-agnostic core store.
  */
 export const createBuilderStore = (options: BuilderStoreOptions): UseBoundStore<StoreApi<BuilderStoreInterface>> => {
-  const { registry, name = "buzzform-builder", storage = typeof window !== "undefined" ? window.localStorage : undefined } = options;
+  const { registry, name } = options;
 
-  return create<BuilderStoreInterface>()(
-    persist(
-      temporal(
-        immer((set) => ({
-          ...DEFAULT_INITIAL_STATE,
+  // Create the underlying vanilla store from core
+  const coreStore = createCoreStore({ name });
 
-          // --- Selection ---
-          selectNode: (id) => set({ selectedId: id }),
+  // Define the React-wrapped actions
+  const getActions = (): Partial<BuilderStoreInterface> => ({
+    createNode: (type: FieldType, parentId: string | null, index = 0, parentSlot = null) => {
+      const entry = registry[type];
+      if (!entry) return;
+      
+      coreStore.getState().createNode(
+        type, 
+        entry.defaultProps as Partial<Field>, 
+        parentId, 
+        index, 
+        parentSlot
+      );
+    },
 
-          // --- Node Operations (Logic moved to core reducers) ---
-          updateNode: (id, updates) => set((state) => {
-            const result = updateNode({ nodes: state.nodes as Record<string, Node>, rootIds: state.rootIds }, id, updates);
-            state.nodes = result.nodes as WritableDraft<Record<string, Node>>;
-            state.rootIds = result.rootIds;
-          }),
+    updateNode: (id, updates) => coreStore.getState().updateNode(id, updates),
+    moveNode: (id, parentId, index, slot) => coreStore.getState().moveNode(id, parentId, index, slot),
+    removeNode: (id) => coreStore.getState().removeNode(id),
+    duplicateNode: (id) => coreStore.getState().duplicateNode(id),
+    selectNode: (id) => coreStore.getState().selectNode(id),
+    setActiveTab: (nodeId, slot) => coreStore.getState().setActiveTab(nodeId, slot),
+    toggleCollapsed: (nodeId) => coreStore.getState().toggleCollapsed(nodeId),
+    setCollapsed: (nodeId, collapsed) => coreStore.getState().setCollapsed(nodeId, collapsed),
+    setDropIndicator: (val) => coreStore.getState().setDropIndicator(val),
+    setMode: (mode) => coreStore.getState().setMode(mode),
+    setViewport: (vp) => coreStore.getState().setViewport(vp),
+    setZoom: (z) => coreStore.getState().setZoom(z),
+    updateFormSettings: (updates) => coreStore.getState().updateFormSettings(updates),
+    clearState: () => coreStore.getState().clearState(),
+    loadDocumentState: (s) => coreStore.getState().loadDocumentState(s),
+    setSaveStatus: (s, t) => coreStore.getState().setSaveStatus(s, t),
+    setFormName: (n) => coreStore.getState().setFormName(n),
+    setFormId: (id) => coreStore.getState().setFormId(id),
+  });
 
-          createNode: (type, parentId, index = 0) => {
-            const entry = registry[type];
-            if (!entry) return;
+  // Wrap the core store in a bound zustand store for React reactivity
+  const store = create<BuilderStoreInterface>()(() => {
+    const coreState = coreStore.getState();
+    const actions = getActions();
 
-            const id = nanoid();
-            const safeTypeName = type.replace(/-/g, "_");
-            const nameField = `${safeTypeName}_${id.slice(0, 4)}`;
+    return {
+      ...(coreState as unknown as BuilderStoreInterface),
+      ...actions,
+      temporal: (coreStore as unknown as { temporal: unknown }).temporal,
+    };
+  });
 
-            const fieldProps = entry.kind === "data"
-              ? { ...entry.defaultProps, name: nameField } as Field
-              : { ...entry.defaultProps } as Field;
+  // Attach coreStore temporal API to the bound store object so useUndoRedo hook works
+  const coreStoreAny = coreStore as unknown as { temporal?: unknown };
+  if (coreStoreAny.temporal) {
+    (store as unknown as { temporal?: unknown }).temporal = coreStoreAny.temporal;
+  }
 
-            const newNode: Node = {
-              id,
-              field: fieldProps,
-              parentId,
-              parentSlot: null, // InsertNode will resolve this
-              children: {},
-            };
-
-            set((state) => {
-              const result = insertNode({ nodes: state.nodes as Record<string, Node>, rootIds: state.rootIds }, newNode, index);
-              state.nodes = result.nodes as WritableDraft<Record<string, Node>>;
-              state.rootIds = result.rootIds;
-              state.selectedId = id;
-            });
-          },
-
-          moveNode: (id, newParentId, index, newParentSlot = null) => set((state) => {
-            const result = moveNode({ nodes: state.nodes as Record<string, Node>, rootIds: state.rootIds }, id, newParentId, index, newParentSlot);
-            state.nodes = result.nodes as WritableDraft<Record<string, Node>>;
-            state.rootIds = result.rootIds;
-          }),
-
-          removeNode: (id) => set((state) => {
-            const result = removeNode({ nodes: state.nodes as Record<string, Node>, rootIds: state.rootIds }, id);
-            state.nodes = result.nodes as WritableDraft<Record<string, Node>>;
-            state.rootIds = result.rootIds;
-            if (state.selectedId === id) state.selectedId = null;
-            delete state.collapsedNodes[id];
-            delete state.activeTabs[id];
-          }),
-
-          duplicateNode: (id) => set((state) => {
-            const { state: nextState, newId } = duplicateNode({ nodes: state.nodes as Record<string, Node>, rootIds: state.rootIds }, id);
-            state.nodes = nextState.nodes as WritableDraft<Record<string, Node>>;
-            state.rootIds = nextState.rootIds;
-            if (newId) state.selectedId = newId;
-          }),
-
-          // --- UI Actions ---
-          setActiveTab: (nodeId, slot) => set((state) => {
-            state.activeTabs[nodeId] = slot;
-          }),
-
-          toggleCollapsed: (nodeId) => set((state) => {
-            state.collapsedNodes[nodeId] = !state.collapsedNodes[nodeId];
-          }),
-
-          setCollapsed: (nodeId, collapsed) => set((state) => {
-            if (collapsed) {
-              state.collapsedNodes[nodeId] = true;
-            } else {
-              delete state.collapsedNodes[nodeId];
-            }
-          }),
-
-          setDropIndicator: (value) => set({ dropIndicator: value }),
-          setMode: (mode) => set({ mode }),
-          setViewport: (viewport) => set({ viewport }),
-          setZoom: (zoom) => set({ zoom }),
-        })),
-        {
-          // Undo/Redo configuration
-          limit: 50,
-          partialize: (state) => ({
-            nodes: state.nodes,
-            rootIds: state.rootIds,
-          }),
+  // Sync the React-bound store whenever the core store changes.
+  coreStore.subscribe((state) => {
+    // We only update the data from the core store, preserving our React-wrapped actions
+    const data: Record<string, unknown> = {};
+    const stateRecord = state as unknown as Record<string, unknown>;
+    for (const key in stateRecord) {
+        if (typeof stateRecord[key] !== "function") {
+            data[key] = stateRecord[key];
         }
-      ),
-      {
-        name,
-        storage: storage ? createJSONStorage(() => storage) : undefined,
-        partialize: (state) => ({
-          nodes: state.nodes,
-          rootIds: state.rootIds,
-          zoom: state.zoom,
-          viewport: state.viewport,
-        }),
-      }
-    )
-  ) as UseBoundStore<StoreApi<BuilderStoreInterface>>;
+    }
+    store.setState(data as unknown as Partial<BuilderStoreInterface>);
+  });
+
+  return store;
 };

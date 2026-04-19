@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createBuilderStore } from "./store";
 import type { BuilderFieldRegistry } from "../types";
 import type { Node } from "@buildnbuzz/form-builder-core";
@@ -35,6 +35,7 @@ const mockRegistry: BuilderFieldRegistry = {
 describe("Builder Store", () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.useFakeTimers();
   });
 
   it("initializes with default state", () => {
@@ -127,7 +128,7 @@ describe("Builder Store", () => {
     expect(store.getState().zoom).toBe(1.5);
   });
 
-  it("supports undo/redo", () => {
+  it("supports undo/redo", async () => {
     const store = createBuilderStore({ registry: mockRegistry });
     const temporalStore = (store as unknown as { 
       temporal: StoreApi<TemporalState<{ nodes: Record<string, Node>; rootIds: string[] }>> 
@@ -136,6 +137,9 @@ describe("Builder Store", () => {
     // Action
     store.getState().createNode("text", null);
     expect(Object.keys(store.getState().nodes)).toHaveLength(1);
+    
+    // Wait for history throttle (400ms in core)
+    await vi.advanceTimersByTimeAsync(500);
     
     // Undo
     temporalStore.getState().undo();
