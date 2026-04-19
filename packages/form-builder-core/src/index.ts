@@ -62,6 +62,10 @@ export * from "./utils/expressions";
 export * from "./registry";
 export * from "./field-properties/base";
 export * from "./field-properties/text";
+export * from "./field-properties/email";
+export * from "./field-properties/password";
+export * from "./field-properties/textarea";
+export * from "./field-properties/number";
 export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";
