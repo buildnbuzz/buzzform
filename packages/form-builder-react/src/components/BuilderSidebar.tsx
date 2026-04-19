@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { getSidebarGroups, type SidebarGroups } from "../registry";
 import { useBuilderContext } from "../context/BuilderContext";
 
@@ -17,6 +17,10 @@ export interface BuilderSidebarProps {
  */
 export const BuilderSidebar = ({ render }: BuilderSidebarProps) => {
   const { registry } = useBuilderContext();
-  const groups = getSidebarGroups(registry);
+  
+  const groups = useMemo(() => {
+    return getSidebarGroups(registry);
+  }, [registry]);
+
   return <>{render({ groups })}</>;
 };
