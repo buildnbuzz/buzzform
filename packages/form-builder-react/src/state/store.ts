@@ -2,6 +2,7 @@ import { create, type UseBoundStore, type StoreApi } from "zustand";
 import {
   createBuilderStore as createCoreStore,
 } from "@buildnbuzz/form-builder-core";
+import type { Store as CoreStore } from "@buildnbuzz/form-builder-core";
 import type { BuilderStoreInterface, BuilderStoreOptions } from "../types";
 import type { Field, FieldType } from "@buildnbuzz/form-core";
 
@@ -55,10 +56,10 @@ export const createBuilderStore = (options: BuilderStoreOptions): UseBoundStore<
     const actions = getActions();
 
     return {
-      ...(coreState as unknown as BuilderStoreInterface),
+      ...(coreState as unknown as CoreStore),
       ...actions,
       temporal: (coreStore as unknown as { temporal: unknown }).temporal,
-    };
+    } as BuilderStoreInterface;
   });
 
   // Attach coreStore temporal API to the bound store object so useUndoRedo hook works
