@@ -57,6 +57,7 @@ export {
 } from "./field-properties";
 
 export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/dnd";
+export * from "./utils/objects";
 
 export { generateComponentCode } from "./code-generator";
 
