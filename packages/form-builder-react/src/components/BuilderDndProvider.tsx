@@ -18,8 +18,10 @@ import { useBuilderContext } from "../context/BuilderContext";
 import { 
   getDropLocation, 
   canDrop, 
-  isDescendant 
+  isDescendant
 } from "@buildnbuzz/form-builder-core";
+import { isContainerType } from "@buildnbuzz/form-core";
+import { isInsideContainerPadding } from "../utils";
 
 /**
  * Custom collision detection that prefers items directly under the pointer.
@@ -81,7 +83,9 @@ export const BuilderDndProvider = ({
     const activeType = active.data.current?.type ?? nodes[activeId]?.field?.type;
 
     // Resolve overId (handling potential dropzone suffixes if used by consumer)
-    const overId = (over.id as string).replace("-dropzone", "");
+    const overRawId = over.id as string;
+    const isDropZone = overRawId.endsWith("-dropzone");
+    const overId = overRawId.replace("-dropzone", "");
     
     // Simple heuristic: if it's a target area, use vertical half to decide position.
     const overRect = over.rect;
@@ -93,7 +97,21 @@ export const BuilderDndProvider = ({
         : 0;
       
     const middle = overRect.top + overRect.height / 2;
-    const position: "before" | "after" | "inside" = pointerY < middle ? "before" : "after";
+    let position: "before" | "after" | "inside" = pointerY < middle ? "before" : "after";
+
+    if (overId === "root") {
+      position = "inside";
+    } else if (isDropZone) {
+      position = "inside";
+    } else {
+      const overNode = nodes[overId];
+      if (overNode && isContainerType(overNode.field.type)) {
+        // Container padding detection
+        if (isInsideContainerPadding(event.activatorEvent as MouseEvent | TouchEvent, overId)) {
+          position = "inside";
+        }
+      }
+    }
 
     const location = getDropLocation(nodes, rootIds, overId, position);
 
@@ -110,6 +128,16 @@ export const BuilderDndProvider = ({
     if (!canDrop(parentType, activeType)) {
       setDropIndicator(null);
       return;
+    }
+
+    // Empty tab guard
+    if (parentType === "tabs" && parentNode) {
+      // @ts-expect-error - field type checking
+      const tabCount = parentNode.field.tabs?.length ?? 0;
+      if (tabCount === 0) {
+        setDropIndicator(null);
+        return;
+      }
     }
 
     // Circularity check
