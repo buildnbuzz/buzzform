@@ -1,51 +1,76 @@
 "use client";
 
+import React, { useEffect } from "react";
 import {
   BuilderSidebar,
   DraggableSidebarItem,
+  useBuilderStore,
 } from "@buildnbuzz/form-builder-react";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { ScrollArea } from "@/components/ui/scroll-area";
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { IconPlaceholder } from "@/components/icon-placeholder";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+
+const CATEGORY_LABELS: Record<string, string> = {
+  inputs: "Inputs",
+  selection: "Selection",
+  layout: "Layout",
+};
 
 /**
  * Visual field palette for the form builder.
  * Grouped by category and draggable into the canvas.
  */
 export const FieldSidebar = () => {
+  const mode = useBuilderStore((s) => s.mode);
+
+  let sidebarSetOpen: ((open: boolean) => void) | undefined;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    sidebarSetOpen = useSidebar().setOpen;
+  } catch {
+    // Ignore until Task 3 adds SidebarProvider
+  }
+
+  const setOpen = React.useCallback(
+    (open: boolean) => {
+      sidebarSetOpen?.(open);
+    },
+    [sidebarSetOpen],
+  );
+
+  useEffect(() => {
+    setOpen(mode !== "preview");
+  }, [mode, setOpen]);
+
   return (
-    <div className="flex h-full flex-col bg-background border-r">
+    <Sidebar className="h-full border-r" collapsible="none">
       <div className="p-4 border-b">
         <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
           Field Palette
         </h2>
       </div>
-
-      <ScrollArea className="flex-1">
+      <SidebarContent>
         <BuilderSidebar
           render={({ groups }) => (
-            <Accordion
-              multiple
-              defaultValue={Object.keys(groups)}
-              className="w-full px-4"
-            >
+            <>
               {Object.entries(groups).map(([category, items]) => (
-                <AccordionItem
-                  key={category}
-                  value={category}
-                  className="border-none"
-                >
-                  <AccordionTrigger className="py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/60 hover:no-underline hover:text-foreground transition-colors">
-                    {category}
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-4">
-                    <div className="grid grid-cols-2 gap-2">
+                <SidebarGroup key={category}>
+                  <SidebarGroupLabel>
+                    {CATEGORY_LABELS[category] ?? category}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
                       {items.map((item) => (
                         <DraggableSidebarItem
                           key={item.type}
@@ -55,35 +80,46 @@ export const FieldSidebar = () => {
                             attributes,
                             listeners,
                             isDragging,
-                          }) => (
-                            <div
-                              ref={setNodeRef}
-                              {...attributes}
-                              {...listeners}
-                              className={cn(
-                                "group flex flex-col items-center justify-center gap-2.5 rounded-xl border bg-card p-3.5 text-center shadow-sm transition-all duration-200 hover:border-primary/50 hover:bg-primary/2 hover:shadow-md cursor-grab active:cursor-grabbing",
-                                isDragging &&
-                                  "opacity-40 border-primary bg-primary/5 scale-95",
-                              )}
-                            >
-                              <div className="flex size-9 items-center justify-center rounded-lg bg-muted/50 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                                <IconPlaceholder {...item.icon} size={18} />
-                              </div>
-                              <span className="text-[11px] font-semibold leading-tight text-muted-foreground group-hover:text-foreground">
-                                {item.label}
-                              </span>
-                            </div>
-                          )}
+                          }) => {
+                            const disabled = item.disabled;
+
+                            return (
+                              <SidebarMenuItem key={item.type}>
+                                <SidebarMenuButton
+                                  ref={setNodeRef}
+                                  {...listeners}
+                                  {...attributes}
+                                  className={cn(
+                                    "cursor-grab group relative",
+                                    disabled && "cursor-not-allowed opacity-50",
+                                    isDragging && "opacity-40 bg-muted/50",
+                                  )}
+                                  // disabled={disabled} // DraggableSidebarItem handles disabled state
+                                >
+                                  <IconPlaceholder {...item.icon} size={16} />
+                                  <span>{item.label}</span>
+                                  {disabled && (
+                                    <Badge
+                                      variant="outline"
+                                      className="ml-auto text-[10px] h-5 px-1.5 py-0 bg-transparent text-muted-foreground border-muted-foreground/40"
+                                    >
+                                      Coming Soon
+                                    </Badge>
+                                  )}
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            );
+                          }}
                         />
                       ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
               ))}
-            </Accordion>
+            </>
           )}
         />
-      </ScrollArea>
-    </div>
+      </SidebarContent>
+    </Sidebar>
   );
 };
