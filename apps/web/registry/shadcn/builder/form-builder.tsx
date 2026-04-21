@@ -6,7 +6,7 @@ import {
   BuilderCanvas as HeadlessCanvas,
   useBuilderStore,
   useUndoRedo,
-  DefaultBuilderProvider,
+  DefaultBuilderProvider
 } from "@buildnbuzz/form-builder-react";
 import { DEFAULT_FIELD_REGISTRY } from "@buildnbuzz/form-builder-core";
 import { FieldSidebar } from "./field-sidebar";
@@ -24,6 +24,11 @@ import {
   PlayIcon,
   FloppyDiskIcon,
 } from "@hugeicons/core-free-icons";
+import { useDroppable } from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 
@@ -102,6 +107,10 @@ const CanvasFrame = () => {
   const zoom = useBuilderStore((s) => s.zoom);
   const rootIds = useBuilderStore((s) => s.rootIds);
 
+  const { setNodeRef } = useDroppable({
+    id: "root",
+  });
+
   const width =
     viewport === "mobile" ? "375px" : viewport === "tablet" ? "768px" : "100%";
 
@@ -116,13 +125,22 @@ const CanvasFrame = () => {
         transform: `scale(${zoom})`,
       }}
     >
-      <div className="flex-1 p-6 overflow-y-auto">
-        <div className="min-h-125">
-          <HeadlessCanvas
-            nodeRenderer={({ node, content }) => (
-              <NodeWrapper node={node}>{content}</NodeWrapper>
-            )}
-          />
+      <div
+        ref={setNodeRef}
+        className="flex-1 p-6 overflow-y-auto"
+        data-id="root"
+      >
+        <div className="min-h-125 relative">
+          <SortableContext
+            items={rootIds}
+            strategy={verticalListSortingStrategy}
+          >
+            <HeadlessCanvas
+              nodeRenderer={({ node, content }) => (
+                <NodeWrapper node={node}>{content}</NodeWrapper>
+              )}
+            />
+          </SortableContext>
         </div>
 
         {rootIds.length === 0 && (
