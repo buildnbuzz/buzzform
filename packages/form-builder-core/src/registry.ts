@@ -143,7 +143,7 @@ export const FIELD_ICONS = {
  * The default field registry for the form builder.
  * Includes all standard input and layout fields.
  */
-export const DEFAULT_FIELD_REGISTRY: FieldRegistry = {
+export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
   text: {
     kind: "data",
     sidebar: {
