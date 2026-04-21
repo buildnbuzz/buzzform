@@ -266,7 +266,7 @@ export const FormBuilder = () => {
                   <IconPlaceholder
                     lucide="Play"
                     hugeicons="PlayIcon"
-                    tabler="IconPlay"
+                    tabler="IconPlayerPlay"
                     phosphor="Play"
                     remixicon="RiPlayFill"
                     size={20}

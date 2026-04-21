@@ -9,8 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { ArrowShrink02Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
   DEFAULT_SLOT,
   useBuilderStore,
@@ -100,10 +99,10 @@ export const CollapsibleRenderer = ({
 
   const renderHeaderContent = () => (
     <div className="flex-1 min-w-0 flex items-center gap-2">
-      <HugeiconsIcon
-        icon={ArrowShrink02Icon}
+      <IconPlaceholder
+        lucide="FoldVertical"
+        hugeicons="ArrowShrink02Icon"
         size={16}
-        strokeWidth={1.5}
         className="text-muted-foreground shrink-0"
       />
       <span
@@ -123,10 +122,10 @@ export const CollapsibleRenderer = ({
   );
 
   const renderChevron = (size: number = 16) => (
-    <HugeiconsIcon
-      icon={ArrowDown01Icon}
+    <IconPlaceholder
+      lucide="ChevronDown"
+      hugeicons="ArrowDown01Icon"
       size={size}
-      strokeWidth={1.5}
       className={cn(
         "text-muted-foreground transition-transform duration-200 shrink-0",
         isCollapsed && "-rotate-90",

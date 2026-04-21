@@ -3,8 +3,7 @@
 import { useDroppable } from "@dnd-kit/core";
 import { horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { RowInsertIcon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
   DEFAULT_SLOT,
   type BuilderNodeRendererProps,
@@ -30,7 +29,7 @@ export const RowRenderer = ({
     <div className="w-full">
       {/* Header */}
       <div className="flex items-center gap-1.5 mb-2 text-muted-foreground">
-        <HugeiconsIcon icon={RowInsertIcon} size={14} strokeWidth={1.5} />
+        <IconPlaceholder lucide="Columns" hugeicons="InsertRowDownIcon" size={14} />
         <span className="text-xs font-medium">Row</span>
       </div>
 

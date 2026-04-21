@@ -9,17 +9,17 @@ import { getTabSlotKeys } from "@buildnbuzz/form-builder-core";
 import { useDroppable } from "@dnd-kit/core";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Layout01Icon, BlockedIcon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import { cn } from "@/lib/utils";
 import type { TabsField, Tab } from "@buildnbuzz/form-core";
 
 function getTabDisplayLabel(tab: Tab, index: number) {
-  if (typeof tab.label === "string" && tab.label.trim().length > 0) {
-    return tab.label;
+  const label = tab.label;
+  if (typeof label === "string" && label.trim().length > 0) {
+    return label;
   }
-  if (typeof tab.label === "number") {
-    return String(tab.label);
+  if (typeof label === "number") {
+    return String(label);
   }
   return `Tab ${index + 1}`;
 }
@@ -45,6 +45,7 @@ function TabDropZone({
   });
 
   const isEmpty = childrenIds.length === 0;
+  const description = (tab as unknown as Record<string, unknown>).description;
 
   return (
     <div
@@ -52,10 +53,8 @@ function TabDropZone({
       data-container-padding
       className={cn("min-h-16 transition-colors", isOver && "bg-primary/5")}
     >
-      {(tab as Record<string, unknown>).description && (
-        <p className="text-sm text-muted-foreground mb-3">
-          {(tab as Record<string, unknown>).description as string}
-        </p>
+      {typeof description === "string" && description && (
+        <p className="text-sm text-muted-foreground mb-3">{description}</p>
       )}
 
       {isEmpty ? (
@@ -140,7 +139,7 @@ export const TabsRenderer = ({
     return (
       <div className="w-full rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4">
         <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          <HugeiconsIcon icon={Layout01Icon} size={14} strokeWidth={1.5} />
+          <IconPlaceholder lucide="Layout" hugeicons="Layout01Icon" size={14} />
           <span className="text-xs font-medium">Tabs</span>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -153,7 +152,7 @@ export const TabsRenderer = ({
   return (
     <div className="w-full">
       <div className="flex items-center gap-1.5 mb-2 text-muted-foreground">
-        <HugeiconsIcon icon={Layout01Icon} size={14} strokeWidth={1.5} />
+        <IconPlaceholder lucide="Layout" hugeicons="Layout01Icon" size={14} />
         <span className="text-xs font-medium">Tabs</span>
       </div>
 
@@ -185,10 +184,10 @@ export const TabsRenderer = ({
                     {childCount}
                   </Badge>
                   {tab.disabled && (
-                    <HugeiconsIcon
-                      icon={BlockedIcon}
+                    <IconPlaceholder
+                      lucide="Ban"
+                      hugeicons="BlockedIcon"
                       size={12}
-                      strokeWidth={1.7}
                       className="text-muted-foreground/70"
                     />
                   )}
@@ -212,10 +211,10 @@ export const TabsRenderer = ({
                       variant="outline"
                       className="ml-2 h-5 gap-1 border-muted-foreground/20 bg-muted/50 px-1.5 text-[10px] font-normal text-muted-foreground"
                     >
-                      <HugeiconsIcon
-                        icon={BlockedIcon}
+                      <IconPlaceholder
+                        lucide="Ban"
+                        hugeicons="BlockedIcon"
                         size={12}
-                        strokeWidth={1.7}
                       />
                       Disabled
                     </Badge>

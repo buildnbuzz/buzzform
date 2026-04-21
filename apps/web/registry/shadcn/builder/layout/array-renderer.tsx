@@ -10,8 +10,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Menu01Icon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
   DEFAULT_SLOT,
   useBuilderStore,
@@ -96,10 +95,10 @@ export const ArrayRenderer = ({
             )}
           >
             <div className="flex min-w-0 flex-1 items-center gap-2">
-              <HugeiconsIcon
-                icon={Menu01Icon}
+              <IconPlaceholder
+                lucide="Menu"
+                hugeicons="Menu01Icon"
                 size={16}
-                strokeWidth={1.5}
                 className="text-muted-foreground shrink-0"
               />
               <span className="text-sm font-semibold truncate">
@@ -127,10 +126,10 @@ export const ArrayRenderer = ({
               )}
             </div>
 
-            <HugeiconsIcon
-              icon={ArrowDown01Icon}
+            <IconPlaceholder
+              lucide="ChevronDown"
+              hugeicons="ArrowDown01Icon"
               size={16}
-              strokeWidth={1.5}
               className={cn(
                 "text-muted-foreground transition-transform duration-200 shrink-0",
                 isCollapsed && "-rotate-90",

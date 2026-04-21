@@ -61,7 +61,7 @@ export function DragOverlayItem({
           {icon ? (
             <IconPlaceholder {...icon} size={20} />
           ) : (
-            <IconPlaceholder lucide="Type" hugeicons="TypeIcon" size={20} />
+            <IconPlaceholder lucide="Type" hugeicons="PencilEdit01Icon" size={20} />
           )}
         </div>
 

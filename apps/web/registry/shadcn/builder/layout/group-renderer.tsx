@@ -9,8 +9,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { FolderIcon, ArrowDown01Icon } from "@hugeicons/core-free-icons";
+import { IconPlaceholder } from "@/components/icon-placeholder";
 import { DEFAULT_SLOT, useBuilderStore, type BuilderNodeRendererProps } from "@buildnbuzz/form-builder-react";
 import type { GroupField } from "@buildnbuzz/form-core";
 
@@ -86,10 +85,10 @@ export const GroupRenderer = ({ id, field, renderSlot, childrenIds }: BuilderNod
       <div className="w-full">
         {label && (
           <div className="flex items-center gap-2 mb-2">
-            <HugeiconsIcon
-              icon={FolderIcon}
+            <IconPlaceholder
+              lucide="Folder"
+              hugeicons="FolderIcon"
               size={14}
-              strokeWidth={1.5}
               className="text-muted-foreground"
             />
             <span className="font-medium text-sm text-foreground">{label as string}</span>
@@ -106,10 +105,10 @@ export const GroupRenderer = ({ id, field, renderSlot, childrenIds }: BuilderNod
       <div className="w-full border border-border/50 rounded-lg p-4">
         {label && (
           <div className="flex items-center gap-2 mb-3">
-            <HugeiconsIcon
-              icon={FolderIcon}
+            <IconPlaceholder
+              lucide="Folder"
+              hugeicons="FolderIcon"
               size={14}
-              strokeWidth={1.5}
               className="text-muted-foreground"
             />
             <span className="font-medium text-sm text-foreground">{label as string}</span>
@@ -128,20 +127,20 @@ export const GroupRenderer = ({ id, field, renderSlot, childrenIds }: BuilderNod
           {label && (
             <CollapsibleTrigger className="w-full px-4 py-2 flex flex-row items-center justify-between hover:bg-muted/50 transition-colors select-none cursor-pointer">
               <div className="flex items-center gap-2">
-                <HugeiconsIcon
-                  icon={FolderIcon}
+                <IconPlaceholder
+                  lucide="Folder"
+                  hugeicons="FolderIcon"
                   size={14}
-                  strokeWidth={1.5}
                   className="text-muted-foreground"
                 />
                 <span className="font-medium text-muted-foreground text-sm">
                   {label as string}
                 </span>
               </div>
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
+              <IconPlaceholder
+                lucide="ChevronDown"
+                hugeicons="ArrowDown01Icon"
                 size={14}
-                strokeWidth={1.5}
                 className={cn(
                   "text-muted-foreground transition-transform duration-200",
                   isCollapsed && "-rotate-90",
@@ -171,18 +170,18 @@ export const GroupRenderer = ({ id, field, renderSlot, childrenIds }: BuilderNod
               )}
             >
               <div className="flex items-center gap-2">
-                <HugeiconsIcon
-                  icon={FolderIcon}
+                <IconPlaceholder
+                  lucide="Folder"
+                  hugeicons="FolderIcon"
                   size={16}
-                  strokeWidth={1.5}
                   className="text-muted-foreground"
                 />
                 <span className="text-sm font-semibold">{label as string}</span>
               </div>
-              <HugeiconsIcon
-                icon={ArrowDown01Icon}
+              <IconPlaceholder
+                lucide="ChevronDown"
+                hugeicons="ArrowDown01Icon"
                 size={16}
-                strokeWidth={1.5}
                 className={cn(
                   "text-muted-foreground transition-transform duration-200",
                   isCollapsed && "-rotate-90",
