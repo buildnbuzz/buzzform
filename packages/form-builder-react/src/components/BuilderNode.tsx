@@ -5,6 +5,7 @@ import { useBuilderStore, useBuilderContext } from "../context/BuilderContext";
 import { getRegistryEntry } from "../registry";
 import type { Node } from "@buildnbuzz/form-builder-core";
 import { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";
+import { SortableContext, verticalListSortingStrategy, type SortingStrategy } from "@dnd-kit/sortable";
 
 export interface BuilderNodeProps {
   /** The unique ID of the node to render. */
@@ -18,7 +19,7 @@ export interface BuilderNodeProps {
     /** The rendered content (either field preview or layout children). */
     content: ReactNode;
     /** Helper to render a specific slot's children. */
-    renderSlot: (slot: string) => ReactNode;
+    renderSlot: (slotKey: string, strategy?: SortingStrategy) => ReactNode;
   }) => ReactNode;
 }
 
@@ -33,15 +34,15 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
 
   const entry = getRegistryEntry(registry, node.field.type);
   
-  /** Renders all children in a specific slot. */
-  const renderSlot = (slotKey: string): ReactNode => {
+  /** Renders all children in a specific slot, optionally specifying a sorting strategy. */
+  const renderSlot = (slotKey: string, strategy: SortingStrategy = verticalListSortingStrategy): ReactNode => {
     const childrenIds = node.children[slotKey] || [];
     return (
-      <React.Fragment>
+      <SortableContext items={childrenIds} strategy={strategy}>
         {childrenIds.map((childId) => (
           <BuilderNode key={childId} id={childId} render={render} />
         ))}
-      </React.Fragment>
+      </SortableContext>
     );
   };
 
