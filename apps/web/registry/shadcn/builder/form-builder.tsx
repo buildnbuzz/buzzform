@@ -5,7 +5,6 @@ import {
   BuilderDndProvider,
   BuilderCanvas as HeadlessCanvas,
   useBuilderStore,
-  useUndoRedo,
   DefaultBuilderProvider,
   BuilderFormProvider,
 } from "@buildnbuzz/form-builder-react";
@@ -21,8 +20,8 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { CanvasToolbar } from "./canvas/canvas-toolbar";
 import { toast } from "sonner";
 import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
@@ -214,122 +213,6 @@ const CanvasFrame = () => {
 };
 
 /**
- * Shared toolbar for zoom, viewport, and undo/redo.
- */
-const BuilderToolbar = () => {
-  const viewport = useBuilderStore((s) => s.viewport);
-  const setViewport = useBuilderStore((s) => s.setViewport);
-  const zoom = useBuilderStore((s) => s.zoom);
-  const selectedId = useBuilderStore((s) => s.selectedId);
-  const selectNode = useBuilderStore((s) => s.selectNode);
-
-  const { undo, redo, canUndo, canRedo } = useUndoRedo();
-
-  return (
-    <div className="flex items-center gap-1 bg-muted/40 p-1 rounded-lg border">
-      <div className="flex items-center border-r pr-1 mr-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          disabled={!canUndo}
-          onClick={() => undo()}
-        >
-          <IconPlaceholder
-            lucide="Undo"
-            hugeicons="ArrowLeft02Icon"
-            tabler="IconArrowLeft"
-            phosphor="ArrowLeft"
-            remixicon="RiArrowLeftLine"
-            size={16}
-          />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7"
-          disabled={!canRedo}
-          onClick={() => redo()}
-        >
-          <IconPlaceholder
-            lucide="Redo"
-            hugeicons="ArrowRight02Icon"
-            tabler="IconArrowRight"
-            phosphor="ArrowRight"
-            remixicon="RiArrowRightLine"
-            size={16}
-          />
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-0.5 border-r pr-1 mr-1">
-        <Button
-          variant={viewport === "desktop" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setViewport("desktop")}
-        >
-          <IconPlaceholder
-            lucide="Monitor"
-            hugeicons="ComputerIcon"
-            tabler="IconDeviceDesktop"
-            phosphor="Monitor"
-            remixicon="RiComputerLine"
-            size={16}
-          />
-        </Button>
-        <Button
-          variant={viewport === "tablet" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setViewport("tablet")}
-        >
-          <IconPlaceholder
-            lucide="Tablet"
-            hugeicons="TabletIcon"
-            tabler="IconDeviceTablet"
-            phosphor="Tablet"
-            remixicon="RiTabletLine"
-            size={16}
-          />
-        </Button>
-        <Button
-          variant={viewport === "mobile" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-7 w-7"
-          onClick={() => setViewport("mobile")}
-        >
-          <IconPlaceholder
-            lucide="Smartphone"
-            hugeicons="SmartPhone01Icon"
-            tabler="IconDeviceMobile"
-            phosphor="DeviceMobile"
-            remixicon="RiSmartphoneLine"
-            size={16}
-          />
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-2 px-2">
-        <span className="text-[10px] font-mono text-muted-foreground w-8 text-center">
-          {Math.round(zoom * 100)}%
-        </span>
-        <Separator orientation="vertical" className="h-3" />
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-6 text-[10px] px-1.5"
-          onClick={() => selectNode(null)}
-          disabled={!selectedId}
-        >
-          Deselect
-        </Button>
-      </div>
-    </div>
-  );
-};
-
-/**
  * Main Form Builder component that orchestrates the entire UI.
  */
 export const FormBuilder = () => {
@@ -395,8 +278,6 @@ export const FormBuilder = () => {
                 </div>
               </div>
 
-              <BuilderToolbar />
-
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -427,6 +308,7 @@ export const FormBuilder = () => {
 
                 {/* Central Canvas */}
                 <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 min-w-0">
+                  <CanvasToolbar />
                   <div ref={containerRef} className="flex-1 min-h-0">
                     <ScrollArea className="h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
                       <CanvasFrame />
