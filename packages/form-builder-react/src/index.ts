@@ -7,6 +7,7 @@ export * from "./components/BuilderNode";
 export * from "./components/BuilderSidebar";
 export * from "./components/BuilderProperties";
 export * from "./components/BuilderDndProvider";
+export * from "./components/BuilderFormProvider";
 export * from "./components/SortableNode";
 export * from "./components/DraggableSidebarItem";
 export { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";
