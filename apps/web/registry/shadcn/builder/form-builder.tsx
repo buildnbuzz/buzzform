@@ -217,6 +217,17 @@ const CanvasFrame = () => {
  * Main Form Builder component that orchestrates the entire UI.
  */
 export const FormBuilder = () => {
+  return (
+    <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
+      <FormBuilderContent />
+    </DefaultBuilderProvider>
+  );
+};
+
+/**
+ * Inner component that uses builder hooks.
+ */
+const FormBuilderContent = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useBuilderStore((state) => state.zoom);
   const setZoom = useBuilderStore((state) => state.setZoom);
@@ -251,85 +262,79 @@ export const FormBuilder = () => {
   }, [zoom, setZoom]);
 
   return (
-    <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
-      <BuilderDndProvider
-        renderOverlay={({ activeId, activeData }) => (
-          <DragOverlayItem activeId={activeId} activeData={activeData} />
-        )}
-      >
-        <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
-          <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
-            {/* Top Header */}
-            <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0 z-10">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg">
-                  <IconPlaceholder
-                    lucide="Play"
-                    hugeicons="PlayIcon"
-                    tabler="IconPlayerPlay"
-                    phosphor="Play"
-                    remixicon="RiPlayFill"
-                    size={20}
-                    className="fill-current"
-                  />
+    <BuilderDndProvider
+      renderOverlay={({ activeId, activeData }) => (
+        <DragOverlayItem activeId={activeId} activeData={activeData} />
+      )}
+    >
+      <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
+        <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
+          {/* Top Header */}
+          <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0 z-10">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg">
+                <IconPlaceholder
+                  lucide="Play"
+                  hugeicons="PlayIcon"
+                  tabler="IconPlayerPlay"
+                  phosphor="Play"
+                  remixicon="RiPlayFill"
+                  size={20}
+                  className="fill-current"
+                />
+              </div>
+              <div>
+                <h1 className="text-sm font-bold leading-tight">
+                  BuzzForm Builder
+                </h1>
+                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                  v0.1 Premium
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="h-8 text-xs gap-2">
+                <IconPlaceholder
+                  lucide="Save"
+                  hugeicons="FloppyDiskIcon"
+                  tabler="IconDeviceFloppy"
+                  phosphor="FloppyDisk"
+                  remixicon="RiSaveLine"
+                  size={14}
+                />
+                Save
+              </Button>
+              <Button size="sm" className="h-8 text-xs shadow-md">
+                Publish
+              </Button>
+            </div>
+          </header>
+
+          {/* Main Layout */}
+          <SidebarProvider className="flex-1 overflow-hidden min-h-0 min-w-0">
+            <div className="flex h-full w-full">
+              {/* Left Sidebar: Components */}
+              <FieldSidebar />
+
+              {/* Central Canvas */}
+              <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 min-w-0">
+                <CanvasToolbar />
+                <div ref={containerRef} className="flex-1 min-h-0">
+                  <ScrollArea className="h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
+                    <CanvasFrame />
+                  </ScrollArea>
                 </div>
-                <div>
-                  <h1 className="text-sm font-bold leading-tight">
-                    BuzzForm Builder
-                  </h1>
-                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                    v0.1 Premium
-                  </p>
-                </div>
-              </div>
+              </main>
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 text-xs gap-2"
-                >
-                  <IconPlaceholder
-                    lucide="Save"
-                    hugeicons="FloppyDiskIcon"
-                    tabler="IconDeviceFloppy"
-                    phosphor="FloppyDisk"
-                    remixicon="RiSaveLine"
-                    size={14}
-                  />
-                  Save
-                </Button>
-                <Button size="sm" className="h-8 text-xs shadow-md">
-                  Publish
-                </Button>
-              </div>
-            </header>
-
-            {/* Main Layout */}
-            <SidebarProvider className="flex-1 overflow-hidden min-h-0 min-w-0">
-              <div className="flex h-full w-full">
-                {/* Left Sidebar: Components */}
-                <FieldSidebar />
-
-                {/* Central Canvas */}
-                <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 min-w-0">
-                  <CanvasToolbar />
-                  <div ref={containerRef} className="flex-1 min-h-0">
-                    <ScrollArea className="h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
-                      <CanvasFrame />
-                    </ScrollArea>
-                  </div>
-                </main>
-
-                {/* Right Sidebar: Properties */}
-                <aside className="w-80 border-l bg-background flex flex-col shrink-0 overflow-y-auto">
-                  <PropertyPanel />
-                </aside>
-              </div>
-            </SidebarProvider>
-          </div>
-        </BuilderFormProvider>
-      </BuilderDndProvider>
-    </DefaultBuilderProvider>
+              {/* Right Sidebar: Properties */}
+              <aside className="w-80 border-l bg-background flex flex-col shrink-0 overflow-y-auto">
+                <PropertyPanel />
+              </aside>
+            </div>
+          </SidebarProvider>
+        </div>
+      </BuilderFormProvider>
+    </BuilderDndProvider>
   );
 };
