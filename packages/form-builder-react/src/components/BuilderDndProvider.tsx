@@ -85,9 +85,12 @@ export const BuilderDndProvider = ({
     
     // Simple heuristic: if it's a target area, use vertical half to decide position.
     const overRect = over.rect;
-    const pointerY = event.activatorEvent instanceof MouseEvent 
-      ? event.activatorEvent.clientY 
-      : 0; 
+    const activeRect = active.rect.current.translated;
+    const pointerY = activeRect
+      ? activeRect.top + activeRect.height / 2
+      : event.activatorEvent instanceof MouseEvent 
+        ? event.activatorEvent.clientY 
+        : 0;
       
     const middle = overRect.top + overRect.height / 2;
     const position: "before" | "after" | "inside" = pointerY < middle ? "before" : "after";
