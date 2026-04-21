@@ -62,6 +62,7 @@ export const BuilderNode = ({ id, render }: BuilderNodeProps) => {
         id={id} 
         field={node.field} 
         childrenIds={allChildrenIds}
+        renderSlot={renderSlot}
       />
     );
   }

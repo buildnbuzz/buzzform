@@ -36,6 +36,8 @@ export interface BuilderNodeRendererProps {
   field: Field;
   /** Flattened child node IDs (computed from all slots). */
   childrenIds: string[];
+  /** Helper to render a specific slot's children natively integrating DnD sorting contexts. */
+  renderSlot: (slotKey: string, strategy?: import("@dnd-kit/sortable").SortingStrategy) => React.ReactNode;
 }
 
 /**
