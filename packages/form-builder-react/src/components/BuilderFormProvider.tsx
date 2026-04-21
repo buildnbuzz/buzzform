@@ -3,16 +3,13 @@
 import * as React from "react";
 import { useMemo } from "react";
 import { Form, useForm, extractDefaults } from "@buildnbuzz/form-react";
-import type {
-  AnyReactFormExtendedApi,
-  FormSchema,
-} from "@buildnbuzz/form-react";
+import type { FormSchema } from "@buildnbuzz/form-react";
 import {
   nodesToFields,
   computeSchemaSignature,
-  syncRuntimeForm,
 } from "@buildnbuzz/form-builder-core";
 import { useBuilderStore } from "../context/BuilderContext";
+import { BuilderFormStateSync } from "./BuilderFormStateSync";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -147,56 +144,4 @@ export function BuilderFormProvider({
       {children}
     </BuilderFormInner>
   );
-}
-
-// ---------------------------------------------------------------------------
-// Internal state sync
-// ---------------------------------------------------------------------------
-
-type TanstackFormApi = AnyReactFormExtendedApi<Record<string, unknown>>;
-
-interface BuilderFormStateSyncProps {
-  form: TanstackFormApi;
-  fields: ReturnType<typeof nodesToFields>;
-  defaultValues: Record<string, unknown>;
-  schemaSignature: string;
-}
-
-/**
- * Syncs TanStack form state with document changes without remounting.
- *
- * - First mount: records the signature without resetting.
- * - Subsequent changes: deterministically merges current values with the new schema.
- *
- * @internal
- */
-function BuilderFormStateSync({
-  form,
-  fields,
-  defaultValues,
-  schemaSignature,
-}: BuilderFormStateSyncProps) {
-  const previousSignatureRef = React.useRef<string | null>(null);
-
-  React.useEffect(() => {
-    // First mount: record signature without resetting
-    if (previousSignatureRef.current === null) {
-      previousSignatureRef.current = schemaSignature;
-      return;
-    }
-
-    // No structural change — skip
-    if (previousSignatureRef.current === schemaSignature) {
-      return;
-    }
-
-    previousSignatureRef.current = schemaSignature;
-
-    // Deterministic merge: preserve current values, apply new defaults, prune removed fields
-    const currentValues = form.store.state.values;
-    const nextValues = syncRuntimeForm(currentValues, fields, defaultValues);
-    form.reset(nextValues);
-  }, [defaultValues, fields, form, schemaSignature]);
-
-  return null;
 }
