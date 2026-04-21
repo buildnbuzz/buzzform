@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   BuilderDndProvider,
   BuilderCanvas as HeadlessCanvas,
   useBuilderStore,
   useUndoRedo,
-  DefaultBuilderProvider
+  DefaultBuilderProvider,
+  BuilderFormProvider,
 } from "@buildnbuzz/form-builder-react";
 import { DEFAULT_FIELD_REGISTRY } from "@buildnbuzz/form-builder-core";
 import { FieldSidebar } from "./field-sidebar";
@@ -14,16 +15,6 @@ import { NodeWrapper } from "./node-wrapper";
 import { PropertyPanel } from "./property-panel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  ArrowLeft02Icon,
-  ArrowRight02Icon,
-  ComputerIcon,
-  SmartPhone01Icon,
-  TabletIcon,
-  PlayIcon,
-  FloppyDiskIcon,
-} from "@hugeicons/core-free-icons";
 import { useDroppable } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -31,132 +22,193 @@ import {
 } from "@dnd-kit/sortable";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { toast } from "sonner";
+import { IconPlaceholder } from "@/components/icon-placeholder";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 
-/**
- * Main Form Builder component that orchestrates the entire UI.
- */
-export const FormBuilder = () => {
+// Inline SubmitToastContent
+function SubmitToastContent({ data }: { data: Record<string, unknown> }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
-      <BuilderDndProvider>
-        <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
-          {/* Top Header */}
-          <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0 z-10">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg">
-                <HugeiconsIcon
-                  icon={PlayIcon}
-                  className="size-5 fill-current"
-                />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold leading-tight">
-                  BuzzForm Builder
-                </h1>
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                  v0.1 Premium
-                </p>
-              </div>
-            </div>
+    <div className="relative mt-2 w-full">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleCopy}
+        className="absolute right-2 top-2 h-7 w-7"
+        title="Copy JSON"
+      >
+        {copied ? (
+          <IconPlaceholder
+            lucide="Check"
+            hugeicons="Tick01Icon"
+            tabler="IconCheck"
+            phosphor="Check"
+            remixicon="RiCheckLine"
+            size={14}
+            className="text-primary"
+          />
+        ) : (
+          <IconPlaceholder
+            lucide="Copy"
+            hugeicons="Copy01Icon"
+            tabler="IconCopy"
+            phosphor="Copy"
+            remixicon="RiFileCopyLine"
+            size={14}
+          />
+        )}
+      </Button>
+      <pre className="max-h-75 overflow-auto rounded-md bg-muted p-3 pt-6 text-xs text-muted-foreground sm:p-3 sm:pr-10 sm:pt-3">
+        <code>{JSON.stringify(data, null, 2)}</code>
+      </pre>
+    </div>
+  );
+}
 
-            <BuilderToolbar />
-
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-2">
-                <HugeiconsIcon icon={FloppyDiskIcon} className="size-3.5" />
-                Save
-              </Button>
-              <Button size="sm" className="h-8 text-xs shadow-md">
-                Publish
-              </Button>
-            </div>
-          </header>
-
-          {/* Main Layout */}
-          <div className="flex flex-1 overflow-hidden">
-            {/* Left Sidebar: Components */}
-            <aside className="w-72 border-r bg-background flex flex-col shrink-0">
-              <FieldSidebar />
-            </aside>
-
-            {/* Central Canvas */}
-            <main className="flex-1 flex flex-col relative overflow-hidden">
-              <ScrollArea className="flex-1 min-h-0">
-                <div className="min-h-full p-8 flex justify-center bg-muted/10">
-                  <CanvasFrame />
-                </div>
-              </ScrollArea>
-            </main>
-
-            {/* Right Sidebar: Properties */}
-            <aside className="w-80 border-l bg-background flex flex-col shrink-0">
-              <PropertyPanel />
-            </aside>
-          </div>
-        </div>
-      </BuilderDndProvider>
-    </DefaultBuilderProvider>
+const EmptyCanvas = () => {
+  return (
+    <Empty className="relative z-10 h-full border-0 bg-transparent min-h-60 pointer-events-none select-none">
+      <EmptyMedia>
+        <IconPlaceholder
+          lucide="MousePointerClick"
+          hugeicons="DragDropIcon"
+          tabler="IconHandClick"
+          phosphor="HandArrowUp"
+          remixicon="RiDragDropLine"
+          size={24}
+        />
+      </EmptyMedia>
+      <EmptyContent className="max-w-[70%]">
+        <EmptyTitle className="text-sm font-medium">Empty Canvas</EmptyTitle>
+        <EmptyDescription className="text-xs">
+          Drag components from the left sidebar to start building your form.
+        </EmptyDescription>
+      </EmptyContent>
+    </Empty>
   );
 };
+
+interface WindowFrameProps {
+  children: React.ReactNode;
+  className?: string;
+}
+
+export function WindowFrame({ children, className }: WindowFrameProps) {
+  const viewport = useBuilderStore((state) => state.viewport);
+  const zoom = useBuilderStore((state) => state.zoom);
+  const mode = useBuilderStore((state) => state.mode);
+
+  const getViewportWidth = () => {
+    switch (viewport) {
+      case "mobile":
+        return "375px";
+      case "tablet":
+        return "768px";
+      default:
+        return "100%";
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        "w-full max-w-2xl h-160 bg-background border border-border rounded-xl shadow-[0_0_60px_-5px_hsl(var(--primary)/0.4)] flex flex-col relative transition-all duration-300 ease-in-out origin-top overflow-hidden",
+        className,
+      )}
+      style={{
+        transform: `scale(${zoom})`,
+        width: getViewportWidth(),
+        maxWidth: viewport === "desktop" ? "896px" : "none",
+      }}
+    >
+      <div className="h-10 bg-muted/50 border-b flex items-center px-4 justify-between shrink-0">
+        <div className="flex items-center gap-1.5 w-20">
+          <div className="w-3 h-3 rounded-full bg-destructive/80" />
+          <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
+          <div className="w-3 h-3 rounded-full bg-green-500/80" />
+        </div>
+        <div className="text-xs text-muted-foreground font-medium flex-1 text-center">
+          {mode === "preview" ? "Preview Mode" : "Edit Mode"}
+        </div>
+        <div className="w-20" />
+      </div>
+
+      {/* Content Area */}
+      <ScrollArea className="flex-1 overflow-hidden">{children}</ScrollArea>
+    </div>
+  );
+}
 
 /**
  * Centered frame for the canvas to simulate different viewports.
  */
 const CanvasFrame = () => {
-  const viewport = useBuilderStore((s) => s.viewport);
-  const zoom = useBuilderStore((s) => s.zoom);
   const rootIds = useBuilderStore((s) => s.rootIds);
+  const mode = useBuilderStore((s) => s.mode);
+  const selectNode = useBuilderStore((s) => s.selectNode);
+
+  const isPreviewMode = mode === "preview";
 
   const { setNodeRef } = useDroppable({
     id: "root",
+    disabled: isPreviewMode,
   });
 
-  const width =
-    viewport === "mobile" ? "375px" : viewport === "tablet" ? "768px" : "100%";
+  const handleBackgroundClick = () => {
+    if (!isPreviewMode) {
+      selectNode(null);
+    }
+  };
 
   return (
     <div
-      className={cn(
-        "bg-background shadow-2xl rounded-xl border transition-all duration-300 origin-top flex flex-col relative",
-        viewport !== "desktop" && "h-203",
-      )}
-      style={{
-        width,
-        transform: `scale(${zoom})`,
-      }}
+      className="p-8 pt-10 flex justify-center items-start min-h-full"
+      onClick={handleBackgroundClick}
     >
-      <div
-        ref={setNodeRef}
-        className="flex-1 p-6 overflow-y-auto"
-        data-id="root"
-      >
-        <div className="min-h-125 relative">
-          <SortableContext
-            items={rootIds}
-            strategy={verticalListSortingStrategy}
-          >
-            <HeadlessCanvas
-              nodeRenderer={({ node, content }) => (
-                <NodeWrapper node={node}>{content}</NodeWrapper>
-              )}
-            />
-          </SortableContext>
-        </div>
-
-        {rootIds.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40 select-none">
-            <div className="size-16 rounded-full border-2 border-dashed flex items-center justify-center mb-4">
-              <HugeiconsIcon icon={PlayIcon} className="size-8 rotate-90" />
+      <WindowFrame>
+        <div
+          ref={isPreviewMode ? undefined : setNodeRef}
+          className="p-8 max-w-2xl mx-auto min-h-full relative"
+          data-id="root"
+        >
+          {rootIds.length === 0 ? (
+            <EmptyCanvas />
+          ) : isPreviewMode ? (
+            <div className="p-4 border rounded-md bg-muted/50 text-center text-sm text-muted-foreground">
+              PreviewForm is stubbed in Phase 3.5. Will be implemented in Phase
+              6.
             </div>
-            <h3 className="text-sm font-bold uppercase tracking-tight">
-              Empty Canvas
-            </h3>
-            <p className="text-xs text-center px-12 mt-1">
-              Drag components from the left sidebar to start building your form.
-            </p>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="min-h-120 relative">
+              <SortableContext
+                items={rootIds}
+                strategy={verticalListSortingStrategy}
+              >
+                <HeadlessCanvas
+                  nodeRenderer={({ node, content }) => (
+                    <NodeWrapper node={node}>{content}</NodeWrapper>
+                  )}
+                />
+              </SortableContext>
+            </div>
+          )}
+        </div>
+      </WindowFrame>
     </div>
   );
 };
@@ -183,7 +235,14 @@ const BuilderToolbar = () => {
           disabled={!canUndo}
           onClick={() => undo()}
         >
-          <HugeiconsIcon icon={ArrowLeft02Icon} className="size-4" />
+          <IconPlaceholder
+            lucide="Undo"
+            hugeicons="ArrowLeft02Icon"
+            tabler="IconArrowLeft"
+            phosphor="ArrowLeft"
+            remixicon="RiArrowLeftLine"
+            size={16}
+          />
         </Button>
         <Button
           variant="ghost"
@@ -192,7 +251,14 @@ const BuilderToolbar = () => {
           disabled={!canRedo}
           onClick={() => redo()}
         >
-          <HugeiconsIcon icon={ArrowRight02Icon} className="size-4" />
+          <IconPlaceholder
+            lucide="Redo"
+            hugeicons="ArrowRight02Icon"
+            tabler="IconArrowRight"
+            phosphor="ArrowRight"
+            remixicon="RiArrowRightLine"
+            size={16}
+          />
         </Button>
       </div>
 
@@ -203,7 +269,14 @@ const BuilderToolbar = () => {
           className="h-7 w-7"
           onClick={() => setViewport("desktop")}
         >
-          <HugeiconsIcon icon={ComputerIcon} className="size-4" />
+          <IconPlaceholder
+            lucide="Monitor"
+            hugeicons="ComputerIcon"
+            tabler="IconDeviceDesktop"
+            phosphor="Monitor"
+            remixicon="RiComputerLine"
+            size={16}
+          />
         </Button>
         <Button
           variant={viewport === "tablet" ? "secondary" : "ghost"}
@@ -211,7 +284,14 @@ const BuilderToolbar = () => {
           className="h-7 w-7"
           onClick={() => setViewport("tablet")}
         >
-          <HugeiconsIcon icon={TabletIcon} className="size-4" />
+          <IconPlaceholder
+            lucide="Tablet"
+            hugeicons="TabletIcon"
+            tabler="IconDeviceTablet"
+            phosphor="Tablet"
+            remixicon="RiTabletLine"
+            size={16}
+          />
         </Button>
         <Button
           variant={viewport === "mobile" ? "secondary" : "ghost"}
@@ -219,7 +299,14 @@ const BuilderToolbar = () => {
           className="h-7 w-7"
           onClick={() => setViewport("mobile")}
         >
-          <HugeiconsIcon icon={SmartPhone01Icon} className="size-4" />
+          <IconPlaceholder
+            lucide="Smartphone"
+            hugeicons="SmartPhone01Icon"
+            tabler="IconDeviceMobile"
+            phosphor="DeviceMobile"
+            remixicon="RiSmartphoneLine"
+            size={16}
+          />
         </Button>
       </div>
 
@@ -239,5 +326,123 @@ const BuilderToolbar = () => {
         </Button>
       </div>
     </div>
+  );
+};
+
+/**
+ * Main Form Builder component that orchestrates the entire UI.
+ */
+export const FormBuilder = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const zoom = useBuilderStore((state) => state.zoom);
+  const setZoom = useBuilderStore((state) => state.setZoom);
+  const mode = useBuilderStore((s) => s.mode);
+
+  const onSubmit = async (data: Record<string, unknown>) => {
+    await new Promise((r) => setTimeout(r, 500));
+    toast("Form Submitted!", {
+      description: <SubmitToastContent data={data} />,
+      duration: 10000,
+    });
+  };
+
+  // Handle Ctrl+Wheel zoom
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY * -0.002;
+        const nextZoom = Math.round((zoom + delta) * 100) / 100;
+        // Clamp zoom between 0.25 and 2
+        const clampedZoom = Math.max(0.25, Math.min(2, nextZoom));
+        setZoom(clampedZoom);
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, [zoom, setZoom]);
+
+  return (
+    <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
+      <BuilderDndProvider>
+        <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
+          <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
+            {/* Top Header */}
+            <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg">
+                  <IconPlaceholder
+                    lucide="Play"
+                    hugeicons="PlayIcon"
+                    tabler="IconPlay"
+                    phosphor="Play"
+                    remixicon="RiPlayFill"
+                    size={20}
+                    className="fill-current"
+                  />
+                </div>
+                <div>
+                  <h1 className="text-sm font-bold leading-tight">
+                    BuzzForm Builder
+                  </h1>
+                  <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+                    v0.1 Premium
+                  </p>
+                </div>
+              </div>
+
+              <BuilderToolbar />
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs gap-2"
+                >
+                  <IconPlaceholder
+                    lucide="Save"
+                    hugeicons="FloppyDiskIcon"
+                    tabler="IconDeviceFloppy"
+                    phosphor="FloppyDisk"
+                    remixicon="RiSaveLine"
+                    size={14}
+                  />
+                  Save
+                </Button>
+                <Button size="sm" className="h-8 text-xs shadow-md">
+                  Publish
+                </Button>
+              </div>
+            </header>
+
+            {/* Main Layout */}
+            <SidebarProvider className="flex-1 overflow-hidden min-h-0 min-w-0">
+              <div className="flex h-full w-full">
+                {/* Left Sidebar: Components */}
+                <FieldSidebar />
+
+                {/* Central Canvas */}
+                <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 min-w-0">
+                  <div ref={containerRef} className="flex-1 min-h-0">
+                    <ScrollArea className="h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
+                      <CanvasFrame />
+                    </ScrollArea>
+                  </div>
+                </main>
+
+                {/* Right Sidebar: Properties */}
+                <aside className="w-80 border-l bg-background flex flex-col shrink-0 overflow-y-auto">
+                  <PropertyPanel />
+                </aside>
+              </div>
+            </SidebarProvider>
+          </div>
+        </BuilderFormProvider>
+      </BuilderDndProvider>
+    </DefaultBuilderProvider>
   );
 };
