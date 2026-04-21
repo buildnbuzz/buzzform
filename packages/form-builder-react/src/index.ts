@@ -10,3 +10,4 @@ export * from "./components/BuilderDndProvider";
 export * from "./components/SortableNode";
 export * from "./components/DraggableSidebarItem";
 export { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";
+export * from "./hooks";
