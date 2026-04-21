@@ -12,6 +12,7 @@ import { DEFAULT_FIELD_REGISTRY } from "@buildnbuzz/form-builder-core";
 import { FieldSidebar } from "./field-sidebar";
 import { NodeWrapper } from "./node-wrapper";
 import { PropertyPanel } from "./property-panel";
+import { DragOverlayItem } from "./drag-overlay";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useDroppable } from "@dnd-kit/core";
@@ -251,7 +252,11 @@ export const FormBuilder = () => {
 
   return (
     <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
-      <BuilderDndProvider>
+      <BuilderDndProvider
+        renderOverlay={({ activeId, activeData }) => (
+          <DragOverlayItem activeId={activeId} activeData={activeData} />
+        )}
+      >
         <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
           <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
             {/* Top Header */}
