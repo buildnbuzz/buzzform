@@ -18,7 +18,8 @@ import { useBuilderContext } from "../context/BuilderContext";
 import { 
   getDropLocation, 
   canDrop, 
-  isDescendant
+  isDescendant,
+  getChildList
 } from "@buildnbuzz/form-builder-core";
 import { isContainerType } from "@buildnbuzz/form-core";
 import { isInsideContainerPadding } from "../utils";
@@ -151,7 +152,7 @@ export const BuilderDndProvider = ({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active } = event;
-    const { nodes, dropIndicator, createNode, moveNode, setDropIndicator } = store.getState();
+    const { nodes, rootIds, dropIndicator, createNode, moveNode, setDropIndicator } = store.getState();
 
     const cleanup = () => {
       setActiveId(null);
@@ -175,10 +176,31 @@ export const BuilderDndProvider = ({
         dropIndicator.parentSlot
       );
     } else {
-      // Basic no-op guard: if the node is already there, do nothing.
-      // A more robust check would involve comparing indices from getChildList.
       const node = nodes[activeId];
       if (node) {
+        const sameParent =
+          node.parentId === dropIndicator.parentId &&
+          node.parentSlot === dropIndicator.parentSlot;
+
+        if (sameParent) {
+          const siblings = getChildList(
+            nodes,
+            rootIds,
+            node.parentId,
+            node.parentSlot
+          );
+          const oldIndex = siblings.indexOf(activeId);
+          const adjustedIndex =
+            dropIndicator.index > oldIndex
+              ? dropIndicator.index - 1
+              : dropIndicator.index;
+
+          if (adjustedIndex === oldIndex) {
+            cleanup();
+            return;
+          }
+        }
+
         moveNode(
           activeId,
           dropIndicator.parentId,
