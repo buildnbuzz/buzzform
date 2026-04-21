@@ -63,6 +63,7 @@ export {
 export { getDropLocation, canDrop, isDescendant, toSafeFileName } from "./utils/dnd";
 export * from "./utils/objects";
 export * from "./utils/expressions";
+export { syncRuntimeForm, computeSchemaSignature } from "./sync";
 export * from "./registry";
 export * from "./field-properties/base";
 export * from "./field-properties/text";
