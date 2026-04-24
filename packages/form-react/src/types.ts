@@ -7,7 +7,6 @@ import type { FieldValidators } from "@tanstack/form-core";
 import type { ReactNode } from "react";
 import type {
   DataField,
-  Field as CoreField,
   FormSchema,
   FormRegistries,
   OutputConfig,

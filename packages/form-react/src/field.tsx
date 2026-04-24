@@ -109,9 +109,10 @@ export function Field<TFormData extends UnknownData = UnknownData>({
     return mergeRegistries(globalRegistries, normalized) ?? {};
   }, [globalRegistries, registries, customValidators, optionResolvers]);
   const pointer = useMemo(() => {
-    if (field.name.startsWith("/")) return field.name;
-    if (field.name.includes(".")) return fromDotNotation(field.name);
-    return `/${escapePointer(field.name)}`;
+    const name = field.name ?? "";
+    if (name.startsWith("/")) return name;
+    if (name.includes(".")) return fromDotNotation(name);
+    return `/${escapePointer(name)}`;
   }, [field.name]);
   const basePointer = useMemo(() => getParentPointer(pointer), [pointer]);
   const resolvedField = useMemo(
@@ -236,19 +237,19 @@ export function Field<TFormData extends UnknownData = UnknownData>({
       resolveBooleanExpr(resolvedField.required, ctx, mergedRegistries.fns);
 
     if (!isConditionMet) {
-      return <ConditionalFieldRemover form={form} name={field.name} />;
+      return <ConditionalFieldRemover form={form} name={field.name ?? ""} />;
     }
 
     if (isHidden) {
       return (
-        <form.Field name={field.name as never} validators={mergedValidators}>
+        <form.Field name={(field.name ?? "") as never} validators={mergedValidators}>
           {() => null}
         </form.Field>
       );
     }
 
     return (
-      <form.Field name={field.name as never} validators={mergedValidators}>
+      <form.Field name={(field.name ?? "") as never} validators={mergedValidators}>
         {(tanstackField: AnyFieldApi) => (
           <FieldContext.Provider
             value={{
