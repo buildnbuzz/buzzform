@@ -190,24 +190,22 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
 
 type FormContentProps = Omit<React.ComponentProps<"form">, "onSubmit"> & {
   autoRender?: boolean;
+  as?: React.ElementType;
 };
 
 function FormContent({
   className,
   autoRender,
+  as,
   children,
   ...props
 }: FormContentProps) {
-  const {
-    form,
-    formId,
-    derivedValidationMode,
-    registries,
-  } = useFormContext();
+  const { form, formId, derivedValidationMode, registries } = useFormContext();
 
   return (
     <HeadlessForm
       id={formId}
+      as={as}
       form={form}
       registries={registries}
       derivedValidationMode={derivedValidationMode}
@@ -233,12 +231,7 @@ type FormFieldsProps = {
 };
 
 function FormFields({ className }: FormFieldsProps) {
-  const {
-    form,
-    schema,
-    derivedValidationMode,
-    registries,
-  } = useFormContext();
+  const { form, schema, derivedValidationMode, registries } = useFormContext();
   const fields = (schema?.fields ?? []) as readonly CoreField[];
 
   return (
