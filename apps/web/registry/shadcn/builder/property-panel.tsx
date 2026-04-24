@@ -1,32 +1,24 @@
 "use client";
 
-import { BuilderProperties } from "@buildnbuzz/form-builder-react";
+import { BuilderProperties, useSyncProperty } from "@buildnbuzz/form-builder-react";
 import { Form, FormContent, useFormContext } from "@/registry/shadcn/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  unflattenFormValues,
-  flattenFieldToFormValues,
-} from "@buildnbuzz/form-builder-core";
+import { flattenFieldToFormValues } from "@buildnbuzz/form-builder-core";
 import type { Field, FormSchema } from "@buildnbuzz/form-core";
 
-import { useWatch } from "@buildnbuzz/form-react";
-
-function FormWatcher({
+/** Renders nothing — syncs form state ↔ builder store bidirectionally. */
+function SyncPropertyState({
   update,
+  data,
+  schema,
 }: {
   update: (data: Record<string, unknown>) => void;
+  data: Record<string, unknown>;
+  schema: Field[];
 }) {
   const { form } = useFormContext();
-
-  useWatch({
-    form,
-    debounceMs: 100,
-    onChange: (values: Record<string, unknown>) => {
-      update(unflattenFormValues(values));
-    },
-  });
-
+  useSyncProperty({ form, data, schema, update });
   return null;
 }
 
@@ -65,7 +57,11 @@ export const PropertyPanel = () => {
                     defaultValues={defaultValues}
                   >
                     <FormContent autoRender as="div">
-                      <FormWatcher update={update} />
+                      <SyncPropertyState
+                        update={update}
+                        data={data}
+                        schema={schema}
+                      />
                     </FormContent>
                   </Form>
                 ) : (
