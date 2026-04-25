@@ -161,6 +161,8 @@ export function WindowFrame({ children, className }: WindowFrameProps) {
   );
 }
 
+import { PreviewForm } from "./preview/preview-form";
+
 /**
  * Centered frame for the canvas to simulate different viewports.
  */
@@ -196,10 +198,7 @@ const CanvasFrame = () => {
           {rootIds.length === 0 ? (
             <EmptyCanvas />
           ) : isPreviewMode ? (
-            <div className="p-4 border rounded-md bg-muted/50 text-center text-sm text-muted-foreground">
-              PreviewForm is stubbed in Phase 3.5. Will be implemented in Phase
-              6.
-            </div>
+            <PreviewForm />
           ) : (
             <div className="min-h-120 relative">
               <SortableContext
