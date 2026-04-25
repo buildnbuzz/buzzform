@@ -2,7 +2,12 @@
 
 import * as React from "react";
 import { useMemo } from "react";
-import { Form, useForm, extractDefaults } from "@buildnbuzz/form-react";
+import {
+  Form,
+  useForm,
+  extractDefaults,
+  type FieldFormApi,
+} from "@buildnbuzz/form-react";
 import type { FormSchema } from "@buildnbuzz/form-react";
 import {
   nodesToFields,
@@ -35,6 +40,8 @@ interface BuilderFormContextValue {
   mode: FormBuilderMode;
   /** Derived field schema from the current builder node tree. */
   fields: ReturnType<typeof nodesToFields>;
+  /** The active form instance. */
+  form: FieldFormApi;
 }
 
 const BuilderFormContext = React.createContext<BuilderFormContextValue | null>(
@@ -85,13 +92,13 @@ function BuilderFormInner({
   });
 
   const builderFormValue = useMemo<BuilderFormContextValue>(
-    () => ({ mode, fields }),
-    [mode, fields],
+    () => ({ mode, fields, form }),
+    [mode, fields, form],
   );
 
   return (
     <BuilderFormContext.Provider value={builderFormValue}>
-      <Form form={form} fields={fields}>
+      <Form form={form} fields={fields} as="div">
         <BuilderFormStateSync
           form={form}
           fields={fields}
