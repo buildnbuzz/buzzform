@@ -119,3 +119,5 @@ export { generateComponentCode } from "./code-generator";
 
 export { createBuilderStore, setupBuilderAutoSave } from "./store";
 export type { Store, BuilderStoreOptions } from "./store";
+
+export * from "./constants";

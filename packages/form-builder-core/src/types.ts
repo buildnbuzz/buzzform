@@ -1,8 +1,4 @@
-import type {
-  DataField,
-  Field,
-  FieldType,
-} from "@buildnbuzz/form-core";
+import type { DataField, Field, FieldType } from "@buildnbuzz/form-core";
 
 // ---------------------------------------------------------------------------
 // Node — the fundamental building block of the builder document
@@ -107,7 +103,16 @@ export function isDataField(field: Field): field is DataField {
 
 // ---------------------------------------------------------------------------
 
-/** 
+/**
+ * A field metadata object for selection in the Expression UI.
+ */
+export interface AvailableField {
+  id: string;
+  label: string;
+  type?: string;
+}
+
+/**
  * Operators supported by the builder's Expression UI.
  */
 export type ExpressionOperator =
@@ -170,7 +175,7 @@ export interface FieldRegistrySidebar<TIcon = IconMetadata> {
 
 /**
  * A single entry in the builder's field registry.
- * 
+ *
  * @template TIcon - The type used for icons (e.g. metadata or React component).
  * @template TRenderer - The type used for custom renderers.
  */
