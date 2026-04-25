@@ -8,22 +8,8 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import {
-  useBuilderStore,
-  useUndoRedo,
-} from "@buildnbuzz/form-builder-react";
+import { useBuilderStore, useUndoRedo } from "@buildnbuzz/form-builder-react";
 import { IconPlaceholder } from "@/components/icon-placeholder";
-import type { Viewport } from "@buildnbuzz/form-builder-core";
-
-interface ViewportOption {
-  id: Viewport;
-  lucide: string;
-  hugeicons: string;
-  tabler: string;
-  phosphor: string;
-  remixicon: string;
-  label: string;
-}
 
 /**
  * Floating canvas toolbar at bottom-center of the canvas area.
@@ -37,12 +23,6 @@ export function CanvasToolbar() {
   const mode = useBuilderStore((state) => state.mode);
   const setMode = useBuilderStore((state) => state.setMode);
   const { undo, redo, canUndo, canRedo } = useUndoRedo();
-
-  const viewports: ViewportOption[] = [
-    { id: "desktop", lucide: "Monitor", hugeicons: "ComputerIcon", tabler: "IconDeviceDesktop", phosphor: "Monitor", remixicon: "RiComputerLine", label: "Desktop (100%)" },
-    { id: "tablet", lucide: "Tablet", hugeicons: "Tablet01Icon", tabler: "IconDeviceTablet", phosphor: "Tablet", remixicon: "RiTabletLine", label: "Tablet (768px)" },
-    { id: "mobile", lucide: "Smartphone", hugeicons: "SmartPhone01Icon", tabler: "IconDeviceMobile", phosphor: "DeviceMobile", remixicon: "RiSmartphoneLine", label: "Mobile (375px)" },
-  ];
 
   const isPreview = mode === "preview";
 
@@ -63,11 +43,18 @@ export function CanvasToolbar() {
                     "h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50",
                     !canUndo && "opacity-50 cursor-not-allowed",
                   )}
-                />
+                >
+                  <IconPlaceholder
+                    lucide="Undo"
+                    hugeicons="UndoIcon"
+                    tabler="IconArrowBackUp"
+                    phosphor="ArrowCounterClockwise"
+                    remixicon="RiArrowGoBackLine"
+                    size={16}
+                  />
+                </Button>
               }
-            >
-              <IconPlaceholder lucide="Undo" hugeicons="UndoIcon" tabler="IconArrowBackUp" phosphor="ArrowCounterClockwise" remixicon="RiArrowGoBackLine" size={16} />
-            </TooltipTrigger>
+            />
             <TooltipContent side="top" sideOffset={8}>
               <p className="text-xs font-medium">Undo</p>
               <p className="text-[10px] text-muted-foreground">Ctrl+Z</p>
@@ -86,11 +73,18 @@ export function CanvasToolbar() {
                     "h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50",
                     !canRedo && "opacity-50 cursor-not-allowed",
                   )}
-                />
+                >
+                  <IconPlaceholder
+                    lucide="Redo"
+                    hugeicons="RedoIcon"
+                    tabler="IconArrowForwardUp"
+                    phosphor="ArrowClockwise"
+                    remixicon="RiArrowGoForwardLine"
+                    size={16}
+                  />
+                </Button>
               }
-            >
-              <IconPlaceholder lucide="Redo" hugeicons="RedoIcon" tabler="IconArrowForwardUp" phosphor="ArrowClockwise" remixicon="RiArrowGoForwardLine" size={16} />
-            </TooltipTrigger>
+            />
             <TooltipContent side="top" sideOffset={8}>
               <p className="text-xs font-medium">Redo</p>
               <p className="text-[10px] text-muted-foreground">Ctrl+Shift+Z</p>
@@ -113,15 +107,29 @@ export function CanvasToolbar() {
                   !isPreview &&
                     "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                 )}
-              />
+              >
+                {isPreview ? (
+                  <IconPlaceholder
+                    lucide="Pencil"
+                    hugeicons="PencilEdit01Icon"
+                    tabler="IconPencil"
+                    phosphor="Pencil"
+                    remixicon="RiPencilLine"
+                    size={16}
+                  />
+                ) : (
+                  <IconPlaceholder
+                    lucide="Eye"
+                    hugeicons="ViewIcon"
+                    tabler="IconEye"
+                    phosphor="Eye"
+                    remixicon="RiEyeLine"
+                    size={16}
+                  />
+                )}
+              </Button>
             }
-          >
-            {isPreview ? (
-              <IconPlaceholder lucide="Pencil" hugeicons="PencilEdit01Icon" tabler="IconPencil" phosphor="Pencil" remixicon="RiPencilLine" size={16} />
-            ) : (
-              <IconPlaceholder lucide="Eye" hugeicons="ViewIcon" tabler="IconEye" phosphor="Eye" remixicon="RiEyeLine" size={16} />
-            )}
-          </TooltipTrigger>
+          />
           <TooltipContent side="top" sideOffset={8}>
             <p className="text-xs font-medium">
               {isPreview ? "Back to Edit Mode" : "Preview Form"}
@@ -133,39 +141,95 @@ export function CanvasToolbar() {
 
         {/* Viewport Toggles */}
         <div className="flex items-center gap-0.5">
-          {viewports.map((item) => {
-            const isActive = viewport === item.id;
-            return (
-              <Tooltip key={item.id}>
-                <TooltipTrigger
-                  render={
-                    <Button
-                      variant={isActive ? "default" : "ghost"}
-                      size="icon"
-                      onClick={() => setViewport(item.id)}
-                      className={cn(
-                        "h-8 w-8 rounded-full",
-                        !isActive &&
-                          "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                      )}
-                    />
-                  }
+          {/* Desktop */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant={viewport === "desktop" ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setViewport("desktop")}
+                  className={cn(
+                    "h-8 w-8 rounded-full",
+                    viewport !== "desktop" &&
+                      "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  )}
                 >
                   <IconPlaceholder
-                    lucide={item.lucide}
-                    hugeicons={item.hugeicons}
-                    tabler={item.tabler}
-                    phosphor={item.phosphor}
-                    remixicon={item.remixicon}
+                    lucide="Monitor"
+                    hugeicons="ComputerIcon"
+                    tabler="IconDeviceDesktop"
+                    phosphor="Monitor"
+                    remixicon="RiComputerLine"
                     size={16}
                   />
-                </TooltipTrigger>
-                <TooltipContent side="top" sideOffset={8}>
-                  <p className="text-xs font-medium">{item.label}</p>
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
+                </Button>
+              }
+            />
+            <TooltipContent side="top" sideOffset={8}>
+              <p className="text-xs font-medium">Desktop (100%)</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Tablet */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant={viewport === "tablet" ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setViewport("tablet")}
+                  className={cn(
+                    "h-8 w-8 rounded-full",
+                    viewport !== "tablet" &&
+                      "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  )}
+                >
+                  <IconPlaceholder
+                    lucide="Tablet"
+                    hugeicons="Tablet01Icon"
+                    tabler="IconDeviceTablet"
+                    phosphor="DeviceTabletIcon"
+                    remixicon="RiTabletLine"
+                    size={16}
+                  />
+                </Button>
+              }
+            />
+            <TooltipContent side="top" sideOffset={8}>
+              <p className="text-xs font-medium">Tablet (768px)</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Mobile */}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant={viewport === "mobile" ? "default" : "ghost"}
+                  size="icon"
+                  onClick={() => setViewport("mobile")}
+                  className={cn(
+                    "h-8 w-8 rounded-full",
+                    viewport !== "mobile" &&
+                      "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                  )}
+                >
+                  <IconPlaceholder
+                    lucide="Smartphone"
+                    hugeicons="SmartPhone01Icon"
+                    tabler="IconDeviceMobile"
+                    phosphor="DeviceMobile"
+                    remixicon="RiSmartphoneLine"
+                    size={16}
+                  />
+                </Button>
+              }
+            />
+            <TooltipContent side="top" sideOffset={8}>
+              <p className="text-xs font-medium">Mobile (375px)</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="mx-1.5 h-6 w-px bg-border/50" />
@@ -180,11 +244,18 @@ export function CanvasToolbar() {
                   size="icon"
                   className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   onClick={() => setZoom(zoom - 0.1)}
-                />
+                >
+                  <IconPlaceholder
+                    lucide="Minus"
+                    hugeicons="MinusSignIcon"
+                    tabler="IconMinus"
+                    phosphor="Minus"
+                    remixicon="RiSubtractLine"
+                    size={16}
+                  />
+                </Button>
               }
-            >
-              <IconPlaceholder lucide="Minus" hugeicons="MinusSignIcon" tabler="IconMinus" phosphor="Minus" remixicon="RiSubtractLine" size={16} />
-            </TooltipTrigger>
+            />
             <TooltipContent side="top" sideOffset={8}>
               Zoom Out
             </TooltipContent>
@@ -202,11 +273,18 @@ export function CanvasToolbar() {
                   size="icon"
                   className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   onClick={() => setZoom(zoom + 0.1)}
-                />
+                >
+                  <IconPlaceholder
+                    lucide="Plus"
+                    hugeicons="Add01Icon"
+                    tabler="IconPlus"
+                    phosphor="Plus"
+                    remixicon="RiAddLine"
+                    size={16}
+                  />
+                </Button>
               }
-            >
-              <IconPlaceholder lucide="Plus" hugeicons="Add01Icon" tabler="IconPlus" phosphor="Plus" remixicon="RiAddLine" size={16} />
-            </TooltipTrigger>
+            />
             <TooltipContent side="top" sideOffset={8}>
               Zoom In
             </TooltipContent>
@@ -227,11 +305,18 @@ export function CanvasToolbar() {
                       "opacity-50 cursor-not-allowed",
                   )}
                   onClick={() => setZoom(0.9)}
-                />
+                >
+                  <IconPlaceholder
+                    lucide="RotateCcw"
+                    hugeicons="ArrowTurnBackwardIcon"
+                    tabler="IconRefresh"
+                    phosphor="ArrowCounterClockwise"
+                    remixicon="RiRefreshLine"
+                    size={16}
+                  />
+                </Button>
               }
-            >
-              <IconPlaceholder lucide="RotateCcw" hugeicons="ArrowTurnBackwardIcon" tabler="IconRefresh" phosphor="ArrowCounterClockwise" remixicon="RiRefreshLine" size={16} />
-            </TooltipTrigger>
+            />
             <TooltipContent side="top" sideOffset={8}>
               Reset Zoom
             </TooltipContent>
