@@ -7,8 +7,14 @@ import {
   useBuilderStore,
   DefaultBuilderProvider,
   BuilderFormProvider,
+  getBrowserLocalStorageProvider,
 } from "@buildnbuzz/form-builder-react";
-import { DEFAULT_FIELD_REGISTRY } from "@buildnbuzz/form-builder-core";
+import {
+  DEFAULT_FIELD_REGISTRY,
+  type BuilderStorageProvider,
+} from "@buildnbuzz/form-builder-core";
+import { SiteHeader } from "./header";
+
 import { FieldSidebar } from "./field-sidebar";
 import { NodeWrapper } from "./node-wrapper";
 import { PropertyPanel } from "./property-panel";
@@ -217,9 +223,21 @@ const CanvasFrame = () => {
  * Main Form Builder component that orchestrates the entire UI.
  */
 export const FormBuilder = () => {
+  const storageProvider = React.useMemo(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      return getBrowserLocalStorageProvider();
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
-    <DefaultBuilderProvider registry={DEFAULT_FIELD_REGISTRY}>
-      <FormBuilderContent />
+    <DefaultBuilderProvider
+      registry={DEFAULT_FIELD_REGISTRY}
+      storageProvider={storageProvider}
+    >
+      <FormBuilderContent storageProvider={storageProvider} />
     </DefaultBuilderProvider>
   );
 };
@@ -227,7 +245,11 @@ export const FormBuilder = () => {
 /**
  * Inner component that uses builder hooks.
  */
-const FormBuilderContent = () => {
+const FormBuilderContent = ({
+  storageProvider,
+}: {
+  storageProvider: BuilderStorageProvider | null;
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useBuilderStore((state) => state.zoom);
   const setZoom = useBuilderStore((state) => state.setZoom);
@@ -270,46 +292,7 @@ const FormBuilderContent = () => {
       <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
         <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
           {/* Top Header */}
-          <header className="h-14 border-b bg-background flex items-center justify-between px-4 shrink-0 z-10">
-            <div className="flex items-center gap-3">
-              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg">
-                <IconPlaceholder
-                  lucide="Play"
-                  hugeicons="PlayIcon"
-                  tabler="IconPlayerPlay"
-                  phosphor="Play"
-                  remixicon="RiPlayFill"
-                  size={20}
-                  className="fill-current"
-                />
-              </div>
-              <div>
-                <h1 className="text-sm font-bold leading-tight">
-                  BuzzForm Builder
-                </h1>
-                <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
-                  v0.1 Premium
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8 text-xs gap-2">
-                <IconPlaceholder
-                  lucide="Save"
-                  hugeicons="FloppyDiskIcon"
-                  tabler="IconDeviceFloppy"
-                  phosphor="FloppyDisk"
-                  remixicon="RiSaveLine"
-                  size={14}
-                />
-                Save
-              </Button>
-              <Button size="sm" className="h-8 text-xs shadow-md">
-                Publish
-              </Button>
-            </div>
-          </header>
+          <SiteHeader storageProvider={storageProvider} />
 
           {/* Main Layout */}
           <SidebarProvider className="flex-1 overflow-hidden min-h-0 min-w-0">
