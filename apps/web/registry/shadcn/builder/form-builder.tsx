@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { CanvasToolbar } from "./canvas/canvas-toolbar";
+import { MobileOverlay } from "./mobile-overlay";
 import { toast } from "sonner";
 import { IconPlaceholder } from "@/components/icon-placeholder";
 import {
@@ -290,6 +291,7 @@ const FormBuilderContent = ({
       )}
     >
       <BuilderFormProvider mode={mode} onSubmit={onSubmit}>
+        <MobileOverlay />
         <div className="flex flex-col h-screen w-full bg-muted/30 overflow-hidden text-foreground">
           {/* Top Header */}
           <SiteHeader storageProvider={storageProvider} />
