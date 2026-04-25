@@ -22,6 +22,9 @@ export interface BuilderContextValue {
 
 const BuilderContext = createContext<BuilderContextValue | null>(null);
 
+import type { BuilderStorageProvider } from "@buildnbuzz/form-builder-core";
+import { useAutoSave } from "../hooks/use-auto-save";
+
 // ---------------------------------------------------------------------------
 // Providers
 // ---------------------------------------------------------------------------
@@ -33,6 +36,8 @@ export interface BuilderProviderProps {
   registry: BuilderFieldRegistry;
   /** Optional function to render icons from metadata. */
   renderIcon?: (metadata: IconMetadata) => React.ReactNode;
+  /** Optional persistence provider for autosaving. */
+  storageProvider?: BuilderStorageProvider | null;
   children: ReactNode;
 }
 
@@ -45,11 +50,24 @@ export const BuilderProvider = ({
   store, 
   registry, 
   renderIcon,
+  storageProvider = null,
   children 
 }: BuilderProviderProps) => {
   const value = useMemo(() => ({ store, registry, renderIcon }), [store, registry, renderIcon]);
-  return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>;
+  
+  return (
+    <BuilderContext.Provider value={value}>
+      <AutoSaveWiring provider={storageProvider} />
+      {children}
+    </BuilderContext.Provider>
+  );
 };
+
+// Component to run hook inside context
+function AutoSaveWiring({ provider }: { provider: BuilderStorageProvider | null }) {
+  useAutoSave(provider);
+  return null;
+}
 
 export interface DefaultBuilderProviderProps {
   /** The field registry. */
@@ -58,6 +76,8 @@ export interface DefaultBuilderProviderProps {
   renderIcon?: (metadata: IconMetadata) => React.ReactNode;
   /** Optional custom name for persistence. */
   persistenceName?: string;
+  /** Optional persistence provider for autosaving. */
+  storageProvider?: BuilderStorageProvider | null;
   children: ReactNode;
 }
 
@@ -70,6 +90,7 @@ export const DefaultBuilderProvider = ({
   registry, 
   renderIcon,
   persistenceName, 
+  storageProvider = null,
   children 
 }: DefaultBuilderProviderProps) => {
   const store = useMemo(() => createBuilderStore({ 
@@ -78,7 +99,12 @@ export const DefaultBuilderProvider = ({
   }), [registry, persistenceName]);
 
   return (
-    <BuilderProvider store={store} registry={registry} renderIcon={renderIcon}>
+    <BuilderProvider 
+      store={store} 
+      registry={registry} 
+      renderIcon={renderIcon}
+      storageProvider={storageProvider}
+    >
       {children}
     </BuilderProvider>
   );
