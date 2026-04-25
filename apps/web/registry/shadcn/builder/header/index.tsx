@@ -9,6 +9,7 @@ import { useBuilderStore } from "@buildnbuzz/form-builder-react";
 import { SaveIndicator } from "./save-indicator";
 import { FormManagerDialog } from "./form-manager-dialog";
 import { CloudSaveDialog } from "./cloud-save-dialog";
+import { ExportSheet } from "../export-sheet";
 import { Button } from "@/components/ui/button";
 import type { BuilderStorageProvider } from "@buildnbuzz/form-builder-core";
 
@@ -45,6 +46,7 @@ export function SiteHeader({
             <ThemeToggle />
             <CloudSaveDialog />
             <FormManagerDialog storageProvider={storageProvider} />
+            <ExportSheet />
             <Button size="sm" className="h-8 text-xs shadow-md">
               Publish
             </Button>
