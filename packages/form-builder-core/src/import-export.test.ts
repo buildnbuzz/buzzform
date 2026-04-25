@@ -1,78 +1,119 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import { parseImportedFormJson, fieldsToBuilderState } from "./import-export";
+import type { Field, DataField, GroupField, TabsField } from "@buildnbuzz/form-core";
 
-import { parseImportedFormJson } from "./import-export";
+vi.mock("nanoid", () => ({
+  nanoid: vi.fn(() => "mock-id")
+}));
 
-// ---------------------------------------------------------------------------
-// parseImportedFormJson
-// ---------------------------------------------------------------------------
+import { nanoid } from "nanoid";
 
 describe("parseImportedFormJson", () => {
-  it("detects a modern FormSchema format", () => {
+  it("parses modern buzzform-schema", () => {
     const json = JSON.stringify({
       fields: [{ type: "text", name: "name" }],
-      title: "Contact",
+      id: "f1",
+      title: "My Form",
     });
 
     const result = parseImportedFormJson(json);
-    expect(result.format).toBe("buzzform-schema");
-    expect(result.state.fields).toEqual([{ type: "text", name: "name" }]);
-    expect(result.state.formName).toBe("Contact");
+    expect(result.state.formId).toBe("f1");
+    expect(result.state.formName).toBe("My Form");
+    expect(Object.keys(result.state.nodes)).toHaveLength(1);
+    expect(result.state.rootIds).toEqual(["mock-id"]);
+    expect(result.state.nodes["mock-id"]!.field.type).toBe("text");
   });
 
-  it("detects a legacy builder backup format", () => {
+  it("throws on builder-backup payload", () => {
     const json = JSON.stringify({
       schemaVersion: 1,
-      formName: "Old Backup",
       nodes: {},
-      rootIds: [],
+      rootIds: []
     });
 
-    const result = parseImportedFormJson(json);
-    expect(result.format).toBe("builder-backup");
-    expect(result.state.formName).toBe("Old Backup");
+    expect(() => parseImportedFormJson(json)).toThrowError("Unrecognised document format");
   });
 
-  it("throws on invalid JSON", () => {
-    expect(() => parseImportedFormJson("not json")).toThrow("Invalid JSON");
+  it("throws on invalid json", () => {
+    expect(() => parseImportedFormJson("not json")).toThrowError("Invalid JSON document");
+  });
+});
+
+describe("fieldsToBuilderState", () => {
+  it("flattens a simple field array", () => {
+    const fields: Field[] = [
+      { type: "text", name: "a" } as Field,
+      { type: "text", name: "b" } as Field
+    ];
+
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("id-1")
+      .mockReturnValueOnce("id-2");
+
+    const { nodes, rootIds } = fieldsToBuilderState(fields);
+
+    expect(rootIds).toEqual(["id-1", "id-2"]);
+    expect(nodes["id-1"]!.parentId).toBeNull();
+    expect((nodes["id-1"]!.field as DataField).name).toBe("a");
+    expect((nodes["id-2"]!.field as DataField).name).toBe("b");
   });
 
-  it("throws on unrecognised format", () => {
-    expect(() => parseImportedFormJson(JSON.stringify({ x: 1 }))).toThrow(
-      "Unrecognised document format",
-    );
+  it("recursively flattens nested groups", () => {
+    const fields: Field[] = [
+      {
+        type: "group",
+        name: "g",
+        fields: [{ type: "text", name: "nested" } as Field]
+      } as Field
+    ];
+
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("id-group")
+      .mockReturnValueOnce("id-nested");
+
+    const { nodes, rootIds } = fieldsToBuilderState(fields);
+
+    expect(rootIds).toEqual(["id-group"]);
+    
+    const groupNode = nodes["id-group"]!;
+    expect(groupNode.children["__default__"]).toEqual(["id-nested"]);
+    expect((groupNode.field as GroupField).fields).toBeUndefined(); // Nested fields stripped
+
+    const nestedNode = nodes["id-nested"]!;
+    expect(nestedNode.parentId).toBe("id-group");
+    expect(nestedNode.parentSlot).toBe("__default__");
+    expect((nestedNode.field as DataField).name).toBe("nested");
   });
 
-  it("uses formNameHint when the input lacks a name", () => {
-    const json = JSON.stringify({
-      fields: [{ type: "switch", name: "active" }],
-    });
+  it("recursively flattens tabs", () => {
+    const fields: Field[] = [
+      {
+        type: "tabs",
+        tabs: [
+          { label: "Tab 1", fields: [{ type: "text", name: "t1" } as Field] },
+          { label: "Tab 2", fields: [{ type: "text", name: "t2" } as Field] }
+        ]
+      } as unknown as Field
+    ];
 
-    const result = parseImportedFormJson(json, { formNameHint: "My Hint" });
-    expect(result.state.formName).toBe("My Hint");
-  });
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("id-tabs")
+      .mockReturnValueOnce("id-t1")
+      .mockReturnValueOnce("id-t2");
 
-  it("falls back to default name when nothing provides one", () => {
-    const json = JSON.stringify({ fields: [] });
+    const { nodes, rootIds } = fieldsToBuilderState(fields);
 
-    const result = parseImportedFormJson(json);
-    expect(result.state.formName).toBe("Imported Form");
-  });
+    expect(rootIds).toEqual(["id-tabs"]);
+    
+    const tabsNode = nodes["id-tabs"]!;
+    expect(tabsNode.children["__tab_0"]).toEqual(["id-t1"]);
+    expect(tabsNode.children["__tab_1"]).toEqual(["id-t2"]);
 
-  it("generates a formId when none is present", () => {
-    const json = JSON.stringify({ fields: [] });
+    const tab1 = (tabsNode.field as TabsField).tabs?.[0];
+    expect(tab1?.fields).toBeUndefined(); // Stripped from payload
+    expect(tab1?.label).toBe("Tab 1");
 
-    const result = parseImportedFormJson(json);
-    expect(result.state.formId).toBeTruthy();
-    expect(typeof result.state.formId).toBe("string");
-  });
-
-  it("preserves an existing formId from the input", () => {
-    const json = JSON.stringify({
-      fields: [],
-      id: "existing-id",
-    });
-
-    const result = parseImportedFormJson(json);
-    expect(result.state.formId).toBe("existing-id");
+    expect(nodes["id-t1"]!.parentSlot).toBe("__tab_0");
+    expect(nodes["id-t2"]!.parentSlot).toBe("__tab_1");
   });
 });

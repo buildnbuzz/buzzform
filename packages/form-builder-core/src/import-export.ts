@@ -1,15 +1,12 @@
 import { nanoid } from "nanoid";
-
-import { migrateBuilderDocument } from "./persistence/migrations";
-
-export type ImportPayloadFormat = "builder-backup" | "buzzform-schema";
+import type { Field } from "@buildnbuzz/form-core";
+import { DEFAULT_SLOT } from "./node-children";
+import type { Node } from "./types";
 
 export interface ParsedImportPayload {
-  /** Which format was detected in the input. */
-  format: ImportPayloadFormat;
-  /** Normalised `FormSchema`-compatible data ready for import. */
   state: {
-    fields: unknown[];
+    nodes: Record<string, Node>;
+    rootIds: string[];
     formId: string;
     formName: string;
     outputConfig?: unknown;
@@ -25,11 +22,10 @@ export interface ParseImportedFormJsonOptions {
  * Detects the format of a pasted JSON string and returns a normalised
  * payload ready for import.
  *
- * Supports:
- * - **builder-backup** — legacy flat Node tree (`nodes` + `rootIds`)
- * - **buzzform-schema** — modern `FormSchema` shape (`fields` array)
+ * Accepts a `FormSchema` JSON string (`{ fields: [...] }`).
+ * Note: Support for legacy `builder-backup` format has been dropped.
  *
- * @throws {Error} When the JSON is malformed or the format is unrecognised.
+ * @throws {Error} When the JSON is malformed or missing fields.
  */
 export function parseImportedFormJson(
   json: string,
@@ -43,33 +39,39 @@ export function parseImportedFormJson(
     throw new Error("Invalid JSON document.");
   }
 
-  const migrated = migrateBuilderDocument(parsed);
+  if (!isBuzzFormSchema(parsed)) {
+    throw new Error(
+      "Unrecognised document format. Expected a FormSchema with a 'fields' array.",
+    );
+  }
 
-  const format = isBuilderBackup(parsed)
-    ? "builder-backup"
-    : "buzzform-schema";
+  const obj = parsed as Record<string, unknown>;
+  const fieldsArray = obj.fields as Field[];
+
+  const { nodes, rootIds } = fieldsToBuilderState(fieldsArray);
 
   const formName =
-    normalizeFormName(migrated.formName) ??
+    normalizeFormName(obj.title) ??
     normalizeFormName(options.formNameHint) ??
     "Imported Form";
 
   return {
-    format,
     state: {
-      ...migrated,
+      nodes,
+      rootIds,
       formName,
-      formId: migrated.formId || nanoid(),
+      formId: typeof obj.id === "string" ? obj.id : nanoid(),
+      outputConfig: obj.output,
     },
   };
 }
 
-function isBuilderBackup(value: unknown): boolean {
+function isBuzzFormSchema(value: unknown): boolean {
   return (
     typeof value === "object" &&
     value !== null &&
-    "schemaVersion" in value &&
-    "nodes" in value
+    "fields" in value &&
+    Array.isArray((value as Record<string, unknown>).fields)
   );
 }
 
@@ -77,4 +79,95 @@ function normalizeFormName(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+}
+
+/**
+ * Recursively converts a nested `Field[]` array into a flat adjacency list
+ * of nodes and a list of root node IDs, used internally by the builder store.
+ *
+ * Container fields (`group`, `array`, `row`, `collapsible`, `tabs`) are stripped
+ * of their nested fields during this process, moving their children into the
+ * `children` map on the respective Node object.
+ */
+export function fieldsToBuilderState(fields: readonly Field[]): {
+  nodes: Record<string, Node>;
+  rootIds: string[];
+} {
+  const nodes: Record<string, Node> = {};
+  const rootIds: string[] = [];
+
+  function processField(
+    field: Field,
+    parentId: string | null,
+    parentSlot: string | null,
+  ): string {
+    const id = nanoid();
+    const node: Node = {
+      id,
+      field: { ...field }, // Shallow copy to avoid mutating the original input
+      parentId,
+      parentSlot,
+      children: {},
+    };
+
+    const type = node.field.type;
+
+    // Handle nested container types (group, array, row, collapsible)
+    if (
+      type === "group" ||
+      type === "array" ||
+      type === "row" ||
+      type === "collapsible"
+    ) {
+      // Cast safely since we checked the type
+      const containerField = node.field as unknown as { fields?: readonly Field[] };
+      const childFields = containerField.fields;
+      
+      // Remove the nested fields array from the node's field payload
+      delete containerField.fields;
+
+      if (Array.isArray(childFields)) {
+        node.children[DEFAULT_SLOT] = childFields.map((child) =>
+          processField(child, id, DEFAULT_SLOT),
+        );
+      }
+    } 
+    // Handle tabs (which have slots per tab)
+    else if (type === "tabs") {
+      const tabsField = node.field as unknown as { tabs?: { fields?: readonly Field[] }[] };
+      const tabs = tabsField.tabs;
+
+      if (Array.isArray(tabs)) {
+        // Map over each tab to create slots
+        tabsField.tabs = tabs.map((tab, index) => {
+          const slot = `__tab_${index}`;
+          const tabFields = tab.fields;
+          
+          // Shallow copy tab to remove its nested fields
+          const strippedTab = { ...tab };
+          delete strippedTab.fields;
+
+          if (Array.isArray(tabFields)) {
+            node.children[slot] = tabFields.map((child) =>
+              processField(child, id, slot),
+            );
+          }
+
+          return strippedTab;
+        });
+      }
+    }
+
+    nodes[id] = node;
+    return id;
+  }
+
+  for (const field of fields) {
+    if (!field || typeof field !== "object" || !field.type) {
+      continue; // Skip malformed or invalid entries gracefully
+    }
+    rootIds.push(processField(field, null, null));
+  }
+
+  return { nodes, rootIds };
 }

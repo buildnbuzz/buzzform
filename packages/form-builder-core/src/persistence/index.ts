@@ -4,4 +4,4 @@ export { SerializableFieldSchema, LegacyBackupSchema, FormSchemaShapeSchema } fr
 export type { SerializableField, LegacyBackupDocument, FormSchemaShape } from "./schemas";
 export { FormSchemaValidationError, parseFormSchemaJson, serializeFormSchema, normalizeFormSchema, validateFormSchemaShape } from "./document";
 export { parseImportedFormJson } from "../import-export";
-export type { ImportPayloadFormat, ParsedImportPayload, ParseImportedFormJsonOptions } from "../import-export";
+export type { ParsedImportPayload, ParseImportedFormJsonOptions } from "../import-export";
