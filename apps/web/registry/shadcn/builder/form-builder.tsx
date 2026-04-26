@@ -312,7 +312,7 @@ const FormBuilderContent = ({
               </main>
 
               {/* Right Sidebar: Properties */}
-              <aside className="w-80 border-l bg-background flex flex-col shrink-0 overflow-y-auto">
+              <aside className="w-80 border-l bg-background flex flex-col shrink-0">
                 <PropertyPanel />
               </aside>
             </div>
