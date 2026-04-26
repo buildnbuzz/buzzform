@@ -10,9 +10,9 @@ import {
   getBrowserLocalStorageProvider,
 } from "@buildnbuzz/form-builder-react";
 import {
-  DEFAULT_FIELD_REGISTRY,
   type BuilderStorageProvider,
 } from "@buildnbuzz/form-builder-core";
+import { SHADCN_BUILDER_REGISTRY } from "./registry";
 import { SiteHeader } from "./header";
 
 import { FieldSidebar } from "./field-sidebar";
@@ -234,11 +234,12 @@ export const FormBuilder = () => {
 
   return (
     <DefaultBuilderProvider
-      registry={DEFAULT_FIELD_REGISTRY}
+      registry={SHADCN_BUILDER_REGISTRY}
       storageProvider={storageProvider}
     >
       <FormBuilderContent storageProvider={storageProvider} />
     </DefaultBuilderProvider>
+
   );
 };
 

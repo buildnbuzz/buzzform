@@ -7,6 +7,7 @@ import {
 } from "@buildnbuzz/form-builder-react";
 import { Form, FormContent, useFormContext } from "@/registry/shadcn/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { FieldIcon } from "./field-icon";
 import { IconPlaceholder } from "@/components/icon-placeholder";
 import { getRegistryEntry } from "@buildnbuzz/form-builder-react";
 import { flattenFieldToFormValues } from "@buildnbuzz/form-builder-core";
@@ -43,7 +44,6 @@ export const PropertyPanel = () => {
           const label =
             entry?.sidebar.label ??
             (id === "form" ? "Form Settings" : "Properties");
-          const icon = entry?.sidebar.icon;
 
           const defaultValues = flattenFieldToFormValues(
             data as unknown as Field,
@@ -56,9 +56,9 @@ export const PropertyPanel = () => {
                 {node && entry ? (
                   <div className="flex items-center gap-3 w-full">
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl border bg-secondary/30 shadow-sm">
-                      {icon && (
-                        <IconPlaceholder
-                          {...icon}
+                      {node && (
+                        <FieldIcon
+                          type={node.field.type}
                           size={20}
                           className="text-foreground"
                         />

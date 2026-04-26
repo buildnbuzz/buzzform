@@ -17,7 +17,7 @@ import {
   SidebarMenuButton,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { IconPlaceholder } from "@/components/icon-placeholder";
+import { FieldIcon } from "./field-icon";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -55,11 +55,6 @@ export const FieldSidebar = () => {
 
   return (
     <Sidebar className="h-full border-r" collapsible="none">
-      <div className="p-4 border-b">
-        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/80">
-          Field Palette
-        </h2>
-      </div>
       <SidebarContent>
         <BuilderSidebar
           render={({ groups }) => (
@@ -96,7 +91,7 @@ export const FieldSidebar = () => {
                                   )}
                                   // disabled={disabled} // DraggableSidebarItem handles disabled state
                                 >
-                                  <IconPlaceholder {...item.icon} size={16} />
+                                  <FieldIcon type={item.type} size={16} />
                                   <span>{item.label}</span>
                                   {disabled && (
                                     <Badge

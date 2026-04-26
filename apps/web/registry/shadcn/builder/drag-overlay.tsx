@@ -4,7 +4,7 @@ import {
   useBuilderStore,
   useBuilderContext,
 } from "@buildnbuzz/form-builder-react";
-import { IconPlaceholder } from "@/components/icon-placeholder";
+import { FieldIcon } from "./field-icon";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,7 +28,6 @@ export function DragOverlayItem({
     | undefined;
   const entry = type ? registry[type] : null;
 
-  const icon = entry?.sidebar?.icon;
   const label =
     entry?.sidebar?.label ?? (typeof type === "string" ? type : "Field");
 
@@ -58,10 +57,10 @@ export function DragOverlayItem({
               : "bg-muted text-foreground",
           )}
         >
-          {icon ? (
-            <IconPlaceholder {...icon} size={20} />
+          {type ? (
+            <FieldIcon type={type} size={20} />
           ) : (
-            <IconPlaceholder lucide="Type" hugeicons="PencilEdit01Icon" size={20} />
+            <FieldIcon type="text" size={20} />
           )}
         </div>
 
@@ -71,12 +70,8 @@ export function DragOverlayItem({
             {isFromSidebar ? `New ${label}` : (fieldName ?? label)}
           </div>
           <div className="text-xs text-muted-foreground flex items-center gap-1.5 whitespace-nowrap">
-            <IconPlaceholder
-              lucide={isFromSidebar ? "Plus" : "Move"}
-              hugeicons={isFromSidebar ? "Add01Icon" : "Move01Icon"}
-              tabler={isFromSidebar ? "IconPlus" : "IconArrowsMove"}
-              phosphor={isFromSidebar ? "Plus" : "ArrowsOutCardinal"}
-              remixicon={isFromSidebar ? "RiAddLine" : "RiDragMove2Line"}
+            <FieldIcon
+              type={isFromSidebar ? "plus" : "move"}
               size={12}
             />
             <div className="flex items-center gap-1">
