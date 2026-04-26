@@ -24,6 +24,7 @@ const BuilderContext = createContext<BuilderContextValue | null>(null);
 
 import type { BuilderStorageProvider } from "@buildnbuzz/form-builder-core";
 import { useAutoSave } from "../hooks/use-auto-save";
+import { useBuilderKeyboardShortcuts } from "../hooks/use-keyboard-shortcuts";
 
 // ---------------------------------------------------------------------------
 // Providers
@@ -58,6 +59,7 @@ export const BuilderProvider = ({
   return (
     <BuilderContext.Provider value={value}>
       <AutoSaveWiring provider={storageProvider} />
+      <KeyboardShortcutWiring />
       {children}
     </BuilderContext.Provider>
   );
@@ -66,6 +68,11 @@ export const BuilderProvider = ({
 // Component to run hook inside context
 function AutoSaveWiring({ provider }: { provider: BuilderStorageProvider | null }) {
   useAutoSave(provider);
+  return null;
+}
+
+function KeyboardShortcutWiring() {
+  useBuilderKeyboardShortcuts();
   return null;
 }
 
