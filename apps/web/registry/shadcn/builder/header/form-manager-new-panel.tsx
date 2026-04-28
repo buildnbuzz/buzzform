@@ -27,6 +27,7 @@ type PendingImport = {
   formName: string;
   nodeCount: number;
   state: ParsedImportPayload["state"];
+  warnings?: string[];
 };
 
 type FormManagerNewPanelProps = {
@@ -88,6 +89,31 @@ function FormManagerPendingImportState({
       </div>
 
       <div className="mt-auto flex w-full flex-col gap-4 rounded-xl border bg-muted/30 p-4">
+        {pendingImport.warnings && pendingImport.warnings.length > 0 && (
+          <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-500/20 dark:text-amber-400">
+            <div className="flex items-center gap-2">
+              <IconPlaceholder
+                hugeicons="Alert01Icon"
+                lucide="AlertTriangle"
+                tabler="IconAlertTriangle"
+                phosphor="Warning"
+                remixicon="RiAlertFill"
+                size={16}
+              />
+              <AlertTitle className="m-0 text-sm font-semibold">
+                Legacy Schema Migrated
+              </AlertTitle>
+            </div>
+            <AlertDescription className="mt-2 max-h-32 overflow-y-auto">
+              <ul className="ml-5 list-disc space-y-1 text-xs opacity-90">
+                {pendingImport.warnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex items-start gap-3">
           <div className="mt-0.5 text-amber-600 dark:text-amber-500">
             <IconPlaceholder
@@ -297,6 +323,7 @@ export function FormManagerNewPanel({ onDone }: FormManagerNewPanelProps) {
           formName: importedState.formName,
           nodeCount: Object.keys(importedState.nodes).length,
           state: importedState,
+          warnings: parsed.warnings,
         });
 
         if (closePasteModeOnSuccess) {
