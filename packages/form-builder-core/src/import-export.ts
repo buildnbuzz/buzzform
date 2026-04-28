@@ -2,6 +2,7 @@ import { nanoid } from "nanoid";
 import type { Field } from "@buildnbuzz/form-core";
 import { DEFAULT_SLOT } from "./node-children";
 import type { Node } from "./types";
+import { migrateLegacySchema } from "./migration";
 
 export interface ParsedImportPayload {
   state: {
@@ -11,6 +12,7 @@ export interface ParsedImportPayload {
     formName: string;
     outputConfig?: unknown;
   };
+  warnings?: string[];
 }
 
 export interface ParseImportedFormJsonOptions {
@@ -45,7 +47,8 @@ export function parseImportedFormJson(
     );
   }
 
-  const obj = parsed as Record<string, unknown>;
+  const { schema, warnings } = migrateLegacySchema(parsed);
+  const obj = schema as unknown as Record<string, unknown>;
   const fieldsArray = obj.fields as Field[];
 
   const { nodes, rootIds } = fieldsToBuilderState(fieldsArray);
@@ -63,6 +66,7 @@ export function parseImportedFormJson(
       formId: typeof obj.id === "string" ? obj.id : nanoid(),
       outputConfig: obj.output,
     },
+    warnings,
   };
 }
 

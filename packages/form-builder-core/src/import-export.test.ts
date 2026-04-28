@@ -37,6 +37,33 @@ describe("parseImportedFormJson", () => {
   it("throws on invalid json", () => {
     expect(() => parseImportedFormJson("not json")).toThrowError("Invalid JSON document");
   });
+
+  it("migrates legacy schema during parsing and collects warnings", () => {
+    vi.mocked(nanoid)
+      .mockReturnValueOnce("id-d1")
+      .mockReturnValueOnce("id-t1");
+
+    const json = JSON.stringify({
+      title: "Legacy Form",
+      fields: [
+        { type: "datetime", name: "d1" },
+        { type: "text", name: "t1", component: "Input" }
+      ]
+    });
+
+    const result = parseImportedFormJson(json);
+    expect(result.state.formName).toBe("Legacy Form");
+    expect(result.warnings).toHaveLength(1);
+    expect(result.warnings?.[0]).toContain("Stripped");
+    
+    const nodes = Object.values(result.state.nodes);
+    const dateNode = nodes.find((n) => (n.field as unknown as Record<string, unknown>).name === "d1")!;
+    const textNode = nodes.find((n) => (n.field as unknown as Record<string, unknown>).name === "t1")!;
+    
+    expect(dateNode.field.type).toBe("date");
+    expect((dateNode.field as unknown as Record<string, unknown>).withTime).toBe(true);
+    expect((textNode.field as unknown as Record<string, unknown>).component).toBeUndefined();
+  });
 });
 
 describe("fieldsToBuilderState", () => {
