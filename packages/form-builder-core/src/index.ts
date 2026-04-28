@@ -121,3 +121,4 @@ export { createBuilderStore, setupBuilderAutoSave } from "./store";
 export type { Store, BuilderStoreOptions } from "./store";
 
 export * from "./constants";
+export * from "./migration";
