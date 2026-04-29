@@ -15,3 +15,6 @@ export { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";
 export * from "./hooks";
 export * from "./persistence/local-storage-provider";
 export { downloadTextFile } from "./utils/download";
+export { createExpressionStore } from "./state/expression-store";
+export type { ExpressionStoreState } from "./state/expression-store";
+export { ExpressionProvider, useExpressionContext, useAvailableFields } from "./context/ExpressionContext";
