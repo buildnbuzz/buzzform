@@ -9,6 +9,10 @@ export type {
   FieldRegistryItem,
   FieldRegistrySidebar,
   IconMetadata,
+  ExpressionGroup,
+  ExpressionRule,
+  ExpressionOperator,
+  AvailableField,
 } from "./types";
 
 export { isDataField } from "./types";
