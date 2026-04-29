@@ -45,8 +45,12 @@ export function ExportSheet() {
   const schemaJson = React.useMemo(() => {
     if (!open) return "";
     const fields = nodesToFields(nodes, rootIds);
-    return JSON.stringify(fields, null, 2);
-  }, [open, nodes, rootIds]);
+    const schema = {
+      title: formName || "BuzzForm Export",
+      fields,
+    };
+    return JSON.stringify(schema, null, 2);
+  }, [open, nodes, rootIds, formName]);
 
   const downloadSchema = React.useCallback(() => {
     if (!schemaJson) return;
