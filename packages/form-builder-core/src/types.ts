@@ -134,6 +134,7 @@ export interface ExpressionRule {
   type: "rule";
   fieldId: string;
   operator: ExpressionOperator;
+  valueType?: "custom" | "field";
   value: string;
 }
 
