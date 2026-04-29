@@ -36,21 +36,28 @@ export const baseStateProperties: Field[] = [
     name: "hidden",
     label: "Hidden",
     description: "Hide this field from the form",
-    ui: { alignment: "between" },
+    ui: { widget: "expression", alignment: "between" },
   },
   {
     type: "checkbox",
     name: "disabled",
     label: "Disabled",
     description: "Prevent user interaction",
-    ui: { alignment: "between" },
+    ui: { widget: "expression", alignment: "between" },
   },
   {
     type: "checkbox",
     name: "readOnly",
     label: "Read Only",
     description: "Display value but prevent editing",
-    ui: { alignment: "between" },
+    ui: { widget: "expression", alignment: "between" },
+  },
+  {
+    type: "checkbox",
+    name: "condition",
+    label: "Condition",
+    description: "Only render when expression is true",
+    ui: { widget: "expression", alignment: "between" },
   },
 ];
 
