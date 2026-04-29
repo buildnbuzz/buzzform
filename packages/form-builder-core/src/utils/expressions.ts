@@ -71,3 +71,59 @@ function compileRule(rule: ExpressionRule): Condition {
       return true;
   }
 }
+
+export function findContainer(id: string, root: ExpressionGroup): string | null {
+  for (const child of root.children) {
+    if (child.id === id) return root.id;
+    if (child.type === "group") {
+      const container = findContainer(id, child);
+      if (container) return container;
+    }
+  }
+  return null;
+}
+
+export function isGroupNode(id: string, root: ExpressionGroup): boolean {
+  if (root.id === id) return true;
+  for (const child of root.children) {
+    if (child.type === "group") {
+      if (isGroupNode(id, child)) return true;
+    }
+  }
+  return false;
+}
+
+export function findNode(
+  id: string,
+  root: ExpressionGroup
+): ExpressionGroup | ExpressionRule | null {
+  if (root.id === id) return root;
+  for (const child of root.children) {
+    if (child.id === id) return child;
+    if (child.type === "group") {
+      const found = findNode(id, child);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+export function isExpressionDescendant(
+  parentId: string,
+  targetId: string,
+  root: ExpressionGroup
+): boolean {
+  const parentNode = findNode(parentId, root);
+  if (!parentNode || parentNode.type !== "group") return false;
+
+  const checkChildren = (node: ExpressionGroup): boolean => {
+    if (node.id === targetId) return true;
+    for (const child of node.children) {
+      if (child.id === targetId) return true;
+      if (child.type === "group" && checkChildren(child)) return true;
+    }
+    return false;
+  };
+
+  return checkChildren(parentNode);
+}
