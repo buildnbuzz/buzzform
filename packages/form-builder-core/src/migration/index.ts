@@ -6,13 +6,25 @@ export * from "./detect";
 export * from "./migrate-legacy";
 
 export function migrateLegacySchema(input: unknown): { schema: FormSchema; warnings: string[] } {
-  const format = detectSchemaFormat(input);
+  let schemaRecord: Record<string, unknown>;
 
-  if (format === "unknown") {
-    throw new Error("Invalid schema format: unable to determine if form-core or buzzform-legacy.");
+  if (Array.isArray(input)) {
+    schemaRecord = { fields: input };
+  } else if (input && typeof input === "object") {
+    schemaRecord = { ...(input as Record<string, unknown>) };
+  } else {
+    return { schema: { fields: [] }, warnings: [] };
   }
 
-  const schemaRecord = input as Record<string, unknown>;
+  const format = detectSchemaFormat(schemaRecord);
+
+  if (format === "unknown") {
+    // If it's an object with fields but we can't tell, assume form-core
+    if (Array.isArray(schemaRecord.fields)) {
+      return { schema: schemaRecord as unknown as FormSchema, warnings: [] };
+    }
+    throw new Error("Invalid schema format: unable to determine if form-core or buzzform-legacy.");
+  }
 
   if (format === "form-core") {
     return { schema: schemaRecord as unknown as FormSchema, warnings: [] };

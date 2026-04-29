@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid";
 import type { Field } from "@buildnbuzz/form-core";
-import { DEFAULT_SLOT } from "./node-children";
+import { DEFAULT_SLOT, getTabSlotKeys } from "./node-children";
 import type { Node } from "./types";
 import { migrateLegacySchema } from "./migration";
 
@@ -41,9 +41,13 @@ export function parseImportedFormJson(
     throw new Error("Invalid JSON document.");
   }
 
+  if (Array.isArray(parsed)) {
+    parsed = { fields: parsed, title: options.formNameHint || "Imported Form" };
+  }
+
   if (!isBuzzFormSchema(parsed)) {
     throw new Error(
-      "Unrecognised document format. Expected a FormSchema with a 'fields' array.",
+      "Unrecognised document format. Expected a FormSchema with a 'fields' array, or a raw array of fields.",
     );
   }
 
@@ -99,6 +103,7 @@ export function fieldsToBuilderState(fields: readonly Field[]): {
 } {
   const nodes: Record<string, Node> = {};
   const rootIds: string[] = [];
+  const usedNames = new Set<string>();
 
   function processField(
     field: Field,
@@ -114,6 +119,18 @@ export function fieldsToBuilderState(fields: readonly Field[]): {
       children: {},
     };
 
+    // Handle name collisions to prevent shared state between unrelated fields
+    const fieldObj = node.field as unknown as Record<string, unknown>;
+    if (typeof fieldObj.name === "string" && fieldObj.name) {
+      let uniqueName = fieldObj.name;
+      let counter = 1;
+      while (usedNames.has(uniqueName)) {
+        uniqueName = `${fieldObj.name}_${counter++}`;
+      }
+      fieldObj.name = uniqueName;
+      usedNames.add(uniqueName);
+    }
+
     const type = node.field.type;
 
     // Handle nested container types (group, array, row, collapsible)
@@ -124,9 +141,11 @@ export function fieldsToBuilderState(fields: readonly Field[]): {
       type === "collapsible"
     ) {
       // Cast safely since we checked the type
-      const containerField = node.field as unknown as { fields?: readonly Field[] };
+      const containerField = node.field as unknown as {
+        fields?: readonly Field[];
+      };
       const childFields = containerField.fields;
-      
+
       // Remove the nested fields array from the node's field payload
       delete containerField.fields;
 
@@ -135,18 +154,21 @@ export function fieldsToBuilderState(fields: readonly Field[]): {
           processField(child, id, DEFAULT_SLOT),
         );
       }
-    } 
+    }
     // Handle tabs (which have slots per tab)
     else if (type === "tabs") {
-      const tabsField = node.field as unknown as { tabs?: { fields?: readonly Field[] }[] };
+      const tabsField = node.field as unknown as {
+        tabs?: { name?: string; fields?: readonly Field[] }[];
+      };
       const tabs = tabsField.tabs;
 
       if (Array.isArray(tabs)) {
+        const slots = getTabSlotKeys(tabs);
         // Map over each tab to create slots
         tabsField.tabs = tabs.map((tab, index) => {
-          const slot = `__tab_${index}`;
+          const slot = slots[index]!;
           const tabFields = tab.fields;
-          
+
           // Shallow copy tab to remove its nested fields
           const strippedTab = { ...tab };
           delete strippedTab.fields;

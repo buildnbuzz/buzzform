@@ -54,7 +54,7 @@ export function nodeToField(
         };
       }),
     };
-  } else if (isContainerType(fieldType) && "fields" in node.field) {
+  } else if (isContainerType(fieldType)) {
     // Container (group, array, row, collapsible) — populate fields from
     // the default slot.
     const childIds = node.children[DEFAULT_SLOT] ?? [];
@@ -83,7 +83,11 @@ function compileExpressions(value: unknown): unknown {
     const obj = value as Record<string, unknown>;
 
     // Identify an ExpressionGroup by its specific keys
-    if (obj.type === "group" && "logicalOperator" in obj && Array.isArray(obj.children)) {
+    if (
+      obj.type === "group" &&
+      "logicalOperator" in obj &&
+      Array.isArray(obj.children)
+    ) {
       return compileToExpression(obj as unknown as ExpressionGroup);
     }
 
@@ -120,9 +124,9 @@ function sanitizeField(value: unknown): unknown {
         continue;
       }
 
-      // Preserve fields and tabs structure (already sanitized via recursion)
+      // Preserve and recurse into fields and tabs structure
       if (key === "fields" || key === "tabs") {
-        cleaned[key] = val;
+        cleaned[key] = sanitizeField(val);
         continue;
       }
 

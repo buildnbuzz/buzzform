@@ -174,7 +174,7 @@ export function flattenFieldToFormValues(
 ): Record<string, unknown> {
   const values: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(field)) {
-    if (key === "type" || key === "fields" || key === "tabs") continue;
+    if (key === "type" || key === "fields") continue;
     values[key] = deepClone(value);
   }
 
