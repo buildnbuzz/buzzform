@@ -9,6 +9,8 @@ import {
   type FieldFormApi,
   type UseFormOptionsWithSchema,
   type FormRegistries,
+  FormProvider,
+  mergeRegistries,
 } from "@buildnbuzz/form-react";
 import type {
   CoreField,
@@ -100,6 +102,10 @@ function Form<TSchema extends FormSchema = FormSchema>(
   }
 
   if ("form" in props && props.form) {
+    const mergedRegistries = mergeRegistries(
+      config?.registries,
+      props.registries,
+    );
     return (
       <FormContext.Provider
         value={{
@@ -107,10 +113,15 @@ function Form<TSchema extends FormSchema = FormSchema>(
           schema: props.schema,
           formId,
           derivedValidationMode,
-          registries: props.registries,
+          registries: mergedRegistries,
         }}
       >
-        {props.children}
+        <FormProvider
+          registries={mergedRegistries}
+          derivedValidationMode={derivedValidationMode}
+        >
+          {props.children}
+        </FormProvider>
       </FormContext.Provider>
     );
   }
@@ -138,6 +149,7 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
   formId: string;
   derivedValidationMode?: ValidationRun;
 }) {
+  const config = React.useContext(FormConfigContext);
   if (process.env.NODE_ENV === "development" && children && actions) {
     console.warn(
       "<Form>: `actions` prop is ignored when children are provided.",
@@ -163,6 +175,11 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
     ...tanstackOpts,
   } as UseFormOptionsWithSchema<TSchema>);
 
+  const mergedRegistries = React.useMemo(
+    () => mergeRegistries(config?.registries, registries),
+    [config?.registries, registries],
+  );
+
   return (
     <FormContext.Provider
       value={{
@@ -170,18 +187,23 @@ function FormInner<TSchema extends FormSchema = FormSchema>({
         schema,
         formId,
         derivedValidationMode,
-        registries,
+        registries: mergedRegistries,
       }}
     >
-      {children ?? (
-        <FormContent>
-          <FormFields />
-          <FormActions align={align}>
-            {showReset && <FormReset {...resetProps}>{resetLabel}</FormReset>}
-            <FormSubmit {...submitProps}>{submitLabel}</FormSubmit>
-          </FormActions>
-        </FormContent>
-      )}
+      <FormProvider
+        registries={mergedRegistries}
+        derivedValidationMode={derivedValidationMode}
+      >
+        {children ?? (
+          <FormContent>
+            <FormFields />
+            <FormActions align={align}>
+              {showReset && <FormReset {...resetProps}>{resetLabel}</FormReset>}
+              <FormSubmit {...submitProps}>{submitLabel}</FormSubmit>
+            </FormActions>
+          </FormContent>
+        )}
+      </FormProvider>
     </FormContext.Provider>
   );
 }

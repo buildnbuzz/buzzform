@@ -1,17 +1,20 @@
 "use client";
 
+import React from "react";
 import {
   useBuilderContext,
   BuilderProperties,
   useSyncProperty,
+  getRegistryEntry,
 } from "@buildnbuzz/form-builder-react";
 import { Form, FormContent, useFormContext } from "@/registry/shadcn/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FieldIcon } from "./field-icon";
 import { IconPlaceholder } from "@/components/icon-placeholder";
-import { getRegistryEntry } from "@buildnbuzz/form-builder-react";
 import { flattenFieldToFormValues } from "@buildnbuzz/form-builder-core";
 import type { Field, FormSchema } from "@buildnbuzz/form-core";
+import { ExpressionCheckbox } from "./expression-builder/expression-checkbox";
+import { registry as shadcnRegistry } from "../registry";
 
 /** Renders nothing — syncs form state ↔ builder store bidirectionally. */
 function SyncPropertyState({
@@ -102,6 +105,13 @@ export const PropertyPanel = () => {
                         key={id}
                         schema={{ fields: schema } as unknown as FormSchema}
                         defaultValues={defaultValues}
+                        registries={{
+                          fields: {
+                            ...shadcnRegistry,
+                            checkbox: ExpressionCheckbox,
+                            switch: ExpressionCheckbox,
+                          },
+                        }}
                       >
                         <FormContent autoRender as="div" className="gap-6">
                           <SyncPropertyState

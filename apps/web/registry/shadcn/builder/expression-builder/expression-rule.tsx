@@ -131,7 +131,7 @@ export function ExpressionRuleItem({
                       hugeicons="LinkSquare02Icon"
                       tabler="IconLink"
                       phosphor="Link"
-                      remixicon="RiLinkLine"
+                      remixicon="RiLinksLine"
                       size={16}
                     />
                   )}
