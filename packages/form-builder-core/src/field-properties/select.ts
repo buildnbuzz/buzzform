@@ -23,7 +23,7 @@ export const selectFieldProperties: Field[] = [
             name: "hasMany",
             label: "Multiple Selection",
             description: "Allow selecting multiple options",
-            ui: { alignment: "between" },
+            ui: { alignment: "between", expressionMode: "none" },
           },
           ...baseStateProperties,
         ],

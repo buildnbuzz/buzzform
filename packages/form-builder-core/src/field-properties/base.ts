@@ -57,7 +57,7 @@ export const baseStateProperties: Field[] = [
     name: "condition",
     label: "Condition",
     description: "Only render when expression is true",
-    ui: { widget: "expression", alignment: "between" },
+    ui: { widget: "expression", alignment: "between", expressionMode: "only" },
   },
 ];
 

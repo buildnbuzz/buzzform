@@ -15,7 +15,7 @@ export const checkboxGroupFieldProperties: Field[] = [
           { type: "switch", name: "hidden", label: "Hidden", description: "Hide this field from the form", ui: { widget: "expression", alignment: "between" } },
           { type: "switch", name: "disabled", label: "Disabled", description: "Prevent user interaction", ui: { widget: "expression", alignment: "between" } },
           { type: "switch", name: "readOnly", label: "Read Only", description: "Display value but prevent editing", ui: { widget: "expression", alignment: "between" } },
-          { type: "switch", name: "condition", label: "Condition", description: "Only render when expression is true", ui: { widget: "expression", alignment: "between" } },
+          { type: "switch", name: "condition", label: "Condition", description: "Only render when expression is true", ui: { widget: "expression", alignment: "between", expressionMode: "only" } },
         ],
       },
       {

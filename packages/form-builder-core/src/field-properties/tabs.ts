@@ -32,7 +32,7 @@ export const tabsFieldProperties: Field[] = [
             type: "checkbox",
             name: "condition",
             label: "Condition",
-            ui: { widget: "expression", alignment: "between" },
+            ui: { widget: "expression", alignment: "between", expressionMode: "only" },
           },
         ],
       },

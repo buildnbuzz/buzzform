@@ -22,7 +22,7 @@ export const tagsFieldProperties: Field[] = [
             type: "checkbox",
             name: "allowDuplicates",
             label: "Allow Duplicates",
-            ui: { alignment: "between" },
+            ui: { alignment: "between", expressionMode: "none" },
           },
           ...baseStateProperties,
         ],

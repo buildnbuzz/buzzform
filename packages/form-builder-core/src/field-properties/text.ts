@@ -71,7 +71,7 @@ export const textFieldProperties: Field[] = [
             name: "trim",
             label: "Trim",
             description: "Remove leading/trailing spaces on blur",
-            ui: { alignment: "between" },
+            ui: { alignment: "between", expressionMode: "none" },
           },
         ],
       },
