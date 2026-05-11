@@ -5,6 +5,8 @@ import {
   type ExpressionRule,
   type ExpressionOperator,
   EXPRESSION_OPERATORS,
+  getFieldTypeCategory,
+  getOperatorsForFieldType,
 } from "@buildnbuzz/form-builder-core";
 import {
   useAvailableFields,
@@ -40,22 +42,212 @@ export function ExpressionRuleItem({
 }: ExpressionRuleItemProps) {
   const availableFields = useAvailableFields();
 
+  const selectedField = availableFields.find((f) => f.id === rule.fieldId);
+  const fieldCategory = getFieldTypeCategory(selectedField?.type);
+  const applicableOperators = getOperatorsForFieldType(selectedField?.type);
+
   const selectedOperator = EXPRESSION_OPERATORS.find(
     (op) => op.value === rule.operator,
   );
   const requiresValue = selectedOperator?.requiresValue ?? true;
 
-  const selectedField = availableFields.find((f) => f.id === rule.fieldId);
   const selectedValueField = availableFields.find((f) => f.id === rule.value);
 
   const { updateRule, removeNode, duplicateRule } = store.getState();
+
+  const handleFieldChange = (newFieldId: string) => {
+    const newField = availableFields.find((f) => f.id === newFieldId);
+    const newCategory = getFieldTypeCategory(newField?.type);
+    const newOps = getOperatorsForFieldType(newField?.type);
+
+    // Reset operator if not applicable to new field type
+    const currentOpApplicable = newOps.some((op) => op.value === rule.operator);
+    const newOperator = currentOpApplicable ? rule.operator : "equals";
+
+    // Reset value for type changes
+    let newValue = rule.value;
+    if (newCategory === "boolean") {
+      newValue = "true";
+    } else if (newCategory !== fieldCategory) {
+      newValue = "";
+    }
+
+    updateRule(parentId, rule.id, {
+      fieldId: newFieldId,
+      operator: newOperator,
+      value: newValue,
+      valueType: newCategory === "boolean" ? "custom" : rule.valueType,
+    });
+  };
+
+  // Render value input based on field type category
+  const renderValueInput = () => {
+    if (!requiresValue) return null;
+
+    // Field reference mode
+    if (rule.valueType !== "custom") {
+      return (
+        <div className="flex items-center gap-2 w-full sm:flex-1">
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="outline"
+                  size="icon-lg"
+                  className="shrink-0 text-muted-foreground"
+                  onClick={() =>
+                    updateRule(parentId, rule.id, {
+                      valueType: "custom",
+                      value: selectedField?.options?.[0]?.value ?? "",
+                    })
+                  }
+                >
+                  <IconPlaceholder
+                    lucide="Link"
+                    hugeicons="LinkSquare02Icon"
+                    tabler="IconLink"
+                    phosphor="Link"
+                    remixicon="RiLinksLine"
+                    size={16}
+                  />
+                </Button>
+              }
+            />
+            <TooltipContent>Use Custom Value</TooltipContent>
+          </Tooltip>
+          <Select
+            value={rule.value}
+            onValueChange={(val: unknown) => {
+              if (val)
+                updateRule(parentId, rule.id, {
+                  value: val as string,
+                });
+            }}
+          >
+            <SelectTrigger className="w-full h-9!">
+              <SelectValue>{selectedValueField?.label}</SelectValue>
+            </SelectTrigger>
+            <SelectContent
+              alignItemWithTrigger={false}
+              align="start"
+              sideOffset={4}
+            >
+              {availableFields
+                .filter((f) => f.id !== rule.fieldId)
+                .map((field) => (
+                  <SelectItem key={field.id} value={field.id}>
+                    {field.label}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    const fieldRefButton = (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              variant="outline"
+              size="icon-lg"
+              className="shrink-0 text-muted-foreground"
+              onClick={() =>
+                updateRule(parentId, rule.id, {
+                  valueType: "field",
+                  value: "",
+                })
+              }
+            >
+              <IconPlaceholder
+                lucide="Type"
+                hugeicons="TextIcon"
+                tabler="IconLetterCase"
+                phosphor="TextT"
+                remixicon="RiText"
+                size={16}
+              />
+            </Button>
+          }
+        />
+        <TooltipContent>Use Field Reference</TooltipContent>
+      </Tooltip>
+    );
+
+    // Fields with options (boolean, select, radio, checkbox-group): render Select dropdown
+    if (selectedField?.options && selectedField.options.length > 0) {
+      const matchedOption = selectedField.options.find(
+        (o) => o.value === rule.value,
+      );
+      return (
+        <div className="flex items-center gap-2 w-full sm:flex-1">
+          {fieldRefButton}
+          <Select
+            value={rule.value}
+            onValueChange={(val: unknown) => {
+              if (val) updateRule(parentId, rule.id, { value: val as string });
+            }}
+          >
+            <SelectTrigger className="w-full h-9!">
+              <SelectValue>{matchedOption?.label ?? rule.value}</SelectValue>
+            </SelectTrigger>
+            <SelectContent
+              alignItemWithTrigger={false}
+              align="start"
+              sideOffset={4}
+            >
+              {selectedField.options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    // Number fields: render number input
+    if (fieldCategory === "number") {
+      return (
+        <div className="flex items-center gap-2 w-full sm:flex-1">
+          {fieldRefButton}
+          <Input
+            type="number"
+            placeholder="Enter number..."
+            className="h-9 w-full"
+            value={rule.value}
+            onChange={(e) =>
+              updateRule(parentId, rule.id, { value: e.target.value })
+            }
+          />
+        </div>
+      );
+    }
+
+    // Default: text input
+    return (
+      <div className="flex items-center gap-2 w-full sm:flex-1">
+        {fieldRefButton}
+        <Input
+          placeholder="Enter value..."
+          className="h-9 w-full"
+          value={rule.value}
+          onChange={(e) =>
+            updateRule(parentId, rule.id, { value: e.target.value })
+          }
+        />
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-card p-2 rounded-lg border shadow-sm transition-all group/rule w-full relative">
       <Select
         value={rule.fieldId}
         onValueChange={(val: unknown) => {
-          if (val) updateRule(parentId, rule.id, { fieldId: val as string });
+          if (val) handleFieldChange(val as string);
         }}
       >
         <SelectTrigger className="w-full sm:w-50 h-9!">
@@ -91,7 +283,7 @@ export function ExpressionRuleItem({
           align="start"
           sideOffset={4}
         >
-          {EXPRESSION_OPERATORS.map((op) => (
+          {applicableOperators.map((op) => (
             <SelectItem key={op.value} value={op.value}>
               {op.label}
             </SelectItem>
@@ -99,91 +291,7 @@ export function ExpressionRuleItem({
         </SelectContent>
       </Select>
 
-      {requiresValue && (
-        <div className="flex items-center gap-2 w-full sm:flex-1">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="icon-lg"
-                  className="shrink-0 text-muted-foreground"
-                  onClick={() =>
-                    updateRule(parentId, rule.id, {
-                      valueType:
-                        rule.valueType === "custom" ? "field" : "custom",
-                      value: "",
-                    })
-                  }
-                >
-                  {rule.valueType === "custom" ? (
-                    <IconPlaceholder
-                      lucide="Type"
-                      hugeicons="TextIcon"
-                      tabler="IconLetterCase"
-                      phosphor="TextT"
-                      remixicon="RiText"
-                      size={16}
-                    />
-                  ) : (
-                    <IconPlaceholder
-                      lucide="Link"
-                      hugeicons="LinkSquare02Icon"
-                      tabler="IconLink"
-                      phosphor="Link"
-                      remixicon="RiLinksLine"
-                      size={16}
-                    />
-                  )}
-                </Button>
-              }
-            />
-            <TooltipContent>
-              {rule.valueType === "custom"
-                ? "Use Field Reference"
-                : "Use Custom Value"}
-            </TooltipContent>
-          </Tooltip>
-
-          {rule.valueType === "custom" ? (
-            <Input
-              placeholder="Enter value..."
-              className="h-9 w-full"
-              value={rule.value}
-              onChange={(e) =>
-                updateRule(parentId, rule.id, { value: e.target.value })
-              }
-            />
-          ) : (
-            <Select
-              value={rule.value}
-              onValueChange={(val: unknown) => {
-                if (val)
-                  updateRule(parentId, rule.id, {
-                    value: val as string,
-                  });
-              }}
-            >
-              <SelectTrigger className="w-full h-9!">
-                <SelectValue>{selectedValueField?.label}</SelectValue>
-              </SelectTrigger>
-              <SelectContent
-                alignItemWithTrigger={false}
-                align="start"
-                sideOffset={4}
-              >
-                {availableFields
-                  .filter((f) => f.id !== rule.fieldId)
-                  .map((field) => (
-                    <SelectItem key={field.id} value={field.id}>
-                      {field.label}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-      )}
+      {renderValueInput()}
 
       <div className="absolute -top-3 right-4 flex items-center bg-card border shadow-sm rounded-md px-1 py-0.5 opacity-0 group-hover/rule:opacity-100 transition-all z-50 scale-95 group-hover/rule:scale-100">
         <Tooltip>
