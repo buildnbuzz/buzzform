@@ -27,31 +27,31 @@ function IconFallback({
 const IconLucide = lazy(() =>
   import("@/registry/icons/lucide").then((mod) => ({
     default: mod.IconLucide,
-  }))
+  })),
 );
 
 const IconTabler = lazy(() =>
   import("@/registry/icons/tabler").then((mod) => ({
     default: mod.IconTabler,
-  }))
+  })),
 );
 
 const IconHugeicons = lazy(() =>
   import("@/registry/icons/hugeicons").then((mod) => ({
     default: mod.IconHugeicons,
-  }))
+  })),
 );
 
 const IconPhosphor = lazy(() =>
   import("@/registry/icons/phosphor").then((mod) => ({
     default: mod.IconPhosphor,
-  }))
+  })),
 );
 
 const IconRemixicon = lazy(() =>
   import("@/registry/icons/remixicon").then((mod) => ({
     default: mod.IconRemixicon,
-  }))
+  })),
 );
 
 export type IconPlaceholderProps = {
@@ -66,7 +66,7 @@ export function IconPlaceholder({
   remixicon,
   ...props
 }: IconPlaceholderProps) {
-  const iconName = lucide ?? tabler ?? hugeicons ?? phosphor ?? remixicon;
+  const iconName = hugeicons ?? lucide ?? tabler ?? phosphor ?? remixicon;
 
   if (!iconName) {
     return null;
@@ -74,15 +74,15 @@ export function IconPlaceholder({
 
   return (
     <Suspense fallback={<IconFallback size={props.size} />}>
-      {lucide && <IconLucide name={lucide} {...props} />}
-      {!lucide && tabler && <IconTabler name={tabler} {...props} />}
-      {!lucide && !tabler && hugeicons && (
-        <IconHugeicons name={hugeicons} {...props} />
+      {hugeicons && <IconHugeicons name={hugeicons} {...props} />}
+      {!hugeicons && lucide && <IconLucide name={lucide} {...props} />}
+      {!hugeicons && !lucide && tabler && (
+        <IconTabler name={tabler} {...props} />
       )}
-      {!lucide && !tabler && !hugeicons && phosphor && (
+      {!hugeicons && !lucide && !tabler && phosphor && (
         <IconPhosphor name={phosphor} {...props} />
       )}
-      {!lucide && !tabler && !hugeicons && !phosphor && remixicon && (
+      {!hugeicons && !lucide && !tabler && !phosphor && remixicon && (
         <IconRemixicon name={remixicon} {...props} />
       )}
     </Suspense>
