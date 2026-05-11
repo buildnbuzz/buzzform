@@ -1,12 +1,12 @@
 import React from "react";
 import { renderHook } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { ExpressionProvider, useAvailableFields, useExpressionContext } from "./ExpressionContext";
-import * as useBuilderStoreModule from "./BuilderContext";
+import { ExpressionProvider, useAvailableFields, useExpressionContext } from "./expression-context";
+import * as useBuilderStoreModule from "./builder-context";
 import type { BuilderStoreInterface } from "../types";
 
 // Mock the hook from form-builder-react
-vi.mock("./BuilderContext", () => ({
+vi.mock("./builder-context", () => ({
   useBuilderStore: vi.fn(),
 }));
 
@@ -68,8 +68,8 @@ describe("ExpressionContext", () => {
     const { result } = renderHook(() => useAvailableFields(), { wrapper });
 
     expect(result.current).toEqual([
-      { id: "firstName", label: "firstName" },
-      { id: "lastName", label: "lastName" },
+      { id: "firstName", label: "First Name", type: "text" },
+      { id: "lastName", label: "Last Name", type: "text" },
     ]);
   });
 });

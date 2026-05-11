@@ -4,13 +4,13 @@ import { describe, it, expect, vi } from "vitest";
 import {
   BuilderFormProvider,
   useBuilderFormContext,
-} from "./BuilderFormProvider";
-import { useBuilderStore } from "../context/BuilderContext";
+} from "./builder-form-provider";
+import { useBuilderStore } from "../context/builder-context";
 
 import type { BuilderStoreInterface } from "../types";
 
 // Mock the builder context hook since it leverages zustand implicitly
-vi.mock("../context/BuilderContext", () => ({
+vi.mock("../context/builder-context", () => ({
   useBuilderStore: vi.fn(),
   BuilderProvider: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>

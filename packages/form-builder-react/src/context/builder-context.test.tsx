@@ -6,7 +6,7 @@ import {
   useBuilderContext, 
   useBuilderStore,
   useSelectedNode 
-} from "./BuilderContext";
+} from "./builder-context";
 import type { BuilderFieldRegistry } from "../types";
 
 const mockRegistry: BuilderFieldRegistry = {

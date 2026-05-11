@@ -1,5 +1,5 @@
 import { useStore } from "zustand";
-import { useBuilderContext } from "../context/BuilderContext";
+import { useBuilderContext } from "../context/builder-context";
 
 /**
  * Hook to retrieve the active drop indicator index for a specific container.

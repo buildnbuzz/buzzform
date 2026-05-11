@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useMemo } from "react";
 import type { AvailableField } from "@buildnbuzz/form-builder-core";
 import { getAllAvailableFields } from "@buildnbuzz/form-builder-core";
-import { useBuilderStore } from "./BuilderContext";
+import { useBuilderStore } from "./builder-context";
 
 export interface ExpressionContextValue {
   availableFields: AvailableField[];

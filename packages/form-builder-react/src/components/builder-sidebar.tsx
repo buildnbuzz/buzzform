@@ -2,7 +2,7 @@
 
 import { ReactNode, useMemo } from "react";
 import { getSidebarGroups, type SidebarGroups } from "../registry";
-import { useBuilderContext } from "../context/BuilderContext";
+import { useBuilderContext } from "../context/builder-context";
 
 export interface BuilderSidebarProps {
   /** 

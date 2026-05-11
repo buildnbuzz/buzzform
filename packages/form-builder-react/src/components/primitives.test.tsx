@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import { DefaultBuilderProvider } from "../context/BuilderContext";
-import { BuilderCanvas } from "./BuilderCanvas";
-import { BuilderSidebar } from "./BuilderSidebar";
-import { BuilderProperties } from "./BuilderProperties";
+import { DefaultBuilderProvider } from "../context/builder-context";
+import { BuilderCanvas } from "./builder-canvas";
+import { BuilderSidebar } from "./builder-sidebar";
+import { BuilderProperties } from "./builder-properties";
 import type { BuilderFieldRegistry } from "../types";
 
 const mockRegistry: BuilderFieldRegistry = {

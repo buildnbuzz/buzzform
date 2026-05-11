@@ -4,7 +4,7 @@ import type {
   BuilderStorageProvider,
   Store,
 } from "@buildnbuzz/form-builder-core";
-import { useBuilderContext } from "../context/BuilderContext";
+import { useBuilderContext } from "../context/builder-context";
 import type { StoreApi } from "zustand";
 
 /**

@@ -1,7 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { BuilderFormStateSync } from "./BuilderFormStateSync";
+import { BuilderFormStateSync } from "./builder-form-state-sync";
 import { syncRuntimeForm } from "@buildnbuzz/form-builder-core";
 
 import type { AnyReactFormExtendedApi } from "@buildnbuzz/form-react";

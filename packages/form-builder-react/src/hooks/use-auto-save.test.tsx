@@ -3,7 +3,7 @@ import { renderHook } from "@testing-library/react";
 import React from "react";
 import { useAutoSave } from "./use-auto-save";
 import { setupBuilderAutoSave } from "@buildnbuzz/form-builder-core";
-import { BuilderProvider } from "../context/BuilderContext";
+import { BuilderProvider } from "../context/builder-context";
 
 vi.mock("@buildnbuzz/form-builder-core", async (importOriginal) => {
   const actual =
@@ -25,9 +25,17 @@ describe("useAutoSave", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    const mockState = { nodes: {}, rootIds: [] };
+    const mockTemporalState = { undo: vi.fn(), redo: vi.fn(), clear: vi.fn(), pastStates: [], futureStates: [] };
+
     mockStore = {
       subscribe: vi.fn(),
-      getState: vi.fn(),
+      getState: vi.fn(() => mockState),
+      temporal: {
+        subscribe: vi.fn(),
+        getState: vi.fn(() => mockTemporalState),
+      },
     } as unknown as UseBoundStore<StoreApi<BuilderStoreInterface>>;
     mockProvider = {
       save: vi.fn(),

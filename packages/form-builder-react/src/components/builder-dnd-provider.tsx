@@ -14,7 +14,7 @@ import {
   rectIntersection,
   CollisionDetection,
 } from "@dnd-kit/core";
-import { useBuilderContext } from "../context/BuilderContext";
+import { useBuilderContext } from "../context/builder-context";
 import { 
   getDropLocation, 
   canDrop, 

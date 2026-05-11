@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { useBuilderStore, useBuilderContext } from "../context/BuilderContext";
+import { useBuilderStore, useBuilderContext } from "../context/builder-context";
 import { getRegistryEntry } from "../registry";
 import type { Node } from "@buildnbuzz/form-builder-core";
 import { DEFAULT_SLOT } from "@buildnbuzz/form-builder-core";

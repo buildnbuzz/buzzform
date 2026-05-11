@@ -1,8 +1,8 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { useBuilderStore } from "../context/BuilderContext";
-import { BuilderNode, type BuilderNodeProps } from "./BuilderNode";
+import { useBuilderStore } from "../context/builder-context";
+import { BuilderNode, type BuilderNodeProps } from "./builder-node";
 
 export interface BuilderCanvasProps {
   /** 

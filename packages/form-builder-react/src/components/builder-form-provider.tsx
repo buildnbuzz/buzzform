@@ -13,8 +13,8 @@ import {
   nodesToFields,
   computeSchemaSignature,
 } from "@buildnbuzz/form-builder-core";
-import { useBuilderStore } from "../context/BuilderContext";
-import { BuilderFormStateSync } from "./BuilderFormStateSync";
+import { useBuilderStore } from "../context/builder-context";
+import { BuilderFormStateSync } from "./builder-form-state-sync";
 
 // ---------------------------------------------------------------------------
 // Types

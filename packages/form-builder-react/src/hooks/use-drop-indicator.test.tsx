@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
-import { useDropIndicator } from "./useDropIndicator";
-import { BuilderProvider } from "../context/BuilderContext";
+import { useDropIndicator } from "./use-drop-indicator";
+import { BuilderProvider } from "../context/builder-context";
 import { createBuilderStore } from "../state/store";
 
 describe("useDropIndicator", () => {

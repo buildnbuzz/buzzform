@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useUndoRedo } from "../context/BuilderContext";
+import { useUndoRedo } from "../context/builder-context";
 
 /**
  * Hook to enable keyboard shortcuts for the form builder.
