@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import {
   BuilderSidebar,
   DraggableSidebarItem,
-  useBuilderStore,
 } from "@buildnbuzz/form-builder-react";
 import {
   Sidebar,
@@ -15,46 +14,18 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  useSidebar,
 } from "@/components/ui/sidebar";
 import { FieldIcon } from "./field-icon";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  inputs: "Inputs",
-  selection: "Selection",
-  layout: "Layout",
-};
 
 /**
  * Visual field palette for the form builder.
  * Grouped by category and draggable into the canvas.
  */
 export const FieldSidebar = () => {
-  const mode = useBuilderStore((s) => s.mode);
-
-  let sidebarSetOpen: ((open: boolean) => void) | undefined;
-  try {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    sidebarSetOpen = useSidebar().setOpen;
-  } catch {
-    // Ignore until Task 3 adds SidebarProvider
-  }
-
-  const setOpen = React.useCallback(
-    (open: boolean) => {
-      sidebarSetOpen?.(open);
-    },
-    [sidebarSetOpen],
-  );
-
-  useEffect(() => {
-    setOpen(mode !== "preview");
-  }, [mode, setOpen]);
-
   return (
-    <Sidebar className="h-full border-r" collapsible="none">
+    <Sidebar className="h-full bg-background" collapsible="none">
       <SidebarContent>
         <BuilderSidebar
           render={({ groups }) => (
@@ -62,7 +33,7 @@ export const FieldSidebar = () => {
               {Object.entries(groups).map(([category, items]) => (
                 <SidebarGroup key={category}>
                   <SidebarGroupLabel>
-                    {CATEGORY_LABELS[category] ?? category}
+                    {category}
                   </SidebarGroupLabel>
                   <SidebarGroupContent>
                     <SidebarMenu>

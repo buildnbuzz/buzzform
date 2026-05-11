@@ -21,7 +21,7 @@ export function PreviewForm() {
       <FormContent noValidate className="p-0 gap-6">
         <FormFields />
         <FormActions className="mt-4" align="start">
-          <FormSubmit>Submit Form</FormSubmit>
+          <FormSubmit>Submit</FormSubmit>
         </FormActions>
       </FormContent>
     </Form>

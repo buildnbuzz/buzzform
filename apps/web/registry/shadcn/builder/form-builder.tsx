@@ -9,9 +9,7 @@ import {
   BuilderFormProvider,
   getBrowserLocalStorageProvider,
 } from "@buildnbuzz/form-builder-react";
-import {
-  type BuilderStorageProvider,
-} from "@buildnbuzz/form-builder-core";
+import { type BuilderStorageProvider } from "@buildnbuzz/form-builder-core";
 import { SHADCN_BUILDER_REGISTRY } from "./registry";
 import { SiteHeader } from "./header";
 
@@ -134,13 +132,13 @@ export function WindowFrame({ children, className }: WindowFrameProps) {
   return (
     <div
       className={cn(
-        "w-full max-w-2xl h-160 bg-background border border-border rounded-xl shadow-[0_0_60px_-5px_hsl(var(--primary)/0.4)] flex flex-col relative transition-all duration-300 ease-in-out origin-top overflow-hidden",
+        "bg-background h-160 border border-border rounded-xl shadow-[0_0_60px_-5px_hsl(var(--primary)/0.4)] flex flex-col relative transition-all duration-300 ease-in-out origin-top overflow-hidden",
         className,
       )}
       style={{
         transform: `scale(${zoom})`,
         width: getViewportWidth(),
-        maxWidth: viewport === "desktop" ? "896px" : "none",
+        maxWidth: viewport === "desktop" ? "896px" : getViewportWidth(),
       }}
     >
       <div className="h-10 bg-muted/50 border-b flex items-center px-4 justify-between shrink-0">
@@ -239,7 +237,6 @@ export const FormBuilder = () => {
     >
       <FormBuilderContent storageProvider={storageProvider} />
     </DefaultBuilderProvider>
-
   );
 };
 
@@ -260,7 +257,6 @@ const FormBuilderContent = ({
   const zoom = useBuilderStore((state) => state.zoom);
   const setZoom = useBuilderStore((state) => state.setZoom);
   const mode = useBuilderStore((s) => s.mode);
-
 
   const onSubmit = async (data: Record<string, unknown>) => {
     await new Promise((r) => setTimeout(r, 500));
@@ -309,21 +305,41 @@ const FormBuilderContent = ({
           <SidebarProvider className="flex-1 overflow-hidden min-h-0 min-w-0">
             <div className="flex h-full w-full">
               {/* Left Sidebar: Components */}
-              <FieldSidebar />
+              <div
+                className={cn(
+                  "border-r bg-background transition-all duration-300 ease-in-out",
+                  mode === "preview"
+                    ? "w-0 opacity-0 overflow-hidden border-none"
+                    : "w-64",
+                )}
+              >
+                <div className="w-64">
+                  <FieldSidebar />
+                </div>
+              </div>
 
               {/* Central Canvas */}
               <main className="flex-1 flex flex-col relative overflow-hidden bg-muted/20 min-w-0">
                 <CanvasToolbar />
                 <div ref={containerRef} className="flex-1 min-h-0">
-                  <ScrollArea className="h-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
+                  <div className="h-full overflow-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none] bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] dark:bg-[radial-gradient(#1f2937_1px,transparent_1px)] bg-size-[20px_20px]">
                     <CanvasFrame />
-                  </ScrollArea>
+                  </div>
                 </div>
               </main>
 
               {/* Right Sidebar: Properties */}
-              <aside className="w-80 border-l bg-background flex flex-col shrink-0">
-                <PropertyPanel />
+              <aside
+                className={cn(
+                  "border-l bg-background flex flex-col shrink-0 transition-all duration-300 ease-in-out",
+                  mode === "preview"
+                    ? "w-0 opacity-0 overflow-hidden border-none"
+                    : "w-80",
+                )}
+              >
+                <div className="w-80 h-full flex flex-col">
+                  <PropertyPanel />
+                </div>
               </aside>
             </div>
           </SidebarProvider>

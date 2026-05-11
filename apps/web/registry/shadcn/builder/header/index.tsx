@@ -10,7 +10,6 @@ import { SaveIndicator } from "./save-indicator";
 import { FormManagerDialog } from "./form-manager-dialog";
 import { CloudSaveDialog } from "./cloud-save-dialog";
 import { ExportSheet } from "../export-sheet";
-import { Button } from "@/components/ui/button";
 import type { BuilderStorageProvider } from "@buildnbuzz/form-builder-core";
 
 export function SiteHeader({
@@ -45,11 +44,8 @@ export function SiteHeader({
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <CloudSaveDialog />
-            <FormManagerDialog storageProvider={storageProvider} />
             <ExportSheet />
-            <Button size="sm" className="h-8 text-xs shadow-md">
-              Publish
-            </Button>
+            <FormManagerDialog storageProvider={storageProvider} />
           </div>
         </div>
       </div>
