@@ -59,7 +59,7 @@ export type BuilderFieldRegistry = FieldRegistry<
 export interface SidebarItem {
   type: string;
   label: string;
-  icon: IconMetadata;
+  icon?: IconMetadata;
   disabled?: boolean;
 }
 

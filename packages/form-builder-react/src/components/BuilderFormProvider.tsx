@@ -91,6 +91,13 @@ function BuilderFormInner({
     },
   });
 
+  // Reset form state when switching back to edit mode to ensure fresh preview data
+  React.useEffect(() => {
+    if (mode === "edit") {
+      form.reset();
+    }
+  }, [mode, form]);
+
   const builderFormValue = useMemo<BuilderFormContextValue>(
     () => ({ mode, fields, form }),
     [mode, fields, form],
