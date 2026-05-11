@@ -1,0 +1,254 @@
+import type { Field } from "@buildnbuzz/form-core";
+import { isContainerType } from "@buildnbuzz/form-core";
+
+import { DEFAULT_SLOT, getTabSlotKeys, getNodeChildren } from "./node-children";
+import { isDataField } from "./types";
+import type { Node, ExpressionGroup, AvailableField } from "./types";
+import { compileToExpression } from "./utils/expressions";
+
+/**
+ * Converts the entire builder node tree into a `Field[]` schema for
+ * `@buildnbuzz/form-core`.
+ *
+ * Maps each root node ID through `nodeToField`, filtering out any entries
+ * whose node could not be resolved.
+ */
+export function nodesToFields(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+): Field[] {
+  return rootIds.map((id) => nodeToField(nodes, id)).filter(Boolean) as Field[];
+}
+
+/**
+ * Converts a single builder node into its `Field` representation,
+ * recursively populating nested `fields[]` or `tabs[].fields[]` arrays.
+ */
+export function nodeToField(
+  nodes: Record<string, Node>,
+  id: string,
+): Field | null {
+  const node = nodes[id];
+  if (!node) return null;
+
+  const fieldType = node.field.type;
+  let result: Field;
+
+  // Tabs — populate each tab's fields from the corresponding slot.
+  if (fieldType === "tabs") {
+    const tabs = (node.field as Extract<Field, { type: "tabs" }>).tabs;
+    const slots = getTabSlotKeys(tabs);
+
+    result = {
+      ...node.field,
+      tabs: tabs.map((tab, index) => {
+        const slotKey = slots[index];
+        if (slotKey === undefined) return { ...tab, fields: [] };
+
+        const childIds = node.children[slotKey] ?? [];
+        return {
+          ...tab,
+          fields: childIds
+            .map((childId) => nodeToField(nodes, childId))
+            .filter(Boolean) as Field[],
+        };
+      }),
+    };
+  } else if (isContainerType(fieldType)) {
+    // Container (group, array, row, collapsible) — populate fields from
+    // the default slot.
+    const childIds = node.children[DEFAULT_SLOT] ?? [];
+    const nestedFields = childIds
+      .map((childId) => nodeToField(nodes, childId))
+      .filter(Boolean) as Field[];
+    result = { ...node.field, fields: nestedFields } as Field;
+  } else {
+    // Leaf data field — return as-is.
+    result = node.field;
+  }
+
+  return sanitizeField(compileExpressions(result)) as Field;
+}
+
+/**
+ * Recursively scans a field object for ExpressionGroup structures and
+ * compiles them into form-core Expr ASTs.
+ */
+function compileExpressions(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(compileExpressions);
+  }
+
+  if (value !== null && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+
+    // Identify an ExpressionGroup by its specific keys
+    if (
+      obj.type === "group" &&
+      "logicalOperator" in obj &&
+      Array.isArray(obj.children)
+    ) {
+      return compileToExpression(obj as unknown as ExpressionGroup);
+    }
+
+    const compiled: Record<string, unknown> = {};
+    for (const key in obj) {
+      compiled[key] = compileExpressions(obj[key]);
+    }
+    return compiled;
+  }
+
+  return value;
+}
+
+/**
+ * Removes empty values (null, undefined, "") from a field object.
+ * Recursively cleans nested objects and arrays.
+ */
+function sanitizeField(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === "object" ? sanitizeField(item) : item))
+      .filter((item) => item !== null && item !== undefined && item !== "");
+  }
+
+  if (value !== null && typeof value === "object") {
+    const cleaned: Record<string, unknown> = {};
+    const obj = value as Record<string, unknown>;
+
+    for (const key in obj) {
+      const val = obj[key];
+
+      // Skip empty strings, null, undefined
+      if (val === "" || val === null || val === undefined) {
+        continue;
+      }
+
+      // Preserve and recurse into fields and tabs structure
+      if (key === "fields" || key === "tabs") {
+        cleaned[key] = sanitizeField(val);
+        continue;
+      }
+
+      // Recursively clean objects and arrays
+      if (typeof val === "object") {
+        const recursive = sanitizeField(val);
+        // Only add if not empty object or array (special cases like empty expressions might need care)
+        if (
+          recursive !== null &&
+          typeof recursive === "object" &&
+          Object.keys(recursive).length === 0 &&
+          !Array.isArray(recursive)
+        ) {
+          continue;
+        }
+        cleaned[key] = recursive;
+      } else {
+        cleaned[key] = val;
+      }
+    }
+    return cleaned;
+  }
+
+  return value;
+}
+
+/**
+ * Extracts every `name` from all data-bearing fields in the node tree.
+ *
+ * Useful for generating unique names when creating new fields or
+ * detecting naming conflicts.
+ */
+export function getAllFieldNames(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+): Set<string> {
+  const names = new Set<string>();
+
+  function traverse(ids: string[]) {
+    for (const id of ids) {
+      const node = nodes[id];
+      if (!node) continue;
+
+      if (isDataField(node.field)) {
+        names.add(node.field.name);
+      }
+
+      traverse(getNodeChildren(node));
+    }
+  }
+
+  traverse(rootIds);
+  return names;
+}
+
+/**
+ * Extracts all data-bearing fields as `AvailableField[]` with type metadata
+ * and static options when available.
+ *
+ * Used by the expression builder to provide type-aware operator filtering
+ * and value input rendering (e.g. select dropdown for booleans and option-based fields).
+ */
+export function getAllAvailableFields(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+): AvailableField[] {
+  const fields: AvailableField[] = [];
+
+  function traverse(ids: string[]) {
+    for (const id of ids) {
+      const node = nodes[id];
+      if (!node) continue;
+
+      if (isDataField(node.field)) {
+        const f = node.field as unknown as Record<string, unknown>;
+        const fieldType = node.field.type;
+
+        // Extract static options for option-based fields
+        let options: { label: string; value: string }[] | undefined;
+
+        if (fieldType === "switch" || (fieldType === "checkbox" && !f.hasMany)) {
+          options = [
+            { label: "True", value: "true" },
+            { label: "False", value: "false" },
+          ];
+        } else if (
+          fieldType === "select" ||
+          fieldType === "radio" ||
+          (fieldType === "checkbox" && f.hasMany === true)
+        ) {
+          const rawOptions = f.options;
+          if (Array.isArray(rawOptions)) {
+            options = rawOptions
+              .map((opt) => {
+                if (typeof opt === "string") {
+                  return { label: opt, value: opt };
+                }
+                if (opt && typeof opt === "object" && "value" in opt) {
+                  const o = opt as { label?: string; value: string };
+                  return {
+                    label: String(o.label ?? o.value),
+                    value: String(o.value),
+                  };
+                }
+                return null;
+              })
+              .filter((o): o is { label: string; value: string } => o !== null);
+          }
+        }
+
+        fields.push({
+          id: node.field.name,
+          label: (f.label as string) || node.field.name,
+          type: fieldType,
+          ...(options && options.length > 0 ? { options } : {}),
+        });
+      }
+
+      traverse(getNodeChildren(node));
+    }
+  }
+
+  traverse(rootIds);
+  return fields;
+}

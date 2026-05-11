@@ -1,0 +1,61 @@
+{
+  "name": "@buildnbuzz/form-builder-core",
+  "version": "0.1.0",
+  "description": "Framework-agnostic form builder primitives for BuzzForm.",
+  "author": "Parth Lad <parth@buildnbuzz.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buildnbuzz/buzzform.git",
+    "directory": "packages/form-builder-core"
+  },
+  "bugs": {
+    "url": "https://github.com/buildnbuzz/buzzform/issues"
+  },
+  "homepage": "https://form.buildnbuzz.com",
+  "keywords": [
+    "form-builder",
+    "schema",
+    "headless",
+    "builder"
+  ],
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "test:types": "tsc --noEmit --project tsconfig.tests.json",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@buildnbuzz/form-core": "workspace:^",
+    "immer": "^11.1.3",
+    "nanoid": "^5.0.9",
+    "zod": "^4.0.0",
+    "zundo": "^2.3.0",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:^",
+    "@repo/typescript-config": "workspace:^"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
