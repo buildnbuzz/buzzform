@@ -100,6 +100,7 @@ export type {
 } from "@buildnbuzz/form-core";
 
 export { useForm } from "./use-form";
+export { useWatch } from "./use-watch";
 export { Field } from "./field";
 export { Form } from "./form";
 export { FieldRenderer, RenderFields } from "./renderer";
@@ -154,6 +155,8 @@ export type {
   FieldOptionsState,
   ResolvedFieldTextOptions,
 } from "./contexts";
+
+export { mergeRegistries } from "./utils/merge-registries";
 
 declare module "@buildnbuzz/form-core" {
   interface FrameworkOverrides {

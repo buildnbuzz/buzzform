@@ -1,4 +1,4 @@
-import type { FormEvent, FormHTMLAttributes, ReactNode } from "react";
+import type { ElementType, FormEvent, HTMLAttributes, ReactNode } from "react";
 import type {
   Field as CoreField,
   FormRegistries,
@@ -11,10 +11,13 @@ import type { FieldRegistry } from "./contexts";
 import { RenderFields } from "./renderer";
 
 /** Props for the headless `<Form>` wrapper component. */
-export interface FormProps<TFormData extends UnknownData = UnknownData>
-  extends Omit<FormHTMLAttributes<HTMLFormElement>, "onSubmit"> {
+export interface FormProps<
+  TFormData extends UnknownData = UnknownData,
+> extends Omit<HTMLAttributes<HTMLElement>, "onSubmit"> {
   /** TanStack form instance created by `useForm`. */
   form: FieldFormApi<TFormData>;
+  /** Optional component or HTML tag to render instead of 'form'. Use 'div' for nested forms. */
+  as?: ElementType;
   /** Optional schema fields to auto-render when no children are provided. */
   fields?: readonly CoreField[];
   /** External context data used by dynamic runtime checks. */
@@ -34,7 +37,7 @@ export interface FormProps<TFormData extends UnknownData = UnknownData>
   /** Optional parent data path used to resolve nested field names. */
   basePath?: string;
   /** Optional custom submit handler invoked before `form.handleSubmit()`. */
-  onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit?: (event: FormEvent<HTMLElement>) => void;
   /** Children to render inside the form. */
   children?: ReactNode;
 }
@@ -42,6 +45,7 @@ export interface FormProps<TFormData extends UnknownData = UnknownData>
 /** Headless form wrapper that wires submit handling and optional schema rendering. */
 export function Form<TFormData extends UnknownData = UnknownData>({
   form,
+  as: Component = "form",
   fields,
   contextData,
   registries,
@@ -55,7 +59,7 @@ export function Form<TFormData extends UnknownData = UnknownData>({
   children,
   ...rest
 }: FormProps<TFormData>) {
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLElement>) => {
     onSubmit?.(event);
     if (event.defaultPrevented) return;
     event.preventDefault();
@@ -68,15 +72,21 @@ export function Form<TFormData extends UnknownData = UnknownData>({
       ? {
           ...registries,
           fields: (registries?.fields ?? registry) as FormRegistries["fields"],
-          validators: { ...registries?.validators, ...customValidators } as FormRegistries["validators"],
-          resolvers: { ...registries?.resolvers, ...optionResolvers } as FormRegistries["resolvers"],
+          validators: {
+            ...registries?.validators,
+            ...customValidators,
+          } as FormRegistries["validators"],
+          resolvers: {
+            ...registries?.resolvers,
+            ...optionResolvers,
+          } as FormRegistries["resolvers"],
         }
       : undefined;
 
   return (
-    <form
+    <Component
       {...rest}
-      onSubmit={handleSubmit}
+      onSubmit={Component === "form" ? handleSubmit : undefined}
     >
       {children ??
         (fields ? (
@@ -90,6 +100,6 @@ export function Form<TFormData extends UnknownData = UnknownData>({
             basePath={basePath}
           />
         ) : null)}
-    </form>
+    </Component>
   );
 }
