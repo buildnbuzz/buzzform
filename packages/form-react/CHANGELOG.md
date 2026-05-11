@@ -1,5 +1,13 @@
 # @buildnbuzz/form-react
 
+## 0.1.9
+
+### Patch Changes
+
+- [#134](https://github.com/buildnbuzz/buzzform/pull/134) [`646afd7`](https://github.com/buildnbuzz/buzzform/commit/646afd75404d6e3103f0adc889bc4f738d225b4e) Thanks [@ladparth](https://github.com/ladparth)! - Add useWatch hook and polymorphic `as` prop to Form component.
+  - Implement `useWatch` hook for accessing form state.
+  - Add polymorphic `as` prop to `Form` component for custom rendering.
+
 ## 0.1.8
 
 ### Patch Changes
