@@ -71,14 +71,26 @@ export const createBuilderStore = (options: BuilderStoreOptions): UseBoundStore<
   // Sync the React-bound store whenever the core store changes.
   coreStore.subscribe((state) => {
     // We only update the data from the core store, preserving our React-wrapped actions
-    const data: Record<string, unknown> = {};
-    const stateRecord = state as unknown as Record<string, unknown>;
-    for (const key in stateRecord) {
-        if (typeof stateRecord[key] !== "function") {
-            data[key] = stateRecord[key];
+    const nextData: Partial<BuilderStoreInterface> = {};
+    const currentState = store.getState();
+    let hasChanged = false;
+
+    const coreState = state as CoreStore;
+    const reactState = currentState as unknown as CoreStore;
+
+    for (const k in coreState) {
+      const key = k as keyof CoreStore;
+      if (typeof coreState[key] !== "function") {
+        (nextData as Record<string, unknown>)[key] = coreState[key];
+        if (coreState[key] !== reactState[key]) {
+          hasChanged = true;
         }
+      }
     }
-    store.setState(data as unknown as Partial<BuilderStoreInterface>);
+
+    if (hasChanged) {
+      store.setState(nextData);
+    }
   });
 
   return store;
