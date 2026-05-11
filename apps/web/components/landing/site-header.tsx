@@ -56,7 +56,7 @@ export function SiteHeader() {
             className="gap-2 h-8 hidden sm:flex"
             nativeButton={false}
             render={
-              <Link href="/builder">
+              <Link href="/builder/v2">
                 <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
                 Create Form
               </Link>

@@ -42,7 +42,34 @@ function getTabDisplayLabel(tab: Tab, index: number) {
 }
 
 function DropLine() {
-  return <div className="h-1 bg-primary rounded-full my-1" />;
+  return <div className="my-1 h-1 rounded-full bg-primary" />;
+}
+
+function useCachedTabChildren(containerId: string, slot: string) {
+  const cacheRef = React.useRef<string[]>([]);
+
+  return useBuilderStore(
+    React.useCallback(
+      (state) => {
+        const nextChildren =
+          state.nodes[containerId]?.tabChildren?.[slot] ?? [];
+        const prevChildren = cacheRef.current;
+
+        if (
+          prevChildren.length === nextChildren.length &&
+          prevChildren.every(
+            (childId, index) => childId === nextChildren[index],
+          )
+        ) {
+          return prevChildren;
+        }
+
+        cacheRef.current = nextChildren;
+        return nextChildren;
+      },
+      [containerId, slot],
+    ),
+  );
 }
 
 function TabDropZone({
@@ -56,9 +83,7 @@ function TabDropZone({
   tab: Tab;
   spacing: keyof typeof spacingMap;
 }) {
-  const childrenIds = useBuilderStore(
-    (state) => state.nodes[containerId]?.tabChildren?.[slot] ?? [],
-  );
+  const childrenIds = useCachedTabChildren(containerId, slot);
   const indicatorIndex = useDropIndicatorIndex(containerId, slot);
 
   const { setNodeRef, isOver } = useDroppable({
@@ -112,10 +137,44 @@ function TabDropZone({
 }
 
 export function TabsLayout({ id, field }: TabsLayoutProps) {
+  const tabChildrenCacheRef = React.useRef<Record<string, string[]>>({});
   const tabs = React.useMemo(() => field.tabs ?? [], [field.tabs]);
   const slots = React.useMemo(() => getTabSlotKeys(tabs), [tabs]);
   const tabChildren = useBuilderStore(
-    (state) => state.nodes[id]?.tabChildren ?? {},
+    React.useCallback(
+      (state) => {
+        const currentTabChildren = state.nodes[id]?.tabChildren ?? {};
+        const currentSlots = Object.keys(currentTabChildren);
+        const previousTabChildren = tabChildrenCacheRef.current;
+
+        if (currentSlots.length === Object.keys(previousTabChildren).length) {
+          let isSame = true;
+
+          for (const slot of currentSlots) {
+            const nextChildren = currentTabChildren[slot] ?? [];
+            const prevChildren = previousTabChildren[slot] ?? [];
+
+            if (
+              nextChildren.length !== prevChildren.length ||
+              nextChildren.some(
+                (childId, index) => childId !== prevChildren[index],
+              )
+            ) {
+              isSame = false;
+              break;
+            }
+          }
+
+          if (isSame) {
+            return previousTabChildren;
+          }
+        }
+
+        tabChildrenCacheRef.current = currentTabChildren;
+        return currentTabChildren;
+      },
+      [id],
+    ),
   );
   const activeSlotFromStore = useBuilderStore(
     (state) => state.activeTabs[id] ?? null,

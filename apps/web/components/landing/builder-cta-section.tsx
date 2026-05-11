@@ -15,14 +15,15 @@ export function BuilderCtaSection() {
           Build forms visually in minutes
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-          Drag, drop, and customize with a live preview. Export clean      code when you are ready.
+          Drag, drop, and customize with a live preview. Export clean code when
+          you are ready.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Button
             size="lg"
             className="rounded-full px-8"
             nativeButton={false}
-            render={<Link href="/builder">Open Builder</Link>}
+            render={<Link href="/builder/v2">Open Builder</Link>}
           />
         </div>
       </div>

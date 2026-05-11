@@ -10,6 +10,7 @@ import {
   SourceCodeIcon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -121,11 +122,16 @@ export function ExportSheet() {
         </SheetHeader>
         <div className="border-b px-4 py-3">
           <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100">
-            <AlertTitle>Migration notice</AlertTitle>
+            <AlertTitle>New Builder available</AlertTitle>
             <AlertDescription>
-              The builder is being migrated to the new framework-agnostic,
-              headless BuzzForm. Exports will be updated as the migration
-              progresses.
+              New BuzzForm is now available with enhanced features. We recommend
+              using the new builder for all new projects.{" "}
+              <Link
+                href="/builder/v2"
+                className="font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity"
+              >
+                Try New Builder
+              </Link>
             </AlertDescription>
           </Alert>
         </div>

@@ -14,7 +14,7 @@ export function HeroSection() {
           variant="outline"
           className="mb-4 animate-fade-in px-3 py-1 rounded-full border-primary/20 bg-primary/5 text-primary gap-2"
         >
-          <Link href="/builder" className="inline-flex items-center gap-2">
+          <Link href="/builder/v2" className="inline-flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>

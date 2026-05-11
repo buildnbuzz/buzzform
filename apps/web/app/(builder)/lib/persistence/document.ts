@@ -155,7 +155,7 @@ function toDocumentNodes(
       field: sanitizedField as BuilderDocumentNode["field"],
       parentId: node.parentId,
       parentSlot: node.parentSlot,
-      children: [...node.children],
+      children: Array.isArray(node.children) ? [...node.children] : [],
       ...(hasEntries(node.tabChildren)
         ? { tabChildren: cloneTabChildren(node.tabChildren) }
         : {}),
@@ -176,7 +176,7 @@ function toStateNodes(
       field: deepClone(node.field) as unknown as Node["field"],
       parentId: node.parentId,
       parentSlot: node.parentSlot,
-      children: [...node.children],
+      children: Array.isArray(node.children) ? [...node.children] : [],
       ...(node.tabChildren
         ? { tabChildren: cloneTabChildren(node.tabChildren) }
         : {}),
@@ -216,7 +216,7 @@ function toBuilderDocumentType(parsed: ParsedBuilderDocument): BuilderDocument {
       field: deepClone(node.field),
       parentId: node.parentId,
       parentSlot: node.parentSlot,
-      children: [...node.children],
+      children: Array.isArray(node.children) ? [...node.children] : [],
       ...(node.tabChildren
         ? { tabChildren: cloneTabChildren(node.tabChildren) }
         : {}),
