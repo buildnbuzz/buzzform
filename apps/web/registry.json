@@ -357,6 +357,184 @@
       ]
     },
     {
+      "name": "form-builder",
+      "type": "registry:ui",
+      "title": "FormBuilder",
+      "description": "Visual drag-and-drop form builder primitives for BuzzForm v2.",
+      "dependencies": [
+        "@buildnbuzz/form-core",
+        "@buildnbuzz/form-react",
+        "@buildnbuzz/form-builder-core",
+        "@buildnbuzz/form-builder-react",
+        "@dnd-kit/core",
+        "@dnd-kit/sortable",
+        "@dnd-kit/utilities",
+        "fumadocs-ui",
+        "zustand"
+      ],
+      "registryDependencies": [
+        "@buzzform/all",
+        "alert",
+        "badge",
+        "button",
+        "card",
+        "checkbox",
+        "collapsible",
+        "dialog",
+        "empty",
+        "field",
+        "input",
+        "scroll-area",
+        "select",
+        "separator",
+        "sheet",
+        "sidebar",
+        "sonner",
+        "spinner",
+        "switch",
+        "tabs",
+        "textarea",
+        "tooltip"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/builder/canvas/canvas-toolbar.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/canvas/canvas-toolbar.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/drag-overlay.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/drag-overlay.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/export-sheet.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/export-sheet.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/expression-builder/expression-checkbox.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/expression-builder/expression-checkbox.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/expression-builder/expression-group.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/expression-builder/expression-group.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/expression-builder/expression-rule.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/expression-builder/expression-rule.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/expression-builder/index.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/expression-builder/index.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/expression-builder/sortable-item.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/expression-builder/sortable-item.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/field-icon.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/field-icon.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/field-sidebar.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/field-sidebar.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/form-builder.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/form-builder.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/cloud-save-dialog.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/cloud-save-dialog.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/form-manager-dialog.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/form-manager-dialog.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/form-manager-new-panel.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/form-manager-new-panel.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/form-manager-saved-panel.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/form-manager-saved-panel.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/index.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/index.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/header/save-indicator.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/header/save-indicator.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/layout/array-renderer.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/layout/array-renderer.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/layout/collapsible-renderer.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/layout/collapsible-renderer.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/layout/group-renderer.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/layout/group-renderer.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/layout/row-renderer.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/layout/row-renderer.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/layout/tabs-renderer.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/layout/tabs-renderer.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/mobile-overlay.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/mobile-overlay.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/node-wrapper.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/node-wrapper.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/preview/preview-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/preview/preview-form.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/property-panel.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/property-panel.tsx"
+        },
+        {
+          "path": "registry/shadcn/builder/registry.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/builder/registry.tsx"
+        }
+      ]
+    },
+    {
       "name": "all",
       "type": "registry:ui",
       "title": "BuzzForm All (v2)",
