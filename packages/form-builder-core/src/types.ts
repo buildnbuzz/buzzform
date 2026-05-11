@@ -171,7 +171,7 @@ export interface IconMetadata {
  */
 export interface FieldRegistrySidebar<TIcon = IconMetadata> {
   label: string;
-  icon: TIcon;
+  icon?: TIcon;
   category: string;
   disabled?: boolean;
 }

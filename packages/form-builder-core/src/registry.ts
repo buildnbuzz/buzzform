@@ -21,135 +21,21 @@ import { tabsFieldProperties } from "./field-properties/tabs";
 import { collapsibleFieldProperties } from "./field-properties/collapsible";
 
 /**
- * Standard icons used in the sidebar.
- * These are mapped to multiple libraries to support different UI adapters.
- */
-export const FIELD_ICONS = {
-  text: {
-    hugeicons: "TextIcon",
-    lucide: "Type",
-    tabler: "IconLettersCase",
-    phosphor: "TextT",
-    remixicon: "RiText",
-  },
-  email: {
-    hugeicons: "Mail01Icon",
-    lucide: "Mail",
-    tabler: "IconMail",
-    phosphor: "Envelope",
-    remixicon: "RiMailLine",
-  },
-  password: {
-    hugeicons: "SecurityPasswordIcon",
-    lucide: "Lock",
-    tabler: "IconLock",
-    phosphor: "LockSimple",
-    remixicon: "RiLockPasswordLine",
-  },
-  textarea: {
-    hugeicons: "TextAlignLeftIcon",
-    lucide: "AlignLeft",
-    tabler: "IconAlignLeft",
-    phosphor: "TextAlignLeft",
-    remixicon: "RiAlignLeft",
-  },
-  number: {
-    hugeicons: "GridIcon",
-    lucide: "Binary",
-    tabler: "IconHash",
-    phosphor: "Hash",
-    remixicon: "RiNumber7",
-  },
-  checkbox: {
-    hugeicons: "CheckmarkSquare02Icon",
-    lucide: "CheckSquare",
-    tabler: "IconCheck",
-    phosphor: "Check",
-    remixicon: "RiCheckLine",
-  },
-  switch: {
-    hugeicons: "ToggleOnIcon",
-    lucide: "ToggleRight",
-    tabler: "IconToggleRight",
-    phosphor: "ToggleRight",
-    remixicon: "RiToggleLine",
-  },
-  select: {
-    hugeicons: "ArrowDown01Icon",
-    lucide: "ChevronDown",
-    tabler: "IconChevronDown",
-    phosphor: "CaretDown",
-    remixicon: "RiArrowDownSLine",
-  },
-  radio: {
-    hugeicons: "CircleIcon",
-    lucide: "CircleDot",
-    tabler: "IconCircleDot",
-    phosphor: "CircleDashed",
-    remixicon: "RiRadioButtonLine",
-  },
-  date: {
-    hugeicons: "Calendar03Icon",
-    lucide: "Calendar",
-    tabler: "IconCalendar",
-    phosphor: "Calendar",
-    remixicon: "RiCalendarLine",
-  },
-  tags: {
-    hugeicons: "Tag01Icon",
-    lucide: "Tag",
-    tabler: "IconTag",
-    phosphor: "Tag",
-    remixicon: "RiTagLine",
-  },
-  group: {
-    hugeicons: "FolderIcon",
-    lucide: "Folder",
-    tabler: "IconFolder",
-    phosphor: "Folder",
-    remixicon: "RiFolderLine",
-  },
-  array: {
-    hugeicons: "Menu01Icon",
-    lucide: "Layers",
-    tabler: "IconLayersIntersect",
-    phosphor: "Stack",
-    remixicon: "RiStackLine",
-  },
-  row: {
-    hugeicons: "RowInsertIcon",
-    lucide: "Columns",
-    tabler: "IconColumns",
-    phosphor: "Columns",
-    remixicon: "RiLayoutColumnLine",
-  },
-  tabs: {
-    hugeicons: "Layout01Icon",
-    lucide: "PanelsTop",
-    tabler: "IconTabs",
-    phosphor: "Browser",
-    remixicon: "RiWindowLine",
-  },
-  collapsible: {
-    hugeicons: "ArrowShrink02Icon",
-    lucide: "ChevronsDownUp",
-    tabler: "IconChevronDownLeft",
-    phosphor: "CaretDoubleDown",
-    remixicon: "RiArrowDownDoubleLine",
-  },
-} satisfies Record<string, IconMetadata>;
-
-/**
  * The default field registry for the form builder.
  * Includes all standard input and layout fields.
+ *
+ * Categories:
+ * - Inputs: Simple text-based data entry.
+ * - Selection: Picking from predefined options.
+ * - Containers: Structural fields that contain other data fields.
+ * - Layout: Visual organization fields (non-data).
  */
 export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
   text: {
     kind: "data",
     sidebar: {
       label: "Text",
-      icon: FIELD_ICONS.text,
-      category: "inputs",
+      category: "Inputs",
     },
     defaultProps: { type: "text", label: "Text Field" },
     properties: textFieldProperties,
@@ -158,8 +44,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Email",
-      icon: FIELD_ICONS.email,
-      category: "inputs",
+      category: "Inputs",
     },
     defaultProps: { type: "email", label: "Email Address" },
     properties: emailFieldProperties,
@@ -168,8 +53,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Password",
-      icon: FIELD_ICONS.password,
-      category: "inputs",
+      category: "Inputs",
     },
     defaultProps: { type: "password", label: "Password" },
     properties: passwordFieldProperties,
@@ -178,8 +62,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Textarea",
-      icon: FIELD_ICONS.textarea,
-      category: "inputs",
+      category: "Inputs",
     },
     defaultProps: { type: "textarea", label: "Long Message" },
     properties: textareaFieldProperties,
@@ -188,8 +71,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Number",
-      icon: FIELD_ICONS.number,
-      category: "inputs",
+      category: "Inputs",
     },
     defaultProps: { type: "number", label: "Quantity" },
     properties: numberFieldProperties,
@@ -198,8 +80,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Checkbox",
-      icon: FIELD_ICONS.checkbox,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "checkbox", label: "Option" },
     properties: checkboxFieldProperties,
@@ -208,8 +89,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Switch",
-      icon: FIELD_ICONS.switch,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "switch", label: "Enabled" },
     properties: switchFieldProperties,
@@ -218,8 +98,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Select",
-      icon: FIELD_ICONS.select,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "select", label: "Choose Option" },
     properties: selectFieldProperties,
@@ -228,8 +107,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Radio",
-      icon: FIELD_ICONS.radio,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "radio", label: "Choose One" },
     properties: radioFieldProperties,
@@ -238,8 +116,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Date",
-      icon: FIELD_ICONS.date,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "date", label: "Pick Date" },
     properties: dateFieldProperties,
@@ -248,8 +125,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Tags",
-      icon: FIELD_ICONS.tags,
-      category: "selection",
+      category: "Selection",
     },
     defaultProps: { type: "tags", label: "Select Tags" },
     properties: tagsFieldProperties,
@@ -258,8 +134,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Group",
-      icon: FIELD_ICONS.group,
-      category: "containers",
+      category: "Containers",
     },
     defaultProps: { type: "group", label: "Nested Group", fields: [] },
     properties: groupFieldProperties,
@@ -268,8 +143,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "data",
     sidebar: {
       label: "Array",
-      icon: FIELD_ICONS.array,
-      category: "containers",
+      category: "Containers",
     },
     defaultProps: { type: "array", label: "Item List", fields: [] },
     properties: arrayFieldProperties,
@@ -278,8 +152,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "layout",
     sidebar: {
       label: "Row",
-      icon: FIELD_ICONS.row,
-      category: "layout",
+      category: "Layout",
     },
     defaultProps: { type: "row", fields: [] },
     properties: rowFieldProperties,
@@ -288,8 +161,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "layout",
     sidebar: {
       label: "Tabs",
-      icon: FIELD_ICONS.tabs,
-      category: "layout",
+      category: "Layout",
     },
     defaultProps: { type: "tabs", tabs: [] },
     properties: tabsFieldProperties,
@@ -298,8 +170,7 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     kind: "layout",
     sidebar: {
       label: "Collapsible",
-      icon: FIELD_ICONS.collapsible,
-      category: "layout",
+      category: "Layout",
     },
     defaultProps: {
       type: "collapsible",
