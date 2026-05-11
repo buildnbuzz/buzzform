@@ -220,11 +220,13 @@ const CanvasFrame = () => {
 /**
  * Main Form Builder component that orchestrates the entire UI.
  */
+const NEW_BUILDER_STORAGE_NAMESPACE = "buzzform-builder:v2:forms";
+
 export const FormBuilder = () => {
   const storageProvider = React.useMemo(() => {
     if (typeof window === "undefined") return null;
     try {
-      return getBrowserLocalStorageProvider();
+      return getBrowserLocalStorageProvider(NEW_BUILDER_STORAGE_NAMESPACE);
     } catch {
       return null;
     }

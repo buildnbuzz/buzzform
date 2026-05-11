@@ -364,6 +364,8 @@
       "dependencies": [
         "@buildnbuzz/form-core",
         "@buildnbuzz/form-react",
+        "@buildnbuzz/form-builder-core",
+        "@buildnbuzz/form-builder-react",
         "@dnd-kit/core",
         "@dnd-kit/sortable",
         "@dnd-kit/utilities",

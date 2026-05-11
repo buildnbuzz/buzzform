@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useBuilderStore } from "@buildnbuzz/form-builder-react";
 
@@ -23,13 +24,19 @@ export function SiteHeader({
     <header className="bg-background sticky top-0 z-50 flex w-full items-center border-b">
       <div className="flex h-header w-full items-center gap-2 px-4 text-foreground">
         <div className="flex min-w-0 items-center gap-2">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-2">
             <div className="flex aspect-square size-8 items-center justify-center rounded-lg invert dark:invert-0">
               <Image src="/bb-icon.svg" alt="Logo" width={24} height={24} />
             </div>
             <span className="text-sm font-semibold tracking-tight">
               BuzzForm
             </span>
+            <Badge
+              variant="secondary"
+              className="h-5 rounded-full px-2 text-[10px] font-semibold tracking-wide"
+            >
+              Preview
+            </Badge>
           </Link>
         </div>
 
