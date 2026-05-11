@@ -1,6 +1,6 @@
 {
   "name": "@buildnbuzz/form-builder-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React adapter for the BuzzForm form builder.",
   "author": "Parth Lad <parth@buildnbuzz.com>",
   "license": "MIT",
