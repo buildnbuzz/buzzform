@@ -188,13 +188,23 @@ export class LocalStorageProvider implements BuilderStorageProvider {
   }
 }
 
-let browserLocalStorageProvider: LocalStorageProvider | null = null;
+const browserLocalStorageProviders = new Map<string, LocalStorageProvider>();
 
-export function getBrowserLocalStorageProvider(): LocalStorageProvider {
-  if (!browserLocalStorageProvider) {
-    browserLocalStorageProvider = new LocalStorageProvider();
+export function getBrowserLocalStorageProvider(
+  namespace?: string,
+): LocalStorageProvider {
+  const normalizedNamespace =
+    normalizeNamespace(namespace) ?? DEFAULT_NAMESPACE;
+  const existingProvider =
+    browserLocalStorageProviders.get(normalizedNamespace);
+
+  if (existingProvider) {
+    return existingProvider;
   }
-  return browserLocalStorageProvider;
+
+  const provider = new LocalStorageProvider({ namespace: normalizedNamespace });
+  browserLocalStorageProviders.set(normalizedNamespace, provider);
+  return provider;
 }
 
 function resolveStorage(storage?: Storage): Storage {
