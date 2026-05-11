@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo } from "react";
 import type { AvailableField } from "@buildnbuzz/form-builder-core";
-import { getAllFieldNames } from "@buildnbuzz/form-builder-core";
+import { getAllAvailableFields } from "@buildnbuzz/form-builder-core";
 import { useBuilderStore } from "./BuilderContext";
 
 export interface ExpressionContextValue {
@@ -16,11 +16,7 @@ export const ExpressionProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const availableFields = useMemo(() => {
     if (!nodes || !rootIds || rootIds.length === 0) return [];
-    const names = getAllFieldNames(nodes, rootIds);
-    return Array.from(names).map((name) => ({
-      id: name,
-      label: name,
-    }));
+    return getAllAvailableFields(nodes, rootIds);
   }, [nodes, rootIds]);
 
   const value = useMemo(() => ({ availableFields }), [availableFields]);
