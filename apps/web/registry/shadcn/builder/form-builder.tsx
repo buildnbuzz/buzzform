@@ -251,10 +251,16 @@ const FormBuilderContent = ({
 }: {
   storageProvider: BuilderStorageProvider | null;
 }) => {
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
   const zoom = useBuilderStore((state) => state.zoom);
   const setZoom = useBuilderStore((state) => state.setZoom);
   const mode = useBuilderStore((s) => s.mode);
+
 
   const onSubmit = async (data: Record<string, unknown>) => {
     await new Promise((r) => setTimeout(r, 500));
@@ -266,6 +272,7 @@ const FormBuilderContent = ({
 
   // Handle Ctrl+Wheel zoom
   useEffect(() => {
+    if (!mounted) return;
     const container = containerRef.current;
     if (!container) return;
 
@@ -282,7 +289,9 @@ const FormBuilderContent = ({
 
     container.addEventListener("wheel", handleWheel, { passive: false });
     return () => container.removeEventListener("wheel", handleWheel);
-  }, [zoom, setZoom]);
+  }, [zoom, setZoom, mounted]);
+
+  if (!mounted) return null;
 
   return (
     <BuilderDndProvider
