@@ -43,6 +43,17 @@ const regenerateIds = (node: ExpressionGroup | ExpressionRule): ExpressionGroup 
   };
 };
 
+const ensureIds = (node: ExpressionGroup | ExpressionRule): ExpressionGroup | ExpressionRule => {
+  if (node.type === "rule") {
+    return { ...node, id: node.id || nanoid(8) };
+  }
+  return {
+    ...node,
+    id: node.id || "root",
+    children: (node.children || []).map(ensureIds),
+  };
+};
+
 export const createExpressionStore = (
   initial?: ExpressionGroup
 ): StoreApi<ExpressionStoreState> => {
@@ -66,7 +77,7 @@ export const createExpressionStore = (
     };
 
     return {
-      rootGroup: initial ? deepClone(initial) : {
+      rootGroup: initial ? ensureIds(deepClone(initial)) as ExpressionGroup : {
         id: "root",
         type: "group",
         logicalOperator: "AND",

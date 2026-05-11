@@ -29,7 +29,8 @@ export function useExpressionStore(
   const store = useMemo(() => {
     void open; // trigger re-creation when dialog opens
     return createExpressionStore(initialValue);
-  }, [open, initialValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const [rootGroup, setRootGroup] = useState<ExpressionGroup>(
     () => store.getState().rootGroup,
