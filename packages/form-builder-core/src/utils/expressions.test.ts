@@ -49,8 +49,8 @@ describe("expressions utility", () => {
     
     expect(compileToExpression(group)).toEqual({
       $and: [
-        { $data: "/a", eq: "1" },
-        { $data: "/b", eq: "2" },
+        { $data: "/a", eq: 1 },
+        { $data: "/b", eq: 2 },
       ],
     });
   });
@@ -68,8 +68,8 @@ describe("expressions utility", () => {
     
     expect(compileToExpression(group)).toEqual({
       $or: [
-        { $data: "/a", eq: "1" },
-        { $data: "/b", eq: "2" },
+        { $data: "/a", eq: 1 },
+        { $data: "/b", eq: 2 },
       ],
     });
   });

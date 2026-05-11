@@ -44,6 +44,19 @@ export function compileToExpression(
 }
 
 /**
+ * Coerces a string value to its likely runtime type.
+ * - `"true"` / `"false"` → boolean
+ * - Numeric strings → number
+ * - Everything else stays string.
+ */
+function coerceValue(value: string): string | number | boolean {
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (value !== "" && !isNaN(Number(value))) return Number(value);
+  return value;
+}
+
+/**
  * Compiles a single expression rule into an AtomicCondition.
  */
 function compileRule(rule: ExpressionRule): Condition {
@@ -52,9 +65,9 @@ function compileRule(rule: ExpressionRule): Condition {
 
   switch (operator) {
     case "equals":
-      return { $data: path, eq: value };
+      return { $data: path, eq: coerceValue(value) };
     case "not_equals":
-      return { $data: path, neq: value };
+      return { $data: path, neq: coerceValue(value) };
     case "contains":
       return { $data: path, contains: value };
     case "not_contains":

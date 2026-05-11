@@ -110,6 +110,8 @@ export interface AvailableField {
   id: string;
   label: string;
   type?: string;
+  /** Static options for select/radio/checkbox-group fields, or True/False for booleans. */
+  options?: { label: string; value: string }[];
 }
 
 /**

@@ -35,7 +35,7 @@ export {
   updateNode,
 } from "./tree";
 
-export { nodesToFields, nodeToField, getAllFieldNames } from "./schema-builder";
+export { nodesToFields, nodeToField, getAllFieldNames, getAllAvailableFields } from "./schema-builder";
 
 export { CURRENT_SCHEMA_VERSION, BUILDER_VERSION } from "./persistence";
 export {

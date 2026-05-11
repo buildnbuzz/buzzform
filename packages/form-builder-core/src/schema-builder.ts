@@ -3,7 +3,7 @@ import { isContainerType } from "@buildnbuzz/form-core";
 
 import { DEFAULT_SLOT, getTabSlotKeys, getNodeChildren } from "./node-children";
 import { isDataField } from "./types";
-import type { Node, ExpressionGroup } from "./types";
+import type { Node, ExpressionGroup, AvailableField } from "./types";
 import { compileToExpression } from "./utils/expressions";
 
 /**
@@ -180,4 +180,75 @@ export function getAllFieldNames(
 
   traverse(rootIds);
   return names;
+}
+
+/**
+ * Extracts all data-bearing fields as `AvailableField[]` with type metadata
+ * and static options when available.
+ *
+ * Used by the expression builder to provide type-aware operator filtering
+ * and value input rendering (e.g. select dropdown for booleans and option-based fields).
+ */
+export function getAllAvailableFields(
+  nodes: Record<string, Node>,
+  rootIds: string[],
+): AvailableField[] {
+  const fields: AvailableField[] = [];
+
+  function traverse(ids: string[]) {
+    for (const id of ids) {
+      const node = nodes[id];
+      if (!node) continue;
+
+      if (isDataField(node.field)) {
+        const f = node.field as unknown as Record<string, unknown>;
+        const fieldType = node.field.type;
+
+        // Extract static options for option-based fields
+        let options: { label: string; value: string }[] | undefined;
+
+        if (fieldType === "switch" || (fieldType === "checkbox" && !f.hasMany)) {
+          options = [
+            { label: "True", value: "true" },
+            { label: "False", value: "false" },
+          ];
+        } else if (
+          fieldType === "select" ||
+          fieldType === "radio" ||
+          (fieldType === "checkbox" && f.hasMany === true)
+        ) {
+          const rawOptions = f.options;
+          if (Array.isArray(rawOptions)) {
+            options = rawOptions
+              .map((opt) => {
+                if (typeof opt === "string") {
+                  return { label: opt, value: opt };
+                }
+                if (opt && typeof opt === "object" && "value" in opt) {
+                  const o = opt as { label?: string; value: string };
+                  return {
+                    label: String(o.label ?? o.value),
+                    value: String(o.value),
+                  };
+                }
+                return null;
+              })
+              .filter((o): o is { label: string; value: string } => o !== null);
+          }
+        }
+
+        fields.push({
+          id: node.field.name,
+          label: (f.label as string) || node.field.name,
+          type: fieldType,
+          ...(options && options.length > 0 ? { options } : {}),
+        });
+      }
+
+      traverse(getNodeChildren(node));
+    }
+  }
+
+  traverse(rootIds);
+  return fields;
 }
