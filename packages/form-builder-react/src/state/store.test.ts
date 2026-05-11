@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createBuilderStore } from "./store";
 import type { BuilderFieldRegistry } from "../types";

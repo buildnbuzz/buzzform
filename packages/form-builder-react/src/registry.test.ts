@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect } from "vitest";
 import { getRegistryEntry, getSidebarGroups, isContainer } from "./registry";
 import type { BuilderFieldRegistry } from "./types";

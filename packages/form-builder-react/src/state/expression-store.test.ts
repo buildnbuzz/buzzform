@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { describe, it, expect, beforeEach } from "vitest";
 import { createExpressionStore, type ExpressionStoreState } from "./expression-store";
 import type { StoreApi } from "zustand/vanilla";

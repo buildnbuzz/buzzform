@@ -1,4 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
+/** @vitest-environment jsdom */
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { 
