@@ -11,8 +11,10 @@ export interface TreeState {
 
 /** Merges an object recursively without mutating. */
 function mergeUpdates<T extends object>(target: T, source: Partial<T>): T {
+  let changed = false;
   const result = { ...target } as unknown as Record<string, unknown>;
   const keys = Object.keys(source) as Array<keyof T>;
+
   for (const key of keys) {
     const sourceValue = source[key];
     const targetValue = result[key as string];
@@ -21,14 +23,23 @@ function mergeUpdates<T extends object>(target: T, source: Partial<T>): T {
       sourceValue && typeof sourceValue === "object" && !Array.isArray(sourceValue) &&
       targetValue && typeof targetValue === "object" && !Array.isArray(targetValue)
     ) {
-      result[key as string] = mergeUpdates(targetValue as object, sourceValue as object);
+      const merged = mergeUpdates(targetValue as object, sourceValue as object);
+      if (merged !== targetValue) {
+        result[key as string] = merged;
+        changed = true;
+      }
     } else if (sourceValue === undefined) {
-      delete result[key as string];
-    } else {
+      if (key in result) {
+        delete result[key as string];
+        changed = true;
+      }
+    } else if (result[key as string] !== sourceValue) {
       result[key as string] = sourceValue;
+      changed = true;
     }
   }
-  return result as T;
+
+  return changed ? (result as T) : target;
 }
 
 export function removeNodeTree(state: TreeState, nodeId: string): TreeState {
@@ -247,6 +258,8 @@ export function updateNode(
 
   const nextField = mergeUpdates(node.field, updates);
   sanitizeFieldDefaults(nextField as unknown as Record<string, unknown>);
+
+  if (nextField === node.field) return state;
 
   const nextNode: Node = { ...node, field: nextField as Field };
   let nextState: TreeState = { nodes: { ...state.nodes, [id]: nextNode }, rootIds: state.rootIds };

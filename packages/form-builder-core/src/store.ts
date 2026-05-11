@@ -125,258 +125,257 @@ export const createBuilderStore = (
 ): StoreApi<Store> =>
   createStore<Store>()(
     persist(
-    temporal(
-      immer((set) => ({
-        ...INITIAL_STATE,
+      temporal(
+        immer((set) => ({
+          ...INITIAL_STATE,
 
-        createNode: (
-          type,
-          defaultProps,
-          parentId,
-          index = 0,
-          parentSlot = null,
-        ) => {
-          const id = nanoid();
-          const safeTypeName = type.replace(/-/g, "_");
-          const name = `${safeTypeName}_${id.slice(0, 4)}`;
-
-          const isData =
-            "name" in defaultProps ||
-            (defaultProps.type !== "group" &&
-              defaultProps.type !== "array" &&
-              defaultProps.type !== "row" &&
-              defaultProps.type !== "tabs" &&
-              defaultProps.type !== "collapsible"); // fast approximation of isDataField without registry
-          const fieldProps = isData
-            ? { ...defaultProps, name }
-            : { ...defaultProps };
-
-          const newNode: Node = {
-            id,
-            field: fieldProps as Node["field"],
+          createNode: (
+            type,
+            defaultProps,
             parentId,
-            parentSlot: null,
-            children: {},
-          };
+            index = 0,
+            parentSlot = null,
+          ) => {
+            const id = nanoid();
+            const safeTypeName = type.replace(/-/g, "_");
+            const name = `${safeTypeName}_${id.slice(0, 4)}`;
 
-          // If tabs, initialize default array for slots
-          if (newNode.field.type === "tabs") {
-            const tabs = (newNode.field as TabsField).tabs || [];
-            tabs.forEach((_, i) => (newNode.children[`__tab_${i}`] = []));
-          }
+            const isData =
+              "name" in defaultProps ||
+              (defaultProps.type !== "row" &&
+                defaultProps.type !== "tabs" &&
+                defaultProps.type !== "collapsible"); // layout-only types excluded
+            const fieldProps = isData
+              ? { ...defaultProps, name }
+              : { ...defaultProps };
 
-          set((state) => {
-            const nextTree = insertNode(
-              { nodes: state.nodes, rootIds: state.rootIds },
-              newNode,
-              index,
-            );
+            const newNode: Node = {
+              id,
+              field: fieldProps as Node["field"],
+              parentId,
+              parentSlot: null,
+              children: {},
+            };
 
-            // Adjust the parent slot after insertion if needed
-            const currentItem = nextTree.nodes[id];
-            if (currentItem && currentItem.parentId) {
-              const { resolvedSlot } = ensureChildList(
-                nextTree.nodes,
-                nextTree.rootIds,
-                currentItem.parentId,
-                parentSlot,
+            // If tabs, initialize default array for slots
+            if (newNode.field.type === "tabs") {
+              const tabs = (newNode.field as TabsField).tabs || [];
+              tabs.forEach((_, i) => (newNode.children[`__tab_${i}`] = []));
+            }
+
+            set((state) => {
+              const nextTree = insertNode(
+                { nodes: state.nodes, rootIds: state.rootIds },
+                newNode,
+                index,
               );
-              nextTree.nodes[id]!.parentSlot = resolvedSlot;
-            }
 
-            state.nodes = nextTree.nodes as unknown as typeof state.nodes;
-            state.rootIds = nextTree.rootIds;
-            state.selectedId = id;
-          });
-        },
+              // Adjust the parent slot after insertion if needed
+              const currentItem = nextTree.nodes[id];
+              if (currentItem && currentItem.parentId) {
+                const { resolvedSlot } = ensureChildList(
+                  nextTree.nodes,
+                  nextTree.rootIds,
+                  currentItem.parentId,
+                  parentSlot,
+                );
+                nextTree.nodes[id]!.parentSlot = resolvedSlot;
+              }
 
-        moveNode: (id, newParentId, index, newParentSlot = null) => {
-          set((state) => {
-            const nextTree = moveNode(
-              { nodes: state.nodes, rootIds: state.rootIds },
-              id,
-              newParentId,
-              index,
-              newParentSlot,
-            );
-            state.nodes = nextTree.nodes as unknown as typeof state.nodes;
-            state.rootIds = nextTree.rootIds;
-          });
-        },
+              state.nodes = nextTree.nodes as unknown as typeof state.nodes;
+              state.rootIds = nextTree.rootIds;
+              state.selectedId = id;
+            });
+          },
 
-        selectNode: (id) => set({ selectedId: id }),
+          moveNode: (id, newParentId, index, newParentSlot = null) => {
+            set((state) => {
+              const nextTree = moveNode(
+                { nodes: state.nodes, rootIds: state.rootIds },
+                id,
+                newParentId,
+                index,
+                newParentSlot,
+              );
+              state.nodes = nextTree.nodes as unknown as typeof state.nodes;
+              state.rootIds = nextTree.rootIds;
+            });
+          },
 
-        updateNode: (id, updates) => {
-          set((state) => {
-            const nextTree = treeUpdateNode(
-              { nodes: state.nodes, rootIds: state.rootIds },
-              id,
-              updates,
-            );
-            state.nodes = nextTree.nodes as unknown as typeof state.nodes;
-            state.rootIds = nextTree.rootIds;
-          });
-        },
+          selectNode: (id) => set({ selectedId: id }),
 
-        updateFormSettings: (updates) => {
-          set((state) => {
-            if ("outputConfig" in updates) {
-              state.outputConfig = updates.outputConfig;
-            }
-            if ("title" in updates) {
-              state.formName = updates.title as string;
-            }
-            if ("description" in updates) {
-               // We don't have description in BuilderState yet, but we can store it in meta or add it.
-               // For now, let's keep it simple.
-            }
-          });
-        },
+          updateNode: (id, updates) => {
+            set((state) => {
+              const nextTree = treeUpdateNode(
+                { nodes: state.nodes, rootIds: state.rootIds },
+                id,
+                updates,
+              );
+              state.nodes = nextTree.nodes as unknown as typeof state.nodes;
+              state.rootIds = nextTree.rootIds;
+            });
+          },
 
-        removeNode: (id) => {
-          set((state) => {
-            const nextTree = treeRemoveNode(
-              { nodes: state.nodes, rootIds: state.rootIds },
-              id,
-            );
-            state.nodes = nextTree.nodes as unknown as typeof state.nodes;
-            state.rootIds = nextTree.rootIds;
+          updateFormSettings: (updates) => {
+            set((state) => {
+              if ("outputConfig" in updates) {
+                state.outputConfig = updates.outputConfig;
+              }
+              if ("title" in updates) {
+                state.formName = updates.title as string;
+              }
+              if ("description" in updates) {
+                // We don't have description in BuilderState yet, but we can store it in meta or add it.
+                // For now, let's keep it simple.
+              }
+            });
+          },
 
-            // Also clean up active tabs for this node and descendants
-            // In a strict setup we'd recursively delete activeTabs, but deleting the node is sufficient for headless
-            delete state.activeTabs[id];
-            delete state.collapsedNodes[id];
+          removeNode: (id) => {
+            set((state) => {
+              const nextTree = treeRemoveNode(
+                { nodes: state.nodes, rootIds: state.rootIds },
+                id,
+              );
+              state.nodes = nextTree.nodes as unknown as typeof state.nodes;
+              state.rootIds = nextTree.rootIds;
 
-            if (state.selectedId === id) {
-              state.selectedId = null;
-            }
-          });
-        },
+              // Also clean up active tabs for this node and descendants
+              // In a strict setup we'd recursively delete activeTabs, but deleting the node is sufficient for headless
+              delete state.activeTabs[id];
+              delete state.collapsedNodes[id];
 
-        duplicateNode: (id) => {
-          set((state) => {
-            const { state: nextTree, newId } = duplicateNode(
-              { nodes: state.nodes, rootIds: state.rootIds },
-              id,
-            );
-            state.nodes = nextTree.nodes as unknown as typeof state.nodes;
-            state.rootIds = nextTree.rootIds;
-            if (newId) {
-              state.selectedId = newId;
-            }
-          });
-        },
+              if (state.selectedId === id) {
+                state.selectedId = null;
+              }
+            });
+          },
 
-        setActiveTab: (nodeId, slot) =>
-          set((state) => {
-            state.activeTabs[nodeId] = slot;
+          duplicateNode: (id) => {
+            set((state) => {
+              const { state: nextTree, newId } = duplicateNode(
+                { nodes: state.nodes, rootIds: state.rootIds },
+                id,
+              );
+              state.nodes = nextTree.nodes as unknown as typeof state.nodes;
+              state.rootIds = nextTree.rootIds;
+              if (newId) {
+                state.selectedId = newId;
+              }
+            });
+          },
+
+          setActiveTab: (nodeId, slot) =>
+            set((state) => {
+              state.activeTabs[nodeId] = slot;
+            }),
+
+          setDropIndicator: (value) => set({ dropIndicator: value }),
+
+          toggleCollapsed: (nodeId) =>
+            set((state) => {
+              state.collapsedNodes[nodeId] = !state.collapsedNodes[nodeId];
+            }),
+
+          setCollapsed: (nodeId, collapsed) =>
+            set((state) => {
+              if (collapsed) {
+                state.collapsedNodes[nodeId] = true;
+              } else {
+                delete state.collapsedNodes[nodeId];
+              }
+            }),
+
+          setMode: (mode) => set({ mode }),
+
+          setZoom: (zoom) => set({ zoom }),
+
+          setViewport: (viewport) => set({ viewport }),
+
+          clearState: () => {
+            // temporal API can be accessed via `builderStore.temporal.getState()`
+            set((state) => {
+              Object.assign(state, INITIAL_STATE);
+              state.formId = nanoid();
+            });
+          },
+
+          loadDocumentState: (documentState) => {
+            set((state) => {
+              Object.assign(state, INITIAL_STATE);
+              state.nodes =
+                documentState.nodes as unknown as typeof state.nodes;
+              state.rootIds = [...documentState.rootIds];
+              state.formId = documentState.formId;
+              state.formName = documentState.formName;
+              state.outputConfig = documentState.outputConfig;
+              state.saveStatus = "saved";
+              state.lastSavedAt = Date.now();
+            });
+          },
+
+          setSaveStatus: (saveStatus, timestamp) =>
+            set({
+              saveStatus,
+              lastSavedAt:
+                timestamp ?? (saveStatus === "saved" ? Date.now() : undefined),
+            }),
+
+          setFormName: (name) => set({ formName: name }),
+          setFormId: (id) => set({ formId: id }),
+        })),
+        {
+          partialize: (state): TrackedState => ({
+            nodes: state.nodes,
+            rootIds: state.rootIds,
+            outputConfig: state.outputConfig,
           }),
-
-        setDropIndicator: (value) => set({ dropIndicator: value }),
-
-        toggleCollapsed: (nodeId) =>
-          set((state) => {
-            state.collapsedNodes[nodeId] = !state.collapsedNodes[nodeId];
-          }),
-
-        setCollapsed: (nodeId, collapsed) =>
-          set((state) => {
-            if (collapsed) {
-              state.collapsedNodes[nodeId] = true;
-            } else {
-              delete state.collapsedNodes[nodeId];
+          equality: (pastState, currentState) =>
+            pastState.nodes === currentState.nodes &&
+            pastState.rootIds === currentState.rootIds &&
+            pastState.outputConfig === currentState.outputConfig,
+          limit: 50,
+          handleSet: (handleSet) => (pastState) => {
+            if (!pendingState) {
+              pendingState = pastState as TrackedState;
             }
-          }),
-
-        setMode: (mode) => set({ mode }),
-
-        setZoom: (zoom) => set({ zoom }),
-
-        setViewport: (viewport) => set({ viewport }),
-
-        clearState: () => {
-          // temporal API can be accessed via `builderStore.temporal.getState()`
-          set((state) => {
-            Object.assign(state, INITIAL_STATE);
-            state.formId = nanoid();
-          });
+            if (throttleTimeout) {
+              clearTimeout(throttleTimeout);
+            }
+            throttleTimeout = setTimeout(() => {
+              if (pendingState) {
+                handleSet(pendingState);
+                pendingState = null;
+              }
+              throttleTimeout = null;
+            }, 400);
+          },
         },
-
-        loadDocumentState: (documentState) => {
-          set((state) => {
-            Object.assign(state, INITIAL_STATE);
-            state.nodes = documentState.nodes as unknown as typeof state.nodes;
-            state.rootIds = [...documentState.rootIds];
-            state.formId = documentState.formId;
-            state.formName = documentState.formName;
-            state.outputConfig = documentState.outputConfig;
-            state.saveStatus = "saved";
-            state.lastSavedAt = Date.now();
-          });
-        },
-
-        setSaveStatus: (saveStatus, timestamp) =>
-          set({
-            saveStatus,
-            lastSavedAt:
-              timestamp ?? (saveStatus === "saved" ? Date.now() : undefined),
-          }),
-
-        setFormName: (name) => set({ formName: name }),
-        setFormId: (id) => set({ formId: id }),
-      })),
+      ),
       {
-        partialize: (state): TrackedState => ({
+        name: options?.name ?? "buzzform-builder",
+        storage:
+          typeof window !== "undefined"
+            ? createJSONStorage(() => localStorage)
+            : undefined,
+        partialize: (state) => ({
           nodes: state.nodes,
           rootIds: state.rootIds,
+          zoom: state.zoom,
+          viewport: state.viewport,
+          formId: state.formId,
+          formName: state.formName,
           outputConfig: state.outputConfig,
         }),
-        equality: (pastState, currentState) =>
-          pastState.nodes === currentState.nodes &&
-          pastState.rootIds === currentState.rootIds &&
-          pastState.outputConfig === currentState.outputConfig,
-        limit: 50,
-        handleSet: (handleSet) => (pastState) => {
-          if (!pendingState) {
-            pendingState = pastState as TrackedState;
+        version: 2,
+        onRehydrateStorage: () => (state) => {
+          if (state) {
+            state.setSaveStatus("saved");
           }
-          if (throttleTimeout) {
-            clearTimeout(throttleTimeout);
-          }
-          throttleTimeout = setTimeout(() => {
-            if (pendingState) {
-              handleSet(pendingState);
-              pendingState = null;
-            }
-            throttleTimeout = null;
-          }, 400);
         },
       },
     ),
-    {
-      name: options?.name ?? "buzzform-builder",
-      storage:
-        typeof window !== "undefined"
-          ? createJSONStorage(() => localStorage)
-          : undefined,
-      partialize: (state) => ({
-        nodes: state.nodes,
-        rootIds: state.rootIds,
-        zoom: state.zoom,
-        viewport: state.viewport,
-        formId: state.formId,
-        formName: state.formName,
-        outputConfig: state.outputConfig,
-      }),
-      version: 2,
-      onRehydrateStorage: () => (state) => {
-        if (state) {
-          state.setSaveStatus("saved");
-        }
-      },
-    },
-  ),
-) as unknown as StoreApi<Store>;
+  ) as unknown as StoreApi<Store>;
 
 // ---------------------------------------------------------------------------
 // External Autosave setup
@@ -413,16 +412,19 @@ export function setupBuilderAutoSave(
   store: StoreApi<Store>,
   provider: BuilderStorageProvider | null,
 ) {
-  return store.subscribe((state, prevState) => {
+  let lastState = store.getState();
+
+  return store.subscribe((state) => {
     if (!provider) return;
 
     if (
-      state.nodes === prevState.nodes &&
-      state.rootIds === prevState.rootIds &&
-      state.formName === prevState.formName &&
-      state.formId === prevState.formId &&
-      state.outputConfig === prevState.outputConfig
+      state.nodes === lastState.nodes &&
+      state.rootIds === lastState.rootIds &&
+      state.formName === lastState.formName &&
+      state.formId === lastState.formId &&
+      state.outputConfig === lastState.outputConfig
     ) {
+      lastState = state;
       return;
     }
 
@@ -434,6 +436,9 @@ export function setupBuilderAutoSave(
       outputConfig: state.outputConfig,
     };
 
+    const prevState = lastState;
+    lastState = state;
+
     if (shouldSkipAutosave(snapshot, prevState)) {
       if (saveTimeout) {
         clearTimeout(saveTimeout);
@@ -444,7 +449,11 @@ export function setupBuilderAutoSave(
       return;
     }
 
-    store.getState().setSaveStatus("saving");
+    // Only set saving if we're not already in a saving state or if it's a fresh change
+    if (store.getState().saveStatus !== "saving") {
+      store.getState().setSaveStatus("saving");
+    }
+
     saveRevision += 1;
     const currentRevision = saveRevision;
 
