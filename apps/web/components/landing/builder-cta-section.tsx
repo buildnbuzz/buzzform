@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function BuilderCtaSection() {
   return (
@@ -19,12 +20,12 @@ export function BuilderCtaSection() {
           you are ready.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button
-            size="lg"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={<Link href="/builder/v2">Open Builder</Link>}
-          />
+          <Link
+            href="/builder/v2"
+            className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+          >
+            Open Builder
+          </Link>
         </div>
       </div>
     </section>

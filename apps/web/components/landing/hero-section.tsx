@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { heroContent } from "@/lib/constants";
 import { CopyCommand } from "@/components/landing/copy-command";
+import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   return (
@@ -30,36 +31,25 @@ export function HeroSection() {
           {heroContent.description}
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-4">
-          <Button
-            size="lg"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={
-              <Link href={heroContent.primaryCta.href}>
-                {heroContent.primaryCta.label}{" "}
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  className="ml-2 h-4 w-4"
-                />
-              </Link>
-            }
-          />
-          <Button
-            size="lg"
-            variant="outline"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={
-              <Link
-                href={heroContent.secondaryCta.href}
-                {...(heroContent.secondaryCta.external
-                  ? { target: "_blank", rel: "noreferrer" }
-                  : {})}
-              >
-                {heroContent.secondaryCta.label}
-              </Link>
-            }
-          />
+          <Link
+            href={heroContent.primaryCta.href}
+            className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+          >
+            {heroContent.primaryCta.label}{" "}
+            <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" />
+          </Link>
+          <Link
+            href={heroContent.secondaryCta.href}
+            className={cn(
+              buttonVariants({ size: "lg", variant: "outline" }),
+              "rounded-full px-8"
+            )}
+            {...(heroContent.secondaryCta.external
+              ? { target: "_blank", rel: "noreferrer" }
+              : {})}
+          >
+            {heroContent.secondaryCta.label}
+          </Link>
         </div>
         <CopyCommand />
       </div>
