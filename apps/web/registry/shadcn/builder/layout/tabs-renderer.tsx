@@ -1,97 +1,51 @@
 "use client";
 
-import React from "react";
-import type { Tab, TabsField as TabsFieldType } from "@buildnbuzz/buzzform";
-import { useDroppable } from "@dnd-kit/core";
+import React, { useMemo, useEffect } from "react";
 import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+  useBuilderStore,
+  type BuilderNodeRendererProps,
+} from "@buildnbuzz/form-builder-react";
+import { getTabSlotKeys } from "@buildnbuzz/form-builder-core";
+import { useDroppable } from "@dnd-kit/core";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
-import { useBuilderStore } from "../../lib/store";
-import { EditableNode } from "../editable-node";
-import { getTabSlotKeys } from "../../lib/node-children";
-import { HugeiconsIcon } from "@hugeicons/react";
-import { Layout01Icon, BlockedIcon } from "@hugeicons/core-free-icons";
 import { Badge } from "@/components/ui/badge";
-import { useDropIndicatorIndex } from "../../hooks/use-drop-indicator-index";
-
-interface TabsLayoutProps {
-  id: string;
-  field: TabsFieldType;
-  childrenIds: string[];
-}
-
-const spacingMap = {
-  sm: "space-y-2",
-  md: "space-y-3",
-  lg: "space-y-4",
-} as const;
+import { IconPlaceholder } from "@/components/icon-placeholder";
+import { cn } from "@/lib/utils";
+import type { TabsField, Tab } from "@buildnbuzz/form-core";
 
 function getTabDisplayLabel(tab: Tab, index: number) {
-  if (typeof tab.label === "string" && tab.label.trim().length > 0) {
-    return tab.label;
+  const label = tab.label;
+  if (typeof label === "string" && label.trim().length > 0) {
+    return label;
   }
-
-  if (typeof tab.label === "number") {
-    return String(tab.label);
+  if (typeof label === "number") {
+    return String(label);
   }
-
   return `Tab ${index + 1}`;
 }
 
-function DropLine() {
-  return <div className="my-1 h-1 rounded-full bg-primary" />;
-}
-
-function useCachedTabChildren(containerId: string, slot: string) {
-  const cacheRef = React.useRef<string[]>([]);
-
-  return useBuilderStore(
-    React.useCallback(
-      (state) => {
-        const nextChildren =
-          state.nodes[containerId]?.tabChildren?.[slot] ?? [];
-        const prevChildren = cacheRef.current;
-
-        if (
-          prevChildren.length === nextChildren.length &&
-          prevChildren.every(
-            (childId, index) => childId === nextChildren[index],
-          )
-        ) {
-          return prevChildren;
-        }
-
-        cacheRef.current = nextChildren;
-        return nextChildren;
-      },
-      [containerId, slot],
-    ),
-  );
+interface TabDropZoneProps {
+  containerId: string;
+  slot: string;
+  tab: Tab;
+  childrenIds: string[];
+  renderSlot: (slot: string) => React.ReactNode;
 }
 
 function TabDropZone({
   containerId,
   slot,
   tab,
-  spacing,
-}: {
-  containerId: string;
-  slot: string;
-  tab: Tab;
-  spacing: keyof typeof spacingMap;
-}) {
-  const childrenIds = useCachedTabChildren(containerId, slot);
-  const indicatorIndex = useDropIndicatorIndex(containerId, slot);
-
+  childrenIds,
+  renderSlot,
+}: TabDropZoneProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: `${containerId}::tab::${encodeURIComponent(slot)}-dropzone`,
     data: { type: "tabs", parentId: containerId, parentSlot: slot },
   });
 
   const isEmpty = childrenIds.length === 0;
+  const description = (tab as unknown as Record<string, unknown>).description;
 
   return (
     <div
@@ -99,8 +53,8 @@ function TabDropZone({
       data-container-padding
       className={cn("min-h-16 transition-colors", isOver && "bg-primary/5")}
     >
-      {tab.description && (
-        <p className="text-sm text-muted-foreground mb-3">{tab.description}</p>
+      {typeof description === "string" && description && (
+        <p className="text-sm text-muted-foreground mb-3">{description}</p>
       )}
 
       {isEmpty ? (
@@ -117,74 +71,36 @@ function TabDropZone({
           </span>
         </div>
       ) : (
-        <SortableContext
-          items={childrenIds}
-          strategy={verticalListSortingStrategy}
-        >
-          <div className={cn(spacingMap[spacing])}>
-            {childrenIds.map((childId, index) => (
-              <div key={childId}>
-                {indicatorIndex === index && <DropLine />}
-                <EditableNode id={childId} />
-              </div>
-            ))}
-            {indicatorIndex === childrenIds.length && <DropLine />}
-          </div>
-        </SortableContext>
+        renderSlot(slot)
       )}
     </div>
   );
 }
 
-export function TabsLayout({ id, field }: TabsLayoutProps) {
-  const tabChildrenCacheRef = React.useRef<Record<string, string[]>>({});
-  const tabs = React.useMemo(() => field.tabs ?? [], [field.tabs]);
-  const slots = React.useMemo(() => getTabSlotKeys(tabs), [tabs]);
-  const tabChildren = useBuilderStore(
-    React.useCallback(
-      (state) => {
-        const currentTabChildren = state.nodes[id]?.tabChildren ?? {};
-        const currentSlots = Object.keys(currentTabChildren);
-        const previousTabChildren = tabChildrenCacheRef.current;
+/**
+ * Visual renderer for 'tabs' fields.
+ * Orchestrates multiple slots as tabs.
+ */
+export const TabsRenderer = ({
+  id,
+  field,
+  renderSlot,
+}: BuilderNodeRendererProps) => {
+  const tabsField = field as TabsField;
+  const tabs = useMemo(() => tabsField.tabs ?? [], [tabsField.tabs]);
+  const slots = useMemo(() => getTabSlotKeys(tabs), [tabs]);
 
-        if (currentSlots.length === Object.keys(previousTabChildren).length) {
-          let isSame = true;
-
-          for (const slot of currentSlots) {
-            const nextChildren = currentTabChildren[slot] ?? [];
-            const prevChildren = previousTabChildren[slot] ?? [];
-
-            if (
-              nextChildren.length !== prevChildren.length ||
-              nextChildren.some(
-                (childId, index) => childId !== prevChildren[index],
-              )
-            ) {
-              isSame = false;
-              break;
-            }
-          }
-
-          if (isSame) {
-            return previousTabChildren;
-          }
-        }
-
-        tabChildrenCacheRef.current = currentTabChildren;
-        return currentTabChildren;
-      },
-      [id],
-    ),
-  );
   const activeSlotFromStore = useBuilderStore(
     (state) => state.activeTabs[id] ?? null,
   );
   const setActiveTab = useBuilderStore((state) => state.setActiveTab);
+  const tabChildren = useBuilderStore(
+    (state) => state.nodes[id]?.children ?? {},
+  );
 
-  const defaultSlot = React.useMemo(() => {
+  const defaultSlot = useMemo(() => {
     if (slots.length === 0) return "";
-
-    const configuredDefault = field.ui?.defaultTab;
+    const configuredDefault = tabsField.ui?.defaultTab;
     const enabledSlots = slots.filter(
       (_, index) => tabs[index]?.disabled !== true,
     );
@@ -205,14 +121,14 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
     }
 
     return enabledFallbackSlot;
-  }, [field.ui?.defaultTab, tabs, slots]);
+  }, [tabsField.ui?.defaultTab, tabs, slots]);
 
   const activeSlot =
     activeSlotFromStore && slots.includes(activeSlotFromStore)
       ? activeSlotFromStore
       : defaultSlot;
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!activeSlot) return;
     if (activeSlotFromStore !== activeSlot) {
       setActiveTab(id, activeSlot);
@@ -223,7 +139,7 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
     return (
       <div className="w-full rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4">
         <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          <HugeiconsIcon icon={Layout01Icon} size={14} strokeWidth={1.5} />
+          <IconPlaceholder lucide="Layout" hugeicons="Layout01Icon" size={14} />
           <span className="text-xs font-medium">Tabs</span>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -236,17 +152,17 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
   return (
     <div className="w-full">
       <div className="flex items-center gap-1.5 mb-2 text-muted-foreground">
-        <HugeiconsIcon icon={Layout01Icon} size={14} strokeWidth={1.5} />
+        <IconPlaceholder lucide="Layout" hugeicons="Layout01Icon" size={14} />
         <span className="text-xs font-medium">Tabs</span>
       </div>
 
       <Tabs
         value={activeSlot}
-        onValueChange={(value) => setActiveTab(id, value)}
+        onValueChange={(val) => val && setActiveTab(id, val)}
         className="w-full"
       >
         <TabsList
-          variant={field.ui?.variant ?? "line"}
+          variant={(tabsField.ui?.variant as "line" | "default") ?? "line"}
           className="w-full justify-start"
         >
           {tabs.map((tab, index) => {
@@ -268,10 +184,10 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
                     {childCount}
                   </Badge>
                   {tab.disabled && (
-                    <HugeiconsIcon
-                      icon={BlockedIcon}
+                    <IconPlaceholder
+                      lucide="Ban"
+                      hugeicons="BlockedIcon"
                       size={12}
-                      strokeWidth={1.7}
                       className="text-muted-foreground/70"
                     />
                   )}
@@ -283,7 +199,7 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
 
         {tabs.map((tab, index) => {
           const slot = slots[index];
-          const spacing = field.ui?.spacing ?? "md";
+          const childrenIdsForSlot = tabChildren[slot] || [];
 
           return (
             <TabsContent key={slot} value={slot} className="mt-4">
@@ -295,10 +211,10 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
                       variant="outline"
                       className="ml-2 h-5 gap-1 border-muted-foreground/20 bg-muted/50 px-1.5 text-[10px] font-normal text-muted-foreground"
                     >
-                      <HugeiconsIcon
-                        icon={BlockedIcon}
+                      <IconPlaceholder
+                        lucide="Ban"
+                        hugeicons="BlockedIcon"
                         size={12}
-                        strokeWidth={1.7}
                       />
                       Disabled
                     </Badge>
@@ -309,7 +225,8 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
                 containerId={id}
                 slot={slot}
                 tab={tab}
-                spacing={spacing}
+                childrenIds={childrenIdsForSlot}
+                renderSlot={renderSlot}
               />
             </TabsContent>
           );
@@ -317,4 +234,4 @@ export function TabsLayout({ id, field }: TabsLayoutProps) {
       </Tabs>
     </div>
   );
-}
+};

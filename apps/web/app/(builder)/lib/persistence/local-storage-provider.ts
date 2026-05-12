@@ -4,11 +4,17 @@ import {
   validateBuilderDocument,
 } from "./document";
 import type { BuilderStorageProvider } from "./provider";
-import { FormSummarySchema, type BuilderDocument, type FormSummary } from "./schemas";
+import {
+  FormSummarySchema,
+  type BuilderDocument,
+  type FormSummary,
+} from "./schemas";
 
 const DEFAULT_NAMESPACE = "buzzform-builder:forms";
 const INDEX_KEY_SUFFIX = "index";
 const DOCUMENT_KEY_PREFIX = "document:";
+
+const browserLocalStorageProviders = new Map<string, LocalStorageProvider>();
 
 export class LocalStorageProviderError extends Error {
   constructor(message: string) {
@@ -93,7 +99,10 @@ export class LocalStorageProvider implements BuilderStorageProvider {
         updatedAt: now,
       };
 
-      this.storage.setItem(this.documentKey(normalizedId), JSON.stringify(persisted));
+      this.storage.setItem(
+        this.documentKey(normalizedId),
+        JSON.stringify(persisted),
+      );
       this.updateIndex(persisted);
     } catch (error) {
       throw new LocalStorageProviderError(
@@ -187,13 +196,21 @@ export class LocalStorageProvider implements BuilderStorageProvider {
   }
 }
 
-let browserLocalStorageProvider: LocalStorageProvider | null = null;
+export function getBrowserLocalStorageProvider(
+  namespace?: string,
+): LocalStorageProvider {
+  const normalizedNamespace =
+    normalizeNamespace(namespace) ?? DEFAULT_NAMESPACE;
+  const existingProvider =
+    browserLocalStorageProviders.get(normalizedNamespace);
 
-export function getBrowserLocalStorageProvider(): LocalStorageProvider {
-  if (!browserLocalStorageProvider) {
-    browserLocalStorageProvider = new LocalStorageProvider();
+  if (existingProvider) {
+    return existingProvider;
   }
-  return browserLocalStorageProvider;
+
+  const provider = new LocalStorageProvider({ namespace: normalizedNamespace });
+  browserLocalStorageProviders.set(normalizedNamespace, provider);
+  return provider;
 }
 
 function toFormSummary(document: BuilderDocument): FormSummary {

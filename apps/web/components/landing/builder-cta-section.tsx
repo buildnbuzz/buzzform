@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function BuilderCtaSection() {
   return (
@@ -15,15 +16,16 @@ export function BuilderCtaSection() {
           Build forms visually in minutes
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground">
-          Drag, drop, and customize with a live preview. Export clean      code when you are ready.
+          Drag, drop, and customize with a live preview. Export clean code when
+          you are ready.
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Button
-            size="lg"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={<Link href="/builder">Open Builder</Link>}
-          />
+          <Link
+            href="/builder/v2"
+            className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+          >
+            Open Builder
+          </Link>
         </div>
       </div>
     </section>

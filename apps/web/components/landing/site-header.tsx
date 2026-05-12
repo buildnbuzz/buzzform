@@ -1,11 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Add01Icon, GithubIcon } from "@hugeicons/core-free-icons";
 import { siteConfig, navLinks } from "@/lib/constants";
 import { MobileNav } from "@/components/landing/mobile-nav";
+import { cn } from "@/lib/utils";
 
 export function SiteHeader() {
   return (
@@ -39,29 +40,26 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <Button
-            variant="ghost"
-            size="icon"
-            nativeButton={false}
-            render={
-              <Link href={siteConfig.github} target="_blank" rel="noreferrer">
-                <HugeiconsIcon icon={GithubIcon} className="h-5 w-5" />
-                <span className="sr-only">GitHub</span>
-              </Link>
-            }
-          />
+          <Link
+            href={siteConfig.github}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(buttonVariants({ variant: "ghost", size: "icon" }))}
+          >
+            <HugeiconsIcon icon={GithubIcon} className="h-5 w-5" />
+            <span className="sr-only">GitHub</span>
+          </Link>
           <ThemeToggle />
-          <Button
-            size="sm"
-            className="gap-2 h-8 hidden sm:flex"
-            nativeButton={false}
-            render={
-              <Link href="/builder">
-                <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
-                Create Form
-              </Link>
-            }
-          />
+          <Link
+            href="/builder/v2"
+            className={cn(
+              buttonVariants({ size: "sm" }),
+              "gap-2 h-8 hidden sm:flex"
+            )}
+          >
+            <HugeiconsIcon icon={Add01Icon} size={16} strokeWidth={2} />
+            Create Form
+          </Link>
           <MobileNav />
         </div>
       </div>

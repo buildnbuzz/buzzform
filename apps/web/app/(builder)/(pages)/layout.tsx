@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { SiteHeader } from "../components/header";
 import { Sidebar } from "../components/sidebar";
@@ -11,8 +12,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <SidebarProvider defaultOpen={true} className="flex flex-col h-full">
           <SiteHeader />
           <div className="flex items-center justify-center gap-2 border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs text-amber-950 dark:text-amber-200">
-            <strong className="font-medium">Migration in progress:</strong>
-            <span>Migrating to the framework-agnostic, headless BuzzForm. Some builder features and exports may be incomplete.</span>
+            <strong className="font-medium">New Builder available:</strong>
+            <span>
+              The all-new BuzzForm Builder is now in public preview. We
+              recommend using it for new projects.
+            </span>
+            <Link
+              href="/builder/v2"
+              className="font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity"
+            >
+              Try New Builder →
+            </Link>
           </div>
           <div className="flex flex-1 overflow-hidden">
             <Sidebar />

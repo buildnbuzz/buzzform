@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { heroContent } from "@/lib/constants";
 import { CopyCommand } from "@/components/landing/copy-command";
+import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   return (
@@ -14,7 +15,7 @@ export function HeroSection() {
           variant="outline"
           className="mb-4 animate-fade-in px-3 py-1 rounded-full border-primary/20 bg-primary/5 text-primary gap-2"
         >
-          <Link href="/builder" className="inline-flex items-center gap-2">
+          <Link href="/builder/v2" className="inline-flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -30,36 +31,25 @@ export function HeroSection() {
           {heroContent.description}
         </p>
         <div className="mt-6 flex flex-col sm:flex-row gap-4">
-          <Button
-            size="lg"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={
-              <Link href={heroContent.primaryCta.href}>
-                {heroContent.primaryCta.label}{" "}
-                <HugeiconsIcon
-                  icon={ArrowRight01Icon}
-                  className="ml-2 h-4 w-4"
-                />
-              </Link>
-            }
-          />
-          <Button
-            size="lg"
-            variant="outline"
-            className="rounded-full px-8"
-            nativeButton={false}
-            render={
-              <Link
-                href={heroContent.secondaryCta.href}
-                {...(heroContent.secondaryCta.external
-                  ? { target: "_blank", rel: "noreferrer" }
-                  : {})}
-              >
-                {heroContent.secondaryCta.label}
-              </Link>
-            }
-          />
+          <Link
+            href={heroContent.primaryCta.href}
+            className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
+          >
+            {heroContent.primaryCta.label}{" "}
+            <HugeiconsIcon icon={ArrowRight01Icon} className="ml-2 h-4 w-4" />
+          </Link>
+          <Link
+            href={heroContent.secondaryCta.href}
+            className={cn(
+              buttonVariants({ size: "lg", variant: "outline" }),
+              "rounded-full px-8"
+            )}
+            {...(heroContent.secondaryCta.external
+              ? { target: "_blank", rel: "noreferrer" }
+              : {})}
+          >
+            {heroContent.secondaryCta.label}
+          </Link>
         </div>
         <CopyCommand />
       </div>

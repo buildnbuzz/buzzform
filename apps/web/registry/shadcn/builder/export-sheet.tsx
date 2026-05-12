@@ -2,19 +2,10 @@
 
 import * as React from "react";
 import { DynamicCodeBlock } from "fumadocs-ui/components/dynamic-codeblock";
-import { HugeiconsIcon } from "@hugeicons/react";
-import {
-  Download01Icon,
-  File02Icon,
-  FileExportIcon,
-  SourceCodeIcon,
-} from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -24,47 +15,27 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { generateComponentCode } from "../lib/code-generator";
-import { toBuilderDocument } from "../lib/persistence";
-import { nodesToFields } from "../lib/schema-builder";
-import { downloadTextFile, toSafeFileName } from "../lib/utils";
-import { useBuilderStore } from "../lib/store";
+import { IconPlaceholder } from "@/components/icon-placeholder";
+import {
+  generateComponentCode,
+  nodesToFields,
+  toSafeFileName,
+} from "@buildnbuzz/form-builder-core";
+import {
+  useBuilderStore,
+  downloadTextFile,
+} from "@buildnbuzz/form-builder-react";
 
 const starterCommand =
   "npx shadcn@latest add https://form.buildnbuzz.com/r/all.json";
 
 export function ExportSheet() {
   const [open, setOpen] = React.useState(false);
-  const [snapshotUpdatedAt, setSnapshotUpdatedAt] = React.useState<
-    number | null
-  >(null);
 
   const nodes = useBuilderStore((state) => state.nodes);
   const rootIds = useBuilderStore((state) => state.rootIds);
-  const formId = useBuilderStore((state) => state.formId);
   const formName = useBuilderStore((state) => state.formName);
   const outputConfig = useBuilderStore((state) => state.outputConfig);
-
-  React.useEffect(() => {
-    if (!open) return;
-    setSnapshotUpdatedAt(Date.now());
-  }, [open, nodes, rootIds, formId, formName]);
-
-  const documentJson = React.useMemo(() => {
-    if (!open || snapshotUpdatedAt === null) return "";
-
-    const document = toBuilderDocument(
-      {
-        nodes,
-        rootIds,
-        formId,
-        formName,
-      },
-      { updatedAt: snapshotUpdatedAt },
-    );
-
-    return JSON.stringify(document, null, 2);
-  }, [open, nodes, rootIds, formId, formName, snapshotUpdatedAt]);
 
   const componentCode = React.useMemo(() => {
     if (!open) return "";
@@ -74,15 +45,12 @@ export function ExportSheet() {
   const schemaJson = React.useMemo(() => {
     if (!open) return "";
     const fields = nodesToFields(nodes, rootIds);
-    return JSON.stringify(fields, null, 2);
-  }, [open, nodes, rootIds]);
-
-  const downloadJson = React.useCallback(() => {
-    if (!documentJson) return;
-    const fileName = `${toSafeFileName(formName)}-doc.json`;
-    downloadTextFile(documentJson, fileName, "application/json");
-    toast.success("Builder Document exported");
-  }, [documentJson, formName]);
+    const schema = {
+      title: formName || "BuzzForm Export",
+      fields,
+    };
+    return JSON.stringify(schema, null, 2);
+  }, [open, nodes, rootIds, formName]);
 
   const downloadSchema = React.useCallback(() => {
     if (!schemaJson) return;
@@ -98,12 +66,25 @@ export function ExportSheet() {
     toast.success("Component code exported");
   }, [componentCode, formName]);
 
+  const copyToClipboard = React.useCallback((text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  }, []);
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
         render={
           <Button variant="outline" className="gap-2">
-            <HugeiconsIcon icon={FileExportIcon} size={16} strokeWidth={2} />
+            <IconPlaceholder
+              hugeicons="FileExportIcon"
+              lucide="FileDown"
+              tabler="IconFileExport"
+              phosphor="FileArrowDown"
+              remixicon="RiFileDownloadLine"
+              size={16}
+              strokeWidth={2}
+            />
             Export
           </Button>
         }
@@ -116,25 +97,9 @@ export function ExportSheet() {
         <SheetHeader className="border-b pr-12">
           <SheetTitle>Export Form</SheetTitle>
           <SheetDescription>
-            Export production-ready TSX, portable BuzzForm schema JSON, or a
-            Builder document file.
+            Export production-ready TSX or portable BuzzForm schema JSON.
           </SheetDescription>
         </SheetHeader>
-        <div className="border-b px-4 py-3">
-          <Alert className="border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-100">
-            <AlertTitle>New Builder available</AlertTitle>
-            <AlertDescription>
-              New BuzzForm is now available with enhanced features. We recommend
-              using the new builder for all new projects.{" "}
-              <Link
-                href="/builder/v2"
-                className="font-semibold underline underline-offset-4 hover:opacity-80 transition-opacity"
-              >
-                Try New Builder
-              </Link>
-            </AlertDescription>
-          </Alert>
-        </div>
 
         <Tabs
           defaultValue="tsx"
@@ -142,17 +107,28 @@ export function ExportSheet() {
         >
           <TabsList variant="line" className="w-full">
             <TabsTrigger value="tsx" className="gap-1.5">
-              <HugeiconsIcon icon={SourceCodeIcon} size={16} strokeWidth={2} />
+              <IconPlaceholder
+                hugeicons="SourceCodeIcon"
+                lucide="Code"
+                tabler="IconCode"
+                phosphor="Code"
+                remixicon="RiCodeLine"
+                size={16}
+                strokeWidth={2}
+              />
               App Code
               <Badge variant="outline">.tsx</Badge>
             </TabsTrigger>
-            <TabsTrigger value="json" className="gap-1.5">
-              <HugeiconsIcon icon={File02Icon} size={16} strokeWidth={2} />
-              Builder Document
-              <Badge variant="outline">.json</Badge>
-            </TabsTrigger>
             <TabsTrigger value="schema" className="gap-1.5">
-              <HugeiconsIcon icon={File02Icon} size={16} strokeWidth={2} />
+              <IconPlaceholder
+                hugeicons="File02Icon"
+                lucide="File"
+                tabler="IconFile"
+                phosphor="File"
+                remixicon="RiFileCodeLine"
+                size={16}
+                strokeWidth={2}
+              />
               BuzzForm Schema
               <Badge variant="outline">.json</Badge>
             </TabsTrigger>
@@ -163,8 +139,12 @@ export function ExportSheet() {
               <div className="space-y-3 p-1">
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-                    <HugeiconsIcon
-                      icon={SourceCodeIcon}
+                    <IconPlaceholder
+                      hugeicons="SourceCodeIcon"
+                      lucide="Code"
+                      tabler="IconCode"
+                      phosphor="Code"
+                      remixicon="RiCodeLine"
                       size={16}
                       strokeWidth={1.8}
                       className="text-muted-foreground"
@@ -181,59 +161,39 @@ export function ExportSheet() {
                       size="sm"
                       onClick={downloadCode}
                     >
-                      <HugeiconsIcon
-                        icon={Download01Icon}
+                      <IconPlaceholder
+                        hugeicons="Download01Icon"
+                        lucide="Download"
+                        tabler="IconDownload"
+                        phosphor="DownloadSimple"
+                        remixicon="RiDownload2Line"
                         size={16}
                         strokeWidth={2}
                       />
                       Download TSX File
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(componentCode, "App code")}
+                    >
+                      <IconPlaceholder
+                        hugeicons="Copy01Icon"
+                        lucide="Copy"
+                        tabler="IconCopy"
+                        phosphor="Copy"
+                        remixicon="RiFileCopyLine"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                      Copy Code
                     </Button>
                   </div>
                 </div>
 
                 <div className="[&_figure]:my-0!">
                   <DynamicCodeBlock lang="tsx" code={componentCode} />
-                </div>
-              </div>
-            </ScrollArea>
-          </TabsContent>
-
-          <TabsContent value="json" className="min-h-0 flex-1 overflow-hidden">
-            <ScrollArea className="h-full px-4 py-2">
-              <div className="space-y-3 p-1">
-                <div className="rounded-lg border bg-muted/30 p-3">
-                  <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-                    <HugeiconsIcon
-                      icon={File02Icon}
-                      size={16}
-                      strokeWidth={1.8}
-                      className="text-muted-foreground"
-                    />
-                    Builder document file
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Includes Builder metadata and node ids to fully restore your
-                    workspace exactly as-is.
-                  </p>
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={downloadJson}
-                    >
-                      <HugeiconsIcon
-                        icon={Download01Icon}
-                        size={16}
-                        strokeWidth={2}
-                      />
-                      Download Builder Document
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="[&_figure]:my-0!">
-                  <DynamicCodeBlock lang="json" code={documentJson} />
                 </div>
               </div>
             </ScrollArea>
@@ -247,8 +207,12 @@ export function ExportSheet() {
               <div className="space-y-3 p-1">
                 <div className="rounded-lg border bg-muted/30 p-3">
                   <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-                    <HugeiconsIcon
-                      icon={File02Icon}
+                    <IconPlaceholder
+                      hugeicons="File02Icon"
+                      lucide="File"
+                      tabler="IconFile"
+                      phosphor="File"
+                      remixicon="RiFileCodeLine"
                       size={16}
                       strokeWidth={1.8}
                       className="text-muted-foreground"
@@ -266,12 +230,33 @@ export function ExportSheet() {
                       size="sm"
                       onClick={downloadSchema}
                     >
-                      <HugeiconsIcon
-                        icon={Download01Icon}
+                      <IconPlaceholder
+                        hugeicons="Download01Icon"
+                        lucide="Download"
+                        tabler="IconDownload"
+                        phosphor="DownloadSimple"
+                        remixicon="RiDownload2Line"
                         size={16}
                         strokeWidth={2}
                       />
                       Download BuzzForm Schema
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(schemaJson, "Schema JSON")}
+                    >
+                      <IconPlaceholder
+                        hugeicons="Copy01Icon"
+                        lucide="Copy"
+                        tabler="IconCopy"
+                        phosphor="Copy"
+                        remixicon="RiFileCopyLine"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                      Copy JSON
                     </Button>
                   </div>
                 </div>
