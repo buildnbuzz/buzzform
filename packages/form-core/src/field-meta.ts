@@ -82,6 +82,42 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
     optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "minTags", "maxTags", "maxTagLength", "allowDuplicates"],
     applicableValidators: ["required", "minTags", "maxTags"],
     example: { type: "tags", name: "skills", label: "Skills" }
+  },
+  select: {
+    type: "select",
+    category: "choice",
+    description: "Dropdown selection (single or multi-select via hasMany)",
+    requiredProps: ["type", "name", "options"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "hasMany", "minSelected", "maxSelected"],
+    applicableValidators: ["required", "minSelected", "maxSelected"],
+    example: { type: "select", name: "country", label: "Country", options: [{ label: "USA", value: "us" }] }
+  },
+  checkbox: {
+    type: "checkbox",
+    category: "choice",
+    description: "Checkbox input (single boolean, tristate boolean, or multi-select group via hasMany)",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "hasMany", "tristate", "options", "minSelected", "maxSelected"],
+    applicableValidators: ["required", "minSelected", "maxSelected"],
+    example: { type: "checkbox", name: "terms", label: "Accept Terms" }
+  },
+  switch: {
+    type: "switch",
+    category: "choice",
+    description: "Toggle switch (boolean)",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue"],
+    applicableValidators: ["required"],
+    example: { type: "switch", name: "notifications", label: "Enable Notifications" }
+  },
+  radio: {
+    type: "radio",
+    category: "choice",
+    description: "Radio button group for single selection",
+    requiredProps: ["type", "name", "options"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue"],
+    applicableValidators: ["required"],
+    example: { type: "radio", name: "plan", label: "Plan", options: [{ label: "Basic", value: "basic" }] }
   }
 } as unknown as Record<FieldType, FieldTypeMeta>;
 

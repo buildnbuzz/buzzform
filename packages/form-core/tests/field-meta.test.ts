@@ -35,4 +35,25 @@ describe("field-meta", () => {
       expect(meta?.example).toEqual({ type: "tags", name: "skills", label: "Skills" });
     });
   });
+
+  describe("choice category", () => {
+    const choiceTypes: FieldType[] = ["select", "checkbox", "switch", "radio"];
+
+    it("has metadata for all choice types", () => {
+      choiceTypes.forEach((type) => {
+        const meta = getFieldMeta(type);
+        expect(meta).toBeDefined();
+        expect(meta?.type).toBe(type);
+        expect(meta?.category).toBe("choice");
+      });
+    });
+
+    it("getFieldsByCategory('choice') returns all choice fields", () => {
+      const choices = getFieldsByCategory("choice");
+      expect(choices.length).toBe(choiceTypes.length);
+      choices.forEach((meta) => {
+        expect(choiceTypes).toContain(meta.type);
+      });
+    });
+  });
 });
