@@ -1,5 +1,16 @@
 # @buildnbuzz/form-core
 
+## 0.1.8
+
+### Patch Changes
+
+- [#141](https://github.com/buildnbuzz/buzzform/pull/141) [`61c3841`](https://github.com/buildnbuzz/buzzform/commit/61c38413eb3ea54ae0e4532d7b69ac34c036ebd1) Thanks [@ladparth](https://github.com/ladparth)! - feat(form-core): add serializable schema primitives, validator, and metadata
+  - Add `SerializableFormSchema` types for headless serialization
+  - Implement `validateSchema` with structure and identity checks
+  - Implement `autoFixSchema` for common schema errors
+  - Add `FIELD_TYPE_META` for field capability discovery
+  - Export serialization utilities: `isSerializable`, `toSerializable`, `serializeSchema`
+
 ## 0.1.7
 
 ### Patch Changes
