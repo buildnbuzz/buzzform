@@ -19,7 +19,71 @@ export interface FieldTypeMeta {
   example: Record<string, unknown>;
 }
 
-export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {} as Record<FieldType, FieldTypeMeta>;
+export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
+  text: {
+    type: "text",
+    category: "input",
+    description: "Standard single-line text input",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "trim", "minLength", "maxLength", "pattern"],
+    applicableValidators: ["required", "minLength", "maxLength", "pattern", "matches"],
+    example: { type: "text", name: "firstName", label: "First Name" }
+  },
+  email: {
+    type: "email",
+    category: "input",
+    description: "Email address input with automatic format validation",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "minLength", "maxLength"],
+    applicableValidators: ["required", "email", "minLength", "maxLength", "matches"],
+    example: { type: "email", name: "userEmail", label: "Email Address" }
+  },
+  password: {
+    type: "password",
+    category: "input",
+    description: "Masked password input with strength criteria support",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "minLength", "maxLength", "criteria"],
+    applicableValidators: ["required", "minLength", "maxLength", "matches", "passwordCriteria"],
+    example: { type: "password", name: "newPassword", label: "Password" }
+  },
+  textarea: {
+    type: "textarea",
+    category: "input",
+    description: "Multi-line text input",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "trim", "minLength", "maxLength", "pattern"],
+    applicableValidators: ["required", "minLength", "maxLength", "pattern", "matches"],
+    example: { type: "textarea", name: "bio", label: "Biography" }
+  },
+  number: {
+    type: "number",
+    category: "input",
+    description: "Numeric input",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "min", "max", "precision", "step"],
+    applicableValidators: ["required", "min", "max", "precision", "step"],
+    example: { type: "number", name: "age", label: "Age" }
+  },
+  date: {
+    type: "date",
+    category: "input",
+    description: "Date picker, optionally with time",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "withTime", "minDate", "maxDate"],
+    applicableValidators: ["required", "minDate", "maxDate"],
+    example: { type: "date", name: "birthdate", label: "Birth Date" }
+  },
+  tags: {
+    type: "tags",
+    category: "input",
+    description: "Multi-value chip/tag input (string array)",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "minTags", "maxTags", "maxTagLength", "allowDuplicates"],
+    applicableValidators: ["required", "minTags", "maxTags"],
+    example: { type: "tags", name: "skills", label: "Skills" }
+  }
+} as unknown as Record<FieldType, FieldTypeMeta>;
 
 export function getFieldMeta(type: string): FieldTypeMeta | undefined {
   return FIELD_TYPE_META[type as FieldType];
