@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateSchema } from "../src/schema-validator";
+import { validateSchema, formatSchemaIssues } from "../src/schema-validator";
 import type { SerializableFormSchema, SerializableField } from "../src/serializable";
 
 describe("schema-validator", () => {
@@ -236,6 +236,62 @@ describe("schema-validator", () => {
       const issues = result.issues.filter(i => i.code === "orphaned_resolver");
       expect(issues).toHaveLength(1);
       expect(issues[0].severity).toBe("warning");
+    });
+  });
+
+  describe("valid schema and deep nesting", () => {
+    it("validates a complex, deeply nested schema with zero issues", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          {
+            type: "group",
+            name: "personal",
+            fields: [
+              { type: "text", name: "firstName", validations: [{ type: "required" }] } as unknown as SerializableField,
+              { type: "text", name: "lastName", condition: { $data: "firstName", "==": "John" } } as unknown as SerializableField
+            ]
+          },
+          {
+            type: "array",
+            name: "addresses",
+            primitive: false,
+            fields: [
+              {
+                type: "row",
+                fields: [
+                  { type: "text", name: "city" },
+                  { type: "text", name: "zip" }
+                ]
+              }
+            ]
+          },
+          {
+            type: "tabs",
+            tabs: [
+              {
+                label: "Settings",
+                fields: [
+                  { type: "checkbox", name: "notifications" }
+                ]
+              }
+            ]
+          }
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(true);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("formats schema issues correctly", () => {
+      const issues = [
+        { code: "missing_name" as const, severity: "error" as const, path: "fields[0]", message: "msg 1" },
+        { code: "orphaned_resolver" as const, severity: "warning" as const, path: "fields[1]", message: "msg 2" }
+      ];
+      const formatted = formatSchemaIssues(issues);
+      expect(formatted).toHaveLength(2);
+      expect(formatted[0]).toBe("❌ Error [missing_name] at fields[0]: msg 1");
+      expect(formatted[1]).toBe("⚠️ Warning [orphaned_resolver] at fields[1]: msg 2");
     });
   });
 });
