@@ -56,4 +56,43 @@ describe("field-meta", () => {
       });
     });
   });
+
+  describe("container and layout categories", () => {
+    const containerTypes: FieldType[] = ["group", "array"];
+    const layoutTypes: FieldType[] = ["row", "tabs", "collapsible"];
+
+    it("has metadata for all container and layout types", () => {
+      [...containerTypes, ...layoutTypes].forEach((type) => {
+        const meta = getFieldMeta(type);
+        expect(meta).toBeDefined();
+        expect(meta?.hasChildren).toBe(true);
+      });
+    });
+
+    it("getFieldsByCategory works for container and layout", () => {
+      expect(getFieldsByCategory("container").length).toBe(containerTypes.length);
+      expect(getFieldsByCategory("layout").length).toBe(layoutTypes.length);
+    });
+    
+    it("layout fields do not have name or defaultValue in required/optional props", () => {
+      layoutTypes.forEach((type) => {
+        const meta = getFieldMeta(type);
+        expect(meta?.requiredProps).not.toContain("name");
+        expect(meta?.optionalProps).not.toContain("name");
+        expect(meta?.optionalProps).not.toContain("defaultValue");
+      });
+    });
+  });
+
+  describe("completeness", () => {
+    it("every FieldType has an entry", () => {
+      const allTypes: FieldType[] = [
+        "text", "email", "password", "textarea", "number", "select", "date", "tags",
+        "checkbox", "switch", "radio", "group", "array", "row", "tabs", "collapsible"
+      ];
+      allTypes.forEach((type) => {
+        expect(getFieldMeta(type)).toBeDefined();
+      });
+    });
+  });
 });

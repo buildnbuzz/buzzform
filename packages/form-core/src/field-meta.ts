@@ -17,6 +17,8 @@ export interface FieldTypeMeta {
   applicableValidators: readonly BuiltInValidatorName[];
   /** Example of a minimal valid configuration */
   example: Record<string, unknown>;
+  /** Indicates if this field can contain other fields */
+  hasChildren?: boolean;
 }
 
 export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
@@ -118,6 +120,56 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
     optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue"],
     applicableValidators: ["required"],
     example: { type: "radio", name: "plan", label: "Plan", options: [{ label: "Basic", value: "basic" }] }
+  },
+  group: {
+    type: "group",
+    category: "container",
+    description: "Groups fields into a nested object",
+    requiredProps: ["type", "name", "fields"],
+    optionalProps: ["label", "description", "hidden", "condition", "disabled", "readOnly"],
+    applicableValidators: [],
+    example: { type: "group", name: "address", fields: [{ type: "text", name: "city" }] },
+    hasChildren: true
+  },
+  array: {
+    type: "array",
+    category: "container",
+    description: "List of items (objects or primitives)",
+    requiredProps: ["type", "name", "fields"],
+    optionalProps: ["label", "description", "hidden", "condition", "primitive", "minItems", "maxItems", "disabled", "readOnly"],
+    applicableValidators: ["minItems", "maxItems"],
+    example: { type: "array", name: "users", fields: [{ type: "text", name: "name" }] },
+    hasChildren: true
+  },
+  row: {
+    type: "row",
+    category: "layout",
+    description: "Horizontal flex layout",
+    requiredProps: ["type", "fields"],
+    optionalProps: ["hidden", "condition"],
+    applicableValidators: [],
+    example: { type: "row", fields: [{ type: "text", name: "firstName" }, { type: "text", name: "lastName" }] },
+    hasChildren: true
+  },
+  tabs: {
+    type: "tabs",
+    category: "layout",
+    description: "Tabbed container layout",
+    requiredProps: ["type", "tabs"],
+    optionalProps: ["hidden", "condition"],
+    applicableValidators: [],
+    example: { type: "tabs", tabs: [{ label: "General", fields: [] }] },
+    hasChildren: true
+  },
+  collapsible: {
+    type: "collapsible",
+    category: "layout",
+    description: "Expandable/collapsible container",
+    requiredProps: ["type", "label", "fields"],
+    optionalProps: ["hidden", "condition", "collapsed"],
+    applicableValidators: [],
+    example: { type: "collapsible", label: "Advanced", fields: [] },
+    hasChildren: true
   }
 } as unknown as Record<FieldType, FieldTypeMeta>;
 
