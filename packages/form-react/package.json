@@ -48,8 +48,8 @@
   },
   "dependencies": {
     "@buildnbuzz/form-core": "workspace:^",
-    "@tanstack/form-core": "^1.28.5",
-    "@tanstack/react-form": "^1.28.5"
+    "@tanstack/form-core": "^1.32.0",
+    "@tanstack/react-form": "^1.32.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:^",
