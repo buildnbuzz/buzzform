@@ -23,7 +23,9 @@ type MutableField = {
 
 function fixField(field: SerializableField): SerializableField {
   // Deep clone the field object
-  const f = JSON.parse(JSON.stringify(field)) as MutableField;
+  const f = (typeof structuredClone === "function" 
+    ? structuredClone(field) 
+    : JSON.parse(JSON.stringify(field))) as MutableField;
 
   // 1. Normalize type casing (e.g. "Text" -> "text")
   if (f.type && typeof f.type === "string") {

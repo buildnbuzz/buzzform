@@ -1,8 +1,10 @@
 import type { SerializableFormSchema, SerializableField } from "./serializable";
 import { getFieldMeta } from "./field-meta";
 
+/** Severity of a schema validation issue */
 export type SchemaIssueSeverity = "error" | "warning";
 
+/** Taxonomy of schema validation errors and warnings */
 export type SchemaIssueCode =
   // Field identity
   | "missing_name"
@@ -20,16 +22,23 @@ export type SchemaIssueCode =
   | "invalid_validation"
   | "orphaned_resolver";
 
+/** A single validation issue found in the schema */
 export interface SchemaIssue {
+  /** The type of issue */
   code: SchemaIssueCode;
+  /** Whether the issue is critical (error) or informational (warning) */
   severity: SchemaIssueSeverity;
   /** Dot-separated path to the field or property */
   path: string;
+  /** Human-readable description of the issue */
   message: string;
 }
 
+/** Result of a schema validation operation */
 export interface SchemaValidationResult {
+  /** True if no issues with 'error' severity were found */
   valid: boolean;
+  /** List of all issues found during validation */
   issues: SchemaIssue[];
 }
 
@@ -90,7 +99,16 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
         }
       }
 
-      const structField = field as { options?: unknown; hasMany?: unknown; fields?: unknown; primitive?: unknown; tabs?: unknown };
+      const structField = field as { 
+        options?: unknown; 
+        hasMany?: unknown; 
+        fields?: unknown; 
+        primitive?: unknown; 
+        tabs?: unknown;
+        condition?: unknown;
+        validations?: unknown;
+        optionsResolver?: unknown;
+      };
 
       if (["select", "radio"].includes(field.type) || (field.type === "checkbox" && structField.hasMany)) {
         if (!Array.isArray(structField.options) || structField.options.length === 0) {
@@ -143,24 +161,25 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
         }
       }
 
-      const containerField = field as { fields?: unknown; primitive?: unknown; tabs?: unknown };
+      if ("condition" in field && structField.condition !== undefined) {
+        const cond = structField.condition;
+        // Conditions can be boolean, atomic object, array of objects, or group object
+        const isObject = typeof cond === "object" && cond !== null && !Array.isArray(cond);
+        const isArray = Array.isArray(cond);
+        const isBoolean = typeof cond === "boolean";
 
-      const exprField = field as { condition?: unknown; validations?: unknown; optionsResolver?: unknown };
-
-      if ("condition" in field && exprField.condition !== undefined) {
-        const cond = exprField.condition;
-        if (typeof cond !== "object" || cond === null || Array.isArray(cond)) {
+        if (!isObject && !isArray && !isBoolean) {
           issues.push({
             code: "invalid_condition",
             severity: "error",
             path: `${path}.condition`,
-            message: `Condition must be an object representing an expression.`
+            message: `Condition must be a boolean or an expression object/array.`
           });
         }
       }
 
-      if ("validations" in field && Array.isArray(exprField.validations)) {
-        exprField.validations.forEach((v: { type?: unknown } | null | undefined, vIndex: number) => {
+      if ("validations" in field && Array.isArray(structField.validations)) {
+        structField.validations.forEach((v: { type?: unknown } | null | undefined, vIndex: number) => {
           if (!v || typeof v !== "object" || typeof v.type !== "string") {
             issues.push({
               code: "invalid_validation",
@@ -181,7 +200,7 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
         });
       }
 
-      if ("optionsResolver" in field && exprField.optionsResolver !== undefined) {
+      if ("optionsResolver" in field && structField.optionsResolver !== undefined) {
         issues.push({
           code: "orphaned_resolver",
           severity: "warning",
@@ -190,16 +209,16 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
         });
       }
 
-      if ("fields" in field && Array.isArray(containerField.fields)) {
-        if (field.type === "array" && containerField.primitive) {
-          validateFields(containerField.fields as readonly SerializableField[], `${path}.fields`, true);
+      if ("fields" in field && Array.isArray(structField.fields)) {
+        if (field.type === "array" && structField.primitive) {
+          validateFields(structField.fields as readonly SerializableField[], `${path}.fields`, true);
         } else {
-          validateFields(containerField.fields as readonly SerializableField[], `${path}.fields`, false);
+          validateFields(structField.fields as readonly SerializableField[], `${path}.fields`, false);
         }
       }
 
-      if (field.type === "tabs" && "tabs" in field && Array.isArray(containerField.tabs)) {
-        containerField.tabs.forEach((tab: { fields?: unknown }, tIndex: number) => {
+      if (field.type === "tabs" && "tabs" in field && Array.isArray(structField.tabs)) {
+        structField.tabs.forEach((tab: { fields?: unknown }, tIndex: number) => {
           validateFields((tab.fields as readonly SerializableField[]) || [], `${path}.tabs[${tIndex}].fields`, false);
         });
       }

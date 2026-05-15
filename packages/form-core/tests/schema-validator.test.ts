@@ -194,13 +194,29 @@ describe("schema-validator", () => {
       const schema: SerializableFormSchema = {
         fields: [
           { type: "text", name: "foo", condition: "bad" } as unknown as SerializableField,
-          { type: "text", name: "bar", condition: [] } as unknown as SerializableField
-        ]
+          { type: "text", name: "bar", condition: 123 } as unknown as SerializableField,
+        ],
       };
       const result = validateSchema(schema);
       expect(result.valid).toBe(false);
-      const issues = result.issues.filter(i => i.code === "invalid_condition");
+      const issues = result.issues.filter(
+        (i) => i.code === "invalid_condition",
+      );
       expect(issues).toHaveLength(2);
+    });
+
+    it("accepts boolean conditions", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { type: "text", name: "foo", condition: true },
+          { type: "text", name: "bar", condition: false },
+        ],
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(true);
+      expect(
+        result.issues.filter((i) => i.code === "invalid_condition"),
+      ).toHaveLength(0);
     });
 
     it("flags invalid validation types", () => {

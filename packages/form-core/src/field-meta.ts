@@ -1,7 +1,9 @@
 import type { FieldType, BuiltInValidatorName } from "./types";
 
+/** Broad category for UI grouping and organization */
 export type FieldCategory = "input" | "choice" | "container" | "layout";
 
+/** Metadata describing a field type and its capabilities */
 export interface FieldTypeMeta {
   /** The field type identifier */
   type: FieldType;
@@ -21,6 +23,10 @@ export interface FieldTypeMeta {
   hasChildren?: boolean;
 }
 
+/** 
+ * Registry of metadata for all supported field types.
+ * @internal
+ */
 export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
   text: {
     type: "text",
@@ -171,12 +177,18 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
     example: { type: "collapsible", label: "Advanced", fields: [] },
     hasChildren: true
   }
-} as unknown as Record<FieldType, FieldTypeMeta>;
+};
 
+/** 
+ * Retrieves metadata for a specific field type.
+ */
 export function getFieldMeta(type: string): FieldTypeMeta | undefined {
   return FIELD_TYPE_META[type as FieldType];
 }
 
+/** 
+ * Retrieves all field types within a specific category.
+ */
 export function getFieldsByCategory(category: FieldCategory): FieldTypeMeta[] {
   return Object.values(FIELD_TYPE_META).filter((meta) => meta && meta.category === category);
 }
