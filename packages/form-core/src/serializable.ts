@@ -371,3 +371,46 @@ export function toSerializable(schema: FormSchema): SerializableFormSchema {
 
   return transform(schema) as SerializableFormSchema;
 }
+
+export function serializeSchema(schema: SerializableFormSchema): string {
+  const deterministicStringify = (val: unknown): string | undefined => {
+    if (val === null) return "null";
+    if (typeof val !== "object") return JSON.stringify(val);
+    if (Array.isArray(val)) {
+      return "[" + val.map((v) => deterministicStringify(v) ?? "null").join(",") + "]";
+    }
+    const keys = Object.keys(val as Record<string, unknown>).sort();
+    let str = "{";
+    let first = true;
+    for (const k of keys) {
+      const v = (val as Record<string, unknown>)[k];
+      if (v !== undefined) {
+        const vStr = deterministicStringify(v);
+        if (vStr !== undefined) {
+          if (!first) str += ",";
+          str += JSON.stringify(k) + ":" + vStr;
+          first = false;
+        }
+      }
+    }
+    str += "}";
+    return str;
+  };
+
+  return deterministicStringify(schema) || "{}";
+}
+
+export function deserializeSchema(json: string): SerializableFormSchema {
+  try {
+    const parsed = JSON.parse(json);
+    if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.fields)) {
+      throw new Error("Invalid schema structure: missing 'fields' array");
+    }
+    return parsed as SerializableFormSchema;
+  } catch (err) {
+    if (err instanceof Error && err.message !== "Invalid schema structure: missing 'fields' array") {
+      throw new Error(`Failed to parse schema: ${err.message}`);
+    }
+    throw err;
+  }
+}
