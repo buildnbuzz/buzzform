@@ -1,5 +1,13 @@
 # @buildnbuzz/form-react
 
+## 0.1.10
+
+### Patch Changes
+
+- [#143](https://github.com/buildnbuzz/buzzform/pull/143) [`7b5ef55`](https://github.com/buildnbuzz/buzzform/commit/7b5ef55ae3ef2608a13c02f701343296765eaa2e) Thanks [@ladparth](https://github.com/ladparth)! - Upgrade TanStack Form dependencies to the latest version.
+  - Update `@tanstack/form-core` to `^1.32.0`.
+  - Update `@tanstack/react-form` to `^1.32.0`.
+
 ## 0.1.9
 
 ### Patch Changes
