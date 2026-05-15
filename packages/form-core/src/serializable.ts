@@ -309,3 +309,65 @@ export interface SerializableFormSchema {
   validate?: SerializableValidationConfig;
   meta?: UnknownData;
 }
+
+import type { FormSchema } from "./types";
+
+export function isSerializable(schema: FormSchema): schema is SerializableFormSchema {
+  let valid = true;
+  const walk = (val: unknown) => {
+    if (!valid) return;
+    if (typeof val === "function") {
+      valid = false;
+      return;
+    }
+    if (val !== null && typeof val === "object") {
+      if (typeof (val as { $$typeof?: unknown }).$$typeof === "symbol") {
+        valid = false;
+        return;
+      }
+      if (Array.isArray(val)) {
+        for (const item of val) walk(item);
+      } else {
+        for (const key in val) {
+          if (Object.prototype.hasOwnProperty.call(val, key)) {
+            walk((val as Record<string, unknown>)[key]);
+          }
+        }
+      }
+    }
+  };
+  walk(schema);
+  return valid;
+}
+
+export function toSerializable(schema: FormSchema): SerializableFormSchema {
+  const transform = (val: unknown, key?: string): unknown => {
+    if (typeof val === "function") {
+      if (key === "options") return [];
+      return undefined;
+    }
+    if (val === null || typeof val !== "object") return val;
+    
+    if (typeof (val as { $$typeof?: unknown }).$$typeof === "symbol") {
+      return String(val);
+    }
+
+    if (Array.isArray(val)) {
+      // Don't pass 'key' to array items to avoid treating functions in arrays as 'options' incorrectly
+      return val.map((v) => transform(v));
+    }
+
+    const out: Record<string, unknown> = {};
+    for (const k in val) {
+      if (Object.prototype.hasOwnProperty.call(val, k)) {
+        const transformed = transform((val as Record<string, unknown>)[k], k);
+        if (transformed !== undefined) {
+          out[k] = transformed;
+        }
+      }
+    }
+    return out;
+  };
+
+  return transform(schema) as SerializableFormSchema;
+}
