@@ -188,4 +188,54 @@ describe("schema-validator", () => {
       expect(issues).toHaveLength(1);
     });
   });
+
+  describe("expression checks", () => {
+    it("flags invalid conditions", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { type: "text", name: "foo", condition: "bad" } as unknown as SerializableField,
+          { type: "text", name: "bar", condition: [] } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(false);
+      const issues = result.issues.filter(i => i.code === "invalid_condition");
+      expect(issues).toHaveLength(2);
+    });
+
+    it("flags invalid validation types", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { 
+            type: "text", 
+            name: "foo", 
+            validations: [{ type: "minDate" }] // Not applicable to text
+          } as unknown as SerializableField,
+          { 
+            type: "number", 
+            name: "bar", 
+            validations: [{ type: "custom" }] // custom is always allowed
+          } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(false);
+      const issues = result.issues.filter(i => i.code === "invalid_validation");
+      expect(issues).toHaveLength(1);
+      expect(issues[0].path).toBe("fields[0].validations[0]");
+    });
+
+    it("flags orphaned options resolver as warning", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { type: "select", name: "foo", options: [{ label: "1", value: "1" }], optionsResolver: "fetchOptions" } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(true);
+      const issues = result.issues.filter(i => i.code === "orphaned_resolver");
+      expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
+    });
+  });
 });

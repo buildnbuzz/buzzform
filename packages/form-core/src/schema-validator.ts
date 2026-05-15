@@ -145,6 +145,51 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
 
       const containerField = field as { fields?: unknown; primitive?: unknown; tabs?: unknown };
 
+      const exprField = field as { condition?: unknown; validations?: unknown; optionsResolver?: unknown };
+
+      if ("condition" in field && exprField.condition !== undefined) {
+        const cond = exprField.condition;
+        if (typeof cond !== "object" || cond === null || Array.isArray(cond)) {
+          issues.push({
+            code: "invalid_condition",
+            severity: "error",
+            path: `${path}.condition`,
+            message: `Condition must be an object representing an expression.`
+          });
+        }
+      }
+
+      if ("validations" in field && Array.isArray(exprField.validations)) {
+        exprField.validations.forEach((v: { type?: unknown } | null | undefined, vIndex: number) => {
+          if (!v || typeof v !== "object" || typeof v.type !== "string") {
+            issues.push({
+              code: "invalid_validation",
+              severity: "error",
+              path: `${path}.validations[${vIndex}]`,
+              message: `Validation must be an object with a 'type' string property.`
+            });
+            return;
+          }
+          if (v.type !== "custom" && meta && !(meta.applicableValidators as readonly string[]).includes(v.type)) {
+            issues.push({
+              code: "invalid_validation",
+              severity: "error",
+              path: `${path}.validations[${vIndex}]`,
+              message: `Validation type '${v.type}' is not applicable to field type '${field.type}'.`
+            });
+          }
+        });
+      }
+
+      if ("optionsResolver" in field && exprField.optionsResolver !== undefined) {
+        issues.push({
+          code: "orphaned_resolver",
+          severity: "warning",
+          path: `${path}.optionsResolver`,
+          message: `Dynamic option resolvers should be evaluated before AI serialization.`
+        });
+      }
+
       if ("fields" in field && Array.isArray(containerField.fields)) {
         if (field.type === "array" && containerField.primitive) {
           validateFields(containerField.fields as readonly SerializableField[], `${path}.fields`, true);
