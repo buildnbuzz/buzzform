@@ -1,4 +1,5 @@
 import type { SerializableFormSchema, SerializableField } from "./serializable";
+import { getFieldMeta } from "./field-meta";
 
 export type SchemaIssueSeverity = "error" | "warning";
 
@@ -47,6 +48,25 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
       
       const path = pathPrefix ? `${pathPrefix}[${index}]` : `fields[${index}]`;
       const isLayout = ["row", "tabs", "collapsible"].includes(field.type);
+
+      const meta = getFieldMeta(field.type);
+      if (!meta) {
+        issues.push({
+          code: "invalid_field_type",
+          severity: "error",
+          path,
+          message: `Unrecognized field type '${field.type}'.`
+        });
+      }
+
+      if (isLayout && "name" in field && (field as { name?: unknown }).name !== undefined) {
+        issues.push({
+          code: "name_in_layout",
+          severity: "error",
+          path,
+          message: `Layout field of type '${field.type}' must not have a 'name' property.`
+        });
+      }
 
       if (!isLayout) {
         const name = (field as { name?: unknown }).name;

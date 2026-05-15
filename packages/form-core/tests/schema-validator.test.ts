@@ -146,4 +146,46 @@ describe("schema-validator", () => {
       expect(result.issues.filter(i => i.code === "missing_fields")).toHaveLength(1);
     });
   });
+
+  describe("type checks", () => {
+    it("flags invalid field types", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { type: "magic", name: "foo" } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(false);
+      const issues = result.issues.filter(i => i.code === "invalid_field_type");
+      expect(issues).toHaveLength(1);
+    });
+
+    it("still traverses invalid fields if they have a fields array", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { 
+            type: "custom-container", 
+            name: "foo", 
+            fields: [{ type: "text", name: "" }] 
+          } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(false);
+      expect(result.issues.filter(i => i.code === "invalid_field_type")).toHaveLength(1);
+      expect(result.issues.filter(i => i.code === "missing_name")).toHaveLength(1);
+    });
+
+    it("flags name on layout fields", () => {
+      const schema: SerializableFormSchema = {
+        fields: [
+          { type: "row", name: "bad_name", fields: [] } as unknown as SerializableField
+        ]
+      };
+      const result = validateSchema(schema);
+      expect(result.valid).toBe(false);
+      const issues = result.issues.filter(i => i.code === "name_in_layout");
+      expect(issues).toHaveLength(1);
+    });
+  });
 });
