@@ -12,3 +12,7 @@ export * from "./utils/dependencies";
 export * from "./utils/output";
 export * from "./utils/number";
 export * from "./validation";
+export * from "./serializable";
+export * from "./field-meta";
+export * from "./schema-fixer";
+export { validateSchema as validateSerializableSchema, formatSchemaIssues } from "./schema-validator";
