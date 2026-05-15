@@ -1,4 +1,4 @@
-import type { SerializableFormSchema } from "./serializable";
+import type { SerializableFormSchema, SerializableField } from "./serializable";
 
 export type SchemaIssueSeverity = "error" | "warning";
 
@@ -38,7 +38,57 @@ export interface SchemaValidationResult {
 export function validateSchema(schema: SerializableFormSchema): SchemaValidationResult {
   const issues: SchemaIssue[] = [];
 
-  // Scaffolding: full implementation in subsequent tasks.
+  function validateFields(fields: readonly SerializableField[], pathPrefix: string, isPrimitiveItem = false) {
+    if (!Array.isArray(fields)) return;
+    const seenNames = new Set<string>();
+
+    fields.forEach((field, index) => {
+      if (!field || typeof field !== "object") return;
+      
+      const path = pathPrefix ? `${pathPrefix}[${index}]` : `fields[${index}]`;
+      const isLayout = ["row", "tabs", "collapsible"].includes(field.type);
+
+      if (!isLayout) {
+        const name = (field as { name?: unknown }).name;
+        if (!isPrimitiveItem && (!name || typeof name !== "string" || name.trim() === "")) {
+          issues.push({
+            code: "missing_name",
+            severity: "error",
+            path,
+            message: `Data field of type '${field.type}' must have a non-empty name.`
+          });
+        } else if (name && typeof name === "string") {
+          if (seenNames.has(name)) {
+            issues.push({
+              code: "duplicate_name",
+              severity: "error",
+              path,
+              message: `Duplicate field name '${name}' at same nesting level.`
+            });
+          }
+          seenNames.add(name);
+        }
+      }
+
+      const containerField = field as { fields?: unknown; primitive?: unknown; tabs?: unknown };
+
+      if ("fields" in field && Array.isArray(containerField.fields)) {
+        if (field.type === "array" && containerField.primitive) {
+          validateFields(containerField.fields as readonly SerializableField[], `${path}.fields`, true);
+        } else {
+          validateFields(containerField.fields as readonly SerializableField[], `${path}.fields`, false);
+        }
+      }
+
+      if (field.type === "tabs" && "tabs" in field && Array.isArray(containerField.tabs)) {
+        containerField.tabs.forEach((tab: { fields?: unknown }, tIndex: number) => {
+          validateFields((tab.fields as readonly SerializableField[]) || [], `${path}.tabs[${tIndex}].fields`, false);
+        });
+      }
+    });
+  }
+
+  validateFields(schema.fields, "");
 
   return {
     valid: issues.every((issue) => issue.severity !== "error"),
