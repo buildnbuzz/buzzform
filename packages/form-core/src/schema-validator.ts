@@ -70,6 +70,59 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
         }
       }
 
+      const structField = field as { options?: unknown; hasMany?: unknown; fields?: unknown; primitive?: unknown; tabs?: unknown };
+
+      if (["select", "radio"].includes(field.type) || (field.type === "checkbox" && structField.hasMany)) {
+        if (!Array.isArray(structField.options) || structField.options.length === 0) {
+          issues.push({
+            code: "missing_options",
+            severity: "error",
+            path,
+            message: `Field of type '${field.type}' must have an 'options' array with at least one item.`
+          });
+        }
+      }
+
+      if (["group", "row", "array", "collapsible"].includes(field.type)) {
+        if (!Array.isArray(structField.fields)) {
+          issues.push({
+            code: "missing_fields",
+            severity: "error",
+            path,
+            message: `Container field of type '${field.type}' must have a 'fields' array.`
+          });
+        } else if (field.type === "array" && structField.primitive && structField.fields.length !== 1) {
+          issues.push({
+            code: "primitive_array_multi",
+            severity: "error",
+            path,
+            message: `Primitive array must have exactly one item in its 'fields' array.`
+          });
+        }
+      }
+
+      if (field.type === "tabs") {
+        if (!Array.isArray(structField.tabs) || structField.tabs.length === 0) {
+          issues.push({
+            code: "empty_tabs",
+            severity: "error",
+            path,
+            message: `Tabs field must have a 'tabs' array with at least one item.`
+          });
+        } else {
+          structField.tabs.forEach((tab: { fields?: unknown }, tIndex: number) => {
+            if (!tab || typeof tab !== "object" || !Array.isArray(tab.fields)) {
+              issues.push({
+                code: "missing_fields",
+                severity: "error",
+                path: `${path}.tabs[${tIndex}]`,
+                message: `Tab item must have a 'fields' array.`
+              });
+            }
+          });
+        }
+      }
+
       const containerField = field as { fields?: unknown; primitive?: unknown; tabs?: unknown };
 
       if ("fields" in field && Array.isArray(containerField.fields)) {
