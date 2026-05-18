@@ -173,16 +173,28 @@ export function SelectField() {
               <ComboboxChips
                 aria-invalid={isInvalid}
                 aria-describedby={ariaDescribedBy}
+                className={cn(
+                  "w-full transition-all duration-200",
+                  isLoading && "animate-pulse bg-muted/40",
+                )}
               >
                 <ComboboxValue>
                   {(values: NormalizedOption[]) => (
                     <React.Fragment>
                       {values.map((opt) => (
-                        <ComboboxChip key={opt.value}>{opt.label}</ComboboxChip>
+                        <ComboboxChip key={opt.value}>
+                          {opt.label}
+                        </ComboboxChip>
                       ))}
                       <ComboboxChipsInput
                         disabled={isDisabled || isReadOnly || isLoading}
-                        placeholder={values.length === 0 ? placeholder : ""}
+                        placeholder={
+                          isLoading
+                            ? "..."
+                            : values.length === 0
+                              ? placeholder
+                              : ""
+                        }
                       />
                     </React.Fragment>
                   )}
@@ -192,16 +204,18 @@ export function SelectField() {
               <ComboboxInput
                 id={fieldApi.name}
                 disabled={isDisabled || isReadOnly || isLoading}
-                placeholder={placeholder}
+                placeholder={isLoading ? "..." : placeholder}
                 aria-invalid={isInvalid}
                 aria-describedby={ariaDescribedBy}
                 showClear={isClearable && !!selectedValues}
-                className="w-full"
+                className={cn(
+                  "w-full transition-all duration-200",
+                  isLoading && "animate-pulse bg-muted/40",
+                )}
               />
             )}
 
             <ComboboxContent>
-
               <ComboboxEmpty>
                 {ui?.labels?.empty ?? "No results found."}
               </ComboboxEmpty>
