@@ -181,7 +181,7 @@ export function SelectField() {
                         <ComboboxChip key={opt.value}>{opt.label}</ComboboxChip>
                       ))}
                       <ComboboxChipsInput
-                        disabled={isDisabled || isReadOnly}
+                        disabled={isDisabled || isReadOnly || isLoading}
                         placeholder={values.length === 0 ? placeholder : ""}
                       />
                     </React.Fragment>
@@ -191,7 +191,7 @@ export function SelectField() {
             ) : (
               <ComboboxInput
                 id={fieldApi.name}
-                disabled={isDisabled || isReadOnly}
+                disabled={isDisabled || isReadOnly || isLoading}
                 placeholder={placeholder}
                 aria-invalid={isInvalid}
                 aria-describedby={ariaDescribedBy}
