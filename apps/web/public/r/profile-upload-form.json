@@ -1,0 +1,22 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "profile-upload-form",
+  "title": "Profile Upload Form",
+  "description": "Avatar upload with circle preview layout.",
+  "registryDependencies": [
+    "@buzzform/upload",
+    "@buzzform/text",
+    "@buzzform/email",
+    "card",
+    "sonner"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/examples/profile-upload-form.tsx",
+      "content": "\"use client\";\n\nimport { toast } from \"sonner\";\nimport { defineSchema, type InferType } from \"@buildnbuzz/form-react\";\nimport {\n  Form,\n  FormContent,\n  FormFields,\n  FormSubmit,\n  FormReset,\n  FormActions,\n} from \"@/registry/shadcn/form\";\nimport {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from \"@/components/ui/card\";\n\nconst profileSchema = defineSchema({\n  fields: [\n    {\n      type: \"upload\",\n      name: \"avatar\",\n      label: \"Profile Picture\",\n      description: \"Upload a profile photo\",\n      ui: {\n        variant: \"avatar\",\n        shape: \"circle\",\n        size: \"lg\",\n        accept: \"image/*\",\n      },\n    },\n    {\n      type: \"text\",\n      name: \"name\",\n      label: \"Display Name\",\n      placeholder: \"Your name\",\n      required: true,\n    },\n    {\n      type: \"email\",\n      name: \"email\",\n      label: \"Email\",\n      placeholder: \"you@example.com\",\n      required: true,\n    },\n  ],\n});\n\ntype ProfileSchema = InferType<typeof profileSchema.fields>;\n\nexport default function ProfileUploadForm() {\n  const handleSubmit = async ({ value }: { value: unknown }) => {\n    const data = value as ProfileSchema;\n    await new Promise((r) => setTimeout(r, 1000));\n    toast(\"Profile saved successfully!\", {\n      description: (\n        <div className=\"space-y-2\">\n          <p className=\"text-[10px] text-muted-foreground\">\n            Check the console for the full File objects.\n          </p>\n          <pre className=\"max-h-40 overflow-auto rounded-md bg-muted p-3 text-xs text-muted-foreground\">\n            <code>\n              {JSON.stringify(\n                {\n                  ...data,\n                  avatar: data.avatar\n                    ? data.avatar instanceof File\n                      ? {\n                          name: data.avatar.name,\n                          size: data.avatar.size,\n                          type: data.avatar.type,\n                        }\n                      : data.avatar\n                    : null,\n                },\n                null,\n                2,\n              )}\n            </code>\n          </pre>\n        </div>\n      ),\n    });\n  };\n\n  return (\n    <Card className=\"w-full max-w-md\">\n      <CardHeader>\n        <CardTitle>Profile Settings</CardTitle>\n        <CardDescription>\n          Avatar upload with circle preview layout\n        </CardDescription>\n      </CardHeader>\n      <CardContent>\n        <Form schema={profileSchema} onSubmit={handleSubmit}>\n          <FormContent>\n            <FormFields className=\"space-y-4\" />\n            <FormActions className=\"mt-6\">\n              <FormReset>Clear</FormReset>\n              <FormSubmit>Save Profile</FormSubmit>\n            </FormActions>\n          </FormContent>\n        </Form>\n      </CardContent>\n    </Card>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/profile-upload-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

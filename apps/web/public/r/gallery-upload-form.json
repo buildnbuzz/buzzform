@@ -1,0 +1,20 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "gallery-upload-form",
+  "title": "Product Gallery",
+  "description": "Multi-file upload with thumbnail grid preview.",
+  "registryDependencies": [
+    "@buzzform/upload",
+    "card",
+    "sonner"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/examples/gallery-upload-form.tsx",
+      "content": "\"use client\";\n\nimport { toast } from \"sonner\";\nimport { defineSchema, type InferType } from \"@buildnbuzz/form-react\";\nimport {\n  Form,\n  FormContent,\n  FormFields,\n  FormSubmit,\n  FormReset,\n  FormActions,\n} from \"@/registry/shadcn/form\";\nimport {\n  Card,\n  CardContent,\n  CardDescription,\n  CardHeader,\n  CardTitle,\n} from \"@/components/ui/card\";\n\nconst gallerySchema = defineSchema({\n  fields: [\n    {\n      type: \"upload\",\n      name: \"images\",\n      label: \"Product Images\",\n      description: \"Upload up to 6 product images\",\n      hasMany: true,\n      max: 6,\n      ui: {\n        variant: \"gallery\",\n        accept: \"image/*\",\n        shape: \"rounded\",\n      },\n    },\n  ],\n});\n\ntype GallerySchema = InferType<typeof gallerySchema.fields>;\n\nexport default function GalleryUploadForm() {\n  const handleSubmit = async ({ value }: { value: unknown }) => {\n    const data = value as GallerySchema;\n    await new Promise((r) => setTimeout(r, 1000));\n\n    const filesInfo = Array.isArray(data.images)\n      ? data.images.map((img) =>\n          img instanceof File\n            ? { name: img.name, size: img.size, type: img.type }\n            : img,\n        )\n      : [];\n\n    toast(\"Images saved!\", {\n      description: (\n        <div className=\"space-y-2\">\n          <p className=\"text-[10px] text-muted-foreground\">\n            Check the console for the full File objects.\n          </p>\n          <pre className=\"max-h-40 overflow-auto rounded-md bg-muted p-3 text-xs text-muted-foreground\">\n            <code>{JSON.stringify({ ...data, images: filesInfo }, null, 2)}</code>\n          </pre>\n        </div>\n      ),\n    });\n  };\n\n  return (\n    <Card className=\"w-full max-w-lg\">\n      <CardHeader>\n        <CardTitle>Product Gallery</CardTitle>\n        <CardDescription>Multi-file upload with thumbnail grid preview</CardDescription>\n      </CardHeader>\n      <CardContent>\n        <Form schema={gallerySchema} onSubmit={handleSubmit}>\n          <FormContent>\n            <FormFields className=\"space-y-4\" />\n            <FormActions className=\"mt-6\">\n              <FormReset>Clear</FormReset>\n              <FormSubmit>Save Images</FormSubmit>\n            </FormActions>\n          </FormContent>\n        </Form>\n      </CardContent>\n    </Card>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/buzzform/examples/gallery-upload-form.tsx"
+    }
+  ],
+  "type": "registry:block"
+}

@@ -42,6 +42,9 @@ const contactSchema = defineSchema({
       label: "Subject",
       placeholder: "How can we help?",
       required: true,
+      ui: {
+        asterisk: false, // Hides the red required * asterisk
+      },
     },
     {
       type: "textarea",
