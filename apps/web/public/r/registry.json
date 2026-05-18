@@ -357,6 +357,24 @@
       ]
     },
     {
+      "name": "upload",
+      "type": "registry:ui",
+      "title": "UploadField",
+      "description": "File upload field for BuzzForm v2 with dropzone, avatar, gallery, and inline variants.",
+      "registryDependencies": [
+        "@buzzform/init",
+        "button",
+        "field"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/upload.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/upload.tsx"
+        }
+      ]
+    },
+    {
       "name": "form-builder",
       "type": "registry:ui",
       "title": "FormBuilder",
@@ -557,7 +575,8 @@
         "@buzzform/tabs",
         "@buzzform/array",
         "@buzzform/date",
-        "@buzzform/tags"
+        "@buzzform/tags",
+        "@buzzform/upload"
       ],
       "files": [
         {

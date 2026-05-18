@@ -16,6 +16,7 @@ interface TristateCheckboxUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 /** Cycles null → true → false → null on each click. */
@@ -99,7 +100,9 @@ export function TristateCheckboxField() {
               className="cursor-pointer m-0 font-normal inline"
             >
               {label}
-              {isRequired && <span className="text-destructive">&nbsp;*</span>}
+              {isRequired && ui?.asterisk !== false && (
+                <span className="text-destructive">&nbsp;*</span>
+              )}
             </FieldLabel>
           )}
 

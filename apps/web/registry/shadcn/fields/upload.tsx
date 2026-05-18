@@ -34,6 +34,8 @@ export interface UploadUi {
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Controls required asterisk visibility. */
+  asterisk?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -255,7 +257,9 @@ export function UploadField() {
         {label && (
           <FieldLabel htmlFor={fieldApi.name} className="gap-1 items-baseline">
             {label}
-            {isRequired ? <span className="text-destructive">*</span> : null}
+            {isRequired && ui?.asterisk !== false ? (
+              <span className="text-destructive">*</span>
+            ) : null}
           </FieldLabel>
         )}
 

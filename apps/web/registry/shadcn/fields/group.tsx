@@ -36,6 +36,8 @@ interface GroupUi {
   showErrorBadge?: boolean;
   /** Description rendered below the label. */
   description?: string;
+  /** Controls required asterisk visibility. */
+  asterisk?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -129,7 +131,9 @@ export function GroupField({ children }: { children?: React.ReactNode }) {
             {label && (
               <FieldLegend>
                 {label}
-                {isRequired ? <span className="text-destructive ml-1">*</span> : null}
+                {isRequired && ui?.asterisk !== false ? (
+                  <span className="text-destructive ml-1">*</span>
+                ) : null}
                 {showErrorBadge && errorCount > 0 && (
                   <Badge variant="destructive" className="h-5 px-1.5 text-xs ml-2">
                     {errorCount}
@@ -158,7 +162,9 @@ export function GroupField({ children }: { children?: React.ReactNode }) {
             {label && (
               <FieldLegend className="flex items-center gap-2">
                 {label}
-                {isRequired ? <span className="text-destructive ml-1">*</span> : null}
+                {isRequired && ui?.asterisk !== false ? (
+                  <span className="text-destructive ml-1">*</span>
+                ) : null}
                 {showErrorBadge && errorCount > 0 && (
                   <Badge variant="destructive" className="h-5 px-1.5 text-xs">
                     {errorCount}

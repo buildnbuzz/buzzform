@@ -32,6 +32,7 @@ interface RadioUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 function getGridColumnsClass(columns: OptionGroupColumns | undefined) {
@@ -131,7 +132,9 @@ export function RadioField() {
         {label && (
           <FieldLabel htmlFor={`${fieldApi.name}-0`}>
             {label}
-            {isRequired && <span className="text-destructive ml-1">*</span>}
+            {isRequired && ui?.asterisk !== false && (
+              <span className="text-destructive ml-1">*</span>
+            )}
           </FieldLabel>
         )}
 

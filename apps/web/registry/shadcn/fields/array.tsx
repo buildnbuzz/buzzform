@@ -87,6 +87,8 @@ interface ArrayUi {
     /** Label for the confirm button in delete confirmation. */
     confirmDeleteActionLabel?: string;
   };
+  /** Controls required asterisk visibility. */
+  asterisk?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -575,7 +577,7 @@ function DefaultArrayField(state: ArrayFieldState) {
                   {label && (
                     <FieldLegend className="text-sm font-semibold truncate mb-0">
                       {label}
-                      {isEffectivelyRequired && (
+                      {isEffectivelyRequired && ui?.asterisk !== false && (
                         <span className="text-destructive ml-1">*</span>
                       )}
                     </FieldLegend>
@@ -822,7 +824,7 @@ function MinimalArrayField(state: ArrayFieldState) {
             {label && (
               <FieldLegend className="text-sm font-semibold mb-0">
                 {label}
-                {isEffectivelyRequired && (
+                {isEffectivelyRequired && ui?.asterisk !== false && (
                   <span className="text-destructive ml-1">*</span>
                 )}
               </FieldLegend>

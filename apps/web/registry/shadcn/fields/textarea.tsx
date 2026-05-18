@@ -22,6 +22,7 @@ interface TextareaUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 export function TextareaField() {
@@ -79,7 +80,9 @@ export function TextareaField() {
         {label && (
           <FieldLabel htmlFor={fieldApi.name} className="gap-1 items-baseline">
             {label}
-            {isRequired ? <span className="text-destructive">*</span> : null}
+            {isRequired && ui?.asterisk !== false ? (
+              <span className="text-destructive">*</span>
+            ) : null}
           </FieldLabel>
         )}
 

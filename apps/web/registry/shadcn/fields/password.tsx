@@ -29,6 +29,7 @@ interface PasswordUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
   /** Text and label overrides. */
   labels?: {
     /** Labels for different strength levels. */
@@ -305,7 +306,9 @@ export function PasswordField() {
         {label && (
           <FieldLabel htmlFor={fieldApi.name} className="gap-1 items-baseline">
             {label}
-            {isRequired ? <span className="text-destructive">*</span> : null}
+            {isRequired && ui?.asterisk !== false ? (
+              <span className="text-destructive">*</span>
+            ) : null}
           </FieldLabel>
         )}
 
