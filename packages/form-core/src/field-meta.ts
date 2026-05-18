@@ -127,6 +127,15 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
     applicableValidators: ["required"],
     example: { type: "radio", name: "plan", label: "Plan", options: [{ label: "Basic", value: "basic" }] }
   },
+  upload: {
+    type: "upload",
+    category: "input",
+    description: "File upload input supporting dropzone, gallery, inline, and avatar modes",
+    requiredProps: ["type", "name"],
+    optionalProps: ["label", "description", "placeholder", "required", "disabled", "readOnly", "hidden", "condition", "defaultValue", "hasMany", "min", "max", "maxSize"],
+    applicableValidators: ["required", "minSelected", "maxSelected", "maxSize"],
+    example: { type: "upload", name: "resume", label: "Resume Upload" }
+  },
   group: {
     type: "group",
     category: "container",

@@ -1186,4 +1186,44 @@ describe("Dynamic Validation Messages", () => {
     const result = await validateFields(fields, { test: "abc" }, { includeDerived: true });
     expect(result.errorsByPath["/test"]).toBe("Must be at least 5 characters.");
   });
+
+  describe("upload validators", () => {
+    it("validates derived min, max, and maxSize check for upload fields", async () => {
+      const fields = [
+        {
+          type: "upload" as const,
+          name: "files",
+          min: 2,
+          max: 3,
+          maxSize: 5000, // 5000 bytes
+        },
+      ];
+
+      // Test size validation on File mocks in node environment (which defaults to true inside node checkSize)
+      // Since window is undefined in node/vitest, let's mock it or test the checkSize directly
+      expect(builtInValidators.maxSize("some-url", { max: 1000 })).toBe(true);
+
+      // In JSDOM, window is defined, so File size check runs! Let's build a mock File
+      const mockFileSmall = { size: 1000, name: "small.png" } as unknown as File;
+      const mockFileLarge = { size: 9000, name: "large.png" } as unknown as File;
+
+      expect(builtInValidators.maxSize(mockFileSmall, { max: 5000 })).toBe(true);
+      expect(builtInValidators.maxSize(mockFileLarge, { max: 5000 })).toBe(false);
+
+      // Test min/max array counts derived rules
+      const tooFew = await validateFields(
+        fields,
+        { files: ["a"] },
+        { run: "blur", includeDerived: true },
+      );
+      expect(tooFew.errorsByPath["/files"]).toBe("Upload at least 2 file(s).");
+
+      const tooMany = await validateFields(
+        fields,
+        { files: ["a", "b", "c", "d"] },
+        { run: "blur", includeDerived: true },
+      );
+      expect(tooMany.errorsByPath["/files"]).toBe("Upload at most 3 file(s).");
+    });
+  });
 });
