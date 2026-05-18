@@ -4,6 +4,7 @@ import {
   UserCircle02Icon,
   Briefcase01Icon,
   File02Icon,
+  Upload01Icon,
 } from "@hugeicons/core-free-icons";
 
 export interface Example {
@@ -195,6 +196,33 @@ export const exampleCategories: ExampleCategory[] = [
         name: "Country + State",
         description: "Cascading dropdowns with real REST API data.",
         file: "country-state-form.tsx",
+      },
+    ],
+  },
+  {
+    category: "File Uploads",
+    icon: Upload01Icon,
+    items: [
+      {
+        slug: "document-upload-form",
+        id: "DocumentUploadForm",
+        name: "Document Upload",
+        description: "A secure document upload form with file validation.",
+        file: "document-upload-form.tsx",
+      },
+      {
+        slug: "gallery-upload-form",
+        id: "GalleryUploadForm",
+        name: "Product Gallery",
+        description: "A product image upload form with gallery grid and previews.",
+        file: "gallery-upload-form.tsx",
+      },
+      {
+        slug: "profile-upload-form",
+        id: "ProfileUploadForm",
+        name: "Profile Settings",
+        description: "A settings form showcasing avatar layout and upload preview.",
+        file: "profile-upload-form.tsx",
       },
     ],
   },

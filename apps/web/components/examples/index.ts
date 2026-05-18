@@ -19,3 +19,7 @@ export { default as GroupFieldExample } from "../../registry/shadcn/examples/gro
 export { default as CollapsibleSettingsForm } from "../../registry/shadcn/examples/collapsible-settings-form";
 export { default as MinimalArrayForm } from "../../registry/shadcn/examples/minimal-array-form";
 export { default as CountryStateForm } from "../../registry/shadcn/examples/country-state-form";
+export { default as DocumentUploadForm } from "../../registry/shadcn/examples/document-upload-form";
+export { default as GalleryUploadForm } from "../../registry/shadcn/examples/gallery-upload-form";
+export { default as ProfileUploadForm } from "../../registry/shadcn/examples/profile-upload-form";
+
