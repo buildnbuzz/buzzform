@@ -1,5 +1,12 @@
 # @buildnbuzz/form-core
 
+## 0.1.9
+
+### Patch Changes
+
+- [#145](https://github.com/buildnbuzz/buzzform/pull/145) [`d8b17f1`](https://github.com/buildnbuzz/buzzform/commit/d8b17f155e775b57c6da9a6e4b8d1e0251f18344) Thanks [@ladparth](https://github.com/ladparth)! - Introduce core support for the upload field type.
+  - Add upload field type definition and core validation rules (maxSize, minSelected, maxSelected) in `@buildnbuzz/form-core`.
+
 ## 0.1.8
 
 ### Patch Changes
