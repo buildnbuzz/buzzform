@@ -16,3 +16,5 @@ export { rowFieldProperties } from "./row";
 export { tabsFieldProperties } from "./tabs";
 export { collapsibleFieldProperties } from "./collapsible";
 export { formSettingsProperties } from "./form";
+export { uploadFieldProperties } from "./upload";
+
