@@ -1,5 +1,15 @@
 # @buildnbuzz/form-react
 
+## 0.1.11
+
+### Patch Changes
+
+- [#145](https://github.com/buildnbuzz/buzzform/pull/145) [`d8b17f1`](https://github.com/buildnbuzz/buzzform/commit/d8b17f155e775b57c6da9a6e4b8d1e0251f18344) Thanks [@ladparth](https://github.com/ladparth)! - Introduce React adapter support for the upload field type.
+  - Provide React bindings and hook integrations for upload fields in `@buildnbuzz/form-react`.
+
+- Updated dependencies [[`d8b17f1`](https://github.com/buildnbuzz/buzzform/commit/d8b17f155e775b57c6da9a6e4b8d1e0251f18344)]:
+  - @buildnbuzz/form-core@0.1.9
+
 ## 0.1.10
 
 ### Patch Changes
