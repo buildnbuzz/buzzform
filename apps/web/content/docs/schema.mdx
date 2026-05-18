@@ -144,6 +144,26 @@ const schema = defineSchema({
 });
 ```
 
+### Hiding Required Asterisks
+
+By default, required fields display a red required asterisk (`*`) next to their label. You can hide the asterisk on a per-field basis by setting the `ui.asterisk` option to `false`:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "email",
+      name: "email",
+      label: "Email Address",
+      required: true,
+      ui: {
+        asterisk: false, // Hides the red required asterisk *
+      },
+    },
+  ],
+});
+```
+
 ## Base Field Properties
 
 Every field has these common properties:

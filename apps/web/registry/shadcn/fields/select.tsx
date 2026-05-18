@@ -37,6 +37,8 @@ interface SelectUi {
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Controls required asterisk visibility. */
+  asterisk?: boolean;
   /** Text and label overrides. */
   labels?: {
     /** Message shown when no options match the search query. */
@@ -150,7 +152,9 @@ export function SelectField() {
         {label && (
           <FieldLabel htmlFor={fieldApi.name} className="gap-1 items-baseline">
             {label}
-            {isRequired && <span className="text-destructive">*</span>}
+            {isRequired && ui?.asterisk !== false && (
+              <span className="text-destructive">*</span>
+            )}
           </FieldLabel>
         )}
 

@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 interface SwitchUi {
   alignment?: "start" | "end" | "between";
   autoFocus?: boolean;
+  asterisk?: boolean;
 }
 
 export function SwitchField() {
@@ -64,7 +65,9 @@ export function SwitchField() {
           htmlFor={fieldApi.name}
           className="cursor-pointer m-0 font-normal flex-none gap-1 items-baseline"
         >
-          {isRequired && <span className="text-destructive">*</span>}
+          {isRequired && ui?.asterisk !== false && (
+            <span className="text-destructive">*</span>
+          )}
           {label}
         </FieldLabel>
       )}

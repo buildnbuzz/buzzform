@@ -31,6 +31,7 @@ interface CheckboxGroupUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 const cardSizeClasses = {
@@ -137,7 +138,9 @@ export function CheckboxGroupField() {
       >
         {label && (
           <FieldLabel className="gap-1 items-baseline">
-            {isRequired && <span className="text-destructive">*</span>}
+            {isRequired && ui?.asterisk !== false && (
+              <span className="text-destructive">*</span>
+            )}
             {label}
           </FieldLabel>
         )}

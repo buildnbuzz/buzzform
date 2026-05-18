@@ -33,6 +33,9 @@ const loginSchema = defineSchema({
       placeholder: "you@example.com",
       required: true,
       autoComplete: "email",
+      ui: {
+        asterisk: false, // Hides the red required * asterisk
+      },
     },
     {
       type: "password",

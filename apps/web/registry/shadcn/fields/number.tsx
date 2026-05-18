@@ -38,6 +38,7 @@ interface NumberUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 export function NumberField() {
@@ -425,7 +426,9 @@ export function NumberField() {
       <Field data-invalid={isInvalid} data-disabled={isDisabled}>
         {label && (
           <FieldLabel htmlFor={fieldApi.name}>
-            {isRequired && <span className="text-destructive mr-0.5">*</span>}
+            {isRequired && ui?.asterisk !== false && (
+              <span className="text-destructive mr-0.5">*</span>
+            )}
             {label}
           </FieldLabel>
         )}

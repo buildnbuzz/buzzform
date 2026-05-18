@@ -36,6 +36,8 @@ interface TagsUi {
   className?: string;
   /** Inline width applied to `<FieldGroup>`. */
   width?: string | number;
+  /** Controls required asterisk visibility. */
+  asterisk?: boolean;
   /** Text and label overrides. */
   labels?: {
     /** Custom text for tag count. Defaults to `"{count} / {max} tags"`. */
@@ -96,7 +98,9 @@ export function TagsField() {
         {label && (
           <FieldLabel htmlFor={fieldApi.name} className="gap-1 items-baseline">
             {label}
-            {isRequired ? <span className="text-destructive">*</span> : null}
+            {isRequired && ui?.asterisk !== false ? (
+              <span className="text-destructive">*</span>
+            ) : null}
           </FieldLabel>
         )}
 

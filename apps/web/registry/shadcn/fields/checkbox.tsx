@@ -16,6 +16,7 @@ interface CheckboxUi {
   autoFocus?: boolean;
   className?: string;
   width?: string | number;
+  asterisk?: boolean;
 }
 
 export function CheckboxField() {
@@ -90,7 +91,9 @@ export function CheckboxField() {
               className="cursor-pointer m-0 font-normal inline"
             >
               {label}
-              {isRequired && <span className="text-destructive">&nbsp;*</span>}
+              {isRequired && ui?.asterisk !== false && (
+                <span className="text-destructive">&nbsp;*</span>
+              )}
             </FieldLabel>
           )}
 

@@ -357,6 +357,24 @@
       ]
     },
     {
+      "name": "upload",
+      "type": "registry:ui",
+      "title": "UploadField",
+      "description": "File upload field for BuzzForm v2 with dropzone, avatar, gallery, and inline variants.",
+      "registryDependencies": [
+        "@buzzform/init",
+        "button",
+        "field"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/upload.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/upload.tsx"
+        }
+      ]
+    },
+    {
       "name": "form-builder",
       "type": "registry:ui",
       "title": "FormBuilder",
@@ -557,7 +575,8 @@
         "@buzzform/tabs",
         "@buzzform/array",
         "@buzzform/date",
-        "@buzzform/tags"
+        "@buzzform/tags",
+        "@buzzform/upload"
       ],
       "files": [
         {
@@ -974,6 +993,63 @@
           "path": "registry/shadcn/examples/collapsible-settings-form.tsx",
           "type": "registry:component",
           "target": "components/buzzform/examples/collapsible-settings-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "profile-upload-form",
+      "type": "registry:block",
+      "title": "Profile Upload Form",
+      "description": "Avatar upload with circle preview layout.",
+      "registryDependencies": [
+        "@buzzform/upload",
+        "@buzzform/text",
+        "@buzzform/email",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/profile-upload-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/profile-upload-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "gallery-upload-form",
+      "type": "registry:block",
+      "title": "Product Gallery",
+      "description": "Multi-file upload with thumbnail grid preview.",
+      "registryDependencies": [
+        "@buzzform/upload",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/gallery-upload-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/gallery-upload-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "document-upload-form",
+      "type": "registry:block",
+      "title": "Document Upload Form",
+      "description": "Drag-and-drop file upload with validation.",
+      "registryDependencies": [
+        "@buzzform/upload",
+        "@buzzform/textarea",
+        "card",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/document-upload-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/document-upload-form.tsx"
         }
       ]
     }
