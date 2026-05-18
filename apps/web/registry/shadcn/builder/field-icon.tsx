@@ -209,6 +209,19 @@ export const FieldIcon = ({ type, size = 16, ...props }: FieldIconProps) => {
           {...props}
         />
       );
+    case "upload":
+      return (
+        <IconPlaceholder
+          lucide="UploadCloud"
+          hugeicons="Upload01Icon"
+          tabler="IconUpload"
+          phosphor="UploadSimple"
+          remixicon="RiUploadCloud2Line"
+          size={size}
+          {...props}
+        />
+      );
+
 
     // Contextual icons
     case "plus":
