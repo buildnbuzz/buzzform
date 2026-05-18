@@ -18,6 +18,7 @@ import { TabsField } from "./fields/tabs";
 import { CollapsibleField } from "./fields/collapsible";
 import { DateField } from "./fields/date";
 import { TagsField } from "./fields/tags";
+import { UploadField } from "./fields/upload";
 
 export const registry: FieldRegistry = {
   text: TextField,
@@ -36,4 +37,5 @@ export const registry: FieldRegistry = {
   collapsible: CollapsibleField,
   date: DateField,
   tags: TagsField,
+  upload: UploadField,
 };

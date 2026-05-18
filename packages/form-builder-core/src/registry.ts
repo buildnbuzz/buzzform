@@ -19,6 +19,7 @@ import { arrayFieldProperties } from "./field-properties/array";
 import { rowFieldProperties } from "./field-properties/row";
 import { tabsFieldProperties } from "./field-properties/tabs";
 import { collapsibleFieldProperties } from "./field-properties/collapsible";
+import { uploadFieldProperties } from "./field-properties/upload";
 
 /**
  * The default field registry for the form builder.
@@ -75,6 +76,15 @@ export const DEFAULT_FIELD_REGISTRY: FieldRegistry<IconMetadata, never> = {
     },
     defaultProps: { type: "number", label: "Quantity" },
     properties: numberFieldProperties,
+  },
+  upload: {
+    kind: "data",
+    sidebar: {
+      label: "Upload",
+      category: "Inputs",
+    },
+    defaultProps: { type: "upload", label: "Upload File" },
+    properties: uploadFieldProperties,
   },
   checkbox: {
     kind: "data",

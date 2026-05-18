@@ -72,6 +72,7 @@ export type {
   EmailField,
   NumberField,
   RadioField,
+  UploadField,
   RowField,
   SwitchField,
   TabsField,

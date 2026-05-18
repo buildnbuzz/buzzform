@@ -55,10 +55,12 @@ const getNumberArg = (
 };
 
 const lengthOf = (value: unknown): number | null => {
+  if (value === null || value === undefined) return 0;
   if (typeof value === "string") return value.length;
   if (Array.isArray(value)) return value.length;
-  return null;
+  return 1;
 };
+
 
 const minLengthLike = (
   value: unknown,
@@ -258,6 +260,26 @@ export const builtInValidators = {
     if (args?.requireNumber && !/[0-9]/.test(value)) return false;
     if (args?.requireSpecial && !/[^A-Za-z0-9]/.test(value)) return false;
     return true;
+  },
+
+  maxSize: (value: unknown, args?: ValidatorArgsMap["maxSize"]) => {
+    const max = args?.max as number | undefined;
+    if (max === undefined) return true;
+
+    const checkSize = (f: unknown) => {
+      if (f && typeof f === "object" && "size" in f) {
+        const sizeVal = (f as { size: unknown }).size;
+        if (typeof sizeVal === "number") {
+          return sizeVal <= max;
+        }
+      }
+      return true;
+    };
+
+    if (Array.isArray(value)) {
+      return value.every(checkSize);
+    }
+    return checkSize(value);
   },
 };
 
@@ -803,6 +825,31 @@ export function deriveFieldChecks(field: Field): ValidationCheck[] {
         type: "maxItems",
         message: { $text: "Cannot exceed ${/args/max} items." },
         args: { max: field.maxItems },
+      });
+    }
+  }
+
+  if (field.type === "upload") {
+    if (typeof field.min === "number" && field.min > 0) {
+      checks.push({
+        type: "minSelected",
+        message: { $text: "Upload at least ${/args/min} file(s)." },
+        args: { min: field.min },
+      });
+    }
+    if (typeof field.max === "number" && field.max > 0) {
+      checks.push({
+        type: "maxSelected",
+        message: { $text: "Upload at most ${/args/max} file(s)." },
+        args: { max: field.max },
+      });
+    }
+    if (typeof field.maxSize === "number") {
+      const sizeMB = (field.maxSize / 1024 / 1024).toFixed(1);
+      checks.push({
+        type: "maxSize",
+        message: `File size must not exceed ${sizeMB}MB.`,
+        args: { max: field.maxSize },
       });
     }
   }

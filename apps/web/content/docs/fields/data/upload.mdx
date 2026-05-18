@@ -1,0 +1,106 @@
+---
+title: Upload Field
+description: File upload field with support for Dropzone, Gallery, Inline, and Avatar variants.
+---
+
+# Upload Field
+
+The `upload` field allows users to upload one or more files with built-in validation for file size and quantity. It supports multiple presentation variants (Dropzone, Avatar, Inline, Gallery) and integrates seamless drag-and-drop support.
+
+## Schema Properties
+
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="UploadField" />
+
+## UI Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `variant` | `"dropzone" \| "avatar" \| "inline" \| "gallery"` | `"dropzone"` | Visual layout style |
+| `shape` | `"circle" \| "square" \| "rounded"` | `"rounded"` | Shape preset for avatar or thumbnail previews |
+| `size` | `"xs" \| "sm" \| "md" \| "lg" \| "xl"` | `"md"` | Size preset for avatar variant |
+| `accept` | `string` | - | Accepted MIME types / extensions (e.g. `image/*`, `.pdf`) |
+| `dropzoneText` | `string` | - | Overwrite the default dropzone placeholder text |
+| `className` | `string` | - | CSS class applied to the field container |
+| `width` | `string \| number` | - | Inline width applied to the field |
+
+## Basic Usage
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    {
+      type: "upload",
+      name: "document",
+      label: "Document Upload",
+      description: "PDF, Word, or text files (max 10MB)",
+      maxSize: 10 * 1024 * 1024,
+      ui: {
+        variant: "dropzone",
+        accept: ".pdf,.doc,.docx,.txt",
+      },
+    },
+  ],
+});
+```
+
+## Examples
+
+### Avatar Variant (Profile Picture)
+
+```tsx
+{
+  type: "upload",
+  name: "avatar",
+  label: "Profile Picture",
+  ui: {
+    variant: "avatar",
+    shape: "circle",
+    size: "lg",
+    accept: "image/*",
+  },
+}
+```
+
+### Gallery Variant (Multiple Images)
+
+```tsx
+{
+  type: "upload",
+  name: "images",
+  label: "Product Images",
+  hasMany: true,
+  max: 6,
+  ui: {
+    variant: "gallery",
+    accept: "image/*",
+  },
+}
+```
+
+### Inline Variant (Simple Button & Pills)
+
+```tsx
+{
+  type: "upload",
+  name: "attachment",
+  label: "Email Attachment",
+  ui: {
+    variant: "inline",
+    accept: "image/*,application/pdf",
+  },
+}
+```
+
+## Auto-Derived Validators
+
+| Property | Validator | Description |
+|----------|-----------|-------------|
+| `required: true` | `required` | File must be uploaded |
+| `min` | `minSelected` | Minimum number of files (when `hasMany` is `true`) |
+| `max` | `maxSelected` | Maximum number of files (when `hasMany` is `true`) |
+| `maxSize` | `maxSize` | Maximum file size in bytes |
+
+## Related
+
+- [Text Area Field](/docs/fields/data/textarea)
+- [Select Field](/docs/fields/data/select)

@@ -188,6 +188,7 @@ export interface ValidatorArgsMap {
     requireNumber?: boolean;
     requireSpecial?: boolean;
   };
+  maxSize: { max?: number | ExprNumber };
 }
 
 /** Names of built-in validators. */
@@ -456,6 +457,19 @@ export interface RadioField extends BaseField<string> {
   options: OptionsConfig;
 }
 
+/** Upload input field. Handles single or multi-file uploads. */
+export interface UploadField extends BaseField<File | File[] | string | string[]> {
+  type: "upload";
+  /** Allow multi-file uploads. */
+  hasMany?: boolean;
+  /** Minimum file count when hasMany is true. */
+  min?: number;
+  /** Maximum file count when hasMany is true. */
+  max?: number;
+  /** Maximum file size in bytes. */
+  maxSize?: number;
+}
+
 /**
  * Group field - wraps fields in a named object.
  */
@@ -631,6 +645,7 @@ export type DataField =
   | CheckboxGroupField
   | SwitchField
   | RadioField
+  | UploadField
   | GroupField
   | ArrayField
   | PrimitiveArrayField;
@@ -801,6 +816,11 @@ interface FieldValueMap<TField extends AnyDataField> {
   : boolean;
   switch: boolean;
   radio: string;
+  upload: TField extends UploadField
+    ? TField["hasMany"] extends true
+      ? (File | string)[]
+      : File | string | null
+    : never;
   group: TField extends GroupField ? InferType<TField["fields"]> : never;
   array: TField extends PrimitiveArrayField
   ? (TField["fields"][0]["name"] extends "" | undefined

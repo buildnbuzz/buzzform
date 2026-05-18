@@ -4,7 +4,7 @@ import type { FieldType } from "../src/types";
 
 describe("field-meta", () => {
   describe("input category", () => {
-    const inputTypes: FieldType[] = ["text", "email", "password", "textarea", "number", "date", "tags"];
+    const inputTypes: FieldType[] = ["text", "email", "password", "textarea", "number", "date", "tags", "upload"];
 
     it("has metadata for all input types", () => {
       inputTypes.forEach((type) => {
@@ -88,7 +88,7 @@ describe("field-meta", () => {
     it("every FieldType has an entry", () => {
       const allTypes: FieldType[] = [
         "text", "email", "password", "textarea", "number", "select", "date", "tags",
-        "checkbox", "switch", "radio", "group", "array", "row", "tabs", "collapsible"
+        "checkbox", "switch", "radio", "group", "array", "row", "tabs", "collapsible", "upload"
       ];
       allTypes.forEach((type) => {
         expect(getFieldMeta(type)).toBeDefined();

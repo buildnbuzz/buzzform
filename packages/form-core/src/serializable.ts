@@ -209,6 +209,14 @@ export interface SerializableRadioField extends SerializableBaseField<string> {
   options: SerializableOptionsConfig;
 }
 
+export interface SerializableUploadField extends SerializableBaseField<File | File[] | string | string[]> {
+  type: "upload";
+  hasMany?: boolean;
+  min?: number;
+  max?: number;
+  maxSize?: number;
+}
+
 export interface SerializableGroupField extends SerializableBaseField<UnknownData> {
   type: "group";
   fields: readonly SerializableField[];
@@ -251,6 +259,7 @@ export type SerializableDataField =
   | SerializableCheckboxGroupField
   | SerializableSwitchField
   | SerializableRadioField
+  | SerializableUploadField
   | SerializableGroupField
   | SerializableArrayField
   | SerializablePrimitiveArrayField;
