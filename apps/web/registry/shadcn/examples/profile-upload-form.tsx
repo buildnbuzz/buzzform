@@ -67,7 +67,7 @@ export default function ProfileUploadForm() {
                 {
                   ...data,
                   avatar: data.avatar
-                    ? data.avatar instanceof File
+                    ? (typeof window !== "undefined" && data.avatar instanceof window.File)
                       ? {
                           name: data.avatar.name,
                           size: data.avatar.size,

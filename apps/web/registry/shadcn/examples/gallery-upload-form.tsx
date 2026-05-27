@@ -45,7 +45,7 @@ export default function GalleryUploadForm() {
 
     const filesInfo = Array.isArray(data.images)
       ? data.images.map((img) =>
-          img instanceof File
+          typeof window !== "undefined" && img instanceof window.File
             ? { name: img.name, size: img.size, type: img.type }
             : img,
         )
