@@ -62,7 +62,7 @@ export default function DocumentUploadForm() {
                 {
                   ...data,
                   document: data.document
-                    ? data.document instanceof File
+                    ? (typeof window !== "undefined" && data.document instanceof window.File)
                       ? {
                           name: data.document.name,
                           size: data.document.size,

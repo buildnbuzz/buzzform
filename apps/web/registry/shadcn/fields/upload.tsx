@@ -147,7 +147,7 @@ export function UploadField() {
 
     const items = Array.isArray(rawValue) ? rawValue : [rawValue];
     const newPreviews = items.map((item) => {
-      if (item instanceof File) {
+      if (typeof window !== "undefined" && item instanceof window.File) {
         return {
           name: item.name,
           size: item.size,
