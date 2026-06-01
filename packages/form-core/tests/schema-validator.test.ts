@@ -148,16 +148,17 @@ describe("schema-validator", () => {
   });
 
   describe("type checks", () => {
-    it("flags invalid field types", () => {
+    it("flags invalid field types as warnings", () => {
       const schema: SerializableFormSchema = {
         fields: [
           { type: "magic", name: "foo" } as unknown as SerializableField
         ]
       };
       const result = validateSchema(schema);
-      expect(result.valid).toBe(false);
+      expect(result.valid).toBe(true);
       const issues = result.issues.filter(i => i.code === "invalid_field_type");
       expect(issues).toHaveLength(1);
+      expect(issues[0].severity).toBe("warning");
     });
 
     it("still traverses invalid fields if they have a fields array", () => {
@@ -172,8 +173,12 @@ describe("schema-validator", () => {
       };
       const result = validateSchema(schema);
       expect(result.valid).toBe(false);
-      expect(result.issues.filter(i => i.code === "invalid_field_type")).toHaveLength(1);
-      expect(result.issues.filter(i => i.code === "missing_name")).toHaveLength(1);
+      const invalidTypeIssues = result.issues.filter(i => i.code === "invalid_field_type");
+      expect(invalidTypeIssues).toHaveLength(1);
+      expect(invalidTypeIssues[0].severity).toBe("warning");
+      const missingNameIssues = result.issues.filter(i => i.code === "missing_name");
+      expect(missingNameIssues).toHaveLength(1);
+      expect(missingNameIssues[0].severity).toBe("error");
     });
 
     it("flags name on layout fields", () => {

@@ -501,7 +501,7 @@ export async function validateSchema(
   formData: Record<string, unknown>,
   options?: ValidateFieldsOptions,
 ): Promise<ValidationResult> {
-  const result = await validateFields(schema.fields, formData, options);
+  const result = await validateFields(schema.fields as Field[], formData, options);
 
   const run = options?.run ?? "submit";
   const ctx: ValidationContext = {

@@ -703,8 +703,15 @@ export interface CollapsibleField extends BaseLayoutField {
   collapsed?: Expr<boolean>;
 }
 
+/** UI/markup layout field for inline HTML/React elements. */
+export interface UiField extends BaseLayoutField {
+  type: "ui";
+  /** The content to render (ReactNode/custom node format). */
+  content: ExprText;
+}
+
 /** Union of all layout-only fields. */
-export type LayoutField = RowField | TabsField | CollapsibleField;
+export type LayoutField = RowField | TabsField | CollapsibleField | UiField;
 
 // ============================================================================
 // 7. FIELD + FORM SCHEMA
@@ -714,7 +721,8 @@ export type LayoutField = RowField | TabsField | CollapsibleField;
 export type Field = DataField | LayoutField;
 
 /** Union of all field type string literals. */
-export type FieldType = Field["type"];
+export type BuiltInFieldType = Field["type"];
+export type FieldType = BuiltInFieldType | (string & {});
 
 /**
  * Returns `true` if the given field type can hold child fields.
@@ -741,7 +749,7 @@ export interface FormSchema {
   /** Human-readable schema description. */
   description?: string;
   /** Field list. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
   /** Form-level validation rules. */
   validate?: ValidationConfig;
   /** Optional schema metadata. */
@@ -750,7 +758,12 @@ export interface FormSchema {
 
 /** Type guard to test if a Field is a LayoutField */
 export function isLayoutField(field: Field): field is LayoutField {
-  return field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+  return (
+    field.type === "row" ||
+    field.type === "tabs" ||
+    field.type === "collapsible" ||
+    field.type === "ui"
+  );
 }
 
 /** Type guard to test if a Field is a DataField */
@@ -831,17 +844,46 @@ interface FieldValueMap<TField extends AnyDataField> {
   : never;
 }
 
+/** Input type for a custom/unregistered field. */
+export interface CustomFieldInput {
+  type: string;
+  name?: string;
+  required?: boolean | ExprBoolean;
+  [key: string]: unknown;
+}
+
+/** Union of all supported field input types (built-in or custom). */
+export type FieldInput = Field | CustomFieldInput;
+
+/** Root schema input container. */
+export interface FormSchemaInput {
+  /** Optional stable schema identifier. */
+  id?: string;
+  /** Human-readable schema title. */
+  title?: string;
+  /** Human-readable schema description. */
+  description?: string;
+  /** Field list. */
+  fields: readonly FieldInput[];
+  /** Form-level validation rules. */
+  validate?: ValidationConfig;
+  /** Optional schema metadata. */
+  meta?: UnknownData;
+}
+
 /** Resolve the inferred value type for a data field. */
-type FieldValue<TField extends AnyDataField> =
-  TField["type"] extends keyof FieldValueMap<TField>
-  ? FieldValueMap<TField>[TField["type"]]
-  : never;
+type FieldValue<TField extends FieldInput> =
+  TField extends AnyDataField
+  ? TField["type"] extends keyof FieldValueMap<TField>
+    ? FieldValueMap<TField>[TField["type"]]
+    : unknown
+  : unknown;
 
 /** Resolve the data shape contribution of a single field (data or layout). */
-type FieldDataShape<TField extends Field> = TField extends DataField
-  ? TField["required"] extends true
-  ? { [K in TField["name"]]: FieldValue<TField> }
-  : { [K in TField["name"]]?: FieldValue<TField> }
+type FieldDataShape<TField extends FieldInput> = TField extends { name: infer TName extends string }
+  ? TField extends { required: true }
+    ? { [K in TName]: FieldValue<TField> }
+    : { [K in TName]?: FieldValue<TField> }
   : TField extends RowField
   ? InferType<TField["fields"]>
   : TField extends TabsField
@@ -858,11 +900,11 @@ type FieldDataShape<TField extends Field> = TField extends DataField
  * Fields with `required: true` (literal) produce required keys; all others are optional.
  * Dynamic conditions cannot be resolved at compile time and default to optional.
  */
-export type InferType<TFields extends readonly Field[]> =
+export type InferType<TFields extends readonly FieldInput[]> =
   TFields extends readonly [infer Head, ...infer Tail]
   ? Simplify<
-    FieldDataShape<Extract<Head, Field>> &
-    InferType<Tail extends readonly Field[] ? Tail : []>
+    FieldDataShape<Extract<Head, FieldInput>> &
+    InferType<Tail extends readonly FieldInput[] ? Tail : []>
   >
   : [TFields[number]] extends [never]
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- intersection identity
@@ -880,6 +922,6 @@ export type InferType<TFields extends readonly Field[]> =
  * // { email: string }
  * ```
  */
-export function defineSchema<const T extends FormSchema>(schema: T): T {
+export function defineSchema<const T extends FormSchemaInput>(schema: T): T {
   return schema;
 }

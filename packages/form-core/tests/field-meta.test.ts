@@ -59,14 +59,18 @@ describe("field-meta", () => {
 
   describe("container and layout categories", () => {
     const containerTypes: FieldType[] = ["group", "array"];
-    const layoutTypes: FieldType[] = ["row", "tabs", "collapsible"];
+    const layoutTypesWithChildren: FieldType[] = ["row", "tabs", "collapsible"];
+    const layoutTypes: FieldType[] = [...layoutTypesWithChildren, "ui"];
 
     it("has metadata for all container and layout types", () => {
-      [...containerTypes, ...layoutTypes].forEach((type) => {
+      [...containerTypes, ...layoutTypesWithChildren].forEach((type) => {
         const meta = getFieldMeta(type);
         expect(meta).toBeDefined();
         expect(meta?.hasChildren).toBe(true);
       });
+      const uiMeta = getFieldMeta("ui");
+      expect(uiMeta).toBeDefined();
+      expect(uiMeta?.hasChildren).toBeUndefined();
     });
 
     it("getFieldsByCategory works for container and layout", () => {
@@ -88,7 +92,7 @@ describe("field-meta", () => {
     it("every FieldType has an entry", () => {
       const allTypes: FieldType[] = [
         "text", "email", "password", "textarea", "number", "select", "date", "tags",
-        "checkbox", "switch", "radio", "group", "array", "row", "tabs", "collapsible", "upload"
+        "checkbox", "switch", "radio", "group", "array", "row", "tabs", "collapsible", "upload", "ui"
       ];
       allTypes.forEach((type) => {
         expect(getFieldMeta(type)).toBeDefined();

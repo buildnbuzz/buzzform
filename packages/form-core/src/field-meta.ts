@@ -1,4 +1,4 @@
-import type { FieldType, BuiltInValidatorName } from "./types";
+import type { FieldType, BuiltInFieldType, BuiltInValidatorName } from "./types";
 
 /** Broad category for UI grouping and organization */
 export type FieldCategory = "input" | "choice" | "container" | "layout";
@@ -27,7 +27,7 @@ export interface FieldTypeMeta {
  * Registry of metadata for all supported field types.
  * @internal
  */
-export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
+export const FIELD_TYPE_META: Record<BuiltInFieldType, FieldTypeMeta> = {
   text: {
     type: "text",
     category: "input",
@@ -185,6 +185,15 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
     applicableValidators: [],
     example: { type: "collapsible", label: "Advanced", fields: [] },
     hasChildren: true
+  },
+  ui: {
+    type: "ui",
+    category: "layout",
+    description: "Inline UI/markup layout element",
+    requiredProps: ["type", "content"],
+    optionalProps: ["hidden", "condition"],
+    applicableValidators: [],
+    example: { type: "ui", content: "Custom UI" }
   }
 };
 
@@ -192,7 +201,7 @@ export const FIELD_TYPE_META: Record<FieldType, FieldTypeMeta> = {
  * Retrieves metadata for a specific field type.
  */
 export function getFieldMeta(type: string): FieldTypeMeta | undefined {
-  return FIELD_TYPE_META[type as FieldType];
+  return FIELD_TYPE_META[type as BuiltInFieldType];
 }
 
 /** 
