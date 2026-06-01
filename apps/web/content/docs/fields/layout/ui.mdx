@@ -1,0 +1,125 @@
+---
+title: UI Layout Field
+description: Render custom inline HTML or React components directly in your form layouts.
+---
+
+# UI Layout Field
+
+The `ui` field is a special layout component that lets you render static markup, custom HTML elements, or arbitrary React components (like headers, dividers, informative cards, or custom banners) directly inside a form layout.
+
+Unlike standard data-bearing fields, a UI layout field **does not capture data** and is not present in the inferred schema type or submitted form data.
+
+---
+
+## Installation
+
+If you are using the Shadcn UI adapter, you can install the `ui` field component automatically via the Shadcn CLI:
+
+```bash
+npx shadcn@latest add @buzzform/ui
+```
+
+This will download the field component to your local registry (`components/buzzform/fields/ui.tsx`) and set up its configuration.
+
+---
+
+## Example Schema
+
+To render custom content, provide static elements, inline markup, or React nodes inside the `content` property.
+
+```tsx
+import { defineSchema } from "@buildnbuzz/form-react";
+import { Separator } from "@/components/ui/separator";
+
+export const profileSchema = defineSchema({
+  fields: [
+    { type: "text", name: "username", label: "Username", required: true },
+    
+    // Renders an inline divider layout
+    {
+      type: "ui",
+      content: (
+        <div className="py-4">
+          <Separator />
+          <h3 className="text-sm font-semibold text-muted-foreground mt-2">
+            Personal Information
+          </h3>
+        </div>
+      ),
+    },
+
+    { type: "text", name: "firstName", label: "First Name" },
+    { type: "text", name: "lastName", label: "Last Name" },
+  ],
+});
+```
+
+---
+
+## Registry Component
+
+In your custom field component registry, the `ui` renderer fetches the dynamic or static content using `resolveExpr` or renders `field.content` directly:
+
+```tsx title="components/my-form/fields/ui.tsx"
+"use client";
+
+import type { ReactNode } from "react";
+import { useLayoutField, resolveExpr } from "@buildnbuzz/form-react";
+import type { UiField as UiFieldDef } from "@buildnbuzz/form-react";
+
+export function UiFieldComponent() {
+  const { field, formData, contextData, registries } = useLayoutField<UiFieldDef>();
+  
+  // Resolve expressions if you pass dynamic logic, or render directly
+  const resolvedContent = resolveExpr<ReactNode>(
+    field.content,
+    { data: formData, context: contextData },
+    registries?.fns
+  );
+
+  return (
+    <div className={field.ui?.className}>
+      {resolvedContent}
+    </div>
+  );
+}
+```
+
+Then register it:
+```ts title="components/my-form/registry.ts"
+export const registry = {
+  // ... other fields
+  ui: UiFieldComponent,
+};
+```
+
+---
+
+## Properties
+
+The `ui` layout field accepts all base layout configurations:
+
+<auto-type-table path="../../../../../../packages/form-core/src/types.ts" name="UiField" />
+
+---
+
+## Dynamic Visibility
+
+Like all layout components, the `ui` field can be conditionally displayed based on other form field values using the `condition` property:
+
+```tsx
+const schema = defineSchema({
+  fields: [
+    { type: "checkbox", name: "showTips", label: "Show helpful tips" },
+    {
+      type: "ui",
+      condition: { $eq: [{ $data: "showTips" }, true] },
+      content: (
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800">
+          💡 Tip: Complete all sections for a stronger profile!
+        </div>
+      ),
+    },
+  ],
+});
+```
