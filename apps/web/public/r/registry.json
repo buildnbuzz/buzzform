@@ -375,6 +375,22 @@
       ]
     },
     {
+      "name": "ui",
+      "type": "registry:ui",
+      "title": "UiField",
+      "description": "UI layout field for BuzzForm v2.",
+      "registryDependencies": [
+        "@buzzform/init"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/fields/ui.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/fields/ui.tsx"
+        }
+      ]
+    },
+    {
       "name": "form-builder",
       "type": "registry:ui",
       "title": "FormBuilder",
@@ -576,7 +592,8 @@
         "@buzzform/array",
         "@buzzform/date",
         "@buzzform/tags",
-        "@buzzform/upload"
+        "@buzzform/upload",
+        "@buzzform/ui"
       ],
       "files": [
         {
@@ -1050,6 +1067,26 @@
           "path": "registry/shadcn/examples/document-upload-form.tsx",
           "type": "registry:component",
           "target": "components/buzzform/examples/document-upload-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ui-and-custom-fields-form",
+      "type": "registry:block",
+      "title": "UI Layout & Custom Fields",
+      "description": "Mixing inline UI components with completely custom registered fields.",
+      "registryDependencies": [
+        "@buzzform/ui",
+        "card",
+        "field",
+        "input",
+        "sonner"
+      ],
+      "files": [
+        {
+          "path": "registry/shadcn/examples/ui-and-custom-fields-form.tsx",
+          "type": "registry:component",
+          "target": "components/buzzform/examples/ui-and-custom-fields-form.tsx"
         }
       ]
     }

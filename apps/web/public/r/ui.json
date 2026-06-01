@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "ui",
+  "title": "UiField",
+  "description": "UI layout field for BuzzForm v2.",
+  "registryDependencies": [
+    "@buzzform/init"
+  ],
+  "files": [
+    {
+      "path": "registry/shadcn/fields/ui.tsx",
+      "content": "\"use client\";\n\nimport type { ReactNode } from \"react\";\nimport type { UiField as UiFieldDef } from \"@buildnbuzz/form-react\";\nimport { useLayoutField, resolveExpr } from \"@buildnbuzz/form-react\";\nimport { cn } from \"@/lib/utils\";\n\ninterface UiUi {\n  className?: string;\n}\n\n/**\n * Shadcn UI/markup layout field.\n * Renders inline text, HTML, or React elements dynamically.\n */\nexport function UiField() {\n  const { field, formData, contextData, registries } = useLayoutField<UiFieldDef>();\n\n  const ui = field.ui as UiUi | undefined;\n\n  const resolvedContent = resolveExpr<ReactNode>(\n    field.content,\n    { data: formData, context: contextData },\n    registries?.fns\n  );\n\n  return (\n    <div className={cn(\"w-full text-sm\", ui?.className)}>\n      {resolvedContent}\n    </div>\n  );\n}\n",
+      "type": "registry:component",
+      "target": "components/buzzform/fields/ui.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}
