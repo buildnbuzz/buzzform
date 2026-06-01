@@ -20,6 +20,7 @@ import type {
   ValidationCheck,
   ValidationRegistry,
   ValidationRun,
+  Field as CoreField,
 } from "@buildnbuzz/form-core";
 import type { UnknownData } from "./types";
 
@@ -48,7 +49,7 @@ export function buildStandardSchemaValidator<TFormData>(
     checks: ValidationCheck[];
   }> = [];
 
-  walkFields(schema.fields, (field, ctx) => {
+  walkFields(schema.fields as CoreField[], (field, ctx) => {
     if (!isDataField(field)) return;
     const checks = collectFieldValidationChecks(field, "submit", {
       includeDerived: true, // "change", "blur", and "submit" all require derived checks to pass on submit

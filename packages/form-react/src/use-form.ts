@@ -3,7 +3,7 @@ import {
   useForm as useTanstackForm,
   type StandardSchemaV1,
 } from "@tanstack/react-form";
-import type { FormSchema } from "@buildnbuzz/form-core";
+import type { FormSchema, Field as CoreField } from "@buildnbuzz/form-core";
 import { extractDefaults, transformFormOutput } from "@buildnbuzz/form-core";
 import type { FormRegistries } from "@buildnbuzz/form-core";
 import type {
@@ -83,7 +83,7 @@ export function useForm<TFormData extends UnknownData>(
   const mergedDefaultValues = useMemo(
     () =>
       ({
-        ...extractDefaults(schema.fields, contextData, mergedRegistries.fns),
+        ...extractDefaults(schema.fields as CoreField[], contextData, mergedRegistries.fns),
         ...defaultValues,
       }) as TFormData,
     [schema.fields, contextData, mergedRegistries.fns, defaultValues],

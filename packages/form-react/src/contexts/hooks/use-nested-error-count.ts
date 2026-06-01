@@ -25,7 +25,10 @@ export function collectDataFieldNames(
   const names: string[] = [];
 
   const isLayoutField = (field: Field) =>
-    field.type === "row" || field.type === "tabs" || field.type === "collapsible";
+    field.type === "row" ||
+    field.type === "tabs" ||
+    field.type === "collapsible" ||
+    field.type === "ui";
 
   walkFields(fields, (field, ctx) => {
     if (isLayoutField(field)) return;
