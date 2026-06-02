@@ -7,8 +7,8 @@ description: Build your own field component UI using any UI library and wire it 
 
 BuzzForm's registry pattern lets you provide your own component for any supported field type. The built-in shadcn components are just one implementation — you can build your own using any UI library (Radix, Mantine, Chakra, plain HTML, etc.) and register them in the field registry.
 
-<Callout type="info">
-  This guide covers building **custom UI components** for BuzzForm's existing field types (text, email, select, etc.). The set of supported field types is defined by `@buildnbuzz/form-react` and cannot be extended at this time.
+<Callout type="tip">
+  **New in v0.1:** In addition to overriding standard fields, you can now define completely **custom unregistered field types** (e.g. `color-picker`, `rich-editor`, `signature`) directly in your schemas with automatic type inference!
 </Callout>
 
 ## How It Works
@@ -365,6 +365,67 @@ export const registry: FieldRegistry = {
   select: RadixSelectField,
 };
 ```
+
+## Unregistered Custom Field Types
+
+Sometimes, a custom component doesn't fit into the standard built-in data types (like `text`, `select`, etc.). BuzzForm allows you to declare arbitrary, unregistered field types directly in your schemas:
+
+### 1. Declare in the Schema
+Any unrecognized `type` string will be allowed by `defineSchema`. It will trigger a lightweight schema validation warning instead of a hard crash:
+
+```tsx
+export const themeSchema = defineSchema({
+  fields: [
+    { type: "text", name: "themeName", label: "Theme Name", required: true },
+    {
+      type: "color-picker", // Custom/unregistered field type
+      name: "primaryColor",
+      label: "Primary Color",
+      defaultValue: "#000000",
+    },
+  ],
+});
+```
+
+### 2. Implement the Component
+Create a custom component. Since `color-picker` is unregistered, we do not have a built-in TypeScript interface for it. Simply call `useDataField` without a generic type parameter (or write your own custom interface extending `CustomFieldInput`):
+
+```tsx title="components/my-form/fields/color-picker.tsx"
+"use client";
+
+import { useDataField } from "@buildnbuzz/form-react";
+
+export function ColorPickerField() {
+  const { fieldApi, label, handleChange } = useDataField();
+  const value = (fieldApi.state.value as string) ?? "#000000";
+
+  return (
+    <div className="flex items-center gap-2">
+      {label && <label className="text-sm font-medium">{label}</label>}
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        className="h-8 w-8 rounded cursor-pointer border-0"
+      />
+    </div>
+  );
+}
+```
+
+### 3. Register the Custom Type
+Register your component with the matching `type` string in the component registry:
+
+```ts title="components/my-form/registry.ts"
+import { ColorPickerField } from "./fields/color-picker";
+
+export const registry = {
+  // ... standard overrides
+  "color-picker": ColorPickerField, // Wire the unregistered type
+};
+```
+
+---
 
 ## Related
 

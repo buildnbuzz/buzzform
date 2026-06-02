@@ -20,6 +20,7 @@ import type {
 } from "@buildnbuzz/form-builder-core";
 import { toSafeFileName, fieldsToBuilderState } from "@buildnbuzz/form-builder-core";
 import { useBuilderStore, downloadTextFile } from "@buildnbuzz/form-builder-react";
+import type { Field } from "@buildnbuzz/form-core";
 import { toast } from "sonner";
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, {
@@ -78,7 +79,9 @@ export function FormManagerSavedPanel({
       if (!storageProvider) return;
       const document = await storageProvider.load(formId);
       if (!document) throw new Error("Document not found");
-      const { nodes, rootIds } = fieldsToBuilderState(document.fields);
+      const { nodes, rootIds } = fieldsToBuilderState(
+        document.fields as readonly Field[],
+      );
 
       loadDocumentState({
         nodes,

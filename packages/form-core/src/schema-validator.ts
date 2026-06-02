@@ -56,13 +56,13 @@ export function validateSchema(schema: SerializableFormSchema): SchemaValidation
       if (!field || typeof field !== "object") return;
       
       const path = pathPrefix ? `${pathPrefix}[${index}]` : `fields[${index}]`;
-      const isLayout = ["row", "tabs", "collapsible"].includes(field.type);
+      const isLayout = ["row", "tabs", "collapsible", "ui"].includes(field.type);
 
       const meta = getFieldMeta(field.type);
       if (!meta) {
         issues.push({
           code: "invalid_field_type",
-          severity: "error",
+          severity: "warning",
           path,
           message: `Unrecognized field type '${field.type}'.`
         });

@@ -3,6 +3,8 @@ import {
 } from "react";
 import {
   defineSchema,
+  defineField,
+  defineFields,
   isDataField,
   isContainerType,
   walkFields,
@@ -29,6 +31,8 @@ import {
 
 export {
   defineSchema,
+  defineField,
+  defineFields,
   isDataField,
   isContainerType,
   walkFields,
@@ -81,6 +85,10 @@ export type {
   TextareaField,
   TristateCheckboxField,
   CollapsibleField,
+  UiField,
+  FormSchemaInput,
+  FieldInput,
+  CustomFieldInput,
   ExprText,
   ExprString,
   ExprBoolean,

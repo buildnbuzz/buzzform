@@ -42,7 +42,6 @@ describe("Registry Helpers", () => {
     });
 
     it("returns undefined for missing entry", () => {
-      // @ts-expect-error - testing invalid field type
       const entry = getRegistryEntry(mockRegistry, "not-a-field");
       expect(entry).toBeUndefined();
     });

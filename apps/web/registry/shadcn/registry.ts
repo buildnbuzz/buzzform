@@ -19,6 +19,7 @@ import { CollapsibleField } from "./fields/collapsible";
 import { DateField } from "./fields/date";
 import { TagsField } from "./fields/tags";
 import { UploadField } from "./fields/upload";
+import { UiField } from "./fields/ui";
 
 export const registry: FieldRegistry = {
   text: TextField,
@@ -38,4 +39,5 @@ export const registry: FieldRegistry = {
   date: DateField,
   tags: TagsField,
   upload: UploadField,
+  ui: UiField,
 };

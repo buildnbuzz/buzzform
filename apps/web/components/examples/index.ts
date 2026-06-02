@@ -22,4 +22,4 @@ export { default as CountryStateForm } from "../../registry/shadcn/examples/coun
 export { default as DocumentUploadForm } from "../../registry/shadcn/examples/document-upload-form";
 export { default as GalleryUploadForm } from "../../registry/shadcn/examples/gallery-upload-form";
 export { default as ProfileUploadForm } from "../../registry/shadcn/examples/profile-upload-form";
-
+export { default as UiAndCustomFieldsExample } from "../../registry/shadcn/examples/ui-and-custom-fields-form";

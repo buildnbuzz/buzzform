@@ -197,6 +197,13 @@ export const exampleCategories: ExampleCategory[] = [
         description: "Cascading dropdowns with real REST API data.",
         file: "country-state-form.tsx",
       },
+      {
+        slug: "ui-and-custom-fields-form",
+        id: "UiAndCustomFieldsExample",
+        name: "UI Layout & Custom Fields",
+        description: "Mix layout fields and custom input types.",
+        file: "ui-and-custom-fields-form.tsx",
+      },
     ],
   },
   {

@@ -1,6 +1,6 @@
 import { describe, it, expect, expectTypeOf } from "vitest";
 import { defineSchema } from "../src";
-import type { ArrayFieldDef, Field, FormSchema, InferType, PrimitiveArrayField, UnknownData } from "../src";
+import type { ArrayFieldDef, Field, FormSchema, InferType, PrimitiveArrayField, UnknownData, ExprText, BuiltInFieldType } from "../src";
 
 describe("form-core types", () => {
   it("infers basic data shape from fields", () => {
@@ -67,9 +67,7 @@ describe("form-core types", () => {
       fields: [{ type: "text", name: "email" }],
     };
 
-    expectTypeOf(schema.fields[0]!.type).toEqualTypeOf<
-      "text" | "email" | "password" | "textarea" | "number" | "select" | "date" | "tags" | "checkbox" | "switch" | "radio" | "group" | "array" | "row" | "tabs" | "collapsible"
-    >();
+    expectTypeOf(schema.fields[0]!.type).toEqualTypeOf<BuiltInFieldType>();
   });
 
   it("accepts schema metadata fields", () => {
@@ -212,5 +210,36 @@ describe("form-core types", () => {
       ],
     };
     expectTypeOf(_valid).toBeObject();
+  });
+
+  it("supports UiField layout component and its typing", () => {
+    const schema = defineSchema({
+      fields: [
+        { type: "ui", content: "Hello layout" }
+      ]
+    });
+    expectTypeOf(schema.fields[0].type).toEqualTypeOf<"ui">();
+    expectTypeOf(schema.fields[0].content).toMatchTypeOf<ExprText>();
+    
+    type Shape = InferType<typeof schema.fields>;
+    // UiField carries no data, so it should infer to {}
+    expectTypeOf<Shape>().toEqualTypeOf<{}>();
+  });
+
+  it("supports custom field types and their type inference", () => {
+    const schema = defineSchema({
+      fields: [
+        { type: "myCustomSelect", name: "favoriteColor", required: true },
+        { type: "separator" }, // custom layout field without name
+        { type: "customDatePicker", name: "optionalDate" } // custom data field
+      ]
+    });
+
+    type Shape = InferType<typeof schema.fields>;
+    // custom fields with name should infer to unknown
+    expectTypeOf<Shape["favoriteColor"]>().toEqualTypeOf<unknown>();
+    expectTypeOf<Shape["optionalDate"]>().toEqualTypeOf<unknown | undefined>();
+    // custom layout field without name should not appear in the shape
+    expectTypeOf<Shape>().not.toHaveProperty("separator");
   });
 });

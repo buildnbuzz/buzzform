@@ -8,11 +8,6 @@ import { Tab, Tabs } from "fumadocs-ui/components/tabs";
 import { Steps, Step } from "fumadocs-ui/components/steps";
 import { TypeTable } from "fumadocs-ui/components/type-table";
 import { Accordion, Accordions } from "fumadocs-ui/components/accordion";
-import {
-  BasicFormDemo,
-  ValidationFormDemo,
-  FullFormDemo,
-} from "@/components/docs/first-form-demos";
 
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
@@ -31,9 +26,6 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     Step,
     Accordion,
     Accordions,
-    BasicFormDemo,
-    ValidationFormDemo,
-    FullFormDemo,
     ...components,
   };
 }

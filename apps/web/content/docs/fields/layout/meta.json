@@ -1,4 +1,4 @@
 {
   "title": "Layout Fields",
-  "pages": ["row", "group", "collapsible", "tabs", "array"]
+  "pages": ["row", "group", "collapsible", "tabs", "array", "ui"]
 }
