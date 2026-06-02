@@ -103,7 +103,7 @@ const customSchema = defineSchema({
         <div className="rounded-lg bg-muted p-4 border mb-2">
           <h3 className="font-semibold">Theme Builder</h3>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure your application's appearance by selecting custom colors below.
+            Configure your application&apos;s appearance by selecting custom colors below.
           </p>
         </div>
       ),
