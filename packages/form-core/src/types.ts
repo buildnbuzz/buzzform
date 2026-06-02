@@ -925,3 +925,34 @@ export type InferType<TFields extends readonly FieldInput[]> =
 export function defineSchema<const T extends FormSchemaInput>(schema: T): T {
   return schema;
 }
+
+/**
+ * Identity function that narrows a single field to its literal type.
+ * Useful for defining reusable or conditional fields outside of `defineSchema`.
+ *
+ * @example
+ * ```ts
+ * const email = defineField({ type: "text", name: "email", required: true });
+ * const schema = defineSchema({ fields: [email] });
+ * ```
+ */
+export function defineField<const T extends FieldInput>(field: T): T {
+  return field;
+}
+
+/**
+ * Identity function that narrows an array of fields to its literal type.
+ * Useful for conditional spreads or splitting a schema into reusable fragments.
+ *
+ * @example
+ * ```ts
+ * const addressFields = defineFields([
+ *   { type: "text", name: "street" },
+ *   { type: "text", name: "city" },
+ * ]);
+ * const schema = defineSchema({ fields: [...addressFields] });
+ * ```
+ */
+export function defineFields<const T extends readonly FieldInput[]>(fields: T): T {
+  return fields;
+}

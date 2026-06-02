@@ -3,6 +3,8 @@ import {
 } from "react";
 import {
   defineSchema,
+  defineField,
+  defineFields,
   isDataField,
   isContainerType,
   walkFields,
@@ -29,6 +31,8 @@ import {
 
 export {
   defineSchema,
+  defineField,
+  defineFields,
   isDataField,
   isContainerType,
   walkFields,
