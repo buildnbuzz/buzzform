@@ -1,5 +1,15 @@
 # @buildnbuzz/form-core
 
+## 0.1.10
+
+### Patch Changes
+
+- [#153](https://github.com/buildnbuzz/buzzform/pull/153) [`05dde69`](https://github.com/buildnbuzz/buzzform/commit/05dde690ad85159a253f73f1449c0fa6df3c5486) Thanks [@ladparth](https://github.com/ladparth)! - Add support for the new UI field layout type and unregistered custom field types.
+  - Add `UiField` layout field type for rendering inline dynamic HTML or React markup.
+  - Allow defining custom, unregistered field types inside `defineSchema` with automatic typings.
+  - Downgrade the unrecognized field type check from an error to a warning in the schema validator.
+  - Add `defineField` and `defineFields` helper functions for programmatic field generation.
+
 ## 0.1.9
 
 ### Patch Changes

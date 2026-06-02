@@ -1,5 +1,17 @@
 # @buildnbuzz/form-react
 
+## 0.1.12
+
+### Patch Changes
+
+- [#153](https://github.com/buildnbuzz/buzzform/pull/153) [`05dde69`](https://github.com/buildnbuzz/buzzform/commit/05dde690ad85159a253f73f1449c0fa6df3c5486) Thanks [@ladparth](https://github.com/ladparth)! - Add support for rendering UI layout fields and exporting new layout types.
+  - Export `UiField`, `FormSchemaInput`, `FieldInput`, and `CustomFieldInput` from `packages/form-react`.
+  - Include `"ui"` layout type in nested error count collections.
+  - Export `defineField`, `defineFields` for programmatic field generation.
+
+- Updated dependencies [[`05dde69`](https://github.com/buildnbuzz/buzzform/commit/05dde690ad85159a253f73f1449c0fa6df3c5486)]:
+  - @buildnbuzz/form-core@0.1.10
+
 ## 0.1.11
 
 ### Patch Changes
