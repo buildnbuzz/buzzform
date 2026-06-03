@@ -214,6 +214,24 @@ describe("extractDefaults", () => {
     });
   });
 
+  it("supports upload field defaults (hasMany vs single)", () => {
+    const fields: Field[] = [
+      { type: "upload", name: "singleFile" },
+      { type: "upload", name: "multiFile", hasMany: true },
+      {
+        type: "upload",
+        name: "fixedFile",
+        defaultValue: "https://example.com/file.pdf",
+      },
+    ];
+
+    expect(extractDefaults(fields)).toEqual({
+      singleFile: null,
+      multiFile: [],
+      fixedFile: "https://example.com/file.pdf",
+    });
+  });
+
   it("resolves $fn and complex logic in defaultValue", () => {
     const fields: Field[] = [
       {
