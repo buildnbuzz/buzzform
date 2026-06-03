@@ -1,5 +1,13 @@
 # @buildnbuzz/form-core
 
+## 0.1.11
+
+### Patch Changes
+
+- [#155](https://github.com/buildnbuzz/buzzform/pull/155) [`bfe3121`](https://github.com/buildnbuzz/buzzform/commit/bfe31217c93f71a1cfc49e0d205357a4bf1fd0fa) Thanks [@ladparth](https://github.com/ladparth)! - Fix default value extraction for upload fields.
+  - Correct `extractDefaults` to return `[]` when `hasMany: true` is configured.
+  - Correct `extractDefaults` to return `null` for single file uploads instead of an empty string `""`.
+
 ## 0.1.10
 
 ### Patch Changes
