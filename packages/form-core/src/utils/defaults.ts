@@ -59,9 +59,13 @@ export function extractDefaults(
         return;
       }
 
-      let val: unknown = ZERO_VALUES[f.type] ?? "";
-      if (f.type === "checkbox" && "tristate" in f && f.tristate === true) {
+      let val: unknown;
+      if (f.type === "upload") {
+        val = f.hasMany === true ? [] : null;
+      } else if (f.type === "checkbox" && "tristate" in f && f.tristate === true) {
         val = null;
+      } else {
+        val = ZERO_VALUES[f.type] ?? "";
       }
 
       setByPath(result, fullPath, val);

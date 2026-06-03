@@ -22,6 +22,18 @@ The `upload` field allows users to upload one or more files with built-in valida
 | `dropzoneText` | `string` | - | Overwrite the default dropzone placeholder text |
 | `className` | `string` | - | CSS class applied to the field container |
 | `width` | `string \| number` | - | Inline width applied to the field |
+| `labels` | `object` | - | Custom translation/localization labels |
+
+### UI Labels Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `trigger` | `React.ReactNode` | `"Attach File"` / `"Add file"` | Action button text (inline: "Attach File", gallery: "Add file") |
+| `remove` | `React.ReactNode` | `"Remove"` | Remove/delete action text (avatar variant) |
+| `edit` | `React.ReactNode` | `"Edit"` | Hover overlay text (avatar variant) |
+| `empty` | `React.ReactNode` | `"No file selected"` | Status text when empty (inline variant) |
+| `selected` | `(count: number) => React.ReactNode` | `` `${count} file(s) attached` `` | Function returning status text when files are selected (inline variant) |
+| `formatHint` | `(accept?: string, maxSize?: string) => React.ReactNode` | - | Function returning format/size hint (dropzone variant) |
 
 ## Basic Usage
 
