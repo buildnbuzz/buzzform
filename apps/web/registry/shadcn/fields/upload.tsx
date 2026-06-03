@@ -36,6 +36,21 @@ export interface UploadUi {
   width?: string | number;
   /** Controls required asterisk visibility. */
   asterisk?: boolean;
+  /** Text and label overrides. */
+  labels?: {
+    /** Action trigger text (gallery: "Add file", inline: "Attach File"). */
+    trigger?: React.ReactNode;
+    /** Remove/delete action text. Defaults to "Remove". */
+    remove?: React.ReactNode;
+    /** Avatar hover overlay text. Defaults to "Edit". */
+    edit?: React.ReactNode;
+    /** Status when empty. Defaults to "No file selected". */
+    empty?: React.ReactNode;
+    /** Status with files selected. Receives count. */
+    selected?: (count: number) => React.ReactNode;
+    /** Format support hint. Receives accept string and formatted maxSize. */
+    formatHint?: (accept?: string, maxSize?: string) => React.ReactNode;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -343,7 +358,7 @@ export function UploadField() {
                       remixicon="RiCameraLine"
                       className="size-4 mr-1"
                     />
-                    Edit
+                    {ui?.labels?.edit ?? "Edit"}
                   </div>
                 </div>
 
@@ -355,7 +370,7 @@ export function UploadField() {
                     onClick={() => removeFile(0)}
                     className="text-muted-foreground hover:text-destructive h-7 px-2"
                   >
-                    Remove
+                    {ui?.labels?.remove ?? "Remove"}
                   </Button>
                 )}
               </div>
@@ -392,12 +407,21 @@ export function UploadField() {
                   <div className="text-center">
                     <p className="text-sm font-medium">{dropzoneText}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {ui?.accept
-                        ? `Supports: ${ui.accept}`
-                        : "All formats supported"}
-                      {field.maxSize
-                        ? ` up to ${formatBytes(field.maxSize)}`
-                        : ""}
+                      {ui?.labels?.formatHint
+                        ? ui.labels.formatHint(
+                            ui.accept,
+                            field.maxSize ? formatBytes(field.maxSize) : undefined,
+                          )
+                        : (
+                            <>
+                              {ui?.accept
+                                ? `Supports: ${ui.accept}`
+                                : "All formats supported"}
+                              {field.maxSize
+                                ? ` up to ${formatBytes(field.maxSize)}`
+                                : ""}
+                            </>
+                          )}
                     </p>
                   </div>
                 </div>
@@ -463,12 +487,13 @@ export function UploadField() {
                       remixicon="RiUploadLine"
                       className="size-4"
                     />
-                    Attach File
+                    {ui?.labels?.trigger ?? "Attach File"}
                   </Button>
                   <span className="text-xs text-muted-foreground truncate">
                     {previews.length === 0
-                      ? "No file selected"
-                      : `${previews.length} file(s) attached`}
+                      ? (ui?.labels?.empty ?? "No file selected")
+                      : (ui?.labels?.selected?.(previews.length) ??
+                        `${previews.length} file(s) attached`)}
                   </span>
                 </div>
 
@@ -584,7 +609,7 @@ export function UploadField() {
                       className="size-5 text-muted-foreground"
                     />
                     <span className="text-xs text-muted-foreground font-medium">
-                      Add file
+                      {ui?.labels?.trigger ?? "Add file"}
                     </span>
                   </div>
                 ) : null}
