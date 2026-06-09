@@ -1,5 +1,17 @@
 # @buildnbuzz/form-react
 
+## 0.1.13
+
+### Patch Changes
+
+- [#161](https://github.com/buildnbuzz/buzzform/pull/161) [`88a9198`](https://github.com/buildnbuzz/buzzform/commit/88a9198795543489ca24ce34950a9cdd07450dbf) Thanks [@ladparth](https://github.com/ladparth)! - Support custom field input definitions in React renderer and context hooks.
+  - Update FieldRenderer and RenderFields to support rendering and nested traversal of custom fields.
+  - Widen FieldRegistry to support component type indexing for arbitrary custom field type strings.
+  - Align useNestedErrorCount hooks to accept FieldInput components and correctly count nested custom fields errors.
+
+- Updated dependencies [[`88a9198`](https://github.com/buildnbuzz/buzzform/commit/88a9198795543489ca24ce34950a9cdd07450dbf)]:
+  - @buildnbuzz/form-core@0.1.12
+
 ## 0.1.12
 
 ### Patch Changes

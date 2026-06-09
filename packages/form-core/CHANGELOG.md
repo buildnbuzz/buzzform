@@ -1,5 +1,14 @@
 # @buildnbuzz/form-core
 
+## 0.1.12
+
+### Patch Changes
+
+- [#161](https://github.com/buildnbuzz/buzzform/pull/161) [`88a9198`](https://github.com/buildnbuzz/buzzform/commit/88a9198795543489ca24ce34950a9cdd07450dbf) Thanks [@ladparth](https://github.com/ladparth)! - Support custom field input definitions across helper and schema APIs.
+  - Widen container field schema definitions to accept FieldInput instead of built-in Field types.
+  - Update traverse, defaults, visibility, and validation APIs to be compatible with custom fields.
+  - Update type guards isDataField and isLayoutField to handle FieldInput parameter.
+
 ## 0.1.11
 
 ### Patch Changes
