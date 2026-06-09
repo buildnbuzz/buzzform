@@ -1,4 +1,4 @@
-import type { Field, ExprContext, FnRegistry } from "../types";
+import type { FieldInput, ExprContext, FnRegistry } from "../types";
 import { walkFields } from "./walk";
 import { escapePointer, setByPath } from "./path";
 import { resolveExpr } from "../expr";
@@ -21,7 +21,7 @@ const ZERO_VALUES: Record<string, unknown> = {
  * otherwise falls back to a type-appropriate zero-value.
  */
 export function extractDefaults(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   context?: Record<string, unknown>,
   fns?: FnRegistry,
 ): Record<string, unknown> {
@@ -37,7 +37,7 @@ export function extractDefaults(
         ? `${ctx.path}/${escapePointer(field.name)}`
         : `/${escapePointer(field.name)}`;
 
-      const f = field as Field & { defaultValue?: unknown };
+      const f = field as FieldInput & { defaultValue?: unknown };
       const exprCtx: ExprContext = { data: result, context };
 
       const resolved = resolveExpr(f.defaultValue, exprCtx, fns, {

@@ -1,9 +1,11 @@
 import type {
   Expr,
-  Field,
+  FieldInput,
   OptionsConfig,
   ValidationConfig,
   ValidationCheck,
+  GroupField,
+  TabsField,
 } from "../types";
 import { extractFromExpr } from "../expr";
 import { deriveFieldChecks } from "../validation";
@@ -50,7 +52,7 @@ function extractFromValidationConfig(
  * Uses the unified `extractFromExpr` walker to handle all Expr<T> node types:
  * `$data`, `$context`, `$when`, `$fn`, `$text`, inline functions, and condition groups.
  */
-export function extractDependencies(field: Field): Set<string> {
+export function extractDependencies(field: FieldInput): Set<string> {
   const deps = new Set<string>();
 
   const f = field as unknown as Record<string, Expr<unknown> | undefined>;
@@ -109,7 +111,7 @@ function extractFromValidationChecks(
  * Extract `$data` dependencies for all fields in a schema.
  */
 export function extractDependenciesFromFields(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
 ): Set<string> {
   const deps = new Set<string>();
 
@@ -117,17 +119,20 @@ export function extractDependenciesFromFields(
     extractDependencies(field).forEach((dep) => deps.add(dep));
 
     if (field.type === "row" || field.type === "collapsible") {
-      extractDependenciesFromFields(field.fields).forEach((dep) => deps.add(dep));
+      const f = field as GroupField | { fields: readonly FieldInput[] };
+      extractDependenciesFromFields((f as { fields: readonly FieldInput[] }).fields).forEach((dep) => deps.add(dep));
     }
 
     if (field.type === "tabs") {
-      for (const tab of field.tabs) {
+      const f = field as TabsField;
+      for (const tab of f.tabs) {
         extractDependenciesFromFields(tab.fields).forEach((dep) => deps.add(dep));
       }
     }
 
     if (field.type === "group" || field.type === "array") {
-      extractDependenciesFromFields(field.fields as readonly Field[]).forEach((dep) => deps.add(dep));
+      const f = field as { fields: readonly FieldInput[] };
+      extractDependenciesFromFields(f.fields).forEach((dep) => deps.add(dep));
     }
   }
 

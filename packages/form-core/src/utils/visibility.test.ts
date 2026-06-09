@@ -1,11 +1,11 @@
 import { describe, it, expect } from "vitest";
-import type { Field } from "../types";
+import type { FieldInput } from "../types";
 import { getVisibleFields } from "./visibility";
 
-const isArrayField = (field: Field): field is Extract<Field, { type: "array" }> =>
+const isArrayField = (field: FieldInput): field is Extract<FieldInput, { type: "array" }> =>
   field.type === "array";
 
-const fields: Field[] = [
+const fields: FieldInput[] = [
   { type: "text", name: "title" },
   {
     type: "text",

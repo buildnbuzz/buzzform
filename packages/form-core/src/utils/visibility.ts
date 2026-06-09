@@ -1,4 +1,13 @@
-import type { ExprContext, Field } from "../types";
+import type {
+  ExprContext,
+  FieldInput,
+  RowField,
+  CollapsibleField,
+  TabsField,
+  GroupField,
+  ArrayField,
+  ExprBoolean,
+} from "../types";
 import { resolveExpr } from "../expr";
 
 /**
@@ -8,33 +17,35 @@ import { resolveExpr } from "../expr";
  * - `hidden`: keeps fields but marks them invisible
  */
 export function getVisibleFields(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   ctx: ExprContext,
-): Field[] {
-  const result: Field[] = [];
+): FieldInput[] {
+  const result: FieldInput[] = [];
 
   for (const field of fields) {
-    const isMounted = resolveExpr<boolean>(field.condition, ctx) ?? true;
+    const isMounted = resolveExpr<boolean>(field.condition as ExprBoolean | undefined, ctx) ?? true;
     if (!isMounted) continue;
 
-    const isHidden = !resolveExpr<boolean>(field.hidden, ctx);
+    const isHidden = !resolveExpr<boolean>(field.hidden as ExprBoolean | undefined, ctx);
 
     switch (field.type) {
       case "row":
       case "collapsible": {
+        const f = field as RowField | CollapsibleField;
         result.push({
-          ...field,
-          hidden: isHidden || field.hidden,
-          fields: getVisibleFields(field.fields, ctx),
+          ...f,
+          hidden: isHidden || f.hidden,
+          fields: getVisibleFields(f.fields, ctx),
         });
         break;
       }
 
       case "tabs": {
+        const f = field as TabsField;
         result.push({
-          ...field,
-          hidden: isHidden || field.hidden,
-          tabs: field.tabs.map((tab) => ({
+          ...f,
+          hidden: isHidden || f.hidden,
+          tabs: f.tabs.map((tab) => ({
             ...tab,
             fields: getVisibleFields(tab.fields, ctx),
           })),
@@ -43,27 +54,29 @@ export function getVisibleFields(
       }
 
       case "group": {
+        const f = field as GroupField;
         result.push({
-          ...field,
-          hidden: isHidden || field.hidden,
-          fields: getVisibleFields(field.fields, ctx),
+          ...f,
+          hidden: isHidden || f.hidden,
+          fields: getVisibleFields(f.fields, ctx),
         });
         break;
       }
 
       case "array": {
-        const hidden = isHidden || field.hidden;
+        const f = field as ArrayField;
+        const hidden = isHidden || f.hidden;
 
-        if (field.primitive) {
+        if (f.primitive) {
           // Primitive arrays have exactly one child field — no visibility filtering needed.
-          result.push({ ...field, hidden });
+          result.push({ ...f, hidden });
           break;
         }
 
         result.push({
-          ...field,
+          ...f,
           hidden,
-          fields: getVisibleFields(field.fields, ctx),
+          fields: getVisibleFields(f.fields, ctx),
         });
         break;
       }
