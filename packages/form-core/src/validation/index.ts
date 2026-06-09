@@ -1,13 +1,14 @@
 import type {
   Expr,
   ExprContext,
-  Field,
+  FieldInput,
   FormSchema,
   ValidationCheck,
   ValidationConfig,
   ValidationGroup,
   ValidatorArgsMap,
   FormRegistries,
+  ExprBoolean,
 } from "../types";
 import { isDataField } from "../types";
 import { resolveExpr } from "../expr";
@@ -368,7 +369,7 @@ export function collectValidationChecks(
 
 /** Collect checks for a field and run group. */
 export function collectFieldValidationChecks(
-  field: Field,
+  field: FieldInput,
   run: ValidationRun,
   options?: { includeDerived?: boolean },
 ): ValidationCheck[] {
@@ -393,7 +394,7 @@ export function collectFieldValidationChecks(
  */
 /** Validate a single field against form data. */
 export async function validateField(
-  field: Field,
+  field: FieldInput,
   path: string,
   formData: Record<string, unknown>,
   options?: ValidateFieldsOptions,
@@ -407,7 +408,7 @@ export async function validateField(
     registries: options?.registries,
   };
 
-  if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) {
+  if (resolveExpr<boolean>(field.condition as ExprBoolean | undefined, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) {
     return { valid: true };
   }
 
@@ -449,17 +450,17 @@ function matchesSchemaPath(schemaPath: string, runtimePath: string): boolean {
 }
 
 function findFieldByPath(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   path: string,
   ctx: ValidationContext,
-): Field | undefined {
-  let match: Field | undefined;
+): FieldInput | undefined {
+  let match: FieldInput | undefined;
 
   walkFields(fields, (field, walkCtx) => {
     if (match || !isDataField(field)) return;
 
     const allConditionsPass = [...walkCtx.parents, field].every((candidate) =>
-      resolveExpr<boolean>(candidate.condition, { data: ctx.formData, context: ctx.contextData }, ctx.registries?.fns) !== false,
+      resolveExpr<boolean>(candidate.condition as ExprBoolean | undefined, { data: ctx.formData, context: ctx.contextData }, ctx.registries?.fns) !== false,
     );
     if (!allConditionsPass) return;
 
@@ -475,7 +476,7 @@ function findFieldByPath(
  * Validate a single field located by JSON Pointer path.
  */
 export async function validatePath(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   path: string,
   formData: Record<string, unknown>,
   options?: ValidateFieldsOptions,
@@ -501,7 +502,7 @@ export async function validateSchema(
   formData: Record<string, unknown>,
   options?: ValidateFieldsOptions,
 ): Promise<ValidationResult> {
-  const result = await validateFields(schema.fields as Field[], formData, options);
+  const result = await validateFields(schema.fields, formData, options);
 
   const run = options?.run ?? "submit";
   const ctx: ValidationContext = {
@@ -527,7 +528,7 @@ export async function validateSchema(
  * Validate a field schema against form data.
  */
 export async function validateFields(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   formData: Record<string, unknown>,
   options?: ValidateFieldsOptions,
 ): Promise<ValidationResult> {
@@ -541,8 +542,8 @@ export async function validateFields(
     registries: options?.registries,
   };
 
-  const visit = async (field: Field, basePath: string): Promise<void> => {
-    if (resolveExpr<boolean>(field.condition, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) return;
+  const visit = async (field: FieldInput, basePath: string): Promise<void> => {
+    if (resolveExpr<boolean>(field.condition as ExprBoolean | undefined, { data: formData, context: options?.contextData }, ctx.registries?.fns) === false) return;
 
     if (isDataField(field)) {
       const fieldPath = joinPointer(basePath, field.name);
@@ -562,18 +563,20 @@ export async function validateFields(
       }
 
       if (field.type === "group") {
-        for (const child of field.fields) {
+        const gf = field as import("../types").GroupField;
+        for (const child of gf.fields) {
           await visit(child, fieldPath);
         }
         return;
       }
 
       if (field.type === "array") {
+        const af = field as import("../types").ArrayField;
         const value = getByPath(formData, fieldPath);
         if (Array.isArray(value)) {
           for (let i = 0; i < value.length; i += 1) {
             const itemPath = `${fieldPath}/${i}`;
-            for (const child of field.fields as Field[]) {
+            for (const child of af.fields) {
               await visit(child, itemPath);
             }
           }
@@ -587,14 +590,16 @@ export async function validateFields(
     switch (field.type) {
       case "row":
       case "collapsible": {
-        for (const child of field.fields) {
+        const cf = field as import("../types").RowField | import("../types").CollapsibleField;
+        for (const child of cf.fields) {
           await visit(child, basePath);
         }
         break;
       }
 
       case "tabs": {
-        for (const tab of field.tabs) {
+        const tf = field as import("../types").TabsField;
+        for (const tab of tf.tabs) {
           for (const child of tab.fields) {
             await visit(child, basePath);
           }
@@ -692,7 +697,7 @@ export function runValidationCheck(
 // ============================================================================
 
 /** Derive built-in checks from field configuration. */
-export function deriveFieldChecks(field: Field): ValidationCheck[] {
+export function deriveFieldChecks(field: FieldInput): ValidationCheck[] {
   if (!isDataField(field)) return [];
   const checks: ValidationCheck[] = [];
 

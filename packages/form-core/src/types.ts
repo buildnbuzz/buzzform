@@ -476,7 +476,7 @@ export interface UploadField extends BaseField<File | File[] | string | string[]
 export interface GroupField extends BaseField<UnknownData> {
   type: "group";
   /** Nested fields. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
 }
 
 /**
@@ -487,7 +487,7 @@ export interface ArrayField extends BaseField<unknown[]> {
   /** Must be absent or `false` for standard (nested-object) arrays. */
   primitive?: false;
   /** Fields for each array item. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
   /**
    * Minimum number of items. Disables remove at minimum and blocks submit via validation.
    */
@@ -670,7 +670,7 @@ export interface BaseLayoutField {
 export interface RowField extends BaseLayoutField {
   type: "row";
   /** Fields to display in a row. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
 }
 
 /** Tab configuration for a tabs layout. */
@@ -680,7 +680,7 @@ export interface Tab {
   /** Tab label. */
   label: ExprText;
   /** Fields in this tab. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
   /** Whether this tab is disabled. */
   disabled?: Expr<boolean>;
 }
@@ -698,7 +698,7 @@ export interface CollapsibleField extends BaseLayoutField {
   /** Collapsible label. */
   label: ExprText;
   /** Nested fields. */
-  fields: readonly Field[];
+  fields: readonly FieldInput[];
   /** Start collapsed. */
   collapsed?: Expr<boolean>;
 }
@@ -756,8 +756,8 @@ export interface FormSchema {
   meta?: UnknownData;
 }
 
-/** Type guard to test if a Field is a LayoutField */
-export function isLayoutField(field: Field): field is LayoutField {
+/** Type guard to test if a FieldInput is a LayoutField. */
+export function isLayoutField(field: FieldInput): field is LayoutField {
   return (
     field.type === "row" ||
     field.type === "tabs" ||
@@ -766,8 +766,8 @@ export function isLayoutField(field: Field): field is LayoutField {
   );
 }
 
-/** Type guard to test if a Field is a DataField */
-export function isDataField(field: Field): field is DataField {
+/** Type guard to test if a FieldInput is a DataField. */
+export function isDataField(field: FieldInput): field is DataField {
   return !isLayoutField(field);
 }
 

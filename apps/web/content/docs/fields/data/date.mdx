@@ -13,7 +13,92 @@ The `date` field renders a date picker with optional time selection.
 
 ## UI Options
 
-Same as [Text Field](/docs/fields/data/text#ui-options).
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `format` | `string` | `"MM/dd/yyyy"` | `date-fns` display format for the calendar trigger. |
+| `inputFormat` | `string` | — | `date-fns` format for manual text input parsing. Defaults to `format`. |
+| `presets` | `boolean \| DatePreset[]` | `false` | Quick-select presets. Set `true` to use default presets, or pass an array of custom presets. |
+| `timePicker` | `boolean \| TimePickerConfig` | `false` | Time picker configuration (only used when `withTime` is `true`). |
+| `autoFocus` | `boolean` | `false` | Auto-focus the text input on mount. |
+| `className` | `string` | — | CSS class applied to the field container. |
+| `width` | `string \| number` | — | Inline width applied to the field. |
+| `asterisk` | `boolean` | `true` | Controls required asterisk visibility. |
+
+### TimePickerConfig
+
+When passing an object to `timePicker`, you can customize the picker behavior:
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `interval` | `number` | `1` | Minute interval for the time input step. |
+| `use24hr` | `boolean` | `true` | Use 24-hour format. |
+| `includeSeconds` | `boolean` | `false` | Include seconds input step. |
+
+### DatePreset
+
+For custom quick-select options:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | `string` | Label displayed on the button. |
+| `value` | `string \| (() => string)` | ISO date/datetime string or a function returning one. |
+
+## Quick-Select Presets
+
+Quick-select presets appear as a row of buttons below the calendar, allowing users to select common dates in a single click.
+
+### Built-in Presets
+
+Set `ui.presets` to `true` to enable the built-in presets: **Today**, **Tomorrow**, and **Next Week**.
+
+```tsx
+{
+  type: "date",
+  name: "appointmentDate",
+  label: "Appointment Date",
+  ui: {
+    presets: true,
+  },
+}
+```
+
+### Custom Presets
+
+Provide an array of `DatePreset` objects to customize the quick-select options. The `value` can be a static ISO string or a function that returns an ISO string.
+
+```tsx
+import { addDays, startOfDay } from "date-fns";
+
+const schema = defineSchema({
+  fields: [
+    {
+      type: "date",
+      name: "targetDate",
+      label: "Target Date",
+      ui: {
+        presets: [
+          {
+            label: "Yesterday",
+            value: () => addDays(new Date(), -1).toISOString(),
+          },
+          {
+            label: "Today",
+            value: () => startOfDay(new Date()).toISOString(),
+          },
+          {
+            label: "Next 3 Days",
+            value: () => addDays(new Date(), 3).toISOString(),
+          },
+          {
+            label: "End of Year",
+            value: "2026-12-31T23:59:59.000Z",
+          },
+        ],
+      },
+    },
+  ],
+});
+```
 
 ## Basic Usage
 

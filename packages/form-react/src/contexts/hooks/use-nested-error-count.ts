@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "@tanstack/react-form";
-import type { Field } from "@buildnbuzz/form-core";
+import type { FieldInput } from "@buildnbuzz/form-core";
 import { walkFields, toDotNotation, fromDotNotation, escapePointer } from "@buildnbuzz/form-core";
 import { useFieldContext } from "../field-context";
 
@@ -18,13 +18,13 @@ import { useFieldContext } from "../field-context";
  * @internal
  */
 export function collectDataFieldNames(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   basePath: string,
 ): string[] {
   const basePointer = basePath ? fromDotNotation(basePath) : "";
   const names: string[] = [];
 
-  const isLayoutField = (field: Field) =>
+  const isLayoutField = (field: FieldInput) =>
     field.type === "row" ||
     field.type === "tabs" ||
     field.type === "collapsible" ||
@@ -65,7 +65,7 @@ export function collectDataFieldNames(
  *   `toDotNotation(fieldPath)` from `useLayoutField`). Defaults to `""`.
  */
 export function useNestedErrorCount(
-  fields: readonly Field[],
+  fields: readonly FieldInput[],
   basePath = "",
 ): number {
   const { form } = useFieldContext();

@@ -1,6 +1,6 @@
 import type { ElementType, FormEvent, HTMLAttributes, ReactNode } from "react";
 import type {
-  Field as CoreField,
+  FieldInput,
   FormRegistries,
   ValidationRegistry,
   OptionResolverRegistry,
@@ -19,7 +19,7 @@ export interface FormProps<
   /** Optional component or HTML tag to render instead of 'form'. Use 'div' for nested forms. */
   as?: ElementType;
   /** Optional schema fields to auto-render when no children are provided. */
-  fields?: readonly CoreField[];
+  fields?: readonly FieldInput[];
   /** External context data used by dynamic runtime checks. */
   contextData?: UnknownData;
   /** Optional runtime registries (fields, validators, resolvers, fns). */
@@ -33,7 +33,7 @@ export interface FormProps<
   /** @deprecated Use `registries.fields` instead. */
   registry?: FieldRegistry;
   /** Optional fallback when a field type has no renderer. */
-  renderFallback?: (field: CoreField) => ReactNode;
+  renderFallback?: (field: FieldInput) => ReactNode;
   /** Optional parent data path used to resolve nested field names. */
   basePath?: string;
   /** Optional custom submit handler invoked before `form.handleSubmit()`. */

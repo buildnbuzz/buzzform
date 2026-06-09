@@ -6,7 +6,7 @@ import {
   RenderFields,
   useNestedErrorCount,
   toDotNotation,
-  type CoreField,
+  type FieldInput,
 } from "@buildnbuzz/form-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,7 @@ function TabTriggerWithBadge({
   label: string;
   value: string;
   disabled: boolean;
-  fields: readonly CoreField[];
+  fields: readonly FieldInput[];
   basePath: string;
   showErrorBadge: boolean;
 }) {

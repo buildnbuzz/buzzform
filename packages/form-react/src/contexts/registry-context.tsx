@@ -9,6 +9,8 @@ import type { ComponentType, ReactNode } from "react";
 /** Registry mapping field type strings to renderer components. */
 export type FieldRegistry = {
   [K in CoreField["type"]]?: ComponentType<{ children?: ReactNode }>;
+} & {
+  [customType: string]: ComponentType<{ children?: ReactNode }> | undefined;
 };
 
 /** Global form configuration context value. */

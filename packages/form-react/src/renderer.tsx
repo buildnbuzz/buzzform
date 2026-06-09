@@ -2,11 +2,15 @@ import { useContext } from "react";
 import type { ReactNode } from "react";
 import type {
   Field as CoreField,
+  FieldInput,
   DataField,
   FormRegistries,
   ValidationRegistry,
   OptionResolverRegistry,
   ValidationRun,
+  GroupField,
+  RowField,
+  CollapsibleField,
 } from "@buildnbuzz/form-core";
 import { fromDotNotation, joinPointer, toDotNotation, isDataField } from "@buildnbuzz/form-core";
 import { Field, LayoutField } from "./field";
@@ -14,14 +18,14 @@ import { FormConfigContext, type FieldRegistry } from "./contexts";
 import type { FieldFormApi, UnknownData } from "./types";
 import { mergeRegistries } from "./utils/merge-registries";
 
-type FallbackRenderer = (field: CoreField) => ReactNode;
+type FallbackRenderer = (field: FieldInput) => ReactNode;
 
 /** Props for rendering one schema field with a registry component. */
 export interface FieldRendererProps<
   TFormData extends UnknownData = UnknownData,
 > {
   /** Field schema node to render. */
-  field: CoreField;
+  field: FieldInput;
   /** TanStack form instance created by `useForm`. */
   form: FieldFormApi<TFormData>;
   /** External context data used by dynamic runtime checks. */
@@ -71,9 +75,10 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   const resolvedRegistry = normalizedRegistries?.fields as FieldRegistry | undefined;
   const Component = resolvedRegistry?.[field.type];
   const basePointer = toPointer(basePath);
-  const resolvedField = isDataField(field)
-    ? resolveDataFieldName(field, basePointer)
-    : field;
+  let resolvedField: FieldInput = field;
+  if (isDataField(field)) {
+    resolvedField = resolveDataFieldName(field, basePointer);
+  }
   const nestedContent = renderNestedFields({
     field,
     form,
@@ -102,7 +107,7 @@ export function FieldRenderer<TFormData extends UnknownData = UnknownData>({
   if (!isDataField(resolvedField)) {
     return (
       <LayoutField
-        field={resolvedField}
+        field={resolvedField as CoreField}
         form={form}
         contextData={contextData}
         registries={normalizedRegistries}
@@ -131,7 +136,7 @@ export interface RenderFieldsProps<
   TFormData extends UnknownData = UnknownData,
 > {
   /** Ordered field nodes to render. */
-  fields: readonly CoreField[];
+  fields: readonly FieldInput[];
   /** TanStack form instance created by `useForm`. */
   form: FieldFormApi<TFormData>;
   /** External context data used by dynamic runtime checks. */
@@ -212,7 +217,7 @@ function renderNestedFields<TFormData extends UnknownData>({
   renderFallback,
   basePointer,
 }: {
-  field: CoreField;
+  field: FieldInput;
   form: FieldFormApi<TFormData>;
   contextData?: UnknownData;
   registries?: FormRegistries;
@@ -220,49 +225,50 @@ function renderNestedFields<TFormData extends UnknownData>({
   renderFallback?: FallbackRenderer;
   basePointer: string;
 }): ReactNode {
-  if (field.type === "tabs") {
-    // Tabs component handles its own nested rendering per-tab via RenderFields.
-    // Returning null here prevents double-rendering — the component receives
-    // children={null} and calls RenderFields itself for each TabsContent.
-    return null;
-  }
+  switch (field.type) {
+    case "tabs":
+      // Tabs component handles its own nested rendering per-tab via RenderFields.
+      return null;
 
-  if (field.type === "row" || field.type === "collapsible") {
-    return (
-      <RenderFields
-        fields={field.fields}
-        form={form}
-        contextData={contextData}
-        registries={registries}
-        derivedValidationMode={derivedValidationMode}
-        renderFallback={renderFallback}
-        basePath={toDotNotation(basePointer)}
-      />
-    );
-  }
+    case "row":
+    case "collapsible": {
+      const f = field as RowField | CollapsibleField;
+      return (
+        <RenderFields
+          fields={f.fields}
+          form={form}
+          contextData={contextData}
+          registries={registries}
+          derivedValidationMode={derivedValidationMode}
+          renderFallback={renderFallback}
+          basePath={toDotNotation(basePointer)}
+        />
+      );
+    }
 
-  if (field.type === "group") {
-    const nextPointer = joinPointer(basePointer, field.name);
-    return (
-      <RenderFields
-        fields={field.fields}
-        form={form}
-        contextData={contextData}
-        registries={registries}
-        derivedValidationMode={derivedValidationMode}
-        renderFallback={renderFallback}
-        basePath={toDotNotation(nextPointer)}
-      />
-    );
-  }
+    case "group": {
+      const f = field as GroupField;
+      const nextPointer = joinPointer(basePointer, f.name);
+      return (
+        <RenderFields
+          fields={f.fields}
+          form={form}
+          contextData={contextData}
+          registries={registries}
+          derivedValidationMode={derivedValidationMode}
+          renderFallback={renderFallback}
+          basePath={toDotNotation(nextPointer)}
+        />
+      );
+    }
 
-  if (field.type === "array") {
-    // Array component handles its own per-row rendering via RenderFields with concrete indices.
-    // Returning null here prevents double-rendering — the component calls RenderFields itself.
-    return null;
-  }
+    case "array":
+      // Array component handles its own per-row rendering via RenderFields with concrete indices.
+      return null;
 
-  return null;
+    default:
+      return null;
+  }
 }
 
 function toPointer(path?: string): string {
