@@ -160,6 +160,7 @@ export function SelectField() {
 
         <FieldContent>
           <Combobox
+            id={hasMany ? fieldApi.name : undefined}
             items={options}
             multiple={hasMany}
             value={selectedValues}
@@ -182,9 +183,7 @@ export function SelectField() {
                   {(values: NormalizedOption[]) => (
                     <React.Fragment>
                       {values.map((opt) => (
-                        <ComboboxChip key={opt.value}>
-                          {opt.label}
-                        </ComboboxChip>
+                        <ComboboxChip key={opt.value}>{opt.label}</ComboboxChip>
                       ))}
                       <ComboboxChipsInput
                         disabled={isDisabled || isReadOnly || isLoading}
