@@ -21,6 +21,9 @@ importers:
       '@changesets/cli':
         specifier: ^2.29.8
         version: 2.29.8(@types/node@22.15.3)
+      '@eslint/js':
+        specifier: ^9.39.1
+        version: 9.39.2
       '@types/node':
         specifier: ^22.15.3
         version: 22.15.3
@@ -45,6 +48,9 @@ importers:
       typescript:
         specifier: 5.9.2
         version: 5.9.2
+      typescript-eslint:
+        specifier: ^8.50.0
+        version: 8.51.0(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.2)
       vitest:
         specifier: ^4.0.18
         version: 4.1.0(@types/node@22.15.3)(jsdom@28.1.0(@noble/hashes@1.8.0))(msw@2.12.7(@types/node@22.15.3)(typescript@5.9.2))(vite@8.0.1(@types/node@22.15.3)(esbuild@0.27.2)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2))
